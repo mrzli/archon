@@ -59,6 +59,9 @@
     - sudo update-alternatives --config x-terminal-emulator
     - then select
 
+- install tmux (maybe, see if it is useful):
+  - sudo apt-get install tmux
+
 - setup i3
   - install i3
   
