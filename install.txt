@@ -71,3 +71,9 @@
 - install mpv player
   - sudo apt-get install vlc
 
+- install vscode
+  - TODO
+  - setup to work with i3
+    - set password store to gnome
+      - https://github.com/microsoft/vscode/issues/187338#issuecomment-1630300049
+      - Adding "password-store": "gnome" to ~/.vscode/argv.json fixed the issue.
