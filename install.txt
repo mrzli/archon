@@ -50,6 +50,15 @@
     - create ~/.vimrc
       - see what it looks like for details
 
+- setup terminal
+  - install 'alacritty':
+    - sudo apt-get install alacritty
+  - set alacritty to have the highest proiority:
+    - sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/alacritty 50
+  - set alacritty as a default terminal:
+    - sudo update-alternatives --config x-terminal-emulator
+    - then select
+
 - setup i3
   - install i3
   
