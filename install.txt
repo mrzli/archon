@@ -9,7 +9,9 @@
   - sudo apt-get upgrade -y
 
 - install prerequisite tools
-  - sudo apt-get install xclip
+  - sudo apt-get install xclip    # provides access to clipboard from terminal
+  - sudo apt-get install maim     # util for taking screenshots on the desktop
+  - sudo apt-get install xdotool  # x11 automation tool (lets you simulate keyboard and mouse inputs, resize activity etc)
 
 - create ssh key:
   - generate key if you already don't have it
