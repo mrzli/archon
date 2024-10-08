@@ -9,7 +9,7 @@
   - sudo apt-get upgrade -y
 
 - install python and pip
-  - sudo apt-get install python3-pip
+  - sudo apt-get install python3-pip python3-venv
 
 - install prerequisite tools
   - sudo apt-get install xclip    # provides access to clipboard from terminal
