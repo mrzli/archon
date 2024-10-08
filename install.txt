@@ -11,6 +11,17 @@
 - install python and pip
   - sudo apt-get install python3-pip python3-venv
 
+- installing ansible
+  - setup python venv
+    - cd ~
+    - python3 -m venv venv
+    - cd venv
+    - source ~/venv/bin/activate # activate venv
+  - install ansible
+    - pip install ansible
+  - deactivate venv
+    - deactivate # after this, ansible will not be accessible (util you activate venv again)
+
 - install prerequisite tools
   - sudo apt-get install xclip    # provides access to clipboard from terminal
   - sudo apt-get install maim     # util for taking screenshots on the desktop
