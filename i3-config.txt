@@ -170,6 +170,8 @@ workspace 10 output $right_screen_work
 
 assign [class="Code"] $ws2
 for_window [class="Code"] layout tabbed
+assign [class="jetbrains-pycharm-ce"] $ws3
+for_window [class="jetbrains-pycharm-ce"] layout tabbed
 assign [window_role="browser"] $ws9
 for_window [class="Slack"] move container to workspace $ws10
 
@@ -223,3 +225,5 @@ bindsym Ctrl+Print exec --no-startup-id maim | xclip -selection clipboard -t ima
 bindsym Ctrl+$mod+Print exec --no-startup-id maim --window $(xdotool getactivewindow) | xclip -selection clipboard -t image/png
 bindsym Ctrl+Shift+Print exec --no-startup-id maim --select | xclip -selection clipboard -t image/png
 
+bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl --min-val=2 -q set 3%-
+bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl -q set 3%+
