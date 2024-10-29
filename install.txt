@@ -97,9 +97,22 @@
     - nvm install node # install latest version of node
 
 - install racket
-  - https://download.racket-lang.org/installers/8.14/racket-8.14-x86_64-linux-cs.sh
-  - OR use snap: sudo snap install racket
-
+  - install
+    - https://download.racket-lang.org/installers/8.14/racket-8.14-x86_64-linux-cs.sh
+    - OR use snap: sudo snap install racket
+  - setup
+    - packages
+      - raco pgk install racket-langserver fmt
+    - vscode
+      - extensions
+        - Magic Racket
+        - racket-fmt
+      - settings
+        ```
+        "[racket]": {
+          "editor.defaultFormatter": "lishizhen.racket-fmt"
+        },
+        ```
   
 - install chrome
   - cd ~/Downloads
