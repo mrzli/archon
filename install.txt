@@ -96,6 +96,10 @@
   - install node
     - nvm install node # install latest version of node
 
+- install racket
+  - https://download.racket-lang.org/installers/8.14/racket-8.14-x86_64-linux-cs.sh
+  - OR use snap: sudo snap install racket
+
   
 - install chrome
   - cd ~/Downloads
