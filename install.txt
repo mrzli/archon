@@ -183,6 +183,45 @@ steoates.autoimport
 yoavbls.pretty-ts-errors
 
     - config is at ~/.config/Code/User/settings.json
+
+```
+{
+  "editor.insertSpaces": true,
+  "editor.minimap.enabled": false,
+  "editor.tabSize": 2,
+  "files.autoSave": "afterDelay",
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.scrollback": 10000,
+  "workbench.editor.wrapTabs": true,
+  "diffEditor.renderSideBySide": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[racket]": {
+    "editor.defaultFormatter": "lishizhen.racket-fmt"
+  },
+  "explorer.confirmDragAndDrop": false,
+}
+```
+
+ - config is at ~/.config/Code/User/keybindings.json
+
+```
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "ctrl+n",
+        "command": "explorer.newFile",
+        "when": "explorerViewletFocus"
+    },
+    {
+        "key": "ctrl+m",
+        "command": "explorer.newFolder",
+        "when": "explorerViewletFocus"
+    }
+]
+```
+
   - setup to work with i3
     - set password store to gnome
       - https://github.com/microsoft/vscode/issues/187338#issuecomment-1630300049
