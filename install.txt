@@ -154,6 +154,34 @@
       - list:
         - evzen-wybitul.magic-racket
         - lishizhen.racket-fmt
+
+angular.ng-template
+dbaeumer.vscode-eslint
+digitalbrainstem.javascript-ejs-support
+donjayamanne.githistory
+esbenp.prettier-vscode
+evzen-wybitul.magic-racket
+firsttris.vscode-jest-runner
+github.copilot
+github.copilot-chat
+goran-mrzljak.ep-js
+goran-mrzljak.ep-snippets-js
+goran-mrzljak.snippets-jest
+goran-mrzljak.snippets-nestjs
+goran-mrzljak.snippets-react
+goran-mrzljak.snippets-redux-observable
+goran-mrzljak.snippets-special
+goran-mrzljak.snippets-typescript
+grapecity.gc-excelviewer
+gruntfuggly.todo-tree
+lishizhen.racket-fmt
+meganrogge.template-string-converter
+mhutchie.git-graph
+nrwl.angular-console
+prisma.prisma
+steoates.autoimport
+yoavbls.pretty-ts-errors
+
     - config is at ~/.config/Code/User/settings.json
   - setup to work with i3
     - set password store to gnome
