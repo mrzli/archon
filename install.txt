@@ -102,7 +102,7 @@
     - OR use snap: sudo snap install racket
   - setup
     - packages
-      - raco pgk install racket-langserver fmt
+      - raco pkg install --auto racket-langserver fmt
     - vscode
       - extensions
         - Magic Racket
@@ -133,7 +133,16 @@
   - sudo apt-get install vlc
 
 - install vscode
-  - TODO
+  - install
+    - sudo snap install code --classic
+    - OR: https://code.visualstudio.com/docs/setup/linux, OR https://phoenixnap.com/kb/install-vscode-ubuntu
+  - setup
+    - extensions:
+      - code --install-extension ms-vscode.cpptools
+      - list:
+        - evzen-wybitul.magic-racket
+        - lishizhen.racket-fmt
+    - config is at ~/.config/Code/User/settings.json
   - setup to work with i3
     - set password store to gnome
       - https://github.com/microsoft/vscode/issues/187338#issuecomment-1630300049
