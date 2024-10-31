@@ -188,6 +188,7 @@ yoavbls.pretty-ts-errors
 {
   "diffEditor.renderSideBySide": true,
   "editor.autoClosingBrackets": "never",
+  "editor.autoClosingComments": "never",
   "editor.autoClosingQuotes": "never",
   "editor.guides.indentation": false,
   "editor.insertSpaces": true,
