@@ -186,14 +186,16 @@ yoavbls.pretty-ts-errors
 
 ```
 {
+  "diffEditor.renderSideBySide": true,
+  "editor.guides.indentation": false,
   "editor.insertSpaces": true,
   "editor.minimap.enabled": false,
+  "editor.renderWhitespace": "all", 
   "editor.tabSize": 2,
   "files.autoSave": "afterDelay",
   "terminal.integrated.defaultProfile.linux": "zsh",
   "terminal.integrated.scrollback": 10000,
   "workbench.editor.wrapTabs": true,
-  "diffEditor.renderSideBySide": true,
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -201,6 +203,7 @@ yoavbls.pretty-ts-errors
     "editor.defaultFormatter": "lishizhen.racket-fmt"
   },
   "explorer.confirmDragAndDrop": false,
+  "window.customTitleBarVisibility": "auto",
 }
 ```
 
