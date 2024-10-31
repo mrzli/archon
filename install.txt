@@ -187,6 +187,8 @@ yoavbls.pretty-ts-errors
 ```
 {
   "diffEditor.renderSideBySide": true,
+  "editor.autoClosingBrackets": "never",
+  "editor.autoClosingQuotes": "never",
   "editor.guides.indentation": false,
   "editor.insertSpaces": true,
   "editor.minimap.enabled": false,
@@ -204,6 +206,12 @@ yoavbls.pretty-ts-errors
   },
   "explorer.confirmDragAndDrop": false,
   "window.customTitleBarVisibility": "auto",
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false
+  },
 }
 ```
 
