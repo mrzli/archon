@@ -2,11 +2,22 @@
   - setup bluetooth
   - power settings
     - screen blank after 15 minuts
+    - sudo xset s 1800 1800
+    - sudo xset dpms 1800 3600 7200
   - set dark theme
 
 - update system
   - sudo apt-get update
   - sudo apt-get upgrade -y
+
+- if I need it install vagrant and virtualbox
+  - vagrant
+    - wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+    - sudo apt update && sudo apt install vagrant
+  - virtual box
+   - sudo apt-get install virtualbox # maybe also virtualbox-ext-pack, but it requires some license bullshit
+   - for ext-pack accept licence (see how to automate this with ansible if I end up using it)
 
 - install python and pip
   - sudo apt-get install python3-pip python3-venv
@@ -95,6 +106,8 @@
     - source ~/.zshrc
   - install node
     - nvm install node # install latest version of node
+  - install pnpm
+    - npm install -g pnpm
 
 - install racket
   - install
