@@ -145,6 +145,9 @@
 - install mpv player
   - sudo apt-get install vlc
 
+- install latex
+  - sudo apt-get install texlive-latex-extra latexmk
+
 - install vscode
   - install
     - sudo snap install code --classic # on work computer, this worked fine; locally I had issues with racket langserver when using this type of installation
@@ -163,10 +166,9 @@
       ```
   - setup
     - extensions:
+      - too see current: code --list-extensions
       - code --install-extension ms-vscode.cpptools
       - list:
-        - evzen-wybitul.magic-racket
-        - lishizhen.racket-fmt
 
 angular.ng-template
 dbaeumer.vscode-eslint
@@ -187,6 +189,8 @@ goran-mrzljak.snippets-special
 goran-mrzljak.snippets-typescript
 grapecity.gc-excelviewer
 gruntfuggly.todo-tree
+igochkov.vscode-ebnf
+james-yu.latex-workshop
 lishizhen.racket-fmt
 meganrogge.template-string-converter
 mhutchie.git-graph
@@ -195,57 +199,9 @@ prisma.prisma
 steoates.autoimport
 yoavbls.pretty-ts-errors
 
-    - config is at ~/.config/Code/User/settings.json
-
-```
-{
-  "diffEditor.renderSideBySide": true,
-  "editor.autoClosingBrackets": "never",
-  "editor.autoClosingComments": "never",
-  "editor.autoClosingQuotes": "never",
-  "editor.guides.indentation": false,
-  "editor.insertSpaces": true,
-  "editor.minimap.enabled": false,
-  "editor.renderWhitespace": "all", 
-  "editor.tabSize": 2,
-  "files.autoSave": "afterDelay",
-  "terminal.integrated.defaultProfile.linux": "zsh",
-  "terminal.integrated.scrollback": 10000,
-  "workbench.editor.wrapTabs": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[racket]": {
-    "editor.defaultFormatter": "lishizhen.racket-fmt"
-  },
-  "explorer.confirmDragAndDrop": false,
-  "window.customTitleBarVisibility": "auto",
-  "github.copilot.enable": {
-    "*": false,
-    "plaintext": false,
-    "markdown": false,
-    "scminput": false
-  },
-}
-```
-
- - config is at ~/.config/Code/User/keybindings.json
-
-```
-// Place your key bindings in this file to override the defaults
-[
-    {
-        "key": "ctrl+n",
-        "command": "explorer.newFile",
-        "when": "explorerViewletFocus"
-    },
-    {
-        "key": "ctrl+m",
-        "command": "explorer.newFolder",
-        "when": "explorerViewletFocus"
-    }
-]
-```
+- set configs
+  - config is at ~/.config/Code/User/settings.json
+  - config is at ~/.config/Code/User/keybindings.json
 
   - setup to work with i3
     - set password store to gnome
