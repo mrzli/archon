@@ -179,8 +179,6 @@ evzen-wybitul.magic-racket
 firsttris.vscode-jest-runner
 github.copilot
 github.copilot-chat
-goran-mrzljak.ep-js
-goran-mrzljak.ep-snippets-js
 goran-mrzljak.snippets-jest
 goran-mrzljak.snippets-nestjs
 goran-mrzljak.snippets-react
@@ -192,6 +190,7 @@ gruntfuggly.todo-tree
 igochkov.vscode-ebnf
 james-yu.latex-workshop
 lishizhen.racket-fmt
+mechatroner.rainbow-csv
 meganrogge.template-string-converter
 mhutchie.git-graph
 nrwl.angular-console
