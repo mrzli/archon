@@ -16,6 +16,7 @@
   "git.confirmSync": false,
   "github.copilot.enable": {
     "*": true,
+    "csv": false,
     "plaintext": false,
     "markdown": true,
     "scminput": false
