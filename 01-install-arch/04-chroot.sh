@@ -91,7 +91,7 @@ echo "Setting password for users 'root' and '$USERNAME'..."
 echo -e "root:$USER_PASSWORD\n$USERNAME:$USER_PASSWORD" | chpasswd || { echo "Failed to set passwords for users."; exit 1; }
 
 echo "Configuring sudoers file to allow members of 'wheel' group to execute any command..."
-sed -E -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers \
+sed -E -i 's/^# %wheel ALL=\(ALL:ALL\) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers \
   || { echo "Failed to configure sudoers file."; exit 1; }
 
 echo ""
