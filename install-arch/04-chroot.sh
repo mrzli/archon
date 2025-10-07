@@ -12,27 +12,6 @@ echo "Starting chroot setup..."
 
 echo ""
 
-HOSTNAME="$USERNAME-arch"
-
-echo "Set hostname..."
-hostnamectl set-hostname "$HOSTNAME" || { echo "Failed to set hostname."; exit 1; }
-
-echo ""
-
-echo "Configuring users..."
-
-echo "Creating user '$USERNAME'..."
-useradd -m -g users -G wheel "$USERNAME" || { echo "Failed to create user '$USERNAME'."; exit 1; }
-
-echo "Setting password for users 'root' and '$USERNAME'..."
-echo -e "root:$USER_PASSWORD\n$USERNAME:$USER_PASSWORD" | chpasswd || { echo "Failed to set passwords for users."; exit 1; }
-
-echo "Configuring sudoers file to allow members of 'wheel' group to execute any command..."
-sed -E -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers \
-  || { echo "Failed to configure sudoers file."; exit 1; }
-
-echo ""
-
 echo "Installing packages..."
 
 echo ""
@@ -93,6 +72,27 @@ pacman_quiet_install \
   linux-firmware \
   nvidia \
   nvidia-utils 2> /dev/null || { echo "Failed to install drivers."; exit 1; }
+
+echo ""
+
+HOSTNAME="$USERNAME-arch"
+
+echo "Set hostname..."
+hostnamectl set-hostname "$HOSTNAME" || { echo "Failed to set hostname."; exit 1; }
+
+echo ""
+
+echo "Configuring users..."
+
+echo "Creating user '$USERNAME'..."
+useradd -m -g users -G wheel "$USERNAME" || { echo "Failed to create user '$USERNAME'."; exit 1; }
+
+echo "Setting password for users 'root' and '$USERNAME'..."
+echo -e "root:$USER_PASSWORD\n$USERNAME:$USER_PASSWORD" | chpasswd || { echo "Failed to set passwords for users."; exit 1; }
+
+echo "Configuring sudoers file to allow members of 'wheel' group to execute any command..."
+sed -E -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers \
+  || { echo "Failed to configure sudoers file."; exit 1; }
 
 echo ""
 

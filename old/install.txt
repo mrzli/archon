@@ -194,7 +194,6 @@ mechatroner.rainbow-csv
 meganrogge.template-string-converter
 mhutchie.git-graph
 ms-playwright.playwright
-nrwl.angular-console
 prisma.prisma
 steoates.autoimport
 yoavbls.pretty-ts-errors
