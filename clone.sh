@@ -6,7 +6,7 @@ REPO_URL="https://github.com/mrzli/machine-setup.git"
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
-if ! command -v git &>/dev/null; then
+if ! type -P git &>/dev/null; then
   echo "Git not found. Installing git..."
   sudo pacman -Sy git --noconfirm
 fi
