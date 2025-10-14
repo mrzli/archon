@@ -101,6 +101,9 @@ echo "Setting up system..."
 echo "Setting default editor to vim..."
 echo "EDITOR=/usr/bin/vim" >> /etc/environment || { echo "Failed to set EDITOR in /etc/environment."; exit 1; }
 
+echo "Setting XDG base directories..."
+cp ./data/xdg-sh /etc/profile.d/xdg.sh || { echo "Failed to copy xdg.sh to /etc/profile.d/."; exit 1; }
+
 echo "Setting up locales..."
 echo "Editing /etc/locale.gen..."
 sed -E -i "s/^#\s*(en_US.UTF-8 UTF-8)/\1/" /etc/locale.gen \
