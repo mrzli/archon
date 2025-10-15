@@ -1,0 +1,5 @@
+- install:
+  - git
+  - alacritty
+  - ttf-firacode-nerd
+  - hyprland

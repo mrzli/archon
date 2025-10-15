@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+run_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+filter=""
+dry="0"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "--dry" ]]; then
+    dry="1"
+  else
+    filter="$1"
+  fi
+  shift
+done
+
+clean_path() {
+  echo "$1" | sed 's|/\./|/|g'
+}
+
+log () {
+  if [[ "$dry" == "1" ]]; then
+    echo "[DRY_RUN]: $(clean_path "$@")"
+  else
+    echo "$(clean_path "$@")"
+  fi
+}
+
+execute() {
+  log "execute $(clean_path "$@")"
+  # if not dry
+  if [[ "$dry" != "1" ]]; then
+    "$@"
+  fi
+}
+
+cd $run_dir
+scripts=$(find ./scripts -mindepth 1 -maxdepth 1 -type f)
+
+for script in $scripts; do
+  if echo "$script" | grep -qv "$filter"; then
+    continue
+  fi
+
+  execute ./$script
+done
