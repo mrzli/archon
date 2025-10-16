@@ -1,0 +1,6 @@
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+
+cd "$XDG_DATA_HOME"
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
