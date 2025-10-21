@@ -2,16 +2,24 @@
 # INSTALL VIA PACMAN
 - zsh               - Z shell.
 - git               - Version control system.
-- hyprland          - Wayland compositor/VM.
 - alacritty         - Terminal emulator.
 - ttf-firacode-nerd - Fira Code Nerdfont.
 - adwaita-cursors   - Standard GNOME cursors.
 - mise              - Version manager.
-- rust              - Rust programming language. Required for 'paru', which won't work with rust installed via mise.
+- rustup            - Rust toolchain installer.
+- jq                - Command-line JSON processor.
+- starship          - Shell prompt.
+- hyprland          - Wayland compositor/VM.
 ```
 
 ```
 chsh -s /bin/zsh    # Change default shell to zsh, requires logout/login.
+```
+
+```
+# for rustup:
+rustup default stable
+# see config, maybe it can be copied directly
 ```
 
 NOTE:
