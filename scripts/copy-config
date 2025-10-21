@@ -52,5 +52,4 @@ copy_dir() {
 
 root_dir=$(dirname $script_dir)
 
-mkdir -p "$XDG_CONFIG_HOME"
 copy_dir "$root_dir/data/config" "$XDG_CONFIG_HOME"
