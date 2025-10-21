@@ -2,7 +2,7 @@
 
 usage() {
   echo "Usage:"
-  echo "  ./ms.sh [command]"
+  echo "  ./ms [command]"
   echo ""
   echo "Commands:"
   echo "  i - Install."
