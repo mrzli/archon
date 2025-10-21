@@ -1,4 +1,4 @@
-#!/usr/bin/evn bash
+#!/usr/bin/env bash
 
 usage() {
   echo "Usage:"
@@ -16,7 +16,7 @@ target_dir="$XDG_DATA_HOME/machine-setup"
 command="$1"
 
 if [[ "$command" == "i" ]]; then
-  curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/clone.sh
+  curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/clone.sh | bash
   find "$target_dir/scripts" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
   find "$target_dir/run" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
   find "$target_dir/run/scripts/" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;

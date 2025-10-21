@@ -77,7 +77,8 @@ echo ""
 
 HOSTNAME="$USERNAME-arch"
 
-echo "Set hostname..."
+echo "Setting hostname..."
+# TODO: for some reason does not seem to set hostname properly, at least I don't see it reflected in the prompt after installation.
 hostnamectl set-hostname "$HOSTNAME" || { echo "Failed to set hostname."; exit 1; }
 
 echo ""
