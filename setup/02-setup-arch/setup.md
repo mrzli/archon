@@ -12,6 +12,9 @@
 - hyprland          - Wayland compositor/VM.
 ```
 
+NOTE:
+- Default hyprland config: https://github.com/hyprwm/Hyprland/blob/main/example/hyprland.conf
+
 ```
 chsh -s /bin/zsh    # Change default shell to zsh, requires logout/login.
 ```

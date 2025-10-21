@@ -17,9 +17,9 @@ command="$1"
 
 if [[ "$command" == "i" ]]; then
   curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/clone.sh
-  find "$target_dir/scripts" -type f -exec chmod +x {} \;
-  find "$target_dir/run" -type f -exec chmod +x {} \;
-  find "$target_dir/run/scripts/" -type f -exec +x {} \;
+  find "$target_dir/scripts" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
+  find "$target_dir/run" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
+  find "$target_dir/run/scripts/" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
 elif [[ "$command" == "d" ]]; then
   rm -rf "$target_dir"
 elif [[ "$command" == "c" ]]; then
