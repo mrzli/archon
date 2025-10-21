@@ -36,20 +36,21 @@ execute() {
 
 log "---------- Copy Config Scripts ----------"
 
-copy_dir() {
+copy_items() {
   from="$1"
   to="$2"
 
   pushd $from > /dev/null
-  dirs=$(find . -mindepth 1 -maxdepth 1 -type d)
+  items=$(find . -mindepth 1 -maxdepth 1)
   popd > /dev/null
 
-  for dir in $dirs; do
-    execute rm -rf $to/$dir
-    execute cp -r $from/$dir $to/$dir
+  for item in $items; do
+    execute rm -rf $to/$item
+    execute cp -r $from/$item $to/$item
   done
 }
 
 root_dir=$(dirname $script_dir)
 
-copy_dir "$root_dir/data/config" "$XDG_CONFIG_HOME"
+copy_items "$root_dir/data/config" "$XDG_CONFIG_HOME"
+copy_items "$root_dir/data/home-config" "$HOME"
