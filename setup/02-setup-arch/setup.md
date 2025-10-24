@@ -1,4 +1,5 @@
 ```
+pacman -S --noconfirm <package-name>
 # INSTALL VIA PACMAN
 - zsh               - Z shell.
 - git               - Version control system.
@@ -41,7 +42,9 @@ mise use -g rust      # Seems to update .config/mise/config.toml, may not be nec
 ```
 
 ```
-paru -S --noconfirm google-chrome
+paru -S --noconfirm <package-name>
+# INSTALL VIA PARU:
+- zsh-vi-mode          - Vi keybindings for zsh.
+- google-chrome        - Web browser.
 ```
 
-```
