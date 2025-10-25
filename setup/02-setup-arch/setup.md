@@ -21,6 +21,7 @@ pacman -S --noconfirm <package-name>
 
 # APPLICATIONS:
 - alacritty         - Terminal emulator.
+- neovim            - Text editor.
 
 # DEVELOPMENT:
 - mise              - Version manager.
@@ -29,6 +30,8 @@ pacman -S --noconfirm <package-name>
 # UI:
 - hyprland          - Wayland compositor/VM.
 ```
+
+## Rest
 
 NOTE:
 - Default hyprland config: https://github.com/hyprwm/Hyprland/blob/main/example/hyprland.conf
