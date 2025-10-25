@@ -1,15 +1,32 @@
-```
+# Setup
+
+## Install From Standard Repositories
+
+```bash
 pacman -S --noconfirm <package-name>
-# INSTALL VIA PACMAN
-- zsh               - Z shell.
+```
+
+```
+# ESSENTIALS:
 - git               - Version control system.
-- alacritty         - Terminal emulator.
-- ttf-firacode-nerd - Fira Code Nerdfont.
+
+# FONTS AND THEMES:
 - adwaita-cursors   - Standard GNOME cursors.
-- mise              - Version manager.
-- rustup            - Rust toolchain installer.
+- ttf-firacode-nerd - Fira Code Nerdfont.
+
+# SHELL:
 - jq                - Command-line JSON processor.
 - starship          - Shell prompt.
+- zsh               - Z shell.
+
+# APPLICATIONS:
+- alacritty         - Terminal emulator.
+
+# DEVELOPMENT:
+- mise              - Version manager.
+- rustup            - Rust toolchain installer.
+
+# UI:
 - hyprland          - Wayland compositor/VM.
 ```
 
