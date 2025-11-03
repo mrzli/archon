@@ -16,10 +16,7 @@ target_dir="$XDG_DATA_HOME/machine-setup"
 command="$1"
 
 if [[ "$command" == "i" ]]; then
-  curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/clone.sh | bash
-  find "$target_dir/path-scripts" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
-  find "$target_dir/run" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
-  find "$target_dir/run/scripts/" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
+  curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/install.sh | bash
 elif [[ "$command" == "d" ]]; then
   rm -rf "$target_dir"
 elif [[ "$command" == "c" ]]; then

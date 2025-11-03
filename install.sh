@@ -15,3 +15,8 @@ mkdir -p "$XDG_DATA_HOME"
 
 cd "$XDG_DATA_HOME"
 git clone "$REPO_URL"
+
+target_dir="$XDG_DATA_HOME/machine-setup"
+find "$target_dir/path-scripts" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
+find "$target_dir/run" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
+find "$target_dir/run/scripts/" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
