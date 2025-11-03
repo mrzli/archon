@@ -29,6 +29,8 @@
 } */
 
 #cpu,
+#memory,
+#temperature,
 #battery {
   min-width: 12px;
   margin: 0 8px;

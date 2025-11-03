@@ -34,7 +34,7 @@
     "tooltip": false
   },
   "memory": {
-    "format": "{used:0.1f}G \uefc5"
+    "format": "{used:0.1f}G"
   },
   "temperature": {
     "format": "{temperatureC}°C"
