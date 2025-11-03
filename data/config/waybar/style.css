@@ -28,6 +28,9 @@
   opacity: 0.5;
 } */
 
+#bluetooth,
+#network,
+#pulseaudio,
 #cpu,
 #memory,
 #temperature,
