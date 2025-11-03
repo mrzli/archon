@@ -6,7 +6,7 @@
   "height": 24,
   "modules-left": ["hyprland/workspaces", "hyprland/window"],
   "modules-center": [],
-  "modules-right": ["cpu", "memory", "temperature", "battery"],
+  "modules-right": ["cpu"],
 
   "hyprland/workspaces": {
     "format": "{icon}",
