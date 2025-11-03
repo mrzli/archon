@@ -6,5 +6,5 @@
   "heigth": 24,
   "modules-left": [],
   "modules-center": [],
-  "modules-right": []
+  "modules-right": ["cpu"]
 }
