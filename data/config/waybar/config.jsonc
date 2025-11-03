@@ -3,7 +3,7 @@
   "layer": "top",
   "position": "top",
   "spacing": 0,
-  "heigth": 30,
+  "height": 30,
   "modules-left": [],
   "modules-center": [],
   "modules-right": ["cpu"]
