@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+usage() {
+  echo "Usage:"
+  echo "  ms [command]"
+  echo ""
+  echo "Commands:"
+  echo "  i - Install."
+  echo "  d - Delete."
+  echo "  c - Copy config."
+}
+
+target_dir="$HOME/ms"
+
+command="$1"
+
+if [[ "$command" == "i" ]]; then
+  curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/install.sh | bash
+elif [[ "$command" == "d" ]]; then
+  rm -rf "$target_dir"
+elif [[ "$command" == "c" ]]; then
+  "$target_dir/shared/copy-config"
+else
+  usage
+  exit 1
+fi

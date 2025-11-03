@@ -17,6 +17,12 @@ cd "$XDG_DATA_HOME"
 git clone "$REPO_URL"
 
 target_dir="$XDG_DATA_HOME/machine-setup"
-find "$target_dir/path-scripts" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
-find "$target_dir/run" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
-find "$target_dir/run/scripts/" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
+find "$target_dir/scripts" -mindepth 1 -type f -exec chmod +x {} \;
+
+install_script_dir="$HOME/ms"
+
+rm -rf "$install_script_dir"
+mkdir -p "$install_script_dir"
+
+cp "$target_dir/scripts/other/"* "$install_script_dir/"
+cp -r "$target_dir/scripts/shared" "$install_script_dir/"
