@@ -4,7 +4,7 @@
   "position": "top",
   "spacing": 0,
   "height": 24,
-  "modules-left": ["hyprland/workspaces"],
+  "modules-left": ["hyprland/workspaces", "hyprland/window"],
   "modules-center": [],
   "modules-right": ["cpu", "battery"],
 
@@ -23,5 +23,9 @@
       "10": "10"
     },
     "on-click": "activate"
+  },
+  "hyprland/window": {
+    "format": "{}",
+    "max-length": 50
   }
 }
