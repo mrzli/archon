@@ -56,3 +56,7 @@ mkdir -p "$XDG_CONFIG_HOME"
 
 copy_items "$root_dir/data/config" "$XDG_CONFIG_HOME"
 copy_items "$root_dir/data/home-config" "$HOME"
+
+if [[ "$dry" != "1" ]]; then
+  ln -sf "$XDG_CONFIG_HOME/zsh/.zshenv" "$HOME/.zshenv"
+fi
