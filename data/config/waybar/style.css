@@ -1,0 +1,12 @@
+@define-color foreground #cdd6f4;
+@define-color background #1a1b26;
+
+* {
+  background-color: @background;
+  color: @foreground;
+
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  font-size: 12px;
+}
