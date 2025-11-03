@@ -32,7 +32,7 @@
   "cpu": {
     "format": "{usage}% \uf4bc",
     "tooltip": false
-  },
+  }
   // "memory": {
   //   "format": "{used:0.1f}G \uefc5"
   // },
