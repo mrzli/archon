@@ -20,7 +20,7 @@ if [[ "$command" == "i" ]]; then
 elif [[ "$command" == "d" ]]; then
   rm -rf "$target_dir"
 elif [[ "$command" == "c" ]]; then
-  "$target_dir/shared/copy-config"
+  "$target_dir/scripts/shared/copy-config"
 else
   usage
   exit 1
