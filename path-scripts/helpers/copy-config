@@ -50,7 +50,7 @@ copy_items() {
   done
 }
 
-root_dir=$(dirname $script_dir)
+root_dir=$(dirname (dirname $script_dir))
 
 copy_items "$root_dir/data/config" "$XDG_CONFIG_HOME"
 copy_items "$root_dir/data/home-config" "$HOME"
