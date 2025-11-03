@@ -29,7 +29,7 @@
       "7": "7",
       "8": "8",
       "9": "9",
-      "10": "10",
+      "10": "10"
     },
     "persistent-workspaces": {
       "1": [],
@@ -43,7 +43,14 @@
       "9": [],
       "10": []
     },
-    "on-click": "activate"
+    "on-click": "activate",
+    // Add CSS class for active workspace
+    "format-active": "{icon}",
+    "active-workspace": {
+      "background": "#your_color_here", // e.g., #b4befe
+      "color": "#11111b" // text color, e.g., dark background
+      // or just color: "#color" if using transparent bg
+    }
   },
   "hyprland/window": {
     "format": "{}",
@@ -116,7 +123,7 @@
   },
   "pulseaudio": {
     "format": "{icon}",
-    "on-click": "$TERMINAL --class=Wiremix -e wiremix",
+    "on-click": "$terminal --class=Wiremix -e wiremix",
     "on-click-right": "pamixer -t",
     "tooltip-format": "Playing at {volume}%",
     "scroll-step": 5,
