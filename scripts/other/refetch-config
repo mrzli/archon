@@ -5,4 +5,6 @@ install_script_dir="$HOME/ms"
 "$install_script_dir/machine-setup" d
 "$install_script_dir/machine-setup" i
 "$install_script_dir/machine-setup" c
-hyprctl dispatch exit
+if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
+  hyprctl dispatch exit
+fi
