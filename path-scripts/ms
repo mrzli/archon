@@ -23,7 +23,7 @@ if [[ "$command" == "i" ]]; then
 elif [[ "$command" == "d" ]]; then
   rm -rf "$target_dir"
 elif [[ "$command" == "c" ]]; then
-  "$target_dir/scripts/helpers/copy-config"
+  "$target_dir/path-scripts/helpers/copy-config"
 else
   usage
   exit 1
