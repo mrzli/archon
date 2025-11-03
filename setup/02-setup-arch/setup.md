@@ -29,6 +29,7 @@ pacman -S --noconfirm <package-name>
 
 # UI:
 - hyprland          - Wayland compositor/VM.
+- waybar            - Status bar for Wayland.
 ```
 
 ## Rest
