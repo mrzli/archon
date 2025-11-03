@@ -30,6 +30,8 @@
 
 #cpu,
 #battery {
+  display: flex;
+  align-items: center;
   min-width: 12px;
-  margin: 0 7.5px;
+  margin: 0 8px;
 }
