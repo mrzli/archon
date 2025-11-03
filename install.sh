@@ -25,4 +25,3 @@ rm -rf "$install_script_dir"
 mkdir -p "$install_script_dir"
 
 cp "$target_dir/scripts/other/"* "$install_script_dir/"
-cp -r "$target_dir/scripts/shared" "$install_script_dir/"

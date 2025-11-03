@@ -10,7 +10,8 @@ usage() {
   echo "  c - Copy config."
 }
 
-target_dir="$HOME/ms"
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+target_dir="$XDG_DATA_HOME/machine-setup"
 
 command="$1"
 

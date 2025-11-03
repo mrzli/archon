@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-target_dir="$XDG_DATA_HOME/machine-setup/path-scripts"
+install_script_dir="$HOME/ms"
 
-"$target_dir/machine-setup" d && "$target_dir/machine-setup" i && "$target_dir/machine-setup" c && hyprctl dispatch exit
+"$install_script_dir/machine-setup" d
+"$install_script_dir/machine-setup" i
+"$install_script_dir/machine-setup" c
+hyprctl dispatch exit
