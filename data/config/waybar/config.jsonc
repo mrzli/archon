@@ -27,5 +27,10 @@
   "hyprland/window": {
     "format": "{}",
     "max-length": 50
+  },
+
+  "cpu": {
+    "format": "{usage}% ", //  = CPU icon
+    "tooltip": false
   }
 }
