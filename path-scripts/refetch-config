@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+./machine-setup d && ./machine-setup i && ./machine-setup c && hyprctl dispatch exit
