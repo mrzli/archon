@@ -14,8 +14,6 @@ To remove the cloned repository:
 XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share} rm -rf "$XDG_DATA_HOME/machine-setup"
 ```
 
-
-
 ## Install Arch Linux
 
 TODO
