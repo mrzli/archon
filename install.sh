@@ -24,4 +24,4 @@ install_script_dir="$HOME/ms"
 rm -rf "$install_script_dir"
 mkdir -p "$install_script_dir"
 
-cp "$target_dir/scripts/other/"* "$install_script_dir/"
+cp "$target_dir/scripts/install/"* "$install_script_dir/"
