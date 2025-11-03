@@ -34,7 +34,8 @@
 #cpu,
 #memory,
 #temperature,
-#battery {
+#battery,
+#clock {
   min-width: 12px;
   margin: 0 8px;
 }
