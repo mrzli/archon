@@ -35,3 +35,7 @@
   min-width: 12px;
   margin: 0 8px;
 }
+
+tooltip {
+  padding: 2px
+}
