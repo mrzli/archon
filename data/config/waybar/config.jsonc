@@ -20,7 +20,6 @@
   "hyprland/workspaces": {
     "format": "{icon}",
     "format-icons": {
-      "default": "",
       "1": "1",
       "2": "2",
       "3": "3",
@@ -31,7 +30,6 @@
       "8": "8",
       "9": "9",
       "10": "10",
-      "active": "󱓻"
     },
     "persistent-workspaces": {
       "1": [],
