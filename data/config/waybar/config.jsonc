@@ -9,7 +9,7 @@
   "modules-right": [
     "bluetooth",
     "network",
-    "pulseaudio",
+    // "pulseaudio",
     "cpu",
     "memory",
     "temperature",
