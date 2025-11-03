@@ -30,7 +30,7 @@
   },
 
   "cpu": {
-    "format": "{usage}% ", //  = CPU icon
+    "format": "{usage}% \uf4bc",
     "tooltip": false
   }
 }
