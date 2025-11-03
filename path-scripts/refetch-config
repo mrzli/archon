@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 
-./machine-setup d && ./machine-setup i && ./machine-setup c && hyprctl dispatch exit
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+target_dir="$XDG_DATA_HOME/machine-setup"
+
+"$target_dir/machine-setup" d && "$target_dir/machine-setup" i && "$target_dir/machine-setup" c && hyprctl dispatch exit
