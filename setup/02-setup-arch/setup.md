@@ -2,6 +2,26 @@
 
 ## Hardware Installation
 
+### Bluetooth
+
+Install packages using pacman:
+
+```bash
+pacman -S --noconfirm <package-name>
+```
+
+```
+- bluez             - Bluetooth protocol stack.
+- bluez-utils       - Command-line tools for Bluetooth.
+- bluetui           - Terminal user interface for managing Bluetooth devices.
+```
+
+Start and enable the Bluetooth service:
+
+```bash
+sudo systemctl enable --now bluetooth.service
+```
+
 ### Sound
 
 How does playing sound work?
