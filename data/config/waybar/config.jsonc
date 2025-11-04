@@ -9,7 +9,7 @@
   "modules-right": [
     "bluetooth",
     "network",
-    // "pulseaudio",
+    "pulseaudio",
     "cpu",
     "memory",
     "temperature",
@@ -47,35 +47,18 @@
     },
     "on-click": "activate"
   },
+
   "hyprland/window": {
     "format": "{}",
     "max-length": 50
   },
 
-  // "network": {
-  //   "format-wifi": "{signalStrength}%\ue1af",
-  //   "format-ethernet": "\ue1c1",
-  //   "format-disconnected": "\ue1c2",
-  //   "tooltip-format-wifi": "{essid} ({ipaddr})",
-  //   "tooltip-format-ethernet": "{ifname} ({ipaddr})"
-  // },
-  // "bluetooth": {
-  //   "format": "\ue1a2",
-  //   "format-connected": "\ue1a2 {num_connections}",
-  //   "format-off": "\ue1a3",
-  //   "tooltip-format-connected": "{device_alias}"
-  // },
-  // "pulseaudio": {
-  //   "format": "{volume}%\ue1a8",
-  //   "format-muted": "Muted\ue1a7",
-  //   "format-icons": ["\ue1a5", "\ue1a6", "\ue1a8"],
-  //   "on-click": "pavucontrol",
-  //   "scroll-step": 5
-  // },
-  "cpu": {
-    "interval": 5,
-    "format": "󰍛",
-    "on-click": "$terminal -e btop"
+  "bluetooth": {
+    "format": "",
+    "format-disabled": "󰂲",
+    "format-connected": "",
+    "tooltip-format": "Devices connected: {num_connections}",
+    "on-click": "blueberry"
   },
   "network": {
     "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
@@ -89,6 +72,30 @@
     "interval": 3,
     "spacing": 1
     // "on-click": "omarchy-launch-wifi"
+  },
+  "pulseaudio": {
+    "format": "{icon}",
+    "on-click": "$terminal --class=Wiremix -e wiremix",
+    "on-click-right": "pamixer -t",
+    "tooltip-format": "Playing at {volume}%",
+    "scroll-step": 5,
+    "format-muted": "",
+    "format-icons": {
+      "default": ["", "", ""]
+    }
+  },
+  "cpu": {
+    "interval": 5,
+    "format": "󰍛",
+    "on-click": "$terminal -e btop"
+  },
+  "memory": {
+    "format": "{used:0.1f}G",
+    "tooltip": false
+  },
+  "temperature": {
+    "format": "{temperatureC}°C",
+    "tooltip": false
   },
   "battery": {
     "format": "{capacity}% {icon}",
@@ -109,43 +116,6 @@
       "critical": 10
     }
   },
-  "bluetooth": {
-    "format": "",
-    "format-disabled": "󰂲",
-    "format-connected": "",
-    "tooltip-format": "Devices connected: {num_connections}",
-    "on-click": "blueberry"
-  },
-  "pulseaudio": {
-    "format": "{icon}",
-    "on-click": "$terminal --class=Wiremix -e wiremix",
-    "on-click-right": "pamixer -t",
-    "tooltip-format": "Playing at {volume}%",
-    "scroll-step": 5,
-    "format-muted": "",
-    "format-icons": {
-      "default": ["", "", ""]
-    }
-  },
-  // "cpu": {
-  //   "format": "CPU {usage}%",
-  //   "tooltip": false
-  // },
-  "memory": {
-    "format": "{used:0.1f}G",
-    "tooltip": false
-  },
-  "temperature": {
-    "format": "{temperatureC}°C",
-    "tooltip": false
-  },
-  // "battery": {
-  //   "format": "{capacity}% \udb80\udc79",
-  //   "states": {
-  //     "warning": 0,
-  //     "critical": 0
-  //   }
-  // }
   "clock": {
     "format": "{:L%A %H:%M}",
     "format-alt": "{:L%d %B W%V %Y}",
