@@ -108,7 +108,6 @@ pacman -S --noconfirm <package-name>
 # UI:
 - hyprland          - Wayland compositor/VM.
 - waybar            - Status bar for Wayland.
-- walker            - Application launcher.
 ```
 
 ## Rest
@@ -141,10 +140,15 @@ mise use -g rust      # Seems to update .config/mise/config.toml, may not be nec
 ./run paru-install  # Install paru AUR helper.
 ```
 
-```
+```bash
 paru -S --noconfirm <package-name>
+```
+
+```
 # INSTALL VIA PARU:
 - zsh-vi-mode          - Vi keybindings for zsh.
 - google-chrome        - Web browser.
+
+- walker               - Application launcher.
 ```
 
