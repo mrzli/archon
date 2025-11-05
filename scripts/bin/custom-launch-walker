@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Start elephant if not running.
+if ! pgrep -x elephant > /dev/null; then
+  setsid elephant &
+fi
+
+# Start walker service if not running.
+if ! pgrep -f "walker --gapplication-service" > /dev/null; then
+  setsid walker --gapplication-service &
+fi
+
+# Launch walker UI.
+exec walker --width 644 --maxheight 300 --minheight 300 "$@"
