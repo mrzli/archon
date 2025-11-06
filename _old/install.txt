@@ -188,13 +188,11 @@ goran-mrzljak.snippets-typescript
 grapecity.gc-excelviewer
 gruntfuggly.todo-tree
 igochkov.vscode-ebnf
-james-yu.latex-workshop
 lishizhen.racket-fmt
 mechatroner.rainbow-csv
 meganrogge.template-string-converter
 mhutchie.git-graph
 ms-playwright.playwright
-prisma.prisma
 steoates.autoimport
 yoavbls.pretty-ts-errors
 

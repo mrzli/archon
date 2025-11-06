@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+extensions=(
+  angular.ng-template
+  dbaeumer.vscode-eslint
+  digitalbrainstem.javascript-ejs-support
+  donjayamanne.githistory
+  esbenp.prettier-vscode
+  evzen-wybitul.magic-racket
+  firsttris.vscode-jest-runner
+  github.copilot
+  github.copilot-chat
+  goran-mrzljak.snippets-jest
+  goran-mrzljak.snippets-nestjs
+  goran-mrzljak.snippets-react
+  goran-mrzljak.snippets-redux-observable
+  goran-mrzljak.snippets-special
+  goran-mrzljak.snippets-typescript
+  grapecity.gc-excelviewer
+  gruntfuggly.todo-tree
+  igochkov.vscode-ebnf
+  lishizhen.racket-fmt
+  mechatroner.rainbow-csv
+  meganrogge.template-string-converter
+  mhutchie.git-graph
+  ms-playwright.playwright
+  steoates.autoimport
+  yoavbls.pretty-ts-errors
+)
+
+for extension in "${extensions[@]}"; do
+  code --install-extension "$extension" --force
+done
