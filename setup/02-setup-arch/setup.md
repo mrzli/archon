@@ -150,5 +150,6 @@ paru -S --noconfirm <package-name>
 - google-chrome        - Web browser.
 
 - walker               - Application launcher.
+- elephant             - Data provider service, used by walker.
 ```
 
