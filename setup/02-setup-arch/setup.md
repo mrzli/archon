@@ -149,7 +149,17 @@ paru -S --noconfirm <package-name>
 - zsh-vi-mode          - Vi keybindings for zsh.
 - google-chrome        - Web browser.
 
-- walker               - Application launcher.
-- elephant             - Data provider service, used by walker.
-```
-
+- walker-bin                           - Application launcher.
+- elephant-bin                         - Data provider service, used by walker.
+- elephant-bluetooth-bin               - Data provider for Bluetooth devices.
+- elephant-calc-bin                    - Data provider for calculations.
+- elephant-clipboard-bin               - Data provider for clipboard contents.
+- elephant-desktopapplications-bin     - Data provider for desktop applications.
+- elephant-files-bin                   - Data provider for file management.
+- elephant-menus-bin                   - Data provider for application menus.
+- elephant-providerlist-bin            - Data provider for available providers.
+- elephant-runner-bin                  - Data provider for application runners.
+- elephant-symbols-bin                 - Data provider for symbols.
+- elephant-todo-bin                    - Data provider for todo lists.
+- elephant-unicode-bin                 - Data provider for Unicode characters.
+- elephant-websearch-bin               - Data provider for web searches.
