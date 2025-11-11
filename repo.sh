@@ -14,7 +14,7 @@ ansi_art='
 clear
 echo -e "\n$ansi_art\n"
 
-sudo pacman -Syu --noconfirm --needed git
+sudo pacman -Sy --noconfirm --needed git
 
 git_username="mrzli"
 repo_name="archon"
@@ -34,5 +34,4 @@ git clone "$git_full_repo_url" "$local_repo_path" > /dev/null
 echo -e "\nPost clone actions..."
 
 # Make scripts executable.
-find "$local_repo_path/arch/01-install-arch" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
 find "$local_repo_path/scripts" -mindepth 1 -type f -exec chmod +x {} \;
