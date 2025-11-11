@@ -32,7 +32,7 @@ local_repo_path="$XDG_DATA_HOME/$repo_name"
 
 echo -e "\nCloning Archon from: $git_full_repo_name..."
 rm -rf "$local_repo_path"
-git clone "$git_full_repo_url" "$local_repo_path" >/dev/null
+git clone "$git_full_repo_url" "$local_repo_path" > /dev/null
 
 echo -e "\nPost clone actions..."
 
