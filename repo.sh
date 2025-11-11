@@ -38,3 +38,5 @@ echo -e "\nPost clone actions..."
 
 # Make scripts executable.
 find "$local_repo_path/scripts" -mindepth 1 -type f -exec chmod +x {} \;
+chmod +x "$local_repo_path/repo.sh"
+chmod +x "$local_repo_path/arch-install.sh"
