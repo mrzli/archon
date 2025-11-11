@@ -14,7 +14,7 @@ ansi_art='
 clear
 echo -e "\n$ansi_art\n"
 
-sudo pacman -Sy --noconfirm --needed git
+sudo pacman -S --noconfirm --needed git
 
 git_username="mrzli"
 repo_name="archon"
