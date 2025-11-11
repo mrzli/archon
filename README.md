@@ -2,20 +2,20 @@
 
 A set of scripts to set up a new Arch Linux installation.
 
-A lot of it is based on or inspired by [Omarchy](https://github.com/basecamp/omarchy).
+A lot of it is based on (copied from) or inspired by [Omarchy](https://github.com/basecamp/omarchy).
 
 ## Clone This Repository
 
 To clone this repository, run the following command in your terminal:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/clone.sh | bash
+curl -sSL https://raw.githubusercontent.com/mrzli/archon/master/install.sh | bash
 ```
 
 To remove the cloned repository:
 
 ```bash
-XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share} rm -rf "$XDG_DATA_HOME/machine-setup"
+XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share} rm -rf "$XDG_DATA_HOME/archon"
 ```
 
 ## Install Arch Linux
@@ -25,3 +25,7 @@ TODO
 ## Other
 
 Generate font here: https://patorjk.com/software/taag/#p=display&f=Delta+Corps+Priest+1
+
+## License
+
+Archon is released under the [MIT License](https://opensource.org/licenses/MIT).
