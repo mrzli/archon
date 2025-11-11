@@ -16,47 +16,23 @@ echo -e "\n$ansi_art\n"
 
 sudo pacman -Syu --noconfirm --needed git
 
-GIT_USER_NAME="mrzli"
-GIT_REPO_NAME="archon"
+git_username="mrzli"
+repo_name="archon"
 
-FULL_REPO_NAME="$GIT_USER_NAME/$GIT_REPO_NAME"
-FULL_REPO_URL="https://github.com/$FULL_REPO_NAME.git"
-
-LOCAL_REPO_PATH="$HOME/.local/share/$GIT_REPO_NAME"
-
-echo -e "\nCloning Archon from: $FULL_REPO_NAME..."
-rm -rf "$LOCAL_REPO_PATH"
-git clone "$FULL_REPO_URL" "$LOCAL_REPO_PATH"
-
-
-
-
-set -e
-
-REPO_NAME="archon"
-
-REPO_URL="https://github.com/mrzli/$REPO_NAME.git"
+git_full_repo_name="$git_username/$repo_name"
+git_full_repo_url="https://github.com/$git_full_repo_name.git"
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-
-if ! type -P git &>/dev/null; then
-  echo "Git not found. Installing git..."
-  sudo pacman -Sy git --noconfirm
-fi
-
 mkdir -p "$XDG_DATA_HOME"
 
-cd "$XDG_DATA_HOME"
-git clone "$REPO_URL"
+local_repo_path="$XDG_DATA_HOME/$repo_name"
+
+echo -e "\nCloning Archon from: $git_full_repo_name..."
+rm -rf "$local_repo_path"
+git clone "$git_full_repo_url" "$local_repo_path" > /dev/null
+
+echo -e "\nPost clone actions..."
 
 # Make scripts executable.
-target_dir="$XDG_DATA_HOME/archon"
-find "$target_dir/scripts" -mindepth 1 -type f -exec chmod +x {} \;
-
-# Copy repo install scripts to home directory for easy access.
-install_script_dir="$HOME/ms"
-
-rm -rf "$install_script_dir"
-mkdir -p "$install_script_dir"
-
-cp "$target_dir/scripts/install/"* "$install_script_dir/"
+find "$local_repo_path/arch/01-install-arch" -mindepth 1 -maxdepth 1 -type f -exec chmod +x {} \;
+find "$local_repo_path/scripts" -mindepth 1 -type f -exec chmod +x {} \;
