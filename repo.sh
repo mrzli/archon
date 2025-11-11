@@ -14,7 +14,10 @@ ansi_art='
 clear
 echo -e "\n$ansi_art\n"
 
-sudo pacman -S --noconfirm --needed git
+if ! type -P git &>/dev/null; then
+  echo -e "\nGit not found. Installing git..."
+  sudo pacman -Sy git --noconfirm
+fi
 
 git_username="mrzli"
 repo_name="archon"
