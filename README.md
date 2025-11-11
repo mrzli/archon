@@ -1,4 +1,8 @@
-# Machine Setup
+# Archon
+
+A set of scripts to set up a new Arch Linux installation.
+
+A lot of it is based on or inspired by [Omarchy](https://github.com/basecamp/omarchy).
 
 ## Clone This Repository
 
@@ -17,3 +21,7 @@ XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share} rm -rf "$XDG_DATA_HOME/machin
 ## Install Arch Linux
 
 TODO
+
+## Other
+
+Generate font here: https://patorjk.com/software/taag/#p=display&f=Delta+Corps+Priest+1
