@@ -9,7 +9,7 @@ A lot of it is based on (copied from) or inspired by [Omarchy](https://github.co
 To clone this repository, run the following command in your terminal:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mrzli/archon/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mrzli/archon/master/repo.sh | bash
 ```
 
 To remove the cloned repository:
