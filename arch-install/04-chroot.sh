@@ -123,6 +123,8 @@ sed -E -i '/^HOOKS=/ { /encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }' /etc/mkinit
   || { echo "Failed to edit /etc/mkinitcpio.conf."; exit 1; }
 
 echo "Regenerating the initramfs..."
+# /etc/vconsole.conf is required by mkinitcpio when generating the initramfs.
+touch /etc/vconsole.conf || { echo "Failed to create /etc/vconsole.conf."; exit 1; }
 mkinitcpio -p linux &> /dev/null || { echo "Failed to regenerate the initramfs."; exit 1; }
 # mkinitcpio -p linux-lts &> /dev/null || { echo "Failed to regenerate the initramfs for LTS kernel."; exit 1; }
 
