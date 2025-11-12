@@ -89,6 +89,11 @@ echo ""
 echo "Mounting root logical volume '$ROOT_LV' to '/mnt'..."
 mount "$ROOT_LV" /mnt || { echo "Failed to mount root logical volume '$ROOT_LV' to '/mnt'."; exit 1; }
 
+cho "Mounting EFI partition '$DEVICE_PARTITION_EFI' to '/mnt/boot'..."
+mkdir -p /mnt/boot
+mount "$DEVICE_PARTITION_EFI" /mnt/boot || { echo "Failed to mount EFI partition '$DEVICE_PARTITION_EFI' to '/mnt/boot'."; exit 1; }
+
+
 echo ""
 
 echo "Disk setup complete!"
