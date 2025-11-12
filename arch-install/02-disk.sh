@@ -63,10 +63,10 @@ echo "Opening LUKS encrypted root partition '$DEVICE_PARTITION_ROOT' as '$LVM_NA
 echo "$ROOT_PARTITION_PASSWORD" | cryptsetup open --type luks "$DEVICE_PARTITION_ROOT" "$LVM_NAME" > /dev/null || { echo "Failed to open LUKS encrypted partition '$DEVICE_PARTITION_ROOT'."; exit 1; }
 
 echo "Creating physical volume targetting '/dev/mapper/$LVM_NAME'..."
-pvcreate /dev/mapper/"$LVM_NAME" > /dev/null || { echo "Failed to create physical volume on '/dev/mapper/$LVM_NAME'."; exit 1; }
+pvcreate "/dev/mapper/$LVM_NAME" > /dev/null || { echo "Failed to create physical volume on '/dev/mapper/$LVM_NAME'."; exit 1; }
 
 echo "Creating volume group '$VOL_GROUP_NAME' targetting '/dev/mapper/$LVM_NAME'..."
-vgcreate "$VOL_GROUP_NAME" /dev/mapper/"$LVM_NAME" > /dev/null || { echo "Failed to create volume group '$VOL_GROUP_NAME'."; exit 1; }
+vgcreate "$VOL_GROUP_NAME" "/dev/mapper/$LVM_NAME" > /dev/null || { echo "Failed to create volume group '$VOL_GROUP_NAME'."; exit 1; }
 
 echo "Creating logical volume '$LV_NAME' in volume group '$VOL_GROUP_NAME' with all available space..."
 lvcreate -l 100%VG -n "$LV_NAME" "$VOL_GROUP_NAME" > /dev/null || { echo "Failed to create logical volume '$LV_NAME' in volume group '$VOL_GROUP_NAME'."; exit 1; }
