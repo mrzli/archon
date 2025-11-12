@@ -31,12 +31,11 @@ clear_disk() {
 
 DEVICE="$1"
 DEVICE_PARTITION_EFI="$2"
-DEVICE_PARTITION_BOOT="$3"
-DEVICE_PARTITION_ROOT="$4"
-LVM_NAME="$5"
-VOL_GROUP_NAME="$6"
-LV_NAME="$7"
-ROOT_PARTITION_PASSWORD="$8"
+DEVICE_PARTITION_ROOT="$3"
+LVM_NAME="$4"
+VOL_GROUP_NAME="$5"
+LV_NAME="$6"
+ROOT_PARTITION_PASSWORD="$7"
 
 echo "Setting up disk '$DEVICE'..."
 
@@ -52,9 +51,6 @@ echo "label: gpt" | sfdisk "$DEVICE" > /dev/null || { echo "Failed to create GPT
 
 echo "Creating 1GB EFI partition on '$DEVICE'..."
 echo "size=1GiB,type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B" | sfdisk --append "$DEVICE" &> /dev/null || { echo "Failed to create EFI partition on '$DEVICE'."; exit 1; }
-
-echo "Creating 1GB boot partition on '$DEVICE'..."
-echo "size=1GiB,type=BC13C2FF-59E6-4262-A352-B275FD6F7172" | sfdisk --append "$DEVICE" &> /dev/null || { echo "Failed to create boot partition on '$DEVICE'."; exit 1; }
 
 echo "Creating LVM partition with the rest of the space on '$DEVICE'..."
 echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "$DEVICE" &> /dev/null || { echo "Failed to create LVM partition on '$DEVICE'."; exit 1; }
@@ -82,9 +78,6 @@ vgchange -ay > /dev/null || { echo "Failed to activate volume groups."; exit 1; 
 echo "Formatting EFI partition on '$DEVICE_PARTITION_EFI' as FAT32..."
 mkfs.fat -F32 "$DEVICE_PARTITION_EFI" &> /dev/null || { echo "Failed to format EFI partition on '$DEVICE_PARTITION_EFI'."; exit 1; }
 
-echo "Formatting boot partition on '$DEVICE_PARTITION_BOOT' as ext4..."
-mkfs.ext4 "$DEVICE_PARTITION_BOOT" &> /dev/null || { echo "Failed to format boot partition on '$DEVICE_PARTITION_BOOT'."; exit 1; }
-
 ROOT_LV="/dev/$VOL_GROUP_NAME/$LV_NAME"
 
 echo "Formatting the root logical volume '$ROOT_LV' as ext4..."
@@ -95,10 +88,6 @@ echo ""
 # Mount partitions.
 echo "Mounting root logical volume '$ROOT_LV' to '/mnt'..."
 mount "$ROOT_LV" /mnt || { echo "Failed to mount root logical volume '$ROOT_LV' to '/mnt'."; exit 1; }
-
-echo "Mounting boot partition '$DEVICE_PARTITION_BOOT' to '/mnt/boot'..."
-mkdir -p /mnt/boot
-mount "$DEVICE_PARTITION_BOOT" /mnt/boot || { echo "Failed to mount boot partition '$DEVICE_PARTITION_BOOT' to '/mnt/boot'."; exit 1; }
 
 echo ""
 

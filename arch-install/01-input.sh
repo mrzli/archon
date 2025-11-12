@@ -105,8 +105,7 @@ echo ""
 USE_P=$([ "$IS_NVME" -eq 1 ] && echo "p" || echo "")
 
 DEVICE_PARTITION_EFI="${DEVICE}${USE_P}1"
-DEVICE_PARTITION_BOOT="${DEVICE}${USE_P}2"
-DEVICE_PARTITION_ROOT="${DEVICE}${USE_P}3"
+DEVICE_PARTITION_ROOT="${DEVICE}${USE_P}2"
 
 # These are arbitrary names for LVM setup.
 LVM_NAME="lvm"
