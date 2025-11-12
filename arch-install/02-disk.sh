@@ -93,7 +93,6 @@ cho "Mounting EFI partition '$DEVICE_PARTITION_EFI' to '/mnt/boot'..."
 mkdir -p /mnt/boot
 mount "$DEVICE_PARTITION_EFI" /mnt/boot || { echo "Failed to mount EFI partition '$DEVICE_PARTITION_EFI' to '/mnt/boot'."; exit 1; }
 
-
 echo ""
 
 echo "Disk setup complete!"
