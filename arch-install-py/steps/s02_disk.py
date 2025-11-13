@@ -16,7 +16,7 @@ def setup_disk(inputs):
     command(
         ["wipefs", "-a", device_name],
         output='error-only'
-      )
+    )
 
     # Create partitions.
     print(f"Creating new GPT partition table on '{device_name}'...")
