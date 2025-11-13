@@ -29,6 +29,6 @@ def chroot_run(logger, inputs):
         )
     )
 
-    logger.command(["arch-chroot", "/mnt", "/bin/bash", "-c", chroot_cmd], output='all')
+    logger.command(["arch-chroot", "/mnt", "/bin/bash", "-c", chroot_cmd])
 
     logger.command(["rm", "-rf", "/mnt/arch-install"])
