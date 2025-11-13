@@ -44,6 +44,9 @@ logger.command(["pacman", "-S", "--noconfirm", *base_packages])
 
 logger.info("Installing Linux kernel and headers...")
 
+# Create /etc/vconsole.conf to to avoid 'sd-vconsole' errors.
+logger.command('echo -e "KEYMAP=us\nFONT=Lat2-Terminus16" > /etc/vconsole.conf', shell=True)
+
 kernel_packages = [
     "linux",                 # The Linux kernel.
     "linux-headers",         # Header files and development tools for the current Linux kernel.
@@ -53,9 +56,6 @@ kernel_packages = [
 logger.command(["pacman", "-S", "--noconfirm", *kernel_packages])
 
 logger.info("Installing drivers and firmware...")
-
-# Create /etc/vconsole.conf to to avoid 'sd-vconsole' errors.
-logger.command('echo -e "KEYMAP=us\nFONT=Lat2-Terminus16" > /etc/vconsole.conf', shell=True)
 
 driver_packages = [
     "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
