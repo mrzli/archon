@@ -12,10 +12,10 @@ def process_installation_inputs():
     return SimpleNamespace(**inputs)
 
 def get_installation_inputs():
-    disk_name = choose_block_device()
-    root_partition_password = input_password("Root partition password: ")
-    username = input_username()
-    user_password = input_password("User password: ")
+    disk_name = "nvme0n1" #choose_block_device()
+    root_partition_password = "pass" #input_password("Root partition password: ")
+    username = "mrzli" #input_username()
+    user_password = "pass" #input_password("User password: ")
 
     is_nvme = re.match(nvme_regex, disk_name)
     partition_suffix = "p" if is_nvme else ""
