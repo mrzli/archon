@@ -74,7 +74,7 @@ def clear_disk(inputs):
     root_lv = f"/dev/{vol_group_name}/{lv_name}"
 
     # Unmount all.
-    command(["umount", "-a"])
+    command(["umount", "-a", "-f"])
     # command(["umount", "/mnt/boot"])
     # command(["umount", "/mnt"])
 
