@@ -1,5 +1,11 @@
 from pprint import pprint
-import subprocess
+from util import (
+  command,
+  LogLevel,
+  Logger,
+  LoggerConsoleHandler,
+  LoggerFileHandler
+)
 from steps import (
   setup_input,
   setup_disk,
@@ -8,7 +14,13 @@ from steps import (
   finalize_arch_installation
 )
 
-subprocess.run(["clear"])
+# Initialize logger.
+logger = Logger([
+    LoggerConsoleHandler(LogLevel.INFO),
+    LoggerFileHandler(LogLevel.DEBUG, "/var/log/arch-install-py.log")
+])
+
+logger.command(["clear"])
 
 inputs = setup_input()
 
