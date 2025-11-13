@@ -1,7 +1,7 @@
 from util import command
 
 def setup_chroot_prerequisites(inputs):
-    print("\nSetup chroot prerequisites...\n")
+    print("\nSetup chroot prerequisites...")
 
     print("\nInstalling essential packages...")
     essential_packages = [
