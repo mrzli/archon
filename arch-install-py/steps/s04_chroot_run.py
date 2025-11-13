@@ -1,7 +1,7 @@
 from util import command
 import shutil
 
-def chroot_run(inputs):
+def chroot_run(logger, inputs):
     username = inputs.username
     user_password = inputs.user_password
     device_partition_efi = inputs.device_partition_efi

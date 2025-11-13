@@ -22,12 +22,12 @@ logger = Logger([
 
 logger.command(["clear"])
 
-inputs = setup_input()
+inputs = setup_input(logger)
 
 # print("Installation Inputs Collected:")
 # pprint(inputs)
 
-setup_disk(inputs)
-setup_chroot_prerequisites(inputs)
-chroot_run(inputs)
-# finalize_arch_installation()
+setup_disk(logger, inputs)
+setup_chroot_prerequisites(logger, inputs)
+chroot_run(logger, inputs)
+# finalize_arch_installation(logger)

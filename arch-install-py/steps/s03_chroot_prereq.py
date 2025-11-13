@@ -1,16 +1,16 @@
 from util import command
 
-def setup_chroot_prerequisites(inputs):
-    print("\nSetup chroot prerequisites...")
+def setup_chroot_prerequisites(logger, inputs):
+    logger.info("\nSetup chroot prerequisites...")
 
-    print("\nInstalling essential packages...")
+    logger.info("\nInstalling essential packages...")
     essential_packages = [
         "base",
         "iptables-nft",
     ]
     command(["pacstrap", "/mnt", *essential_packages])
 
-    print("Generating fstab file...")
+    logger.info("Generating fstab file...")
     command(["genfstab -U /mnt >> /mnt/etc/fstab"], shell=True)
 
-    print("\nFinished setting up chroot prerequisites.\n")
+    logger.info("\nFinished setting up chroot prerequisites.\n")

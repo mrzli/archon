@@ -2,12 +2,12 @@ import re
 from types import SimpleNamespace
 from util import get_block_device_names, input_password
 
-def setup_input():
-    print("\nCollecting installation inputs...")
+def setup_input(logger):
+    logger.info("\nCollecting installation inputs...")
 
     inputs = get_installation_inputs()
 
-    print("\nAll inputs collected successfully.\n")
+    logger.info("\nAll inputs collected successfully.\n")
 
     return SimpleNamespace(**inputs)
 
