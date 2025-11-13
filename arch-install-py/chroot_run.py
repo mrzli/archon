@@ -21,46 +21,46 @@ vol_group_name = sys.argv[5]
 
 logger.info("Starting chroot setup...")
 
-# logger.info("Installing packages...")
+logger.info("Installing packages...")
 
-# logger.info("Updating package database and upgrading system...")
-# logger.command(["pacman", "-Syu", "--noconfirm"])
+logger.info("Updating package database and upgrading system...")
+logger.command(["pacman", "-Syu", "--noconfirm"])
 
-# logger.info("Installing base packages, essential tools and applications...")
+logger.info("Installing base packages, essential tools and applications...")
 
-# base_packages = [
-#     "base-devel",       # Collection of packages for building and compiling software.
-#     "dosfstools",       # Tools for making and checking MS-DOS FAT filesystems.
-#     "mtools",           # Tools for manipulating MS-DOS files.
-#     "grub",             # Bootloader.
-#     "efibootmgr",       # EFI boot manager.
-#     "sudo",             # Allows users to run commands as root.
-#     "lvm2",             # Logical volume management.
-#     "openssh",          # SSH server and client.
-#     "networkmanager",   # Network management service.
-#     "vim",              # Text editor.
-# ]
-# logger.command(["pacman", "-S", "--noconfirm", *base_packages])
+base_packages = [
+    "base-devel",       # Collection of packages for building and compiling software.
+    "dosfstools",       # Tools for making and checking MS-DOS FAT filesystems.
+    "mtools",           # Tools for manipulating MS-DOS files.
+    "grub",             # Bootloader.
+    "efibootmgr",       # EFI boot manager.
+    "sudo",             # Allows users to run commands as root.
+    "lvm2",             # Logical volume management.
+    "openssh",          # SSH server and client.
+    "networkmanager",   # Network management service.
+    "vim",              # Text editor.
+]
+logger.command(["pacman", "-S", "--noconfirm", *base_packages])
 
-# logger.info("Installing Linux kernel and headers...")
+logger.info("Installing Linux kernel and headers...")
 
-# kernel_packages = [
-#     "linux",                 # The Linux kernel.
-#     "linux-headers",         # Header files and development tools for the current Linux kernel.
-#     # "linux-lts",           # Long term support version of the Linux kernel.
-#     # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
-# ]
-# logger.command(["pacman", "-S", "--noconfirm", *kernel_packages])
+kernel_packages = [
+    "linux",                 # The Linux kernel.
+    "linux-headers",         # Header files and development tools for the current Linux kernel.
+    # "linux-lts",           # Long term support version of the Linux kernel.
+    # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
+]
+logger.command(["pacman", "-S", "--noconfirm", *kernel_packages])
 
-# logger.info("Installing drivers and firmware...")
+logger.info("Installing drivers and firmware...")
 
-# driver_packages = [
-#     "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
-#     "nvidia",           # NVidia kernel modules if you are using the latest kernel.
-#     "nvidia-utils",     # NVidia driver libraries and utilities.
-#     # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
-# ]
-# logger.command(["pacman", "-S", "--noconfirm", *driver_packages])
+driver_packages = [
+    "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
+    "nvidia",           # NVidia kernel modules if you are using the latest kernel.
+    "nvidia-utils",     # NVidia driver libraries and utilities.
+    # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
+]
+logger.command(["pacman", "-S", "--noconfirm", *driver_packages])
 
 # hostname = f"{username}-arch"
 
