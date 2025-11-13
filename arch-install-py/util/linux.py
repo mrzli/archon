@@ -16,7 +16,7 @@ def get_block_device_names():
 def command(
     args,
     shell=False,
-    output='none'
+    output='error-only'
 ):
     switch output:
         case 'none':
