@@ -34,7 +34,7 @@ base_packages = [
     "networkmanager",   # Network management service.
     "vim",              # Text editor.
 ]
-logger.command(["pacman", "-S", "--noconfirm", *base_packages], output='all')
+logger.command(["pacman", "-S", "--noconfirm", *base_packages])
 
 logger.info("Installing Linux kernel and headers...")
 
@@ -44,7 +44,7 @@ kernel_packages = [
     # "linux-lts",           # Long term support version of the Linux kernel.
     # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
 ]
-logger.command(["pacman", "-S", "--noconfirm", *kernel_packages], output='all')
+logger.command(["pacman", "-S", "--noconfirm", *kernel_packages])
 
 logger.info("Installing drivers and firmware...")
 
@@ -54,7 +54,7 @@ driver_packages = [
     "nvidia-utils",     # NVidia driver libraries and utilities.
     # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
 ]
-logger.command(["pacman", "-S", "--noconfirm", *driver_packages], output='all')
+logger.command(["pacman", "-S", "--noconfirm", *driver_packages])
 
 hostname = f"{username}-arch"
 
