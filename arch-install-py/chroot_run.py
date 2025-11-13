@@ -6,7 +6,6 @@ from util import (
     LoggerFileHandler,
     LogLevel
 )
-from logger import 
 
 # Initialize logger.
 logger = Logger([
