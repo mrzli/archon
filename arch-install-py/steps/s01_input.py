@@ -2,7 +2,7 @@ import re
 from types import SimpleNamespace
 from util import get_block_device_names, input_password
 
-def process_installation_inputs():
+def setup_input():
     print("Collecting installation inputs...\n")
 
     inputs = get_installation_inputs()

@@ -1,7 +1,7 @@
-from .s01_input import process_installation_inputs
+from .s01_input import setup_input
 from .s02_disk import setup_disk
 
 __all__ = [
-    "process_installation_inputs",
+    "setup_input",
     "setup_disk"
 ]

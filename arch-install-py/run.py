@@ -1,10 +1,10 @@
 from pprint import pprint
 import subprocess
-from steps import process_installation_inputs, setup_disk
+from steps import setup_input, setup_disk
 
 subprocess.run(["clear"])
 
-inputs = process_installation_inputs()
+inputs = setup_input()
 
 # print("Installation Inputs Collected:")
 # pprint(inputs)
