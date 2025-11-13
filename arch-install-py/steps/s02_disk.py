@@ -13,7 +13,7 @@ def setup_disk(inputs):
 
     print(f"Wiping disk '{device_name}'...")
     clear_disk(inputs)
-    subprocess.run(["wipefs", "-a", device_name], capture_output=False, check=True)
+    subprocess.run(["wipefs", "-a", device_name], capture_output=True, check=True)
 
     # Create partitions.
     print(f"Creating new GPT partition table on '{device_name}'...")
@@ -39,7 +39,7 @@ def setup_disk(inputs):
     subprocess.run(["vgcreate", vol_group_name, f"/dev/mapper/{lvm_name}"], capture_output=True, check=True)
 
     print(f"Creating logical volume '{lv_name}' in volume group '{vol_group_name}' with all available space...")
-    subprocess.run(["lvcreate", "-l", "100%VG", "-n", lv_name, vol_group_name], capture_output=False, check=True)
+    subprocess.run(["lvcreate", "-l", "100%VG", "-n", lv_name, vol_group_name], capture_output=True, check=True)
 
     print("Activating all volume groups...")
     subprocess.run(["vgchange", "-ay"], capture_output=True, check=True)
