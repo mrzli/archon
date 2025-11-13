@@ -1,6 +1,6 @@
 from pprint import pprint
 import subprocess
-from steps import setup_input, setup_disk
+from steps import setup_input, setup_disk, setup_chroot_prerequisites
 
 subprocess.run(["clear"])
 
@@ -10,3 +10,4 @@ inputs = setup_input()
 # pprint(inputs)
 
 setup_disk(inputs)
+setup_chroot_prerequisites(inputs)
