@@ -1,6 +1,6 @@
 from pprint import pprint
 import subprocess
-from steps import setup_input, setup_disk, setup_chroot_prerequisites
+from steps import setup_input, setup_disk, setup_chroot_prerequisites, chroot_run
 
 subprocess.run(["clear"])
 
