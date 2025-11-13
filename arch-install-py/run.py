@@ -18,6 +18,21 @@ def enter_password(prompt):
 
         return password
 
+import subprocess
+
+def get_block_devices_detailed():
+    try:
+        result = subprocess.run(['lsblk', '-o', 'NAME,SIZE,TYPE,MODEL', '-d', '-n'], 
+                                capture_output=True, text=True, check=True)
+        return result.stdout.strip().split('\n')[1:]  # Skip header
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"Error running lsblk: {e}")
+        return []
+
+# Example usage
+for line in get_block_devices_detailed():
+    print(line)
+
 disk_name = input("Disk name: ")
 root_partition_password = enter_password("Root partition password: ")
 username = input("Username: ")
