@@ -3,6 +3,7 @@ from util import command
 def setup_disk(inputs):
     device_name = inputs.device_name
     device_partition_efi = inputs.device_partition_efi
+    device_partition_boot = inputs.device_partition_boot
     device_partition_root = inputs.device_partition_root
     root_partition_password = inputs.root_partition_password
     lvm_name = inputs.lvm_name
