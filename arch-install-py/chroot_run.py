@@ -16,53 +16,53 @@ command(["pacman", "-Syu", "--noconfirm"])
 
 print("\nInstalling base packages, essential tools and applications...")
 
-# base_packages = [
-#     "base-devel",       # Collection of packages for building and compiling software.
-#     "dosfstools",       # Tools for making and checking MS-DOS FAT filesystems.
-#     "mtools",           # Tools for manipulating MS-DOS files.
-#     "grub",             # Bootloader.
-#     "efibootmgr",       # EFI boot manager.
-#     "sudo",             # Allows users to run commands as root.
-#     "lvm2",             # Logical volume management.
-#     "openssh",          # SSH server and client.
-#     "networkmanager",   # Network management service.
-#     "vim",              # Text editor.
-# ]
-# command(["pacman", "-S", "--noconfirm", *base_packages])
+base_packages = [
+    "base-devel",       # Collection of packages for building and compiling software.
+    "dosfstools",       # Tools for making and checking MS-DOS FAT filesystems.
+    "mtools",           # Tools for manipulating MS-DOS files.
+    "grub",             # Bootloader.
+    "efibootmgr",       # EFI boot manager.
+    "sudo",             # Allows users to run commands as root.
+    "lvm2",             # Logical volume management.
+    "openssh",          # SSH server and client.
+    "networkmanager",   # Network management service.
+    "vim",              # Text editor.
+]
+command(["pacman", "-S", "--noconfirm", *base_packages])
 
-# print("\nInstalling Linux kernel and headers...")
+print("\nInstalling Linux kernel and headers...")
 
-# kernel_packages = [
-#     "linux",                 # The Linux kernel.
-#     "linux-headers",         # Header files and development tools for the current Linux kernel.
-#     # "linux-lts",           # Long term support version of the Linux kernel.
-#     # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
-# ]
-# command(["pacman", "-S", "--noconfirm", *kernel_packages])
+kernel_packages = [
+    "linux",                 # The Linux kernel.
+    "linux-headers",         # Header files and development tools for the current Linux kernel.
+    # "linux-lts",           # Long term support version of the Linux kernel.
+    # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
+]
+command(["pacman", "-S", "--noconfirm", *kernel_packages])
 
-# print("\nInstalling drivers and firmware...")
+print("\nInstalling drivers and firmware...")
 
-# driver_packages = [
-#     "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
-#     "nvidia",           # NVidia kernel modules if you are using the latest kernel.
-#     "nvidia-utils",     # NVidia driver libraries and utilities.
-#     # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
-# ]
-# command(["pacman", "-S", "--noconfirm", *driver_packages])
+driver_packages = [
+    "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
+    "nvidia",           # NVidia kernel modules if you are using the latest kernel.
+    "nvidia-utils",     # NVidia driver libraries and utilities.
+    # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
+]
+command(["pacman", "-S", "--noconfirm", *driver_packages])
 
-# hostname = f"{username}-arch"
+hostname = f"{username}-arch"
 
-# print(f"\nSetting hostname to '{hostname}'...")
-# command(["hostnamectl", "set-hostname", hostname])
+print(f"\nSetting hostname to '{hostname}'...")
+command(["hostnamectl", "set-hostname", hostname])
 
-# print("\nConfiguring users...")
+print("\nConfiguring users...")
 
-# print(f"Creating user '{username}'...")
-# command(["useradd", "-m", "-g", "users", "-G", "wheel", username])
-# print(f"Setting password for users 'root' and '{username}'...")
-# command(f'echo -e "root:{user_password}\n{username}:{user_password}" | chpasswd', shell=True)
-# print("Configuring sudoers to allow members of 'wheel' group to execute any command...")
-# command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:ALL) ALL/", "/etc/sudoers"])
+print(f"Creating user '{username}'...")
+command(["useradd", "-m", "-g", "users", "-G", "wheel", username])
+print(f"Setting password for users 'root' and '{username}'...")
+command(f'echo -e "root:{user_password}\n{username}:{user_password}" | chpasswd', shell=True)
+print("Configuring sudoers to allow members of 'wheel' group to execute any command...")
+command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:ALL) ALL/", "/etc/sudoers"])
 
 # print("\nSetting up system...")
 
