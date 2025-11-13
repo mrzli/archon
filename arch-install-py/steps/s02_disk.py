@@ -72,9 +72,8 @@ def setup_disk(inputs):
 
     print("\nDisk setup completed successfully.\n")
 
-
 def clear_disk(inputs):
-    device_name = inputs.device_name
+    lvm_name = inputs.lvm_name
     vol_group_name = inputs.vol_group_name
     lv_name = inputs.lv_name
 
@@ -94,9 +93,9 @@ def clear_disk(inputs):
     command(["vgremove", "-f", vol_group_name], check=False)
 
     # Remove the physical volume if it exists.
-    command(["pvremove", "-f", f"/dev/mapper/{lv_name}"], check=False)
+    command(["pvremove", "-f", f"/dev/mapper/{lvm_name}"], check=False)
 
     # Close the LUKS mapping.
-    command(["cryptsetup", "close", lv_name], check=False)
+    command(["cryptsetup", "close", lvm_name], check=False)
 
     
