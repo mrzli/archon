@@ -17,4 +17,5 @@ inputs = setup_input()
 
 setup_disk(inputs)
 setup_chroot_prerequisites(inputs)
-# chroot_run(inputs)
+chroot_run(inputs)
+# finalize_arch_installation()
