@@ -70,7 +70,7 @@ def setup_disk(logger, inputs):
 
     logger.info("Disk setup completed successfully.")
 
-def clear_disk(inputs):
+def clear_disk(logger, inputs):
     lvm_name = inputs.lvm_name
     vol_group_name = inputs.vol_group_name
     lv_name = inputs.lv_name
