@@ -1,5 +1,5 @@
 import getpass
-from .disk import get_block_device_names
+from .linux import get_block_device_names
 
 def input_password(prompt):
     while True:
