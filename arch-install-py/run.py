@@ -22,7 +22,7 @@ import subprocess
 
 def get_block_devices_detailed():
     try:
-        result = subprocess.run(['lsblk', '-o', 'NAME,SIZE,TYPE,MODEL', '-d', '-n'], 
+        result = subprocess.run(['lsblk', '-o', 'NAME', '-d', '-n'], 
                                 capture_output=True, text=True, check=True)
         return result.stdout.strip().split('\n')[1:]  # Skip header
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
