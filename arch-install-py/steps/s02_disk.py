@@ -26,31 +26,44 @@ def setup_disk(inputs):
     subprocess.run(f'echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "{device_name}" ', shell=True, capture_output=True)
 
     # Set up root partition.
-
-    # echo "Setting up LUKS encryption on root partition '$DEVICE_PARTITION_ROOT'..."
-    # echo "$ROOT_PARTITION_PASSWORD" | cryptsetup luksFormat --batch-mode "$DEVICE_PARTITION_ROOT" > /dev/null || { echo "Failed to set up LUKS encryption on '$DEVICE_PARTITION_ROOT'."; exit 1; }
-
-    # echo "Opening LUKS encrypted root partition '$DEVICE_PARTITION_ROOT' as '$LVM_NAME'..."
-    # echo "$ROOT_PARTITION_PASSWORD" | cryptsetup open --type luks "$DEVICE_PARTITION_ROOT" "$LVM_NAME" > /dev/null || { echo "Failed to open LUKS encrypted partition '$DEVICE_PARTITION_ROOT'."; exit 1; }
-
-    # echo "Creating physical volume targetting '/dev/mapper/$LVM_NAME'..."
-    # pvcreate "/dev/mapper/$LVM_NAME" > /dev/null || { echo "Failed to create physical volume on '/dev/mapper/$LVM_NAME'."; exit 1; }
-
-    # echo "Creating volume group '$VOL_GROUP_NAME' targetting '/dev/mapper/$LVM_NAME'..."
-    # vgcreate "$VOL_GROUP_NAME" "/dev/mapper/$LVM_NAME" > /dev/null || { echo "Failed to create volume group '$VOL_GROUP_NAME'."; exit 1; }
-
-    # echo "Creating logical volume '$LV_NAME' in volume group '$VOL_GROUP_NAME' with all available space..."
-    # lvcreate -l 100%VG -n "$LV_NAME" "$VOL_GROUP_NAME" > /dev/null || { echo "Failed to create logical volume '$LV_NAME' in volume group '$VOL_GROUP_NAME'."; exit 1; }
-
-    # echo "Activating all volume groups..."
-    # vgchange -ay > /dev/null || { echo "Failed to activate volume groups."; exit 1; }
-
-    # implement above comment in pyhron, ignore { echo "Failed to ..."; exit 1; } parts
     print(f"Setting up LUKS encryption on root partition '{device_partition_root}'...\n")
     subprocess.run(f'echo {root_partition_password} | cryptsetup luksFormat --batch-mode "{device_partition_root}"', shell=True, capture_output=True)
 
     print(f"Opening LUKS encrypted root partition '{device_partition_root}' as '{lvm_name}'...\n")
     subprocess.run(f'echo {root_partition_password} | cryptsetup open --type luks "{device_partition_root}" "{lvm_name}"', shell=True, capture_output=True)
+
+    print(f"Creating physical volume targetting '/dev/mapper/{lvm_name}'...\n")
+    subprocess.run(["pvcreate", f"/dev/mapper/{lvm_name}"], capture_output=True)
+
+    print(f"Creating volume group '{vol_group_name}' targetting '/dev/mapper/{lvm_name}'...\n")
+    subprocess.run(["vgcreate", vol_group_name, f"/dev/mapper/{lvm_name}"], capture_output=True)
+
+    print(f"Creating logical volume '{lv_name}' in volume group '{vol_group_name}' with all available space...\n")
+    subprocess.run(["lvcreate", "-l", "100%VG", "-n", lv_name, vol_group_name], capture_output=True)
+
+    print("Activating all volume groups...\n")
+    subprocess.run(["vgchange", "-ay"], capture_output=True)
+
+    # Format partitions.
+    print(f"Formatting EFI partition '{device_partition_efi}' as FAT32...\n")
+    subprocess.run(["mkfs.fat", "-F32", device_partition_efi], capture_output=True)
+
+    root_lv = f"/dev/{vol_group_name}/{lv_name}"
+
+    print(f"Formatting root logical volume '{root_lv}' as ext4...\n")
+    subprocess.run(["mkfs.ext4", root_lv], capture_output=True)
+
+    print("\n")
+
+    # Mount partitions.
+    print(f"Mounting root logical volume '{root_lv}' to '/mnt'...\n")
+    subprocess.run(["mount", root_lv, "/mnt"], capture_output=True)
+
+    print(f"Mounting EFI partition '{device_partition_efi}' to '/mnt/boot'...\n")
+    subprocess.run(["mkdir", "-p", "/mnt/boot"], capture_output=True)
+    subprocess.run(["mount", device_partition_efi, "/mnt/boot"], capture_output=True)
+
+    print("\nDisk setup completed successfully.\n")
 
 
 def clear_disk(inputs):
