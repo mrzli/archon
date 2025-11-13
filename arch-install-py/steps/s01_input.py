@@ -1,5 +1,18 @@
 import re
-from util import get_block_device_names
+from util import get_block_device_names, input_password
+
+def get_installation_inputs():
+    disk_name = choose_block_device()
+    root_partition_password = input_password("Root partition password: ")
+    username = input_username()
+    user_password = input_password("User password: ")
+
+    return {
+        "disk_name": disk_name,
+        "root_partition_password": root_partition_password,
+        "username": username,
+        "user_password": user_password
+    }
 
 def choose_block_device():
     devices = get_block_device_names()
