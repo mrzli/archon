@@ -5,12 +5,12 @@ from util import input_password, get_block_device_names
 def choose_block_device():
     devices = get_block_device_names()
     if not devices:
-        print("No block devices found. Exiting.")
+        print("No disk devices found. Exiting.")
         exit(1)
 
-    print("Available block devices:")
+    print("Available disks:")
     for i, name in enumerate(devices, 1):
-        print(f"{i}. {name}")
+        print(f"  {i}. {name}")
 
     disk_name = None
 
