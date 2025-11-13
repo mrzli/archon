@@ -20,7 +20,7 @@ def chroot_run(inputs):
     chroot_cmd = (
         "pacman -Syu --noconfirm python && "
         "cd /arch-install && "
-        'python chroot-run.py "{}" "{}" "{}" "{}" "{}"'.format(
+        'python chroot_run.py "{}" "{}" "{}" "{}" "{}"'.format(
             username,
             user_password,
             device_partition_efi,
