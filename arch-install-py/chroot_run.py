@@ -54,6 +54,9 @@ logger.command(["pacman", "-S", "--noconfirm", *kernel_packages])
 
 logger.info("Installing drivers and firmware...")
 
+# Create /etc/vconsole.conf to to avoid 'sd-vconsole' errors.
+logger.command('echo "KEYMAP=us" > /etc/vconsole.conf', shell=True)
+
 driver_packages = [
     "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
     "nvidia",           # NVidia kernel modules if you are using the latest kernel.
