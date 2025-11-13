@@ -14,13 +14,13 @@ def chroot_run(inputs):
     # use python functions
     # so this script then "../chroot", then copy all from there to "/mnt/arch-install"
     script_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
-    chroot_dir = shutil.os.path.abspath(shutil.os.path.join(script_dir, "..", "chroot"))
-    shutil.copytree(chroot_dir, "/mnt/arch-install", dirs_exist_ok=True)
+    python_project_dir = shutil.os.path.abspath(shutil.os.path.join(script_dir, ".."))
+    shutil.copytree(python_project_dir, "/mnt/arch-install", dirs_exist_ok=True)
 
     chroot_cmd = (
         "pacman -Syu --noconfirm python && "
         "cd /arch-install && "
-        'python script.py "{}" "{}" "{}" "{}" "{}"'.format(
+        'python chroot-run.py "{}" "{}" "{}" "{}" "{}"'.format(
             username,
             user_password,
             device_partition_efi,
