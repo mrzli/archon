@@ -30,7 +30,7 @@ echo "Installing base packages, essential tools and applications..."
 # - efibootmgr     - EFI boot manager.
 # - sudo           - Allows users to run commands as root.
 # - lvm2           - Logical volume management.
-# - openssh        - SSH server and client
+# - openssh        - SSH server and client.
 # - networkmanager - Network management service.
 # - vim            - Text editor.
 pacman_quiet_install \
