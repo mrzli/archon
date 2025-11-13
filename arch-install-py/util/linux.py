@@ -18,7 +18,7 @@ def command(
     shell=False,
     output='error-only'
 ):
-    switch output:
+    match output:
         case 'none':
             return subprocess.run(
                 args,
