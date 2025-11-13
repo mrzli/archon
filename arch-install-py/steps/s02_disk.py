@@ -13,7 +13,7 @@ def setup_disk(inputs):
 
     print(f"Wiping disk '{device_name}'...")
     clear_disk(inputs)
-    subprocess.run(["wipefs", "-a", device_name], capture_output=False)
+    subprocess.run(["wipefs", "-a", device_name], capture_output=False, check=True)
 
     # Create partitions.
     print(f"Creating new GPT partition table on '{device_name}'...")
