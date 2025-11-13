@@ -1,3 +1,4 @@
+import re
 from util import get_block_device_names
 
 def choose_block_device():
@@ -10,17 +11,31 @@ def choose_block_device():
     for i, name in enumerate(devices, 1):
         print(f"  {i}. {name}")
 
-    disk_name = None
-
     while True:
         try:
             choice = int(input("Select disk number: ")) - 1
-            if 0 <= choice < len(devices):
-                disk_name = devices[choice]
-                break
-            else:
+
+            if choice < 0 or choice >= len(devices):
                 print("Invalid number. Please try again.")
+                continue
+
+            disk_name = devices[choice]
+            return disk_name
         except ValueError:
             print("Please enter a valid number.")
 
-    return disk_name
+username_regex = "^[a-z_][a-z0-9_-]{0,31}$"
+
+def input_username():
+    while True:
+        username = input("Enter username: ").strip()
+
+        if not username:
+            print("Username cannot be empty. Please try again.")
+            continue
+
+        if not re.match(username_regex, username):
+            print("Invalid username format. Please try again.")
+            continue
+
+        return username
