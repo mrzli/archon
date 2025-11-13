@@ -5,7 +5,7 @@ def setup_disk(inputs):
 
     print(f"Setting up disk '{device_name}'...\n\n")
 
-    print(f"Wiping disk '{device_name}'...")
+    print(f"Wiping disk '{device_name}'...\n")
     clear_disk(inputs)
     subprocess.run(["wipefs", "-a", device_name], capture_output=True)
 
