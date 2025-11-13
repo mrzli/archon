@@ -7,11 +7,28 @@ def get_installation_inputs():
     username = input_username()
     user_password = input_password("User password: ")
 
+    is_nvme = re.match(nvme_regex, disk_name)
+    partition_suffix = "p" if is_nvme else ""
+    device_name = f"/dev/{disk_name}"
+    device_partition_efi = f"{device_name}{partition_suffix}1"
+    device_partition_root = f"{device_name}{partition_suffix}2"
+
+    # Arbitrary names for LVM setup.
+    lvm_name = "lvm"
+    vol_group_name = "volgroup0"
+    lv_name = "lv_root"
+
     return {
         "disk_name": disk_name,
         "root_partition_password": root_partition_password,
         "username": username,
-        "user_password": user_password
+        "user_password": user_password,
+        "device_name": device_name,
+        "device_partition_efi": device_partition_efi,
+        "device_partition_root": device_partition_root,
+        "lvm_name": lvm_name,
+        "vol_group_name": vol_group_name,
+        "lv_name": lv_name,
     }
 
 def choose_block_device():
@@ -37,8 +54,6 @@ def choose_block_device():
         except ValueError:
             print("Please enter a valid number.")
 
-username_regex = "^[a-z_][a-z0-9_-]{0,31}$"
-
 def input_username():
     while True:
         username = input("Enter username: ").strip()
@@ -52,3 +67,6 @@ def input_username():
             continue
 
         return username
+
+username_regex = "^[a-z_][a-z0-9_-]{0,31}$"
+nvme_regex = "^nvme[0-9]+n[0-9]+$"
