@@ -77,8 +77,10 @@ def clear_disk(inputs):
     root_lv = f"/dev/{vol_group_name}/{lv_name}"
 
     # Unmount all.
-    subprocess.run(["umount", "/mnt/boot"], capture_output=True)
-    subprocess.run(["umount", "/mnt"], capture_output=True)
+    subprocess.run(["umount", "-a"], capture_output=True)
+
+    # subprocess.run(["umount", "/mnt/boot"], capture_output=True)
+    # subprocess.run(["umount", "/mnt"], capture_output=True)
 
     # Deactivate and remove the logical volume if it exists.
     subprocess.run(["lvchange", "-an", root_lv], capture_output=True)
