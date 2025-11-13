@@ -13,12 +13,9 @@ def setup_disk(inputs):
 
     print(f"Wiping disk '{device_name}'...")
     clear_disk(inputs)
-    subprocess.run(
+    command(
         ["wipefs", "-a", device_name],
-        stdout=subprocess.PIPE,
-        stderr=None,
-        text=True,
-        check=True
+        output='error-only'
       )
 
     # Create partitions.
