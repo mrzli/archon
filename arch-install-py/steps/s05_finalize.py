@@ -3,7 +3,7 @@ import subprocess
 from util import command
 
 def finalize_arch_installation():
-    print("Finalizing setup...")
+    print("\nFinalizing setup...\n")
 
     # Prompt user for confirmation
     finish_choice = input("Setup complete. Unmount and reboot now? (y/n): ").strip()

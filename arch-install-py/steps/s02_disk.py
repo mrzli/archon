@@ -10,14 +10,14 @@ def setup_disk(inputs):
     vol_group_name = inputs.vol_group_name
     lv_name = inputs.lv_name
 
-    print(f"Setting up disk '{device_name}'...\n")
+    print(f"\nSetting up disk '{device_name}'...\n")
 
     print(f"Wiping disk '{device_name}'...")
     clear_disk(inputs)
     command(["wipefs", "-a", device_name])
 
     # Create partitions.
-    print(f"Creating new GPT partition table on '{device_name}'...")
+    print(f"\nCreating new GPT partition table on '{device_name}'...")
     command(f'echo "label: gpt" | sfdisk "{device_name}"', shell=True)
 
     print(f"Creating 1GB EFI partition on '{device_name}'...")
@@ -30,7 +30,7 @@ def setup_disk(inputs):
     command(f'echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "{device_name}"', shell=True)
 
     # Set up root partition.
-    print(f"Setting up LUKS encryption on root partition '{device_partition_root}'...")
+    print(f"\nSetting up LUKS encryption on root partition '{device_partition_root}'...")
     command(f'echo {root_partition_password} | cryptsetup luksFormat --batch-mode "{device_partition_root}"', shell=True)
 
     print(f"Opening LUKS encrypted root partition '{device_partition_root}' as '{lvm_name}'...")
@@ -49,7 +49,7 @@ def setup_disk(inputs):
     command(["vgchange", "-ay"])
 
     # Format partitions.
-    print(f"Formatting EFI partition '{device_partition_efi}' as FAT32...")
+    print(f"\nFormatting EFI partition '{device_partition_efi}' as FAT32...")
     command(["mkfs.fat", "-F32", device_partition_efi])
 
     print(f"Formatting boot partition '{device_partition_boot}' as ext4...")
@@ -60,10 +60,8 @@ def setup_disk(inputs):
     print(f"Formatting root logical volume '{root_lv}' as ext4...")
     command(["mkfs.ext4", root_lv])
 
-    print("")
-
     # Mount partitions.
-    print(f"Mounting root logical volume '{root_lv}' to '/mnt'...")
+    print(f"\nMounting root logical volume '{root_lv}' to '/mnt'...")
     command(["mount", root_lv, "/mnt"])
 
     print(f"Mounting boot partition '{device_partition_boot}' to '/mnt/boot'...")
