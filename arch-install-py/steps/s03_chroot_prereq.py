@@ -8,9 +8,9 @@ def setup_chroot_prerequisites(logger, inputs):
         "base",
         "iptables-nft",
     ]
-    command(["pacstrap", "/mnt", *essential_packages])
+    logger.command(["pacstrap", "/mnt", *essential_packages])
 
     logger.info("Generating fstab file...")
-    command(["genfstab -U /mnt >> /mnt/etc/fstab"], shell=True)
+    logger.command(["genfstab -U /mnt >> /mnt/etc/fstab"], shell=True)
 
     logger.info("Finished setting up chroot prerequisites.")

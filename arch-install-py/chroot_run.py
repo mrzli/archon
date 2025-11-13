@@ -1,20 +1,26 @@
 import sys
 from util import command
 
+# Initialize logger.
+logger = Logger([
+    LoggerConsoleHandler(LogLevel.INFO),
+    LoggerFileHandler(LogLevel.DEBUG, "/var/log/arch-install-py.log")
+])
+
 username = sys.argv[1]
 user_password = sys.argv[2]
 device_partition_efi = sys.argv[3]
 device_partition_root = sys.argv[4]
 vol_group_name = sys.argv[5]
 
-print("Starting chroot setup...")
+logger.info("Starting chroot setup...")
 
-print("\nInstalling packages...")
+logger.info("Installing packages...")
 
-print("\nUpdating package database and upgrading system...")
-command(["pacman", "-Syu", "--noconfirm"])
+logger.info("Updating package database and upgrading system...")
+logger.command(["pacman", "-Syu", "--noconfirm"])
 
-print("\nInstalling base packages, essential tools and applications...")
+logger.info("Installing base packages, essential tools and applications...")
 
 base_packages = [
     "base-devel",       # Collection of packages for building and compiling software.
@@ -28,9 +34,9 @@ base_packages = [
     "networkmanager",   # Network management service.
     "vim",              # Text editor.
 ]
-command(["pacman", "-S", "--noconfirm", *base_packages], output='all')
+logger.command(["pacman", "-S", "--noconfirm", *base_packages], output='all')
 
-print("\nInstalling Linux kernel and headers...")
+logger.info("Installing Linux kernel and headers...")
 
 kernel_packages = [
     "linux",                 # The Linux kernel.
@@ -38,9 +44,9 @@ kernel_packages = [
     # "linux-lts",           # Long term support version of the Linux kernel.
     # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
 ]
-command(["pacman", "-S", "--noconfirm", *kernel_packages], output='all')
+logger.command(["pacman", "-S", "--noconfirm", *kernel_packages], output='all')
 
-print("\nInstalling drivers and firmware...")
+logger.info("Installing drivers and firmware...")
 
 driver_packages = [
     "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
@@ -48,55 +54,55 @@ driver_packages = [
     "nvidia-utils",     # NVidia driver libraries and utilities.
     # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
 ]
-command(["pacman", "-S", "--noconfirm", *driver_packages], output='all')
+logger.command(["pacman", "-S", "--noconfirm", *driver_packages], output='all')
 
 hostname = f"{username}-arch"
 
-print(f"\nSetting hostname to '{hostname}'...")
-command(["hostnamectl", "set-hostname", hostname])
+logger.info(f"Setting hostname to '{hostname}'...")
+logger.command(["hostnamectl", "set-hostname", hostname])
 
-print("\nConfiguring users...")
+logger.info("Configuring users...")
 
-print(f"Creating user '{username}'...")
-command(["useradd", "-m", "-g", "users", "-G", "wheel", username])
-print(f"Setting password for users 'root' and '{username}'...")
-command(f'echo -e "root:{user_password}\n{username}:{user_password}" | chpasswd', shell=True)
-print("Configuring sudoers to allow members of 'wheel' group to execute any command...")
-command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:ALL) ALL/", "/etc/sudoers"])
+logger.info(f"Creating user '{username}'...")
+logger.command(["useradd", "-m", "-g", "users", "-G", "wheel", username])
+logger.info(f"Setting password for users 'root' and '{username}'...")
+logger.command(f'echo -e "root:{user_password}\n{username}:{user_password}" | chpasswd', shell=True)
+logger.info("Configuring sudoers to allow members of 'wheel' group to execute any command...")
+logger.command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:ALL) ALL/", "/etc/sudoers"])
 
-# print("\nSetting up system...")
+# logger.info("Setting up system...")
 
-# print("Setting default editor to vim...")
-# command('echo "EDITOR=/usr/bin/vim" >> /etc/environment', shell=True)
+# logger.info("Setting default editor to vim...")
+# logger.command('echo "EDITOR=/usr/bin/vim" >> /etc/environment', shell=True)
 
-# print("Setting XDG base directories...")
-# command(["cp", "./data/xdg-sh", "/etc/profile.d/xdg.sh"])
+# logger.info("Setting XDG base directories...")
+# logger.command(["cp", "./data/xdg-sh", "/etc/profile.d/xdg.sh"])
 
-# print("Setting up locales...")
-# print("Editing /etc/locale.gen...")
-# command(["sed", "-E", "-i", "s/^#\\s*(en_US.UTF-8 UTF-8)/\\1/", "/etc/locale.gen"])
-# print("Generating locales...")
-# command(["locale-gen"])
+# logger.info("Setting up locales...")
+# logger.info("Editing /etc/locale.gen...")
+# logger.command(["sed", "-E", "-i", "s/^#\\s*(en_US.UTF-8 UTF-8)/\\1/", "/etc/locale.gen"])
+# logger.info("Generating locales...")
+# logger.command(["locale-gen"])
 
-# print("\nSetting up RAM disk...")
+# logger.info("Setting up RAM disk...")
 
 # # echo "Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks..."
-# print("Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks...")
+# logger.info("Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks...")
 # # Insert 'encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
 # # This is required for the system to know how to handle encrypted LVM partition during boot.
-# command(["sed", "-E", "-i", r"/^HOOKS=/ { /encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
+# logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
 
 # # echo "Regenerating the initramfs..."
-# print("Regenerating the initramfs...")
-# command(["mkinitcpio", "-P"])
+# logger.info("Regenerating the initramfs...")
+# logger.command(["mkinitcpio", "-P"])
 
-# print("\nSetting up boot process...")
+# logger.info("Setting up boot process...")
 
-# print("Editing /etc/default/grub...")
+# logger.info("Editing /etc/default/grub...")
 
 # # Add `cryptdevice=<device_partition_root>:<volume_group_name>` to the `GRUB_CMDLINE_LINUX_DEFAULT` line.
 # # Do not use '/' delimiter in 'sed' command to avoid conflicts with device paths.
-# command([
+# logger.command([
 #     "sed",
 #     "-E",
 #     "-i",
@@ -104,12 +110,12 @@ command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:A
 #     "/etc/default/grub"
 # ])
 
-# print("Mounting EFI partition...")
-# command(["mkdir", "-p", "/boot/EFI"])
-# command(["mount", device_partition_efi, "/boot/EFI"])
+# logger.info("Mounting EFI partition...")
+# logger.command(["mkdir", "-p", "/boot/EFI"])
+# logger.command(["mount", device_partition_efi, "/boot/EFI"])
 
-# print("Installing GRUB bootloader...")
-# command([
+# logger.info("Installing GRUB bootloader...")
+# logger.command([
 #     "grub-install",
 #     "--target=x86_64-efi",
 #     "--efi-directory=/boot/EFI",
@@ -117,16 +123,16 @@ command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:A
 #     "--recheck"
 # ])
 
-# print("Copying GRUB's message catalog for English language...")
-# command(["cp", "/usr/share/locale/en@quot/LC_MESSAGES/grub.mo", "/boot/grub/locale/en.mo"])
+# logger.info("Copying GRUB's message catalog for English language...")
+# logger.command(["cp", "/usr/share/locale/en@quot/LC_MESSAGES/grub.mo", "/boot/grub/locale/en.mo"])
 
-# print("Generating GRUB configuration file...")
-# command(["grub-mkconfig", "-o", "/boot/grub/grub.cfg"])
+# logger.info("Generating GRUB configuration file...")
+# logger.command(["grub-mkconfig", "-o", "/boot/grub/grub.cfg"])
 
-# print("\nEnabling services to start on boot...")
+# logger.info("Enabling services to start on boot...")
 
 # services = [
 #     "NetworkManager",   # Manages network connections.
 #     "sshd"              # SSH server daemon.
 # ]
-# command(["systemctl", "enable", *services])
+# logger.command(["systemctl", "enable", *services])

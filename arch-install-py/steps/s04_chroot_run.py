@@ -8,7 +8,7 @@ def chroot_run(logger, inputs):
     device_partition_root = inputs.device_partition_root
     vol_group_name = inputs.vol_group_name
 
-    command(["mkdir", "-p", "/mnt/arch-install"])
+    logger.command(["mkdir", "-p", "/mnt/arch-install"])
 
     # Copy files from chroot dir, which is in parent of this script dir
     # use python functions
@@ -29,6 +29,6 @@ def chroot_run(logger, inputs):
         )
     )
 
-    command(["arch-chroot", "/mnt", "/bin/bash", "-c", chroot_cmd], output='all')
+    logger.command(["arch-chroot", "/mnt", "/bin/bash", "-c", chroot_cmd], output='all')
 
-    command(["rm", "-rf", "/mnt/arch-install"])
+    logger.command(["rm", "-rf", "/mnt/arch-install"])
