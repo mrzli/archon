@@ -3,7 +3,7 @@
 import getpass
 import subprocess
 
-def enter_password(propmpt):
+def enter_password(prompt):
     while True:
         password = getpass.getpass(prompt)
 
