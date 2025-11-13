@@ -79,21 +79,19 @@ def clear_disk(logger, inputs):
 
     # Unmount all.
     # command(["umount", "-a", "-f"], check=False)
-    command(["umount", "/mnt/boot"], check=False)
-    command(["umount", "/mnt"], check=False)
+    logger.command(["umount", "/mnt/boot"], check=False)
+    logger.command(["umount", "/mnt"], check=False)
 
     # Deactivate and remove the logical volume if it exists.
-    command(["lvchange", "-an", root_lv], check=False)
-    command(["lvremove", "-f", root_lv], check=False)
+    logger.command(["lvchange", "-an", root_lv], check=False)
+    logger.command(["lvremove", "-f", root_lv], check=False)
 
     # Deactivate and remove the volume group if it exists.
-    command(["vgchange", "-an", vol_group_name], check=False)
-    command(["vgremove", "-f", vol_group_name], check=False)
+    logger.command(["vgchange", "-an", vol_group_name], check=False)
+    logger.command(["vgremove", "-f", vol_group_name], check=False)
 
     # Remove the physical volume if it exists.
-    command(["pvremove", "-f", f"/dev/mapper/{lvm_name}"], check=False)
+    logger.command(["pvremove", "-f", f"/dev/mapper/{lvm_name}"], check=False)
 
     # Close the LUKS mapping.
-    command(["cryptsetup", "close", lvm_name], check=False)
-
-    
+    logger.command(["cryptsetup", "close", lvm_name], check=False)
