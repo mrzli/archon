@@ -1,4 +1,5 @@
 import sys
+import shutil
 from util import (
     command,
     Logger,
@@ -18,6 +19,8 @@ user_password = sys.argv[2]
 device_partition_efi = sys.argv[3]
 device_partition_root = sys.argv[4]
 vol_group_name = sys.argv[5]
+
+python_project_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
 
 logger.info("Starting chroot setup...")
 
@@ -85,7 +88,7 @@ logger.info("Setting default editor to vim...")
 logger.command('echo "EDITOR=/usr/bin/vim" >> /etc/environment', shell=True)
 
 logger.info("Setting XDG base directories...")
-logger.command(["cp", "./data/xdg-sh", "/etc/profile.d/xdg.sh"])
+logger.command(["cp", f"{python_project_dir}/data/xdg-sh", "/etc/profile.d/xdg.sh"])
 
 logger.info("Setting up locales...")
 logger.info("Editing /etc/locale.gen...")
