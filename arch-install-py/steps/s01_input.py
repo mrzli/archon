@@ -3,11 +3,11 @@ from types import SimpleNamespace
 from util import get_block_device_names, input_password
 
 def setup_input(logger):
-    logger.info("\nCollecting installation inputs...")
+    logger.info("Collecting installation inputs...")
 
     inputs = get_installation_inputs()
 
-    logger.info("\nAll inputs collected successfully.\n")
+    logger.info("All inputs collected successfully.")
 
     return SimpleNamespace(**inputs)
 

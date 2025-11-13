@@ -1,9 +1,9 @@
 from util import command
 
 def setup_chroot_prerequisites(logger, inputs):
-    logger.info("\nSetup chroot prerequisites...")
+    logger.info("Setup chroot prerequisites...")
 
-    logger.info("\nInstalling essential packages...")
+    logger.info("Installing essential packages...")
     essential_packages = [
         "base",
         "iptables-nft",
@@ -13,4 +13,4 @@ def setup_chroot_prerequisites(logger, inputs):
     logger.info("Generating fstab file...")
     command(["genfstab -U /mnt >> /mnt/etc/fstab"], shell=True)
 
-    logger.info("\nFinished setting up chroot prerequisites.\n")
+    logger.info("Finished setting up chroot prerequisites.")

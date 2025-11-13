@@ -10,14 +10,14 @@ def setup_disk(logger, inputs):
     vol_group_name = inputs.vol_group_name
     lv_name = inputs.lv_name
 
-    logger.info(f"\nSetting up disk '{device_name}'...\n")
+    logger.info(f"Setting up disk '{device_name}'...")
 
     logger.info(f"Wiping disk '{device_name}'...")
     clear_disk(logger, inputs)
     command(["wipefs", "-a", device_name])
 
     # Create partitions.
-    logger.info(f"\nCreating new GPT partition table on '{device_name}'...")
+    logger.info(f"Creating new GPT partition table on '{device_name}'...")
     command(f'echo "label: gpt" | sfdisk "{device_name}"', shell=True)
 
     logger.info(f"Creating 1GB EFI partition on '{device_name}'...")
@@ -30,7 +30,7 @@ def setup_disk(logger, inputs):
     command(f'echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "{device_name}"', shell=True)
 
     # Set up root partition.
-    logger.info(f"\nSetting up LUKS encryption on root partition '{device_partition_root}'...")
+    logger.info(f"Setting up LUKS encryption on root partition '{device_partition_root}'...")
     command(f'echo {root_partition_password} | cryptsetup luksFormat --batch-mode "{device_partition_root}"', shell=True)
 
     logger.info(f"Opening LUKS encrypted root partition '{device_partition_root}' as '{lvm_name}'...")
@@ -49,7 +49,7 @@ def setup_disk(logger, inputs):
     command(["vgchange", "-ay"])
 
     # Format partitions.
-    logger.info(f"\nFormatting EFI partition '{device_partition_efi}' as FAT32...")
+    logger.info(f"Formatting EFI partition '{device_partition_efi}' as FAT32...")
     command(["mkfs.fat", "-F32", device_partition_efi])
 
     logger.info(f"Formatting boot partition '{device_partition_boot}' as ext4...")
@@ -61,14 +61,14 @@ def setup_disk(logger, inputs):
     command(["mkfs.ext4", root_lv])
 
     # Mount partitions.
-    logger.info(f"\nMounting root logical volume '{root_lv}' to '/mnt'...")
+    logger.info(f"Mounting root logical volume '{root_lv}' to '/mnt'...")
     command(["mount", root_lv, "/mnt"])
 
     logger.info(f"Mounting boot partition '{device_partition_boot}' to '/mnt/boot'...")
     command(["mkdir", "-p", "/mnt/boot"])
     command(["mount", device_partition_boot, "/mnt/boot"])
 
-    logger.info("\nDisk setup completed successfully.\n")
+    logger.info("Disk setup completed successfully.")
 
 def clear_disk(inputs):
     lvm_name = inputs.lvm_name
