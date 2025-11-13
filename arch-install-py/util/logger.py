@@ -15,7 +15,7 @@ class LogLevel(IntEnum):
 class LoggerHandlerBase(ABC):
     """Abstract base class for log handlers."""
 
-    def __init__(self, level: int = LogLevel.INFO):
+    def __init__(self, level: int):
         self.level = level
     
     def log(self, level: int, message: str):
@@ -29,6 +29,9 @@ class LoggerHandlerBase(ABC):
 
 class LoggerConsoleHandler(LoggerHandlerBase):
     """Handler for logging to console."""
+
+    def __init__(self, level: int):
+        super().__init__(level)
     
     def log_internal(self, level: int, message: str):
         timestamp = get_timestamp()
@@ -38,7 +41,9 @@ class LoggerConsoleHandler(LoggerHandlerBase):
 class LoggerFileHandler(LoggerHandlerBase):
     """Handler for logging to a file."""
     
-    def __init__(self, filename: str):
+    def __init__(self, level: int, filename: str):
+        super().__init__(level)
+
         self.filename = filename
         self.file = open(filename, 'w')
 
