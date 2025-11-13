@@ -28,7 +28,7 @@ base_packages = [
     "networkmanager",   # Network management service.
     "vim",              # Text editor.
 ]
-command(["pacman", "-S", "--noconfirm", *base_packages])
+command(["pacman", "-S", "--noconfirm", *base_packages], output='all')
 
 print("\nInstalling Linux kernel and headers...")
 
@@ -38,7 +38,7 @@ kernel_packages = [
     # "linux-lts",           # Long term support version of the Linux kernel.
     # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
 ]
-command(["pacman", "-S", "--noconfirm", *kernel_packages])
+command(["pacman", "-S", "--noconfirm", *kernel_packages], output='all')
 
 print("\nInstalling drivers and firmware...")
 
@@ -48,7 +48,7 @@ driver_packages = [
     "nvidia-utils",     # NVidia driver libraries and utilities.
     # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
 ]
-command(["pacman", "-S", "--noconfirm", *driver_packages])
+command(["pacman", "-S", "--noconfirm", *driver_packages], output='all')
 
 hostname = f"{username}-arch"
 
