@@ -16,6 +16,7 @@ def get_block_device_names():
 def command(
     args,
     shell=False,
+    check=True,
     output='error-only'
 ):
     match output:
@@ -25,7 +26,7 @@ def command(
                 capture_output=True,
                 shell=shell,
                 text=True,
-                check=True
+                check=check
             )
         case 'error-only':
             return subprocess.run(
@@ -34,7 +35,7 @@ def command(
                 stderr=None,
                 shell=shell,
                 text=True,
-                check=True
+                check=check
             )
         case 'all':
             return subprocess.run(
@@ -42,7 +43,7 @@ def command(
                 capture_output=False,
                 shell=shell,
                 text=True,
-                check=True
+                check=check
             )
         case _:
             raise ValueError(f"Invalid output option: {output}")
