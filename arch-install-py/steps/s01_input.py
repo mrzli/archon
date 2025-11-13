@@ -1,4 +1,5 @@
 import re
+from types import SimpleNamespace
 from util import get_block_device_names, input_password
 
 def process_installation_inputs():
@@ -7,6 +8,8 @@ def process_installation_inputs():
     inputs = get_installation_inputs()
 
     print("All inputs collected successfully.\n")
+
+    return SimpleNamespace(**inputs)
 
 def get_installation_inputs():
     disk_name = choose_block_device()
