@@ -1,6 +1,13 @@
 import re
 from util import get_block_device_names, input_password
 
+def process_installation_inputs():
+    print("Collecting installation inputs...\n")
+
+    inputs = get_installation_inputs()
+
+    print("All inputs collected successfully.\n")
+
 def get_installation_inputs():
     disk_name = choose_block_device()
     root_partition_password = input_password("Root partition password: ")
