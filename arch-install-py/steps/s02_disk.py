@@ -39,7 +39,7 @@ def setup_disk(inputs):
     subprocess.run(["vgcreate", vol_group_name, f"/dev/mapper/{lvm_name}"], capture_output=True)
 
     print(f"Creating logical volume '{lv_name}' in volume group '{vol_group_name}' with all available space...")
-    subprocess.run(["lvcreate", "-l", "100%VG", "-n", lv_name, vol_group_name], capture_output=True)
+    subprocess.run(["lvcreate", "-l", "100%VG", "-n", lv_name, vol_group_name])
 
     print("Activating all volume groups...")
     subprocess.run(["vgchange", "-ay"], capture_output=True)
