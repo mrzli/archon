@@ -12,3 +12,37 @@ def get_block_device_names():
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         print(f"Error running lsblk: {e}")
         return []
+
+def command(
+    args,
+    shell=False,
+    output='none'
+):
+    switch output:
+        case 'none':
+            return subprocess.run(
+                args,
+                capture_output=True,
+                shell=shell,
+                text=True,
+                check=True
+            )
+        case 'error-only':
+            return subprocess.run(
+                args,
+                stdout=subprocess.PIPE,
+                stderr=None,
+                shell=shell,
+                text=True,
+                check=True
+            )
+        case 'all':
+            return subprocess.run(
+                args,
+                capture_output=False,
+                shell=shell,
+                text=True,
+                check=True
+            )
+        case _:
+            raise ValueError(f"Invalid output option: {output}")
