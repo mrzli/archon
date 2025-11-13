@@ -1,5 +1,12 @@
 import sys
-from util import command
+from util import (
+    command,
+    Logger,
+    LoggerConsoleHandler,
+    LoggerFileHandler,
+    LogLevel
+)
+from logger import 
 
 # Initialize logger.
 logger = Logger([
