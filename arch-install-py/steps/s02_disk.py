@@ -9,6 +9,9 @@ def setup_disk(inputs):
     clear_disk(inputs)
     subprocess.run(["wipefs", "-a", device_name], capture_output=True)
 
+    # Create partitions.
+    print(f"Creating new GPT partition table on '{device_name}'...\n")
+
 def clear_disk(inputs):
     device_name = inputs.device_name
     vol_group_name = inputs.vol_group_name
