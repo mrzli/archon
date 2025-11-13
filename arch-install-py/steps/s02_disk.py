@@ -22,6 +22,9 @@ def setup_disk(inputs):
     print(f"Creating 1GB EFI partition on '{device_name}'...")
     command(f'echo "size=1GiB,type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B" | sfdisk --append "{device_name}"', shell=True)
 
+    print(f"Creating 1GB boot partition on '{device_name}'...")
+    command(f'echo "size=1GiB,type=BC13C2FF-59E6-4262-A352-B275FD6F7172" | sfdisk --append "{device_name}"', shell=True)
+
     print(f"Creating LVM partition on the rest of space on '{device_name}'...")
     command(f'echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "{device_name}"', shell=True)
 
@@ -48,6 +51,9 @@ def setup_disk(inputs):
     print(f"Formatting EFI partition '{device_partition_efi}' as FAT32...")
     command(["mkfs.fat", "-F32", device_partition_efi])
 
+    print(f"Formatting boot partition '{device_partition_boot}' as ext4...")
+    command(["mkfs.ext4", device_partition_boot])
+
     root_lv = f"/dev/{vol_group_name}/{lv_name}"
 
     print(f"Formatting root logical volume '{root_lv}' as ext4...")
@@ -59,9 +65,9 @@ def setup_disk(inputs):
     print(f"Mounting root logical volume '{root_lv}' to '/mnt'...")
     command(["mount", root_lv, "/mnt"])
 
-    print(f"Mounting EFI partition '{device_partition_efi}' to '/mnt/boot'...")
+    print(f"Mounting boot partition '{device_partition_boot}' to '/mnt/boot'...")
     command(["mkdir", "-p", "/mnt/boot"])
-    command(["mount", device_partition_efi, "/mnt/boot"])
+    command(["mount", device_partition_boot, "/mnt/boot"])
 
     print("\nDisk setup completed successfully.\n")
 

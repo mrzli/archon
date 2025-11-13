@@ -21,7 +21,8 @@ def get_installation_inputs():
     partition_suffix = "p" if is_nvme else ""
     device_name = f"/dev/{disk_name}"
     device_partition_efi = f"{device_name}{partition_suffix}1"
-    device_partition_root = f"{device_name}{partition_suffix}2"
+    device_partition_boot = f"{device_name}{partition_suffix}2"
+    device_partition_root = f"{device_name}{partition_suffix}3"
 
     # Arbitrary names for LVM setup.
     lvm_name = "lvm"
@@ -35,6 +36,7 @@ def get_installation_inputs():
         "user_password": user_password,
         "device_name": device_name,
         "device_partition_efi": device_partition_efi,
+        "device_partition_boot": device_partition_boot,
         "device_partition_root": device_partition_root,
         "lvm_name": lvm_name,
         "vol_group_name": vol_group_name,
