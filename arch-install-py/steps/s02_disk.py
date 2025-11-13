@@ -87,7 +87,7 @@ def clear_disk(inputs):
     command(["vgremove", "-f", vol_group_name], check=False)
 
     # Remove the physical volume if it exists.
-    command(["pvremove", "-f", f"/dev/mapper/{lv_name}"], check=False )
+    command(["pvremove", "-f", f"/dev/mapper/{lv_name}"], check=False)
 
     # Close the LUKS mapping.
     command(["cryptsetup", "close", lv_name], check=False)
