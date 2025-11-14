@@ -79,6 +79,7 @@ def clear_disk(logger, inputs):
 
     # Unmount all.
     # command(["umount", "-a", "-f"], check=False)
+    logger.command(["umount", "/mnt/boot/EFI"], check=False)
     logger.command(["umount", "/mnt/boot"], check=False)
     logger.command(["umount", "/mnt"], check=False)
 
