@@ -96,13 +96,13 @@ logger.command(["sed", "-E", "-i", "s/^#\\s*(en_US.UTF-8 UTF-8)/\\1/", "/etc/loc
 logger.info("Generating locales...")
 logger.command(["locale-gen"])
 
-# logger.info("Setting up RAM disk...")
+logger.info("Setting up RAM disk...")
 
-# # echo "Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks..."
-# logger.info("Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks...")
-# # Insert 'encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
-# # This is required for the system to know how to handle encrypted LVM partition during boot.
-# logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
+# echo "Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks..."
+logger.info("Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks...")
+# Insert 'encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
+# This is required for the system to know how to handle encrypted LVM partition during boot.
+logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
 
 # # echo "Regenerating the initramfs..."
 # logger.info("Regenerating the initramfs...")
