@@ -121,29 +121,29 @@ logger.command([
     "/etc/default/grub"
 ])
 
-# logger.info("Mounting EFI partition...")
-# logger.command(["mkdir", "-p", "/boot/EFI"])
-# logger.command(["mount", device_partition_efi, "/boot/EFI"])
+logger.info("Mounting EFI partition...")
+logger.command(["mkdir", "-p", "/boot/EFI"])
+logger.command(["mount", device_partition_efi, "/boot/EFI"])
 
-# logger.info("Installing GRUB bootloader...")
-# logger.command([
-#     "grub-install",
-#     "--target=x86_64-efi",
-#     "--efi-directory=/boot/EFI",
-#     "--bootloader-id=grub_uefi",
-#     "--recheck"
-# ])
+logger.info("Installing GRUB bootloader...")
+logger.command([
+    "grub-install",
+    "--target=x86_64-efi",
+    "--efi-directory=/boot/EFI",
+    "--bootloader-id=grub_uefi",
+    "--recheck"
+])
 
-# logger.info("Copying GRUB's message catalog for English language...")
-# logger.command(["cp", "/usr/share/locale/en@quot/LC_MESSAGES/grub.mo", "/boot/grub/locale/en.mo"])
+logger.info("Copying GRUB's message catalog for English language...")
+logger.command(["cp", "/usr/share/locale/en@quot/LC_MESSAGES/grub.mo", "/boot/grub/locale/en.mo"])
 
-# logger.info("Generating GRUB configuration file...")
-# logger.command(["grub-mkconfig", "-o", "/boot/grub/grub.cfg"])
+logger.info("Generating GRUB configuration file...")
+logger.command(["grub-mkconfig", "-o", "/boot/grub/grub.cfg"])
 
-# logger.info("Enabling services to start on boot...")
+logger.info("Enabling services to start on boot...")
 
-# services = [
-#     "NetworkManager",   # Manages network connections.
-#     "sshd"              # SSH server daemon.
-# ]
-# logger.command(["systemctl", "enable", *services])
+services = [
+    "NetworkManager",   # Manages network connections.
+    "sshd"              # SSH server daemon.
+]
+logger.command(["systemctl", "enable", *services])
