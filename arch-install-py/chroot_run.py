@@ -22,7 +22,6 @@ device_partition_efi = sys.argv[4]
 device_partition_root = sys.argv[5]
 luks_mapping_name = sys.argv[6]
 vol_group_name = sys.argv[7]
-lv_path = sys.argv[8]
 
 root_device_uuid = get_block_device_uuid(device_partition_root)
 
