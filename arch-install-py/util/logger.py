@@ -103,6 +103,8 @@ class Logger:
         for line in result_stderr:
             self.error(line)
 
+        return result
+
 def get_timestamp() -> str:
     """Get the current timestamp as a string."""
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
