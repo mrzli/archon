@@ -7,7 +7,9 @@ def chroot_run(logger, env, inputs):
     user_password = inputs.user_password
     device_partition_efi = inputs.device_partition_efi
     device_partition_root = inputs.device_partition_root
+    luks_mapping_name = inputs.luks_mapping_name
     vol_group_name = inputs.vol_group_name
+    lv_path = inputs.lv_path
 
     logger.command(["mkdir", "-p", "/mnt/arch-install"])
 
