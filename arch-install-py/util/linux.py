@@ -48,6 +48,19 @@ def get_block_device_names():
         print(f"Error running lsblk: {e}")
         return []
 
+def get_block_device_uuid(device_name):
+    result = subprocess.run(
+        ['blkid', device_name, '-s', 'UUID', '-o', 'value'],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    uuid = result.stdout.strip()
+    if not uuid:
+        raise ValueError(f"UUID not found for device: {device_name}")
+
+    return uuid
+
 def get_cpu_vendor_id():
     result = subprocess.run(
         "lscpu | grep 'Vendor ID'",
