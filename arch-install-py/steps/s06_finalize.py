@@ -15,6 +15,6 @@ def finalize_arch_installation(logger):
         except subprocess.CalledProcessError:
             logger.warning("Warning: Unmount failed; some filesystems may still be mounted.")
         logger.info("Rebooting...")
-        logger.command(['reboot'])
+        # logger.command(['reboot'])
     else:
         logger.info("Unmount and reboot canceled. Please remember to unmount all partitions and reboot manually later.")
