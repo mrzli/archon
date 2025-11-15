@@ -46,6 +46,6 @@ def get_cpu_vendor(logger):
             return "<unknown>"
 
 def get_architecture(logger):
-    result = logger.command(["uname -m"])
+    result = logger.command(["uname", "-m"])
     architecture = result.stdout.strip()
     return architecture
