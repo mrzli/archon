@@ -36,9 +36,9 @@ def setup_disk(logger, inputs):
 
     # Example commands:
     # cryptsetup luksFormat --batch-mode /dev/nvme0n1p3
-    # cryptsetup open --type luks /dev/nvme0n1p3 lvm
-    # pvcreate /dev/mapper/lvm
-    # vgcreate volgroup0 /dev/mapper/lvm
+    # cryptsetup open --type luks /dev/nvme0n1p3 root_crypt
+    # pvcreate /dev/mapper/root_crypt
+    # vgcreate volgroup0 /dev/mapper/root_crypt
     # lvcreate -l 100%VG -n lv_root volgroup0
     # vgchange -ay
 
