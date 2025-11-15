@@ -79,35 +79,35 @@ hostname = f"{username}-arch"
 logger.info(f"Setting hostname to '{hostname}'...")
 logger.command(["hostnamectl", "set-hostname", hostname])
 
-# logger.info("Configuring users...")
+logger.info("Configuring users...")
 
-# logger.info(f"Creating user '{username}'...")
-# logger.command(["useradd", "-m", "-g", "users", "-G", "wheel", username])
-# logger.info(f"Setting password for users 'root' and '{username}'...")
-# logger.command(f'echo -e "root:{user_password}\n{username}:{user_password}" | chpasswd', shell=True)
-# logger.info("Configuring sudoers to allow members of 'wheel' group to execute any command...")
-# logger.command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:ALL) ALL/", "/etc/sudoers"])
+logger.info(f"Creating user '{username}'...")
+logger.command(["useradd", "-m", "-g", "users", "-G", "wheel", username])
+logger.info(f"Setting password for users 'root' and '{username}'...")
+logger.command(f'echo -e "root:{user_password}\n{username}:{user_password}" | chpasswd', shell=True)
+logger.info("Configuring sudoers to allow members of 'wheel' group to execute any command...")
+logger.command(["sed", "-E", "-i", "s/^# %wheel ALL=\\(ALL:ALL\\) ALL/%wheel ALL=(ALL:ALL) ALL/", "/etc/sudoers"])
 
-# logger.info("Setting up system...")
+logger.info("Setting up system...")
 
-# logger.info("Setting default editor to vim...")
-# logger.command('echo "EDITOR=/usr/bin/vim" >> /etc/environment', shell=True)
+logger.info("Setting default editor to vim...")
+logger.command('echo "EDITOR=/usr/bin/vim" >> /etc/environment', shell=True)
 
-# logger.info("Setting XDG base directories...")
-# logger.command(["cp", f"{python_project_dir}/data/xdg-sh", "/etc/profile.d/xdg.sh"])
+logger.info("Setting XDG base directories...")
+logger.command(["cp", f"{python_project_dir}/data/xdg-sh", "/etc/profile.d/xdg.sh"])
 
-# logger.info("Setting up locales...")
-# logger.info("Editing /etc/locale.gen...")
-# logger.command(["sed", "-E", "-i", "s/^#\\s*(en_US.UTF-8 UTF-8)/\\1/", "/etc/locale.gen"])
-# logger.info("Generating locales...")
-# logger.command(["locale-gen"])
+logger.info("Setting up locales...")
+logger.info("Editing /etc/locale.gen...")
+logger.command(["sed", "-E", "-i", "s/^#\\s*(en_US.UTF-8 UTF-8)/\\1/", "/etc/locale.gen"])
+logger.info("Generating locales...")
+logger.command(["locale-gen"])
 
-# logger.info("Setting up RAM disk...")
+logger.info("Setting up RAM disk...")
 
-# logger.info("Editing /etc/mkinitcpio.conf to include 'sd-encrypt' and 'lvm2' hooks...")
-# # Insert 'sd-encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
-# # This is required for the system to know how to handle encrypted LVM partition during boot.
-# logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /sd-encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
+logger.info("Editing /etc/mkinitcpio.conf to include 'sd-encrypt' and 'lvm2' hooks...")
+# Insert 'sd-encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
+# This is required for the system to know how to handle encrypted LVM partition during boot.
+logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /sd-encrypt lvm2/! s/(block)/\1 sd-encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
 
 # # echo "Regenerating the initramfs..."
 # logger.info("Regenerating the initramfs...")
