@@ -25,7 +25,7 @@ def get_installation_inputs():
     device_partition_root = f"{device_name}{partition_suffix}3"
 
     # Arbitrary names for LVM setup.
-    lvm_name = "lvm"
+    luks_mapping_name = "lvm"
     vol_group_name = "volgroup0"
     lv_name = "lv_root"
 
@@ -38,7 +38,7 @@ def get_installation_inputs():
         "device_partition_efi": device_partition_efi,
         "device_partition_boot": device_partition_boot,
         "device_partition_root": device_partition_root,
-        "lvm_name": lvm_name,
+        "luks_mapping_name": luks_mapping_name,
         "vol_group_name": vol_group_name,
         "lv_name": lv_name,
     }
