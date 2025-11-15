@@ -56,28 +56,28 @@ logger.info("Installing Linux kernel and headers...")
 # Create /etc/vconsole.conf to to avoid 'sd-vconsole' errors.
 logger.command('echo "KEYMAP=us" > /etc/vconsole.conf', shell=True)
 
-# kernel_packages = [
-#     "linux",                 # The Linux kernel.
-#     "linux-headers",         # Header files and development tools for the current Linux kernel.
-#     # "linux-lts",           # Long term support version of the Linux kernel.
-#     # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
-# ]
-# logger.command(["pacman", "-S", "--noconfirm", *kernel_packages])
+kernel_packages = [
+    "linux",                 # The Linux kernel.
+    "linux-headers",         # Header files and development tools for the current Linux kernel.
+    # "linux-lts",           # Long term support version of the Linux kernel.
+    # "linux-lts-headers",   # Header files and development tools for the current Linux LTS.
+]
+logger.command(["pacman", "-S", "--noconfirm", *kernel_packages])
 
-# logger.info("Installing drivers and firmware...")
+logger.info("Installing drivers and firmware...")
 
-# driver_packages = [
-#     "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
-#     "nvidia",           # NVidia kernel modules if you are using the latest kernel.
-#     "nvidia-utils",     # NVidia driver libraries and utilities.
-#     # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
-# ]
-# logger.command(["pacman", "-S", "--noconfirm", *driver_packages])
+driver_packages = [
+    "linux-firmware",   # Proprietary binary firmware/drivers for various hardware devices.
+    "nvidia",           # NVidia kernel modules if you are using the latest kernel.
+    "nvidia-utils",     # NVidia driver libraries and utilities.
+    # "nvidia-lts",     # NVidia kernel modules if you are using the LTS kernel.
+]
+logger.command(["pacman", "-S", "--noconfirm", *driver_packages])
 
-# hostname = f"{username}-arch"
+hostname = f"{username}-arch"
 
-# logger.info(f"Setting hostname to '{hostname}'...")
-# logger.command(["hostnamectl", "set-hostname", hostname])
+logger.info(f"Setting hostname to '{hostname}'...")
+logger.command(["hostnamectl", "set-hostname", hostname])
 
 # logger.info("Configuring users...")
 
