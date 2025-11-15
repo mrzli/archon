@@ -122,7 +122,7 @@ logger.command([
     "sed",
     "-E",
     "-i",
-    f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet rd.luks.name={root_device_uuid}={luks_mapping_name} root={lv_path}\"|",
+    f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet rd.luks.name={root_device_uuid}={luks_mapping_name}\"|",
     "/etc/default/grub"
 ])
 
