@@ -28,6 +28,6 @@ validate_environment(logger, env)
 
 inputs = collect_inputs(logger)
 setup_disk(logger, inputs)
-# setup_chroot_prerequisites(logger, inputs)
-# chroot_run(logger, env, inputs)
+setup_chroot_prerequisites(logger, inputs)
+chroot_run(logger, env, inputs)
 # finalize_arch_installation(logger)
