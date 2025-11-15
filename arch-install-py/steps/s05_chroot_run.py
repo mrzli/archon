@@ -1,7 +1,8 @@
 from util import command
 import shutil
 
-def chroot_run(logger, inputs):
+def chroot_run(logger, env, inputs):
+    cpu_vendor = env.cpu_vendor
     username = inputs.username
     user_password = inputs.user_password
     device_partition_efi = inputs.device_partition_efi
@@ -17,7 +18,8 @@ def chroot_run(logger, inputs):
     chroot_cmd = (
         "pacman -Syu --noconfirm python && "
         "cd /arch-install && "
-        'python chroot_run.py "{}" "{}" "{}" "{}" "{}"'.format(
+        'python chroot_run.py "{}" "{}" "{}" "{}" "{}" "{}"'.format(
+            cpu_vendor,
             username,
             user_password,
             device_partition_efi,

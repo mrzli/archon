@@ -14,11 +14,12 @@ logger = Logger([
     LoggerFileHandler(LogLevel.DEBUG, "/var/log/arch-install-py.log")
 ])
 
-username = sys.argv[1]
-user_password = sys.argv[2]
-device_partition_efi = sys.argv[3]
-device_partition_root = sys.argv[4]
-vol_group_name = sys.argv[5]
+cpu_vendor = sys.argv[1]
+username = sys.argv[2]
+user_password = sys.argv[3]
+device_partition_efi = sys.argv[4]
+device_partition_root = sys.argv[5]
+vol_group_name = sys.argv[6]
 
 python_project_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
 
