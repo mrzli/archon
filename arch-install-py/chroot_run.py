@@ -109,22 +109,22 @@ logger.info("Editing /etc/mkinitcpio.conf to include 'sd-encrypt' and 'lvm2' hoo
 # This is required for the system to know how to handle encrypted LVM partition during boot.
 logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /sd-encrypt lvm2/! s/(block)/\1 sd-encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
 
-# # echo "Regenerating the initramfs..."
-# logger.info("Regenerating the initramfs...")
-# logger.command(["mkinitcpio", "-P"])
+# echo "Regenerating the initramfs..."
+logger.info("Regenerating the initramfs...")
+logger.command(["mkinitcpio", "-P"])
 
-# logger.info("Setting up boot process...")
+logger.info("Setting up boot process...")
 
-# logger.info("Editing /etc/default/grub...")
-# # Add `cryptdevice=<device_partition_root>:<volume_group_name>` to the `GRUB_CMDLINE_LINUX_DEFAULT` line.
-# # Do not use '/' delimiter in 'sed' command to avoid conflicts with device paths.
-# logger.command([
-#     "sed",
-#     "-E",
-#     "-i",
-#     f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet rd.luks.name={root_device_uuid}={luks_mapping_name} root={lv_path}\"|",
-#     "/etc/default/grub"
-# ])
+logger.info("Editing /etc/default/grub...")
+# Add `cryptdevice=<device_partition_root>:<volume_group_name>` to the `GRUB_CMDLINE_LINUX_DEFAULT` line.
+# Do not use '/' delimiter in 'sed' command to avoid conflicts with device paths.
+logger.command([
+    "sed",
+    "-E",
+    "-i",
+    f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet rd.luks.name={root_device_uuid}={luks_mapping_name} root={lv_path}\"|",
+    "/etc/default/grub"
+])
 
 # logger.info("Mounting EFI partition...")
 # logger.command(["mount", "-m", device_partition_efi, "/boot/EFI"])
