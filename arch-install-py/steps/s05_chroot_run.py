@@ -11,6 +11,8 @@ def chroot_run(logger, env, inputs):
     vol_group_name = inputs.vol_group_name
     lv_path = inputs.lv_path
 
+    logger.info("Preparing chroot environment...")
+
     logger.command(["mkdir", "-p", "/mnt/arch-install"])
 
     script_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
@@ -39,3 +41,5 @@ def chroot_run(logger, env, inputs):
     command(["arch-chroot", "/mnt", "/bin/bash", "-c", chroot_cmd], output='all')
 
     logger.command(["rm", "-rf", "/mnt/arch-install"])
+
+    logger.info("Chroot setup completed successfully.")
