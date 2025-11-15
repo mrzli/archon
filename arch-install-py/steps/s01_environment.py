@@ -1,4 +1,3 @@
-import re
 from types import SimpleNamespace
 from util import get_cpu_vendor_id, get_architecture
 
