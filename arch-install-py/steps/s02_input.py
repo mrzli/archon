@@ -30,7 +30,7 @@ def get_installation_inputs():
     lv_name = "lv_root"
 
     luks_mapping_path = f"/dev/mapper/{luks_mapping_name}"
-    root_lv_path = f"/dev/{vol_group_name}/{lv_name}"
+    lv_path = f"/dev/{vol_group_name}/{lv_name}"
 
     return {
         "disk_name": disk_name,
@@ -45,7 +45,7 @@ def get_installation_inputs():
         "vol_group_name": vol_group_name,
         "lv_name": lv_name,
         "luks_mapping_path": luks_mapping_path,
-        "root_lv_path": root_lv_path,
+        "lv_path": lv_path,
     }
 
 def choose_block_device():

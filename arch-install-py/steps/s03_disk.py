@@ -10,7 +10,7 @@ def setup_disk(logger, inputs):
     vol_group_name = inputs.vol_group_name
     lv_name = inputs.lv_name
     luks_mapping_path = inputs.luks_mapping_path
-    root_lv_path = inputs.root_lv_path
+    lv_path = inputs.lv_path
 
     logger.info(f"Setting up disk '{device_name}'...")
 
@@ -66,12 +66,12 @@ def setup_disk(logger, inputs):
     logger.info(f"Formatting boot partition '{device_partition_boot}' as ext4...")
     logger.command(["mkfs.ext4", device_partition_boot])
 
-    logger.info(f"Formatting root logical volume '{root_lv_path}' as ext4...")
-    logger.command(["mkfs.ext4", root_lv_path])
+    logger.info(f"Formatting root logical volume '{lv_path}' as ext4...")
+    logger.command(["mkfs.ext4", lv_path])
 
     # Mount partitions.
-    logger.info(f"Mounting root logical volume '{root_lv_path}' to '/mnt'...")
-    logger.command(["mount", "-m", root_lv_path, "/mnt"])
+    logger.info(f"Mounting root logical volume '{lv_path}' to '/mnt'...")
+    logger.command(["mount", "-m", lv_path, "/mnt"])
 
     logger.info(f"Mounting boot partition '{device_partition_boot}' to '/mnt/boot'...")
     logger.command(["mount", "-m", device_partition_boot, "/mnt/boot"])
@@ -82,14 +82,14 @@ def clear_disk(logger, inputs):
     luks_mapping_name = inputs.luks_mapping_name
     vol_group_name = inputs.vol_group_name
     luks_mapping_path = inputs.luks_mapping_path
-    root_lv_path = inputs.root_lv_path
+    lv_path = inputs.lv_path
 
     # Unmount all.
     logger.command(["umount", "-R", "/mnt"], check=False)
 
     # Deactivate and remove the logical volume if it exists.
-    logger.command(["lvchange", "-an", root_lv_path], check=False)
-    logger.command(["lvremove", "-f", root_lv_path], check=False)
+    logger.command(["lvchange", "-an", lv_path], check=False)
+    logger.command(["lvremove", "-f", lv_path], check=False)
 
     # Deactivate and remove the volume group if it exists.
     logger.command(["vgchange", "-an", vol_group_name], check=False)
