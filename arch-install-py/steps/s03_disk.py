@@ -30,6 +30,14 @@ def setup_disk(logger, inputs):
     logger.command(f'echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "{device_name}"', shell=True)
 
     # Set up root partition.
+    # Example commands:
+    # cryptsetup luksFormat --batch-mode /dev/nvme0n1p3
+    # cryptsetup open --type luks /dev/nvme0n1p3 lvm
+    # pvcreate /dev/mapper/lvm
+    # vgcreate volgroup0 /dev/mapper/lvm
+    # lvcreate -l 100%VG -n lv_root volgroup0
+    # vgchange -ay
+
     logger.info(f"Setting up LUKS encryption on root partition '{device_partition_root}'...")
     logger.command(f'echo {root_partition_password} | cryptsetup luksFormat --batch-mode "{device_partition_root}"', shell=True)
 
