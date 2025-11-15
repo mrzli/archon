@@ -76,7 +76,9 @@ logger.command(["pacman", "-S", "--noconfirm", *driver_packages])
 hostname = f"{username}-arch"
 
 logger.info(f"Setting hostname to '{hostname}'...")
-logger.command(["hostnamectl", "set-hostname", hostname])
+# logger.command(["hostnamectl", "set-hostname", hostname])
+# Directly write to /etc/hostname to avoid issues with hostnamectl in chroot.
+logger.command(f'echo "{hostname}" > /etc/hostname', shell=True)
 
 logger.info("Configuring users...")
 
