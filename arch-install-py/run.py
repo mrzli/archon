@@ -6,7 +6,7 @@ from util import (
   LoggerFileHandler
 )
 from steps import (
-  setup_input,
+  collect_inputs,
   setup_disk,
   setup_chroot_prerequisites,
   chroot_run,
@@ -21,7 +21,7 @@ logger = Logger([
 
 logger.command(["clear"])
 
-inputs = setup_input(logger)
+inputs = collect_inputs(logger)
 setup_disk(logger, inputs)
 setup_chroot_prerequisites(logger, inputs)
 chroot_run(logger, inputs)
