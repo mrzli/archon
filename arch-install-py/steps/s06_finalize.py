@@ -11,9 +11,7 @@ def finalize_arch_installation(logger):
     if finish_choice.lower() in ['y', 'yes']:
         logger.info("Unmounting all partitions...")
         try:
-            logger.command(["umount", "/mnt/boot/EFI"], check=False)
-            logger.command(["umount", "/mnt/boot"], check=False)
-            logger.command(["umount", "/mnt"], check=False)
+            logger.command(["umount", "-R", "/mnt"], check=False)
         except subprocess.CalledProcessError:
             logger.warning("Warning: Unmount failed; some filesystems may still be mounted.")
         logger.info("Rebooting...")

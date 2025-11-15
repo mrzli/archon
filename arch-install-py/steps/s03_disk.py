@@ -62,11 +62,10 @@ def setup_disk(logger, inputs):
 
     # Mount partitions.
     logger.info(f"Mounting root logical volume '{root_lv}' to '/mnt'...")
-    logger.command(["mount", root_lv, "/mnt"])
+    logger.command(["mount", "-m", root_lv, "/mnt"])
 
     logger.info(f"Mounting boot partition '{device_partition_boot}' to '/mnt/boot'...")
-    logger.command(["mkdir", "-p", "/mnt/boot"])
-    logger.command(["mount", device_partition_boot, "/mnt/boot"])
+    logger.command(["mount", "-m", device_partition_boot, "/mnt/boot"])
 
     logger.info("Disk setup completed successfully.")
 
@@ -79,9 +78,9 @@ def clear_disk(logger, inputs):
 
     # Unmount all.
     # command(["umount", "-a", "-f"], check=False)
-    logger.command(["umount", "/mnt/boot/EFI"], check=False)
-    logger.command(["umount", "/mnt/boot"], check=False)
-    logger.command(["umount", "/mnt"], check=False)
+    # logger.command(["umount", "/mnt/boot/EFI"], check=False)
+    # logger.command(["umount", "/mnt/boot"], check=False)
+    logger.command(["umount", "-R", "/mnt"], check=False)
 
     # Deactivate and remove the logical volume if it exists.
     logger.command(["lvchange", "-an", root_lv], check=False)
