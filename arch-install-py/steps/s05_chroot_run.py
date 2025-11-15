@@ -15,17 +15,23 @@ def chroot_run(logger, env, inputs):
     python_project_dir = shutil.os.path.abspath(shutil.os.path.join(script_dir, ".."))
     shutil.copytree(python_project_dir, "/mnt/arch-install", dirs_exist_ok=True)
 
+    chroot_params = [
+        cpu_vendor,
+        username,
+        user_password,
+        device_partition_efi,
+        device_partition_root,
+        luks_mapping_name,
+        vol_group_name,
+        lv_path
+    ]
+    chroot_params_quoted = [f'"{param}"' for param in chroot_params]
+    chroot_params_str = " ".join(chroot_params_quoted)
+
     chroot_cmd = (
         "pacman -Syu --noconfirm python && "
         "cd /arch-install && "
-        'python chroot_run.py "{}" "{}" "{}" "{}" "{}" "{}"'.format(
-            cpu_vendor,
-            username,
-            user_password,
-            device_partition_efi,
-            device_partition_root,
-            vol_group_name
-        )
+        f"python chroot_run.py {chroot_params_str}"
     )
 
     command(["arch-chroot", "/mnt", "/bin/bash", "-c", chroot_cmd], output='all')

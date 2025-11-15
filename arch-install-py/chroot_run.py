@@ -2,6 +2,7 @@ import sys
 import shutil
 from util import (
     command,
+    get_block_device_uuid,
     Logger,
     LoggerConsoleHandler,
     LoggerFileHandler,
@@ -19,7 +20,11 @@ username = sys.argv[2]
 user_password = sys.argv[3]
 device_partition_efi = sys.argv[4]
 device_partition_root = sys.argv[5]
-vol_group_name = sys.argv[6]
+luks_mapping_name = sys.argv[6]
+vol_group_name = sys.argv[7]
+lv_path = sys.argv[8]
+
+root_device_uuid = get_block_device_uuid(device_partition_root)
 
 python_project_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
 
@@ -49,7 +54,7 @@ logger.command(["pacman", "-S", "--noconfirm", *base_packages])
 logger.info("Installing Linux kernel and headers...")
 
 # Create /etc/vconsole.conf to to avoid 'sd-vconsole' errors.
-logger.command('echo -e "KEYMAP=us\nFONT=Lat2-Terminus16" > /etc/vconsole.conf', shell=True)
+logger.command('echo "KEYMAP=us" > /etc/vconsole.conf', shell=True)
 
 kernel_packages = [
     "linux",                 # The Linux kernel.
@@ -99,11 +104,10 @@ logger.command(["locale-gen"])
 
 logger.info("Setting up RAM disk...")
 
-# echo "Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks..."
-logger.info("Editing /etc/mkinitcpio.conf to include 'encrypt' and 'lvm2' hooks...")
-# Insert 'encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
+logger.info("Editing /etc/mkinitcpio.conf to include 'sd-encrypt' and 'lvm2' hooks...")
+# Insert 'sd-encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
 # This is required for the system to know how to handle encrypted LVM partition during boot.
-logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
+logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /sd-encrypt lvm2/! s/(block)/\1 encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
 
 # echo "Regenerating the initramfs..."
 logger.info("Regenerating the initramfs...")
@@ -118,7 +122,7 @@ logger.command([
     "sed",
     "-E",
     "-i",
-    f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 cryptdevice={device_partition_root}:{vol_group_name} quiet\"|",
+    f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet rd.luks.name={root_device_uuid}={luks_mapping_name} root={lv_path}\"|",
     "/etc/default/grub"
 ])
 
