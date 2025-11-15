@@ -1,18 +1,5 @@
 import subprocess
 
-def get_block_device_names():
-    try:
-        result = subprocess.run(
-            ['lsblk', '-o', 'NAME', '-d', '-n'], 
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip().split('\n')[1:]  # Skip header
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        print(f"Error running lsblk: {e}")
-        return []
-
 def command(
     args,
     shell=False,
@@ -47,3 +34,40 @@ def command(
             )
         case _:
             raise ValueError(f"Invalid output option: {output}")
+
+def get_block_device_names():
+    try:
+        result = subprocess.run(
+            ['lsblk', '-o', 'NAME', '-d', '-n'], 
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip().split('\n')[1:]  # Skip header
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"Error running lsblk: {e}")
+        return []
+
+def get_cpu_vendor_id():
+    result = subprocess.run(
+        "lscpu | grep 'Vendor ID'",
+        shell=True,
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    cpu_info = result.stdout.strip()
+    vendor_id_match = re.search(r'Vendor ID:\s+(\S+)', cpu_info)
+    vendor_id = vendor_id_match.group(1) if vendor_id_match else None
+
+    return vendor_id
+
+def get_architecture():
+    result = subprocess.run(
+        ["uname", "-m"],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    architecture = result.stdout.strip()
+    return architecture

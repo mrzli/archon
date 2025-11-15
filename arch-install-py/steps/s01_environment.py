@@ -1,11 +1,12 @@
 import re
 from types import SimpleNamespace
+from util import get_cpu_vendor_id, get_architecture
 
 def get_environment(logger):
     logger.info("Collecting environment information...")
     
-    cpu_vendor = get_cpu_vendor(logger)
-    architecture = get_architecture(logger)
+    cpu_vendor = get_cpu_vendor()
+    architecture = get_architecture()
 
     env = {
         "cpu_vendor": cpu_vendor,
@@ -31,11 +32,8 @@ def validate_environment(logger, env):
 
     logger.info("Environment validation completed successfully.")
 
-def get_cpu_vendor(logger):
-    result = logger.command(["lscpu | grep 'Vendor ID'"], shell=True)
-    cpu_info = result.stdout.strip()
-    vendor_id_match = re.search(r'Vendor ID:\s+(\S+)', cpu_info)
-    vendor_id = vendor_id_match.group(1) if vendor_id_match else None
+def get_cpu_vendor():
+    vendor_id = get_cpu_vendor_id()
 
     match vendor_id:
         case "GenuineIntel":
@@ -44,8 +42,3 @@ def get_cpu_vendor(logger):
             return "amd"
         case _:
             return "<unknown>"
-
-def get_architecture(logger):
-    result = logger.command(["uname", "-m"])
-    architecture = result.stdout.strip()
-    return architecture
