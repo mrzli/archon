@@ -9,9 +9,8 @@ def setup_disk(logger, inputs):
     luks_mapping_name = inputs.luks_mapping_name
     vol_group_name = inputs.vol_group_name
     lv_name = inputs.lv_name
-
-    luks_mapping_path = f"/dev/mapper/{luks_mapping_name}"
-    root_lv_path = f"/dev/{vol_group_name}/{lv_name}"
+    luks_mapping_path = inputs.luks_mapping_path
+    root_lv_path = inputs.root_lv_path
 
     logger.info(f"Setting up disk '{device_name}'...")
 
@@ -82,10 +81,8 @@ def setup_disk(logger, inputs):
 def clear_disk(logger, inputs):
     luks_mapping_name = inputs.luks_mapping_name
     vol_group_name = inputs.vol_group_name
-    lv_name = inputs.lv_name
-
-    luks_mapping_path = f"/dev/mapper/{luks_mapping_name}"
-    root_lv_path = f"/dev/{vol_group_name}/{lv_name}"
+    luks_mapping_path = inputs.luks_mapping_path
+    root_lv_path = inputs.root_lv_path
 
     # Unmount all.
     logger.command(["umount", "-R", "/mnt"], check=False)
