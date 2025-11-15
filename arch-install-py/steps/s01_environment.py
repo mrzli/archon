@@ -4,8 +4,8 @@ from types import SimpleNamespace
 def get_environment(logger):
     logger.info("Collecting environment information...")
     
-    cpu_vendor = get_cpu_vendor()
-    architecture = get_architecture()
+    cpu_vendor = get_cpu_vendor(logger)
+    architecture = get_architecture(logger)
 
     env = {
         "cpu_vendor": cpu_vendor,
@@ -31,8 +31,8 @@ def validate_environment(logger, env):
 
     logger.info("Environment validation completed successfully.")
 
-def get_cpu_vendor():
-    result = command(["lscpu | grep 'Vendor ID'"], shell=True)
+def get_cpu_vendor(logger):
+    result = logger.command(["lscpu | grep 'Vendor ID'"], shell=True)
     cpu_info = result.stdout.strip()
     vendor_id_match = re.search(r'Vendor ID:\s+(\S+)', cpu_info)
     vendor_id = vendor_id_match.group(1) if vendor_id_match else None
@@ -45,7 +45,7 @@ def get_cpu_vendor():
         case _:
             return "<unknown>"
 
-def get_architecture():
-    result = command(["uname -m"])
+def get_architecture(logger):
+    result = logger.command(["uname -m"])
     architecture = result.stdout.strip()
     return architecture
