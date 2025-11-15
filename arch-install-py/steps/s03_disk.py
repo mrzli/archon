@@ -77,9 +77,6 @@ def clear_disk(logger, inputs):
     root_lv = f"/dev/{vol_group_name}/{lv_name}"
 
     # Unmount all.
-    # command(["umount", "-a", "-f"], check=False)
-    # logger.command(["umount", "/mnt/boot/EFI"], check=False)
-    # logger.command(["umount", "/mnt/boot"], check=False)
     logger.command(["umount", "-R", "/mnt"], check=False)
 
     # Deactivate and remove the logical volume if it exists.
