@@ -1,4 +1,3 @@
-from pprint import pprint
 from util import (
   command,
   LogLevel,
@@ -23,10 +22,6 @@ logger = Logger([
 logger.command(["clear"])
 
 inputs = setup_input(logger)
-
-# print("Installation Inputs Collected:")
-# pprint(inputs)
-
 setup_disk(logger, inputs)
 setup_chroot_prerequisites(logger, inputs)
 chroot_run(logger, inputs)
