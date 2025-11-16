@@ -6,7 +6,6 @@ def setup_chroot_prerequisites(logger, inputs):
     logger.info("Installing essential packages...")
     essential_packages = [
         "base",
-        "iptables-nft",
     ]
     logger.command(["pacstrap", "/mnt", *essential_packages])
 
