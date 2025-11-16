@@ -3,7 +3,6 @@ from util import command
 def setup_disk(logger, inputs):
     device_name = inputs.device_name
     device_partition_efi = inputs.device_partition_efi
-    device_partition_boot = inputs.device_partition_boot
     device_partition_root = inputs.device_partition_root
     root_partition_password = inputs.root_partition_password
     luks_mapping_name = inputs.luks_mapping_name
@@ -24,9 +23,6 @@ def setup_disk(logger, inputs):
 
     logger.info(f"Creating 1GB EFI partition on '{device_name}'...")
     logger.command(f'echo "size=1GiB,type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B" | sfdisk --append "{device_name}"', shell=True)
-
-    logger.info(f"Creating 1GB boot partition on '{device_name}'...")
-    logger.command(f'echo "size=1GiB,type=BC13C2FF-59E6-4262-A352-B275FD6F7172" | sfdisk --append "{device_name}"', shell=True)
 
     logger.info(f"Creating LVM partition on the rest of space on '{device_name}'...")
     logger.command(f'echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "{device_name}"', shell=True)
@@ -63,9 +59,6 @@ def setup_disk(logger, inputs):
     logger.info(f"Formatting EFI partition '{device_partition_efi}' as FAT32...")
     logger.command(["mkfs.fat", "-F32", device_partition_efi])
 
-    logger.info(f"Formatting boot partition '{device_partition_boot}' as ext4...")
-    logger.command(["mkfs.ext4", device_partition_boot])
-
     logger.info(f"Formatting root logical volume '{lv_path}' as ext4...")
     logger.command(["mkfs.ext4", lv_path])
 
@@ -73,8 +66,8 @@ def setup_disk(logger, inputs):
     logger.info(f"Mounting root logical volume '{lv_path}' to '/mnt'...")
     logger.command(["mount", "-m", lv_path, "/mnt"])
 
-    logger.info(f"Mounting boot partition '{device_partition_boot}' to '/mnt/boot'...")
-    logger.command(["mount", "-m", device_partition_boot, "/mnt/boot"])
+    logger.info(f"Mounting EFI partition '{device_partition_efi}' to '/mnt/boot'...")
+    logger.command(["mount", "-m", device_partition_efi, "/mnt/boot"])
 
     logger.info("Disk setup completed successfully.")
 

@@ -127,14 +127,11 @@ logger.command([
     "/etc/default/grub"
 ])
 
-logger.info("Mounting EFI partition...")
-logger.command(["mount", "-m", device_partition_efi, "/boot/EFI"])
-
 logger.info("Installing GRUB bootloader...")
 logger.command([
     "grub-install",
     "--target=x86_64-efi",
-    "--efi-directory=/boot/EFI",
+    "--efi-directory=/boot",
     "--bootloader-id=grub_uefi",
     "--recheck"
 ])
