@@ -40,8 +40,5 @@ echo -e "\nMaking scripts executable..."
 
 # Make scripts executable.
 find "$local_repo_path/scripts" -mindepth 1 -type f -exec chmod +x {} \;
-chmod +x "$local_repo_path/repo.sh"
-chmod +x "$local_repo_path/arch-install.sh"
-find "$local_repo_path/arch-install" -mindepth 1 -type f -name "*.sh" -exec chmod +x {} \;
 
 echo -e "Done.\n\n"
