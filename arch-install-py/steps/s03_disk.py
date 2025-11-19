@@ -44,7 +44,7 @@ def setup_disk(logger, inputs):
     logger.info(f"Opening LUKS encrypted root partition '{device_partition_root}' as '{luks_mapping_name}'...")
     logger.command(f'echo {root_partition_password} | cryptsetup open --type luks "{device_partition_root}" "{luks_mapping_name}"', shell=True)
 
-    logger.info(f"Creating physical volume targetting '{luks_mapping_path}'...")
+    logger.info(f"Make the decrypted root partition '{luks_mapping_path}' into a physical volume...")
     logger.command(["pvcreate", luks_mapping_path])
 
     logger.info(f"Creating volume group '{vol_group_name}' targetting '{luks_mapping_path}'...")
