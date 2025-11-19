@@ -25,6 +25,7 @@ def setup_disk(logger, inputs):
     logger.command(f'echo "size=1GiB,type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B" | sfdisk --append "{device_name}"', shell=True)
 
     logger.info(f"Creating LVM partition on the rest of space on '{device_name}'...")
+    # For a normal root partition, use type '4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709'.
     logger.command(f'echo "size=+,type=E6D6D379-F507-44C2-A23C-238F2A3DF928" | sfdisk --append "{device_name}"', shell=True)
 
     # Set up root partition.
