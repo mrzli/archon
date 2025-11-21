@@ -31,11 +31,11 @@ def setup_disk(logger, inputs):
     # Set up root partition.
 
     # Example commands:
-    # cryptsetup luksFormat --batch-mode /dev/nvme0n1p3
-    # cryptsetup open --type luks /dev/nvme0n1p3 root_crypt
-    # pvcreate /dev/mapper/root_crypt
-    # vgcreate volgroup0 /dev/mapper/root_crypt
-    # lvcreate -l 100%VG -n lv_root volgroup0
+    # cryptsetup luksFormat --batch-mode /dev/nvme0n1p2
+    # cryptsetup open --type luks /dev/nvme0n1p2 cryptroot
+    # pvcreate /dev/mapper/cryptroot
+    # vgcreate vg /dev/mapper/cryptroot
+    # lvcreate -l 100%VG -n rootlv vg
     # vgchange -ay
 
     logger.info(f"Setting up LUKS encryption on root partition '{device_partition_root}'...")
