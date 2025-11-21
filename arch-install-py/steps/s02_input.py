@@ -24,9 +24,9 @@ def get_installation_inputs():
     device_partition_root = f"{device_name}{partition_suffix}2"
 
     # Arbitrary names for LVM setup.
-    luks_mapping_name = "root_crypt"
-    vol_group_name = "volgroup0"
-    lv_name = "lv_root"
+    luks_mapping_name = "cryptroot"
+    vol_group_name = "vg"
+    lv_name = "rootlv"
 
     luks_mapping_path = f"/dev/mapper/{luks_mapping_name}"
     lv_path = f"/dev/{vol_group_name}/{lv_name}"
