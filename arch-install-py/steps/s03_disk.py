@@ -94,18 +94,21 @@ def clear_disk(logger, inputs):
     # Unmount all.
     logger.command(["umount", "-R", "/mnt"], check=False)
 
-    if use_lvm:
-        # # Deactivate and remove the logical volume if it exists.
-        # logger.command(["lvchange", "-an", lv_path], check=False)
-        # logger.command(["lvremove", "-f", lv_path], check=False)
+    # Clean everything related to LVM and LUKS even if not using LVM and encryption now
+    #  because they might be leftover from previous installation attempt.
 
-        # Deactivate and remove the volume group if it exists.
-        logger.command(["vgchange", "-an", vol_group_name], check=False)
-        logger.command(["vgremove", "-f", vol_group_name], check=False)
+    # if use_lvm:
+    # # Deactivate and remove the logical volume if it exists.
+    # logger.command(["lvchange", "-an", lv_path], check=False)
+    # logger.command(["lvremove", "-f", lv_path], check=False)
 
-        # Remove the physical volume if it exists.
-        logger.command(["pvremove", "-f", pv_target], check=False)
+    # Deactivate and remove the volume group if it exists.
+    logger.command(["vgchange", "-an", vol_group_name], check=False)
+    logger.command(["vgremove", "-f", vol_group_name], check=False)
 
-    if use_encryption:
-        # Close the LUKS mapping.
-        logger.command(["cryptsetup", "close", luks_mapping_name], check=False)
+    # Remove the physical volume if it exists.
+    logger.command(["pvremove", "-f", pv_target], check=False)
+
+    # if use_encryption:
+    # Close the LUKS mapping.
+    logger.command(["cryptsetup", "close", luks_mapping_name], check=False)
