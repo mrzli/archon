@@ -31,6 +31,19 @@ def get_installation_inputs():
     luks_mapping_path = f"/dev/mapper/{luks_mapping_name}"
     lv_path = f"/dev/{vol_group_name}/{lv_name}"
 
+    use_encryption = True
+    use_lvm = True
+
+    root_partition_target = device_partition_root
+    if use_lvm:
+        root_partition_target = lv_path
+    elif use_encryption:
+        root_partition_target = luks_mapping_path
+
+    pv_target = device_partition_root
+    if use_encryption:
+        pv_target = luks_mapping_path
+
     return {
         "disk_name": disk_name,
         "root_partition_password": root_partition_password,
@@ -44,6 +57,10 @@ def get_installation_inputs():
         "lv_name": lv_name,
         "luks_mapping_path": luks_mapping_path,
         "lv_path": lv_path,
+        "use_encryption": use_encryption,
+        "use_lvm": use_lvm,
+        "root_partition_target": root_partition_target,
+        "pv_target": pv_target
     }
 
 def choose_block_device():

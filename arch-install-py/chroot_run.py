@@ -21,11 +21,8 @@ user_password = sys.argv[3]
 device_partition_efi = sys.argv[4]
 device_partition_root = sys.argv[5]
 luks_mapping_name = sys.argv[6]
-vol_group_name = sys.argv[7]
-
-root_device_uuid = get_block_device_uuid(device_partition_root)
-
-python_project_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
+use_encryption = sys.argv[7] == 'True'
+use_lvm = sys.argv[8] == 'True'
 
 logger.info("Starting chroot setup...")
 
@@ -43,7 +40,10 @@ base_packages = [
     "grub",             # Bootloader.
     "efibootmgr",       # EFI boot manager.
     "sudo",             # Allows users to run commands as root.
-    "lvm2",             # Logical volume management.
+
+    # Logical volume management.
+    *(["lvm2"] if use_lvm else []),
+
     "openssh",          # SSH server and client.
     "networkmanager",   # Network management service.
     "vim",              # Text editor.
@@ -95,6 +95,7 @@ logger.info("Setting default editor to vim...")
 logger.command('echo "EDITOR=/usr/bin/vim" >> /etc/environment', shell=True)
 
 logger.info("Setting XDG base directories...")
+python_project_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
 logger.command(["cp", f"{python_project_dir}/data/xdg-sh", "/etc/profile.d/xdg.sh"])
 
 logger.info("Setting up locales...")
@@ -105,27 +106,35 @@ logger.command(["locale-gen"])
 
 logger.info("Setting up RAM disk...")
 
-logger.info("Editing /etc/mkinitcpio.conf to include 'sd-encrypt' and 'lvm2' hooks...")
-# Insert 'sd-encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems'.
-# This is required for the system to know how to handle encrypted LVM partition during boot.
-logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /sd-encrypt lvm2/! s/(block)/\1 sd-encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
+if use_encryption or use_lvm:
+    logger.info("Editing /etc/mkinitcpio.conf...")
+    # Insert 'sd-encrypt' and 'lvm2' before 'filesystems' in the HOOKS array, between 'block' and 'filesystems', as necessary
+    # This is required for the system to know how to handle encrypted LVM partition during boot.
+    if use_encryption and use_lvm:
+        logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /sd-encrypt lvm2/! s/(block)/\1 sd-encrypt lvm2/ }", "/etc/mkinitcpio.conf"])
+    elif use_encryption:
+        logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /sd-encrypt/! s/(block)/\1 sd-encrypt/ }", "/etc/mkinitcpio.conf"])
+    elif use_lvm:
+        logger.command(["sed", "-E", "-i", r"/^HOOKS=/ { /lvm2/! s/(block)/\1 lvm2/ }", "/etc/mkinitcpio.conf"])
 
-# echo "Regenerating the initramfs..."
-logger.info("Regenerating the initramfs...")
-logger.command(["mkinitcpio", "-P"])
+    # echo "Regenerating the initramfs..."
+    logger.info("Regenerating the initramfs...")
+    logger.command(["mkinitcpio", "-P"])
 
 logger.info("Setting up boot process...")
 
-logger.info("Editing /etc/default/grub...")
-# Add `cryptdevice=<device_partition_root>:<volume_group_name>` to the `GRUB_CMDLINE_LINUX_DEFAULT` line.
-# Do not use '/' delimiter in 'sed' command to avoid conflicts with device paths.
-logger.command([
-    "sed",
-    "-E",
-    "-i",
-    f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet rd.luks.name={root_device_uuid}={luks_mapping_name}\"|",
-    "/etc/default/grub"
-])
+if use_encryption:
+    logger.info("Editing /etc/default/grub...")
+    # Add `cryptdevice=<device_partition_root>:<volume_group_name>` to the `GRUB_CMDLINE_LINUX_DEFAULT` line.
+    # Do not use '/' delimiter in 'sed' command to avoid conflicts with device paths.
+    root_device_uuid = get_block_device_uuid(device_partition_root)
+    logger.command([
+        "sed",
+        "-E",
+        "-i",
+        f"s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet rd.luks.name={root_device_uuid}={luks_mapping_name}\"|",
+        "/etc/default/grub"
+    ])
 
 logger.info("Installing GRUB bootloader...")
 logger.command([

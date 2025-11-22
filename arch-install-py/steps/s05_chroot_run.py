@@ -8,7 +8,8 @@ def chroot_run(logger, env, inputs):
     device_partition_efi = inputs.device_partition_efi
     device_partition_root = inputs.device_partition_root
     luks_mapping_name = inputs.luks_mapping_name
-    vol_group_name = inputs.vol_group_name
+    use_encryption = inputs.use_encryption
+    use_lvm = inputs.use_lvm
 
     logger.info("Preparing chroot environment...")
 
@@ -25,7 +26,8 @@ def chroot_run(logger, env, inputs):
         device_partition_efi,
         device_partition_root,
         luks_mapping_name,
-        vol_group_name
+        str(use_encryption),
+        str(use_lvm)
     ]
     chroot_params_quoted = [f'"{param}"' for param in chroot_params]
     chroot_params_str = " ".join(chroot_params_quoted)
