@@ -1,4 +1,7 @@
-from .input import input_password
+from .input import (
+    input_password,
+    input_yes_no
+)
 from .linux import (
     command,
     get_block_device_names,
@@ -16,6 +19,7 @@ from .output import print_separator
 
 __all__ = [
     "input_password",
+    "input_yes_no",
     "command",
     "get_block_device_names",
     "get_block_device_uuid",

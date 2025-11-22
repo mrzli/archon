@@ -1,5 +1,14 @@
 import getpass
 
+def input_yes_no(prompt):
+    while True:
+        choice = input(prompt).strip().lower()
+        if choice in ("y", "yes"):
+            return True
+        if choice in ("n", "no"):
+            return False
+        print("Please answer with 'y' or 'n'.")
+
 def input_password(prompt):
     while True:
         password = getpass.getpass(prompt)

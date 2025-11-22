@@ -1,6 +1,10 @@
 import re
 from types import SimpleNamespace
-from util import get_block_device_names, input_password
+from util import (
+    get_block_device_names,
+    input_password,
+    input_yes_no
+)
 
 def collect_inputs(logger):
     logger.info("Collecting installation inputs...")
@@ -31,8 +35,8 @@ def get_installation_inputs():
     luks_mapping_path = f"/dev/mapper/{luks_mapping_name}"
     lv_path = f"/dev/{vol_group_name}/{lv_name}"
 
-    use_encryption = True
-    use_lvm = True
+    use_encryption = True #input_yes_no("Use disk encryption? (y/n): ")
+    use_lvm = True #input_yes_no("Use LVM? (y/n): ")
 
     root_partition_target = device_partition_root
     if use_lvm:
