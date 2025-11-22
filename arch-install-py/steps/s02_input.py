@@ -48,6 +48,9 @@ def get_installation_inputs():
     if use_encryption:
         pv_target = luks_mapping_path
 
+    iana_tz_area = "Europe"
+    iana_tz_location = "Zagreb"
+
     return {
         "disk_name": disk_name,
         "root_partition_password": root_partition_password,
@@ -64,7 +67,9 @@ def get_installation_inputs():
         "use_encryption": use_encryption,
         "use_lvm": use_lvm,
         "root_partition_target": root_partition_target,
-        "pv_target": pv_target
+        "pv_target": pv_target,
+        "iana_tz_area": iana_tz_area,
+        "iana_tz_location": iana_tz_location,
     }
 
 def choose_block_device():

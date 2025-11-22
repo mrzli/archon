@@ -10,6 +10,8 @@ def chroot_run(logger, env, inputs):
     luks_mapping_name = inputs.luks_mapping_name
     use_encryption = inputs.use_encryption
     use_lvm = inputs.use_lvm
+    iana_tz_area = inputs.iana_tz_area
+    iana_tz_location = inputs.iana_tz_location
 
     logger.info("Preparing chroot environment...")
 
@@ -27,7 +29,9 @@ def chroot_run(logger, env, inputs):
         device_partition_root,
         luks_mapping_name,
         str(use_encryption),
-        str(use_lvm)
+        str(use_lvm),
+        iana_tz_area,
+        iana_tz_location
     ]
     chroot_params_quoted = [f'"{param}"' for param in chroot_params]
     chroot_params_str = " ".join(chroot_params_quoted)

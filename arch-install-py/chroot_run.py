@@ -23,6 +23,8 @@ device_partition_root = sys.argv[5]
 luks_mapping_name = sys.argv[6]
 use_encryption = sys.argv[7] == 'True'
 use_lvm = sys.argv[8] == 'True'
+iana_tz_area = sys.argv[9]
+iana_tz_location = sys.argv[10]
 
 logger.info("Starting chroot setup...")
 
@@ -97,6 +99,12 @@ logger.command('echo "EDITOR=/usr/bin/vim" >> /etc/environment', shell=True)
 logger.info("Setting XDG base directories...")
 python_project_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
 logger.command(["cp", f"{python_project_dir}/data/xdg-sh", "/etc/profile.d/xdg.sh"])
+
+logger.info("Setting up time...")
+logger.info(f"Setting timezone to '{iana_tz_area}/{iana_tz_location}'...")
+logger.command(["ln", "-sf", f"/usr/share/zoneinfo/{iana_tz_area}/{iana_tz_location}", "/etc/localtime"])
+logger.info("Synchronizing hardware clock to system clock...")
+logger.command(["hwclock", "--systohc"])
 
 logger.info("Setting up locales...")
 logger.info("Editing /etc/locale.gen...")
