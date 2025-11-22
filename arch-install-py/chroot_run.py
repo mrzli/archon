@@ -103,6 +103,8 @@ logger.info("Editing /etc/locale.gen...")
 logger.command(["sed", "-E", "-i", "s/^#\\s*(en_US.UTF-8 UTF-8)/\\1/", "/etc/locale.gen"])
 logger.info("Generating locales...")
 logger.command(["locale-gen"])
+logger.info("Setting LANG variable...")
+logger.command('echo "LANG=en_US.UTF-8" > /etc/locale.conf', shell=True)
 
 logger.info("Setting up RAM disk...")
 
