@@ -16,10 +16,15 @@ def collect_inputs(logger):
     return SimpleNamespace(**inputs)
 
 def get_installation_inputs():
-    disk_name = "nvme0n1" #choose_block_device()
-    root_partition_password = "pass" #input_password("Root partition password: ")
-    username = "mrzli" #input_username()
-    user_password = "pass" #input_password("User password: ")
+    input_values = get_user_input_values()
+    # input_values = get_test_input_values()
+
+    disk_name = input_values["disk_name"]
+    root_partition_password = input_values["root_partition_password"]
+    username = input_values["username"]
+    user_password = input_values["user_password"]
+    use_encryption = input_values["use_encryption"]
+    use_lvm = input_values["use_lvm"]
 
     is_nvme = re.match(nvme_regex, disk_name)
     partition_suffix = "p" if is_nvme else ""
@@ -34,9 +39,6 @@ def get_installation_inputs():
 
     luks_mapping_path = f"/dev/mapper/{luks_mapping_name}"
     lv_path = f"/dev/{vol_group_name}/{lv_name}"
-
-    use_encryption = True #input_yes_no("Use disk encryption? (y/n): ")
-    use_lvm = True #input_yes_no("Use LVM? (y/n): ")
 
     root_partition_target = device_partition_root
     if use_lvm:
@@ -56,6 +58,8 @@ def get_installation_inputs():
         "root_partition_password": root_partition_password,
         "username": username,
         "user_password": user_password,
+        "use_encryption": use_encryption,
+        "use_lvm": use_lvm,
         "device_name": device_name,
         "device_partition_efi": device_partition_efi,
         "device_partition_root": device_partition_root,
@@ -64,12 +68,31 @@ def get_installation_inputs():
         "lv_name": lv_name,
         "luks_mapping_path": luks_mapping_path,
         "lv_path": lv_path,
-        "use_encryption": use_encryption,
-        "use_lvm": use_lvm,
         "root_partition_target": root_partition_target,
         "pv_target": pv_target,
         "iana_tz_area": iana_tz_area,
         "iana_tz_location": iana_tz_location,
+    }
+
+def get_user_input_values():
+    return {
+        "disk_name": choose_block_device(),
+        "root_partition_password": input_password("Root partition password: "),
+        "username": input_username(),
+        "user_password": input_password("User password: "),
+        "use_encryption": input_yes_no("Use disk encryption? (y/n): "),
+        "use_lvm": input_yes_no("Use LVM? (y/n): "),
+    }
+
+
+def get_test_input_values():
+    return {
+        "disk_name": "nvme0n1",
+        "root_partition_password": "pass",
+        "username": "mrzli",
+        "user_password": "pass",
+        "use_encryption": True,
+        "use_lvm": True,
     }
 
 def choose_block_device():
