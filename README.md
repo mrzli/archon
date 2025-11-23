@@ -2,7 +2,7 @@
 
 A set of scripts to set up a new Arch Linux installation.
 
-A lot of it is based on (copied from) or inspired by [Omarchy](https://github.com/basecamp/omarchy).
+A lot of it is based on, copied from, or inspired by [Omarchy](https://github.com/basecamp/omarchy).
 
 ## Clone This Repository
 
