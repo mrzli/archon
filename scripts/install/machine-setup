@@ -11,12 +11,12 @@ usage() {
 }
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-target_dir="$XDG_DATA_HOME/machine-setup"
+target_dir="$XDG_DATA_HOME/archon"
 
 command="$1"
 
 if [[ "$command" == "i" ]]; then
-  curl -sSL https://raw.githubusercontent.com/mrzli/machine-setup/master/install.sh | bash
+  curl -sSL https://raw.githubusercontent.com/mrzli/archon/master/install.sh | bash
 elif [[ "$command" == "d" ]]; then
   rm -rf "$target_dir"
 elif [[ "$command" == "c" ]]; then

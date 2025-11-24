@@ -9,7 +9,7 @@ sudo pacman -S --noconfirm git rustup
 rustup default stable
 
 # INSTALL VIA RUN SCRIPTS:
-# before all, navigate to "$XDG_DATA_HOME/machine-setup/run"
+# before all, navigate to "$XDG_DATA_HOME/archon/run"
 ./run paru-install  # Install paru AUR helper.
 ```
 
