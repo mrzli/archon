@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-def install_packages_from_file(file_path)::
+def install_packages_from_file(file_path):
     packages = parse_packages(file_path)
     install_packages(packages)
 
