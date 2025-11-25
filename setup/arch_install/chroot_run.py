@@ -49,6 +49,7 @@ base_packages = [
     "openssh",          # SSH server and client.
     "networkmanager",   # Network management service.
     "vim",              # Text editor.
+    "git"               # Version control system.
 ]
 logger.command(["pacman", "-S", "--noconfirm", *base_packages])
 
