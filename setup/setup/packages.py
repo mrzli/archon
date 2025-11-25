@@ -13,7 +13,7 @@ def uninstall_packages_from_file(file_path):
     uninstall_packages(packages)
 
 def uninstall_packages(packages):
-    subprocess.run(["pacman", "-Rns", "--noconfirm", *packages], check=True)
+    subprocess.run(["sudo", "pacman", "-Rns", "--noconfirm", *packages], check=True)
 
 def parse_packages(file_path):
     packages = []
