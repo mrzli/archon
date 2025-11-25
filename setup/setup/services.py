@@ -8,7 +8,7 @@ def enable_and_start_services_from_file(file_path, is_user_service=False):
 
 def enable_and_start_services(services, is_user_service=False):
     cmd = get_command(services, "enable", is_user_service=is_user_service)
-    subprocess.run(["sudo", *cmd], check=True)
+    subprocess.run(cmd, check=True)
 
 def disable_and_stop_services_from_file(file_path):
     services = parse_file_entries(file_path)
@@ -16,10 +16,14 @@ def disable_and_stop_services_from_file(file_path):
 
 def disable_and_stop_services(services, is_user_service=False):
     cmd = get_command(services, "disable", is_user_service=is_user_service)
-    subprocess.run(["sudo", *cmd], check=True)
+    subprocess.run(cmd, check=True)
 
 def get_command(services, action, is_user_service=False):
-    base_cmd = ["systemctl"]
-    if is_user_service:
-        base_cmd.append("--user")
-    return [*base_cmd, action, "--now", *services]
+    return [
+        *(["sudo"] if not is_user_service else []),
+        "systemctl",
+        *(["--user"] if is_user_service else []),
+        action,
+        "--now",
+        *services
+    ]
