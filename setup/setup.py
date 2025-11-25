@@ -1,7 +1,7 @@
 import argparse
 
 def setup():
-    parser = argparse.ArgumentParser(description="My simple CLI tool")
+    parser = argparse.ArgumentParser(description="Tool for installing or uninstalling 'archon' Arch Linux setup.")
     
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -9,7 +9,7 @@ def setup():
     install_parser = subparsers.add_parser(
         'install',
         aliases=['i'],                  # ← allows "i" too
-        help='Install something'
+        help="Install 'archon' Arch Linux setup"
     )
     install_parser.set_defaults(func=install)
 
@@ -17,7 +17,7 @@ def setup():
     uninstall_parser = subparsers.add_parser(
         'uninstall',
         aliases=['u'],                  # ← allows "u" too
-        help='Uninstall something'
+        help="Uninstall 'archon' Arch Linux setup"
     )
     uninstall_parser.set_defaults(func=uninstall)
 
