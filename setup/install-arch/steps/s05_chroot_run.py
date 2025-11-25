@@ -15,11 +15,11 @@ def chroot_run(logger, env, inputs):
 
     logger.info("Preparing chroot environment...")
 
-    logger.command(["mkdir", "-p", "/mnt/arch-install"])
+    logger.command(["mkdir", "-p", "/mnt/archon"])
 
     script_dir = shutil.os.path.dirname(shutil.os.path.abspath(__file__))
     python_project_dir = shutil.os.path.abspath(shutil.os.path.join(script_dir, ".."))
-    shutil.copytree(python_project_dir, "/mnt/arch-install", dirs_exist_ok=True)
+    shutil.copytree(python_project_dir, "/mnt/archon", dirs_exist_ok=True)
 
     chroot_params = [
         cpu_vendor,
@@ -38,12 +38,12 @@ def chroot_run(logger, env, inputs):
 
     chroot_cmd = (
         "pacman -Syu --noconfirm python && "
-        "cd /arch-install && "
+        "cd /archon && "
         f"python chroot_run.py {chroot_params_str}"
     )
 
     command(["arch-chroot", "/mnt", "/bin/bash", "-c", chroot_cmd], output='all')
 
-    logger.command(["rm", "-rf", "/mnt/arch-install"])
+    logger.command(["rm", "-rf", "/mnt/archon"])
 
     logger.info("Chroot setup completed successfully.")
