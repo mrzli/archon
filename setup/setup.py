@@ -19,7 +19,7 @@ def setup():
     # "install" command (i or install)
     install_parser = subparsers.add_parser(
         'install',
-        aliases=['i'],                  # ← allows "i" too
+        aliases=['i'],
         help="Install 'archon' Arch Linux setup"
     )
     install_parser.set_defaults(func=install)
@@ -27,7 +27,7 @@ def setup():
     # "uninstall" command (u or uninstall)
     uninstall_parser = subparsers.add_parser(
         'uninstall',
-        aliases=['u'],                  # ← allows "u" too
+        aliases=['u'],
         help="Uninstall 'archon' Arch Linux setup"
     )
     uninstall_parser.set_defaults(func=uninstall)
