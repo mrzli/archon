@@ -1,4 +1,1 @@
 bluetooth
-pipewire
-wireplumber
-pipewire-pulse
