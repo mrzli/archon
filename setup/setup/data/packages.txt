@@ -1,6 +1,5 @@
 # Bluetooth.
-# bluez             # Bluetooth protocol stack.
-# bluez-utils       # Command-line tools for Bluetooth.
-# bluetui           # Terminal user interface for managing Bluetooth devices.
 
-git
+bluez             # Bluetooth protocol stack.
+bluez-utils       # Command-line tools for Bluetooth.
+bluetui           # Terminal user interface for managing Bluetooth devices.
