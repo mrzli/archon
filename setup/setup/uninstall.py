@@ -9,4 +9,4 @@ from util import (
 )
 
 def uninstall():
-     subprocess.run('archon-uninstall-paru')
+     subprocess.run(['archon-uninstall-paru'])
