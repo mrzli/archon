@@ -10,6 +10,8 @@ from util import (
 from .packages import uninstall_packages_from_file
 
 def uninstall():
+    subprocess.run(['clear'])
+
     # Ensure sudo password is provided.
     subprocess.run(['sudo', '-v'])
 
