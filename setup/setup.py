@@ -1,8 +1,5 @@
 import argparse
 
-if __name__ == "__main__":
-    setup()
-
 def setup():
     parser = argparse.ArgumentParser(description="My simple CLI tool")
     
@@ -32,3 +29,7 @@ def install():
 
 def uninstall():
     print("Running uninstall...")
+
+if __name__ == "__main__":
+    setup()
+
