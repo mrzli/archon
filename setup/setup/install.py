@@ -7,7 +7,7 @@ from util import (
   LoggerConsoleHandler,
   LoggerFileHandler
 )
-from .packages install_packages_from_file
+from .packages import install_packages_from_file
 
 def install():
     subprocess.run(["archon-install-paru"])
