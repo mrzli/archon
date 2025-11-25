@@ -12,7 +12,7 @@ from util import (
 # Initialize logger.
 logger = Logger([
     LoggerConsoleHandler(LogLevel.INFO),
-    LoggerFileHandler(LogLevel.DEBUG, "/var/log/arch-install-py.log")
+    LoggerFileHandler(LogLevel.DEBUG, "/var/log/arch-install.log")
 ])
 
 cpu_vendor = sys.argv[1]
