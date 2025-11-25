@@ -1,4 +1,7 @@
 import argparse
+import os
+
+log_dir = os.path.expanduser("~/.local/state/log")
 
 def setup():
     parser = argparse.ArgumentParser(description="Tool for installing or uninstalling 'archon' Arch Linux setup.")
@@ -25,9 +28,21 @@ def setup():
     args.func()  # calls install() or uninstall()
 
 def install():
+    os.makedirs(log_dir, exist_ok=True)
+
+    logger = Logger([
+        LoggerConsoleHandler(LogLevel.INFO),
+        LoggerFileHandler(LogLevel.DEBUG, os.path.join(log_dir, "archon-install.log"))
+    ])
+
+    logger.command(["clear"])
+    logger.info("Welcome to the 'archon' Arch Linux setup tool.")
+
     print("Running install...")
 
 def uninstall():
+    os.makedirs(log_dir, exist_ok=True)
+
     print("Running uninstall...")
 
 if __name__ == "__main__":
