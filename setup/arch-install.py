@@ -5,7 +5,7 @@ from util import (
   LoggerConsoleHandler,
   LoggerFileHandler
 )
-from steps import (
+from arch_install.steps import (
   get_environment,
   validate_environment,
   collect_inputs,
