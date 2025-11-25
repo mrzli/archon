@@ -1,5 +1,11 @@
 # Bluetooth.
-
 bluez             # Bluetooth protocol stack.
 bluez-utils       # Command-line tools for Bluetooth.
 bluetui           # Terminal user interface for managing Bluetooth devices.
+
+# Audio.
+pipewire          # Sound server/processor, central to audio handling.
+pipewire-alsa     # Allows communication between PipeWire and ALSA.
+pipewire-jack     # Allows communication between apps using JACK and PipeWire.
+pipewire-pulse    # Allows communication between apps using PulseAudio and PipeWire.
+wireplumber       # Discovers and manages audio devices for PipeWire.
