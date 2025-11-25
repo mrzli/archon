@@ -6,7 +6,7 @@ def install_packages_from_file(file_path):
     install_packages(packages)
 
 def install_packages(packages):
-    subprocess.run(["paru", "-S", "--noconfirm", *packages], check=True)
+    subprocess.run(["sudo", "paru", "-S", "--noconfirm", *packages], check=True)
 
 def uninstall_packages_from_file(file_path):
     packages = parse_packages(file_path)
