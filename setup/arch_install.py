@@ -15,9 +15,6 @@ from arch_install.steps import (
   finalize_arch_installation
 )
 
-if __name__ == "__main__":
-    arch_install()
-
 def arch_install():
     # Initialize logger.
     logger = Logger([
@@ -35,3 +32,6 @@ def arch_install():
     setup_chroot_prerequisites(logger, inputs)
     chroot_run(logger, env, inputs)
     finalize_arch_installation(logger)
+
+if __name__ == "__main__":
+    arch_install()
