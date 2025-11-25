@@ -40,5 +40,6 @@ echo -e "\nMaking scripts executable..."
 
 # Make scripts executable.
 find "$local_repo_path/bin" -mindepth 1 -type f -exec chmod +x {} \;
+find "$local_repo_path/setup/setup" -mindepth 1 -type f -exec chmod +x {} \;
 
 echo -e "\nDone.\n\n"

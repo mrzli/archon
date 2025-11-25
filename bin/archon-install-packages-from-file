@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Usage: ./install_packages.sh <path_to_packages.txt>
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <packages.txt>"
+    exit 1
+fi
+
+file="$1"
+
+packages=()
+
+while IFS= read -r line; do
+    # Skip comments and empty lines
+    [[ $line =~ ^# ]] && continue
+    [[ -z "$line" ]] && continue
+    # Extract package name (before any # comment)
+    package=$(echo "$line" | sed 's/#.*//; s/^[[:space:]]*//; s/[[:space:]]*$//')
+    if [ -n "$package" ]; then
+        packages+=("$package")
+    fi
+done < "$file"
+
+if [ ${#packages[@]} -gt 0 ]; then
+    # sudo pacman -S "${packages[@]}"
+    echo "Installing packages: ${packages[*]}"
+else
+    echo "No packages found."
+fi
