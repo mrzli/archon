@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 from util import (
   command,
   LogLevel,
@@ -42,9 +43,10 @@ def install():
         LoggerFileHandler(LogLevel.DEBUG, os.path.join(log_dir, "archon-install.log"))
     ])
 
-    logger.command(["clear"])
-    command("export AAA=\"$HOME/.local/share/archon/bin:$PATH\" && echo $AAA", shell=True)
-    command(["printenv"], output='all')
+    # logger.command(["clear"])
+    # command("export AAA=\"$HOME/.local/share/archon/bin:$PATH\" && echo $AAA", shell=True)
+    # command(["printenv"], output='all')
+    subprocess.run("echo \"222\"", shell=True, check=True)
     logger.info("Welcome to the 'archon' Arch Linux setup tool.")
 
     print("Running install...")
