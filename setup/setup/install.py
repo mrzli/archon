@@ -9,4 +9,4 @@ from util import (
 )
 
 def install():
-     subprocess.run('archon-install-paru')
+     subprocess.run(['archon-install-paru'])
