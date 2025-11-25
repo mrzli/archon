@@ -6,4 +6,4 @@ cd "$XDG_DATA_HOME"
 rm -rf paru-bin
 git clone https://aur.archlinux.org/paru-bin.git
 cd paru-bin
-makepkg -si
+makepkg -si --noconfirm

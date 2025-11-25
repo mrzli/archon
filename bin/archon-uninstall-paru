@@ -2,7 +2,7 @@
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
-sudo pacman -Rns paru-bin
+sudo pacman -Rns --noconfirm paru-bin
 
 cd "$XDG_DATA_HOME"
 rm -rf paru-bin
