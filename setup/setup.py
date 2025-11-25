@@ -43,6 +43,7 @@ def install():
     ])
 
     logger.command(["clear"])
+    logger.command("export PATH=$PATH:$HOME/.local/share/archon/bin", shell=True)
     command(["printenv"], output='all')
     logger.info("Welcome to the 'archon' Arch Linux setup tool.")
 
