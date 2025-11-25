@@ -7,6 +7,9 @@ from util import (
   LoggerConsoleHandler,
   LoggerFileHandler
 )
+from .packages import uninstall_packages_from_file
 
 def uninstall():
-     subprocess.run(['archon-uninstall-paru'])
+    subprocess.run(['archon-uninstall-paru'])
+    packages_file = os.path.join(os.path.dirname(__file__), 'data/packages.txt')
+    uninstall_packages_from_file(packages_file)
