@@ -9,6 +9,7 @@ from util import (
   LoggerConsoleHandler,
   LoggerFileHandler
 )
+from setup import install, uninstall
 
 log_dir = os.path.expanduser("~/.local/state/log")
 
@@ -25,7 +26,7 @@ def setup():
         aliases=['i'],
         help="Install 'archon' Arch Linux setup"
     )
-    install_parser.set_defaults(func=install)
+    install_parser.set_defaults(func=install_wrapper)
 
     # "uninstall" command (u or uninstall).
     uninstall_parser = subparsers.add_parser(
@@ -33,7 +34,7 @@ def setup():
         aliases=['u'],
         help="Uninstall 'archon' Arch Linux setup"
     )
-    uninstall_parser.set_defaults(func=uninstall)
+    uninstall_parser.set_defaults(func=uninstall_wrapper)
 
     args = parser.parse_args()
     args.func()
@@ -46,7 +47,7 @@ def setup_rerequisites():
     os.environ["ARCHON_PATH"] = str(archon_path)
     os.environ["PATH"] = str(archon_path / "bin") + os.pathsep + os.environ.get("PATH", "")
 
-def install():
+def install_wrapper():
     logger = Logger([
         LoggerConsoleHandler(LogLevel.INFO),
         LoggerFileHandler(LogLevel.DEBUG, os.path.join(log_dir, "archon-install.log"))
@@ -61,10 +62,10 @@ def install():
     subprocess.run(["printenv"], check=True)
     logger.info("Welcome to the 'archon' Arch Linux setup tool.")
 
-    print("Running install...")
+    install()
 
-def uninstall():
-    print("Running uninstall...")
+def uninstall_wrapper():
+    uninstall()
 
 if __name__ == "__main__":
     setup()
