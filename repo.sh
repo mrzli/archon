@@ -39,6 +39,6 @@ echo -e "\nPost clone actions..."
 echo -e "\nMaking scripts executable..."
 
 # Make scripts executable.
-find "$local_repo_path/scripts" -mindepth 1 -type f -exec chmod +x {} \;
+find "$local_repo_path/bin" -mindepth 1 -type f -exec chmod +x {} \;
 
 echo -e "Done.\n\n"
