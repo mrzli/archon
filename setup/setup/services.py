@@ -21,5 +21,5 @@ def disable_and_stop_services(services, is_user_service=False):
 def get_command(services, action, is_user_service=False):
     base_cmd = ["systemctl"]
     if is_user_service:
-        base_cmd.insert(0, "--user")
+        base_cmd.append("--user")
     return [*base_cmd, action, "--now", *services]
