@@ -47,6 +47,7 @@ def install():
     # command("export AAA=\"$HOME/.local/share/archon/bin:$PATH\" && echo $AAA", shell=True)
     # command(["printenv"], output='all')
     subprocess.run("echo \"222\"", shell=True, check=True)
+    subprocess.run(["clear"])
     logger.info("Welcome to the 'archon' Arch Linux setup tool.")
 
     print("Running install...")
