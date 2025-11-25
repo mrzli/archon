@@ -48,19 +48,19 @@ def setup_rerequisites():
     os.environ["PATH"] = str(archon_path / "bin") + os.pathsep + os.environ.get("PATH", "")
 
 def install_wrapper():
-    logger = Logger([
-        LoggerConsoleHandler(LogLevel.INFO),
-        LoggerFileHandler(LogLevel.DEBUG, os.path.join(log_dir, "archon-install.log"))
-    ])
+    # logger = Logger([
+    #     LoggerConsoleHandler(LogLevel.INFO),
+    #     LoggerFileHandler(LogLevel.DEBUG, os.path.join(log_dir, "archon-install.log"))
+    # ])
 
-    # logger.command(["clear"])
-    # command("export AAA=\"$HOME/.local/share/archon/bin:$PATH\" && echo $AAA", shell=True)
-    # command(["printenv"], output='all')
-    # subprocess.run("echo \"222\"", shell=True, check=True)
-    # subprocess.run(["clear"])
-    # subprocess.run("export AAA=\"$HOME/.local/share/archon/bin:$PATH\" && echo $AAA", shell=True)
-    subprocess.run(["printenv"], check=True)
-    logger.info("Welcome to the 'archon' Arch Linux setup tool.")
+    # # logger.command(["clear"])
+    # # command("export AAA=\"$HOME/.local/share/archon/bin:$PATH\" && echo $AAA", shell=True)
+    # # command(["printenv"], output='all')
+    # # subprocess.run("echo \"222\"", shell=True, check=True)
+    # # subprocess.run(["clear"])
+    # # subprocess.run("export AAA=\"$HOME/.local/share/archon/bin:$PATH\" && echo $AAA", shell=True)
+    # subprocess.run(["printenv"], check=True)
+    # logger.info("Welcome to the 'archon' Arch Linux setup tool.")
 
     install()
 
