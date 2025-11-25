@@ -9,4 +9,4 @@ from util import (
 )
 
 def install():
-     subprocess.run(['clear'])
+     subprocess.run(['printenv'])
