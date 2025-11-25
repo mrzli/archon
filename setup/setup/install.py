@@ -10,3 +10,4 @@ from util import (
 
 def install():
      subprocess.run(['printenv'])
+     subprocess.run(["archon-install-paru"])
