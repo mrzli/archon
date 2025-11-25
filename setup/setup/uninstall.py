@@ -1,2 +1,12 @@
+import os
+import subprocess
+from util import (
+  command,
+  LogLevel,
+  Logger,
+  LoggerConsoleHandler,
+  LoggerFileHandler
+)
+
 def uninstall():
-    print("Running uninstall...")
+     subprocess.run('archon-uninstall-paru')
