@@ -1,2 +1,12 @@
+import os
+import subprocess
+from util import (
+  command,
+  LogLevel,
+  Logger,
+  LoggerConsoleHandler,
+  LoggerFileHandler
+)
+
 def install():
-     print("Running install...")
+     subprocess.run('archon-install-paru')
