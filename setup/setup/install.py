@@ -10,6 +10,9 @@ from util import (
 from .packages import install_packages_from_file
 
 def install():
+    # Ensure sudo password is provided.
+    subprocess.run(['sudo', '-v'])
+
     subprocess.run(["archon-install-paru"])
     packages_file = os.path.join(os.path.dirname(__file__), 'data/packages.txt')
     install_packages_from_file(packages_file)
