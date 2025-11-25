@@ -20,8 +20,11 @@ def install():
 
     subprocess.run(['sudo', 'pacman', '-Syu', '--noconfirm'])
     subprocess.run(["archon-install-paru"])
+
     packages_file = os.path.join(data_dir, 'packages.txt')
     install_packages_from_file(packages_file)
     services_file = os.path.join(data_dir, 'services.txt')
     enable_and_start_services_from_file(services_file)
+    user_services_file = os.path.join(data_dir, 'services-user.txt')
+    enable_and_start_services_from_file(user_services_file, is_user_service=True)
 
