@@ -28,18 +28,18 @@ hyprland                             # Wayland compositor/VM.
 waybar                               # Status bar for Wayland.
 walker-bin                           # Application launcher (AUR).
 elephant-bin                         # Data provider service, used by walker (AUR).
-elephant-bluetooth-bin               # Data provider for Bluetooth devices (AUR).
-elephant-calc-bin                    # Data provider for calculations (AUR).
-elephant-clipboard-bin               # Data provider for clipboard contents (AUR).
-elephant-desktopapplications-bin     # Data provider for desktop applications (AUR).
-elephant-files-bin                   # Data provider for file management (AUR).
-elephant-menus-bin                   # Data provider for application menus (AUR).
-elephant-providerlist-bin            # Data provider for available providers (AUR).
-elephant-runner-bin                  # Data provider for application runners (AUR).
-elephant-symbols-bin                 # Data provider for symbols (AUR).
-elephant-todo-bin                    # Data provider for todo lists (AUR).
-elephant-unicode-bin                 # Data provider for Unicode characters (AUR).
-elephant-websearch-bin               # Data provider for web searches (AUR).
+# elephant-bluetooth-bin               # Data provider for Bluetooth devices (AUR).
+# elephant-calc-bin                    # Data provider for calculations (AUR).
+# elephant-clipboard-bin               # Data provider for clipboard contents (AUR).
+# elephant-desktopapplications-bin     # Data provider for desktop applications (AUR).
+# elephant-files-bin                   # Data provider for file management (AUR).
+# elephant-menus-bin                   # Data provider for application menus (AUR).
+# elephant-providerlist-bin            # Data provider for available providers (AUR).
+# elephant-runner-bin                  # Data provider for application runners (AUR).
+# elephant-symbols-bin                 # Data provider for symbols (AUR).
+# elephant-todo-bin                    # Data provider for todo lists (AUR).
+# elephant-unicode-bin                 # Data provider for Unicode characters (AUR).
+# elephant-websearch-bin               # Data provider for web searches (AUR).
 
 ## Applications.
 #alacritty                    # Terminal emulator.
