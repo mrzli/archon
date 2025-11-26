@@ -11,9 +11,6 @@ def install_packages(packages):
         [
             "paru",
             "-S",
-            "--noconfirm",
-            '--overwrite',
-            "'*'",
             *packages
         ],
         check=True
