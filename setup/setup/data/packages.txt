@@ -27,7 +27,7 @@ mise                  # Version manager.
 hyprland                             # Wayland compositor/VM.
 waybar                               # Status bar for Wayland.
 walker-bin                           # Application launcher (AUR).
-elephant-bin                         # Data provider service, used by walker (AUR).
+# elephant-bin                         # Data provider service, used by walker (AUR).
 # elephant-bluetooth-bin               # Data provider for Bluetooth devices (AUR).
 # elephant-calc-bin                    # Data provider for calculations (AUR).
 # elephant-clipboard-bin               # Data provider for clipboard contents (AUR).

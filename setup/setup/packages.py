@@ -2,15 +2,25 @@ import subprocess
 import sys
 from .file_entries import parse_file_entries
 
-def install_packages_from_file(file_path):
-    packages = parse_file_entries(file_path)
+def install_packages_from_file(packages_file):
+    packages = parse_file_entries(packages_file)
     install_packages(packages)
 
 def install_packages(packages):
-    subprocess.run(["paru", "-S", "--noconfirm", *packages], check=True)
+    subprocess.run(
+        [
+            "paru",
+            "-S",
+            "--noconfirm",
+            '--overwrite',
+            "'*'",
+            *packages
+        ],
+        check=True
+    )
 
-def uninstall_packages_from_file(file_path):
-    packages = parse_file_entries(file_path)
+def uninstall_packages_from_file(packages_file):
+    packages = parse_file_entries(packages_file)
     uninstall_packages(packages)
 
 def uninstall_packages(packages):
