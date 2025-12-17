@@ -10,13 +10,14 @@ from util import (
   LoggerFileHandler
 )
 from setup import install, uninstall
+from setup.config import setup_config, remove_config
 
 log_dir = os.path.expanduser("~/.local/state/log")
 
 def setup():
     setup_rerequisites()
 
-    parser = argparse.ArgumentParser(description="Tool for installing or uninstalling 'archon' Arch Linux setup.")
+    parser = argparse.ArgumentParser(description="Tool for installing, uninstalling, and managing 'archon' Arch Linux setup.")
     
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -35,6 +36,22 @@ def setup():
         help="Uninstall 'archon' Arch Linux setup"
     )
     uninstall_parser.set_defaults(func=uninstall_wrapper)
+
+    # "config" command (c or config).
+    config_parser = subparsers.add_parser(
+        'config',
+        aliases=['c'],
+        help="Copy repo data/config into XDG_CONFIG_HOME"
+    )
+    config_parser.set_defaults(func=config_wrapper)
+
+    # "remove-config" command (rc or remove-config).
+    remove_config_parser = subparsers.add_parser(
+        'remove-config',
+        aliases=['rc', 'remove_config'],
+        help="Delete everything inside XDG_CONFIG_HOME"
+    )
+    remove_config_parser.set_defaults(func=remove_config_wrapper)
 
     args = parser.parse_args()
     args.func()
@@ -66,6 +83,15 @@ def install_wrapper():
 
 def uninstall_wrapper():
     uninstall()
+
+def config_wrapper():
+    repo_data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+    subprocess.run(['clear'])
+    setup_config(repo_data_dir)
+
+def remove_config_wrapper():
+    subprocess.run(['clear'])
+    remove_config()
 
 if __name__ == "__main__":
     setup()
