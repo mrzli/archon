@@ -20,9 +20,9 @@ def uninstall():
 
     subprocess.run(['archon-uninstall-paru'])
 
-    packages_file = os.path.join(data_dir, 'packages.txt')
-    uninstall_packages_from_file(packages_file)
-    services_file = os.path.join(data_dir, 'services.txt')
-    disable_and_stop_services_from_file(services_file)
     user_services_file = os.path.join(data_dir, 'services-user.txt')
     disable_and_stop_services_from_file(user_services_file, is_user_service=True)
+    services_file = os.path.join(data_dir, 'services.txt')
+    disable_and_stop_services_from_file(services_file)
+    packages_file = os.path.join(data_dir, 'packages.txt')
+    uninstall_packages_from_file(packages_file)
