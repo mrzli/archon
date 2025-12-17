@@ -2,7 +2,9 @@
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
-sudo pacman -Rns --noconfirm paru-bin
+# check if paru-bin is installed
+if ! pacman -Qi paru-bin &> /dev/null; then
+  sudo pacman -Rns --noconfirm paru-bin
 
 cd "$XDG_DATA_HOME"
 rm -rf paru-bin
