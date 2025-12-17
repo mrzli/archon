@@ -80,7 +80,7 @@ hostname = f"{username}-arch"
 
 logger.info(f"Setting hostname to '{hostname}'...")
 # logger.command(["hostnamectl", "set-hostname", hostname])
-# Directly write to /etc/hostname to avoid issues with hostnamectl in chroot.
+# Directly write to /etc/hostname to avoid issues with hostnamectl in chroot not working for some reason.
 logger.command(f'echo "{hostname}" > /etc/hostname', shell=True)
 
 logger.info("Configuring users...")
