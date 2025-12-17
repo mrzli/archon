@@ -42,7 +42,7 @@ elephant-unicode-bin                 # Data provider for Unicode characters (AUR
 elephant-websearch-bin               # Data provider for web searches (AUR).
 
 ## Applications.
-#alacritty                    # Terminal emulator.
-#neovim                       # Text editor.
-#google-chrome                # Web browser (AUR).
-#visual-studio-code-bin       # VS Code IDE (AUR).
+alacritty                    # Terminal emulator.
+neovim                       # Text editor.
+google-chrome                # Web browser (AUR).
+visual-studio-code-bin       # VS Code IDE (AUR).
