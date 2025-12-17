@@ -10,9 +10,9 @@ def enable_and_start_services(services, is_user_service=False):
     cmd = get_command(services, "enable", is_user_service=is_user_service)
     subprocess.run(cmd, check=True)
 
-def disable_and_stop_services_from_file(services_file):
+def disable_and_stop_services_from_file(services_file, is_user_service=False):
     services = parse_file_entries(services_file)
-    disable_and_stop_services(services)
+    disable_and_stop_services(services, is_user_service=is_user_service)
 
 def disable_and_stop_services(services, is_user_service=False):
     cmd = get_command(services, "disable", is_user_service=is_user_service)
