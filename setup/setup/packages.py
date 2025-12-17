@@ -33,7 +33,7 @@ def get_installed_packages_subset(packages):
         ["pacman", "-Qq", *packages],
         capture_output=True,
         text=True,
-        check=True
+        check=False
     )
     installed_packages = result.stdout.strip().split('\n')
     return installed_packages
