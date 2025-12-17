@@ -3,7 +3,7 @@
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 cd "$XDG_DATA_HOME"
-rm -rf paru-bin
-git clone https://aur.archlinux.org/paru-bin.git
-cd paru-bin
+rm -rf paru
+git clone https://aur.archlinux.org/paru.git
+cd paru
 makepkg -si --noconfirm
