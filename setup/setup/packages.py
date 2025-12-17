@@ -35,7 +35,11 @@ def get_installed_packages_subset(packages):
         text=True,
         check=False
     )
-    installed_packages = result.stdout.strip().split('\n')
+    installed_packages = [
+        line.strip()
+        for line in (result.stdout or "").splitlines()
+        if line.strip()
+    ]
     # Print installed packages for debugging
     print(f"Installed packages subset: {installed_packages}")
     return installed_packages
