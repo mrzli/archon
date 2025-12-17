@@ -37,7 +37,6 @@ def get_services_to_uninstall(services, is_user_service=False):
         for service in services
         if service in existing_services
     ]
-    print(f"Services to uninstall: {services_to_uninstall}")
     return services_to_uninstall
 
 def get_existing_services(is_user_service=False):
@@ -61,5 +60,4 @@ def get_existing_services(is_user_service=False):
         for line in (result.stdout or "").splitlines()
         if line.strip()
     ]
-    print(f"Existing services: {services}")
     return services
