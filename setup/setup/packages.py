@@ -22,7 +22,7 @@ def uninstall_packages_from_file(packages_file):
 
 def uninstall_packages(packages):
     installed_packages = get_installed_packages_subset(packages)
-    if installed_packages:
+    if installed_packages and len(installed_packages) > 0:
         subprocess.run(
             ["sudo", "pacman", "-Rns", "--noconfirm", *installed_packages],
             check=True
@@ -40,6 +40,4 @@ def get_installed_packages_subset(packages):
         for line in (result.stdout or "").splitlines()
         if line.strip()
     ]
-    # Print installed packages for debugging
-    print(f"Installed packages subset: {installed_packages}")
     return installed_packages
