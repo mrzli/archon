@@ -7,6 +7,7 @@ from util import (
   LoggerConsoleHandler,
   LoggerFileHandler
 )
+from .config import remove_config
 from .packages import uninstall_packages_from_file
 from .services import disable_and_stop_services_from_file
 
@@ -26,3 +27,5 @@ def uninstall():
     disable_and_stop_services_from_file(services_file)
     packages_file = os.path.join(data_dir, 'packages.txt')
     uninstall_packages_from_file(packages_file)
+
+    remove_config()
