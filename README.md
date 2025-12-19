@@ -20,7 +20,32 @@ XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share} rm -rf "$XDG_DATA_HOME/archon
 
 ## Install Arch Linux
 
-TODO
+```bash
+python ~/.local/share/archon/setup/arch_install.py
+```
+
+## Setup Arch Linux
+
+### Setup System
+
+```bash
+python ~/.local/share/archon/setup/setup.py i
+python ~/.local/share/archon/setup/setup.py c
+```
+
+Change shell to zsh:
+
+```bash
+chsh -s /bin/zsh
+```
+
+Re login to see changes.
+
+### Remove Setup
+
+```bash
+python ~/.local/share/archon/setup/setup.py u
+```
 
 ## Other
 
