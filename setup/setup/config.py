@@ -4,6 +4,7 @@ from pathlib import Path
 
 def setup_config(repo_data_dir):
     copy_xdg_config(repo_data_dir)
+    copy_home_config(repo_data_dir)
 
 def copy_xdg_config(repo_data_dir):
     repo_data_dir = Path(repo_data_dir)
