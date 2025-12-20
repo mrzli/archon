@@ -56,8 +56,6 @@ if [[ ! -d "$projects_data_dir" ]]; then
   exit 1
 fi
 
-# Read <root>/omarchy/data/projects/*.txt and clone repos accordingly.
-
 mapfile -t project_files < <(find "$projects_data_dir" -maxdepth 1 -type f -name '*.txt' -print | sort)
 
 if [[ ${#project_files[@]} -eq 0 ]]; then
