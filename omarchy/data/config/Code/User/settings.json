@@ -1,0 +1,53 @@
+{
+  "diffEditor.renderSideBySide": true,
+  "editor.autoClosingBrackets": "never",
+  "editor.autoClosingComments": "never",
+  "editor.autoClosingQuotes": "never",
+  "editor.guides.indentation": false,
+  "editor.fontFamily": "'FiraCode Nerd Font Mono', monospace",
+  "editor.fontLigatures": false,
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.minimap.enabled": false,
+  "editor.renderWhitespace": "all",
+  "editor.tabSize": 2,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "files.autoSave": "afterDelay",
+  "git.confirmSync": false,
+  "github.copilot.enable": {
+    "*": true,
+    "csv": false,
+    "markdown": true,
+    "plaintext": true,
+    "scminput": false,
+    "shellscript": true
+  },
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono', monospace",
+  "terminal.integrated.scrollback": 10000,
+  "window.customTitleBarVisibility": "auto",
+  "workbench.editor.empty.hint": "hidden",
+  "workbench.editor.wrapTabs": true,
+  "workbench.secondarySideBar.defaultVisibility": "hidden",
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[racket]": {
+    "editor.defaultFormatter": "lishizhen.racket-fmt"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

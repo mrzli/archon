@@ -1,0 +1,32 @@
+angular.ng-template
+dbaeumer.vscode-eslint
+digitalbrainstem.javascript-ejs-support
+donjayamanne.githistory
+esbenp.prettier-vscode
+evzen-wybitul.magic-racket
+firsttris.vscode-jest-runner
+github.copilot
+github.copilot-chat
+goran-mrzljak.snippets-jest
+goran-mrzljak.snippets-nestjs
+goran-mrzljak.snippets-react
+goran-mrzljak.snippets-redux-observable
+goran-mrzljak.snippets-special
+goran-mrzljak.snippets-typescript
+grapecity.gc-excelviewer
+gruntfuggly.todo-tree
+igochkov.vscode-ebnf
+lishizhen.racket-fmt
+mechatroner.rainbow-csv
+meganrogge.template-string-converter
+mhutchie.git-graph
+ms-playwright.playwright
+ms-python.black-formatter
+ms-python.debugpy
+ms-python.python
+ms-python.vscode-pylance
+ms-python.vscode-python-envs
+# openai.chatgpt
+# prisma.prisma
+steoates.autoimport
+unifiedjs.vscode-mdx
