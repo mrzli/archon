@@ -54,6 +54,23 @@ for src in "$config_source_dir"/*; do
   cp -R "$src" "$XDG_CONFIG_HOME/$name"
 done
 
+# $XDG_CONFIG_HOME/waybar/config.jsonc
+# In the root object, replace "hyprland/workspaces"."persistent-workspaces" content with
+# {
+#   "1": [],
+#   "2": [],
+#   "3": [],
+#   "4": [],
+#   "5": [],
+#   "6": [],
+#   "7": [],
+#   "8": [],
+#   "9": [],
+#   "10": []
+# }
+waybar_config_file="$XDG_CONFIG_HOME/waybar/config.jsonc"
+jq '.["hyprland/workspaces"]["persistent-workspaces"] = {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": [], "10": []}' "$waybar_config_file" > "$waybar_config_file.tmp" && mv "$waybar_config_file.tmp" "$waybar_config_file"
+
 # Do this manually:
 # - Log into Gmail and YouTube on Chromium.
 # - Log into Grok.
