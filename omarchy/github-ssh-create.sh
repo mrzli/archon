@@ -20,4 +20,5 @@ Host github.com
 EOF
 chmod 600 "$ssh_config_file"
 
-
+# Copy public key to clipboard.
+cat "$ssh_key_file.pub" | wl-copy
