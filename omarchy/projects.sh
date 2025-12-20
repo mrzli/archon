@@ -2,26 +2,6 @@
 
 set -euo pipefail
 
-repo_root_dir="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
-projects_dir="$HOME/projects"
-
-# Check if the projects directory exists. If it exists, delete, but prompt the user for confirmation.
-if [[ -d "$projects_dir" ]]; then
-  read -rp "The projects directory '$projects_dir' already exists. Do you want to delete it and recreate? (y/N): " confirm
-  if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
-    rm -rf "$projects_dir"
-  else
-    echo "Aborting."
-    exit 1
-  fi
-fi
-
-mkdir -p "$projects_dir"
-
-personal_projects_dir="$projects_dir/personal"
-
-projects_data_dir="$repo_root_dir/omarchy/data/projects"
-
 read_project_file() {
   local file_path="$1"
   [[ -f "$file_path" ]] || return 0
@@ -51,12 +31,50 @@ clone_repos() {
   done
 }
 
-for subdir in "${personal_projects_subdirs[@]}"; do
+repo_root_dir="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+projects_dir="$HOME/projects"
+
+# Check if the projects directory exists. If it exists, delete, but prompt the user for confirmation.
+if [[ -d "$projects_dir" ]]; then
+  read -rp "The projects directory '$projects_dir' already exists. Do you want to delete it and recreate? (y/N): " confirm
+  if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
+    rm -rf "$projects_dir"
+  else
+    echo "Aborting."
+    exit 1
+  fi
+fi
+
+mkdir -p "$projects_dir"
+
+personal_projects_dir="$projects_dir/personal"
+
+projects_data_dir="$repo_root_dir/omarchy/data/projects"
+
+if [[ ! -d "$projects_data_dir" ]]; then
+  echo "Projects data dir not found: $projects_data_dir"
+  exit 1
+fi
+
+# Read <root>/omarchy/data/projects/*.txt and clone repos accordingly.
+
+mapfile -t project_files < <(find "$projects_data_dir" -maxdepth 1 -type f -name '*.txt' -print | sort)
+
+if [[ ${#project_files[@]} -eq 0 ]]; then
+  echo "No project list files found in: $projects_data_dir"
+  exit 1
+fi
+
+for projects_file in "${project_files[@]}"; do
+  [[ -n "$projects_file" ]] || continue
+
+  file_name="$(basename "$projects_file")"
+  subdir_base="${file_name%.txt}"
+  subdir="$(printf '%s' "$subdir_base" | tr '_' '/')"
+
   target_dir="$personal_projects_dir/$subdir"
   mkdir -p "$target_dir"
 
-  projects_file="$projects_data_dir/${subdir//\//_}.txt"
   mapfile -t repos < <(read_project_file "$projects_file")
-
   clone_repos "$target_dir" "${repos[@]}"
 done
