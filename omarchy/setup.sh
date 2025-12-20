@@ -56,13 +56,13 @@ for src in "$config_source_dir"/*; do
   cp -R "$src" "$XDG_CONFIG_HOME/$name"
 done
 
-# $XDG_CONFIG_HOME/hyprland/hyprland.conf
+# $XDG_CONFIG_HOME/hypr/hyprland.conf
 # Read the file and meke sure it exists.
 # Check whether it contains the following line:
 #   source = ~/.config/hypr/hyprland-custom.conf
 # If not, append it to the end of the file.
 # Copy <repo_root>/omarchy/data/hyprland-custom.conf to $XDG_CONFIG_HOME/hypr/hyprland-custom.conf.
-hyprland_conf_file="$XDG_CONFIG_HOME/hyprland/hyprland.conf"
+hyprland_conf_file="$XDG_CONFIG_HOME/hypr/hyprland.conf"
 if ! grep -q '^source = ~/.config/hypr/hyprland-custom.conf$' "$hyprland_conf_file"; then
   echo -e "\nsource = ~/.config/hypr/hyprland-custom.conf" >> "$hyprland_conf_file"
 fi
