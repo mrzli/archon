@@ -9,7 +9,7 @@ mkdir -p "$XDG_CONFIG_HOME"
 
 repo_root_dir="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
 
-# Remove unneeded.
+# Remove unneeded app and packages.
 
 packages_to_remove=(
 	1password-beta
@@ -30,10 +30,16 @@ webapps_to_remove=(
 
 omarchy-webapp-remove "${webapps_to_remove[@]}"
 
-# Install needed.
+# Install packages.
 
 omarchy-install-steam
 omarchy-install-vscode
+
+# Install development tools.
+omarchy-install-dev-env ruby
+omarchy-install-dev-env python
+omarchy-install-dev-env node
+omarchy-install-dev-env bun
 
 # Install VSCode extensions.
 vscode_extensions_file="$repo_root_dir/omarchy/data/vscode-extensions.txt"
