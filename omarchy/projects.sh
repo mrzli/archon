@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 projects_dir="$HOME/projects"
 
 # Check if the projects directory exists. If it exists, delete, but prompt the user for confirmation.
@@ -33,97 +35,44 @@ personal_projects_subdirs=(
   "example"
 )
 
-for subdir in "${personal_projects_subdirs[@]}"; do
-  mkdir -p "$personal_projects_dir/$subdir"
-done
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+projects_data_dir="$script_dir/data/projects"
+
+read_project_file() {
+  local file_path="$1"
+  [[ -f "$file_path" ]] || return 0
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    # Trim leading whitespace.
+    line="${line#${line%%[![:space:]]*}}"
+
+    [[ -n "$line" ]] || continue
+    [[ "$line" == \#* ]] && continue
+
+    printf '%s\n' "$line"
+  done < "$file_path"
+}
 
 clone_repos() {
-  local target_dir=$1
+  local target_dir="$1"
   shift
   local repos=("$@")
+
+  if [[ ${#repos[@]} -eq 0 ]]; then
+    return 0
+  fi
+
   for repo in "${repos[@]}"; do
     git clone "git@github.com:mrzli/$repo.git" "$target_dir/$repo"
   done
 }
 
-# docs/generic
-docs_generic_projects=(
-  "docs"
-  "generic-docs"
-  "gm-docs"
-  "repos"
-)
+for subdir in "${personal_projects_subdirs[@]}"; do
+  target_dir="$personal_projects_dir/$subdir"
+  mkdir -p "$target_dir"
 
-clone_repos "$personal_projects_dir/docs/generic" "${docs_generic_projects[@]}"
+  projects_file="$projects_data_dir/${subdir//\//_}.txt"
+  mapfile -t repos < <(read_project_file "$projects_file")
 
-# docs/development
-# No repos.
-
-# libs/shared
-libs_shared_projects=(
-  "apply-function"
-  "array-create"
-  "array-sort"
-  "array-transformers"
-  "assert"
-  "binary-search"
-  "comparers"
-  "compose-function"
-  "data-container-util"
-  "date-util"
-  "generic-functions"
-  "generic-types"
-  "nullish-checks"
-  "number-util"
-  "type-checks"
-  "value-generators"
-  "value-transformers"
-)
-
-clone_repos "$personal_projects_dir/libs/shared" "${libs_shared_projects[@]}"
-
-# libs/browser
-libs_browser_projects=(
-  "browser-storage"
-)
-
-clone_repos "$personal_projects_dir/libs/browser" "${libs_browser_projects[@]}"
-
-# libs/node
-libs_node_projects=(
-  "crypto"
-  "exec-observable"
-  "file-system"
-  "package-json"
-  "path"
-)
-
-clone_repos "$personal_projects_dir/libs/node" "${libs_node_projects[@]}"
-
-# libs/development
-libs_development_projects=(
-  "eslint-config"
-)
-
-clone_repos "$personal_projects_dir/libs/development" "${libs_development_projects[@]}"
-
-# libs/test
-libs_test_projects=(
-  "test-util"
-)
-
-clone_repos "$personal_projects_dir/libs/test" "${libs_test_projects[@]}"
-
-# tools
-tools_projects=(
-  "github-tools"
-)
-
-clone_repos "$personal_projects_dir/tools" "${tools_projects[@]}"
-
-# setup
-setup_projects=(
-  "archon"
-)
-
-clone_repos "$personal_projects_dir/setup" "${setup_projects[@]}"
+  clone_repos "$target_dir" "${repos[@]}"
+done
