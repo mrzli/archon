@@ -9,18 +9,23 @@ set -euo pipefail
 # Remove unneeded.
 
 packages_to_remove=(
-	1password
+	1password-beta
+  1password-cli
   aether
   obsidian
   spotify
   typora
 )
 
-for pkg in "${packages_to_remove[@]}"; do
-	omarchy-pkg-remove "$pkg"
-done
+omarchy-pkg-drop "${packages_to_remove[@]}"
 
-omarchy-webapp-remove Basecamp Fizzy HEY
+webapps_to_remove=(
+  Basecamp
+  Fizzy
+  HEY
+)
+
+omarchy-webapp-remove "${webapps_to_remove[@]}"
 
 # Install needed.
 
