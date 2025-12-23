@@ -1,1 +1,6 @@
-# (no repos)
+gm-trading
+trading
+trading-data-server
+trading-experiments
+trading-general-data
+tradingview-data
