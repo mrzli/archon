@@ -1,3 +1,5 @@
 [user]
   name = Goran Mržljak
   email = goran.mrzljak@gmail.com
+[init]
+  defaultBranch = master

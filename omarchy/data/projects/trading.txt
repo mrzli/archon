@@ -1,5 +1,6 @@
 gm-trading
 trading
+trading-chart
 trading-data-server
 trading-experiments
 trading-general-data
