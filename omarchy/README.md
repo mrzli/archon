@@ -12,11 +12,25 @@ Uninstall unneeded packages, install needed packages, configure settings.
 ~/.config/archon/omarchy/setup.sh
 ```
 
-Do some manuual steps:
+## Manual Steps
+
+### Wi-Fi
+
+- Go to Wi-Fi settings:
+  - Press `SUPER + ALT + SPACE`.
+  - Select 'Setup' and press `ENTER`.
+  - Select 'Wi-Fi' and press `ENTER`.
+- Select the SSID:
+  - Press `TAB` to focus on the list of available networks:
+  - Use arrow keys to select your network.
+  - Press `ENTER`.
+- Enter the Wi-Fi password and press `ENTER`.
+
+### Logins
 
 - Log into GMail, Youtube, and GitHub in Chromium.
 
-Install GitHub SSH key:
+### GitHub SSH Key
 
 ```bash
 ~/.config/archon/omarchy/github-ssh-create.sh
