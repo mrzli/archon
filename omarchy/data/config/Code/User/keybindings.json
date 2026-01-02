@@ -18,5 +18,15 @@
     "key": "ctrl+shift+alt+k",
     "command": "editor.action.copyLinesUpAction",
     "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "ctrl+shift+a",
+    "command": "workbench.panel.chat.view.copilot.focus",
+    "when": "editorFocus"
+  },
+  {
+    "key": "ctrl+shift+a",
+    "command": "workbench.action.focusActiveEditorGroup",
+    "when": "!editorFocus"
   }
 ]
