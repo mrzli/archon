@@ -83,6 +83,8 @@ Uninstall unneeded packages, install needed packages, configure settings.
 ~/.local/share/archon/omarchy/setup.sh
 ```
 
+Reboot after the script finishes.
+
 ## Manual Steps
 
 ### Wi-Fi
@@ -97,14 +99,26 @@ Uninstall unneeded packages, install needed packages, configure settings.
   - Press `ENTER`.
 - Enter the Wi-Fi password and press `ENTER`.
 
+### Chromium
+
+- Log into:
+  - GMail
+  - Youtube
+  - GitHub
+  - X
+  - Grok
+
+- Add BitWarden extension and log in.
+
 ### Logins
 
-- Log into GMail, Youtube, and GitHub in Chromium.
+- Sign into VS Code Copilot.
+- Log into Steam.
 
 ### GitHub SSH Key
 
 ```bash
-~/.config/archon/omarchy/github-ssh-create.sh
+~/.local/share/archon/omarchy/github-ssh-create.sh
 # Automatically copies the public key to clipboard.
 ```
 
@@ -119,5 +133,11 @@ Setup the SSH key in your GitHub account:
 Test the SSH connection:
 
 ```bash
-~/.config/archon/omarchy/github-ssh-test.sh
+~/.local/share/archon/omarchy/github-ssh-test.sh
+```
+
+### Create Projects
+
+```bash
+~/.local/share/archon/omarchy/create-projects.sh
 ```
