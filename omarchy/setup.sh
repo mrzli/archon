@@ -51,6 +51,16 @@ done
 
 # Setup configs.
 
+# Append custom content to ~/.bashrc
+bashrc_file="$HOME/.bashrc"
+bashrc_append_file="$repo_root_dir/omarchy/data/home/bashrc-append.txt"
+bashrc_marker="# Custom omarchy configuration"
+
+if ! grep -q "^$bashrc_marker$" "$bashrc_file" 2>/dev/null; then
+  echo -e "\n$bashrc_marker" >> "$bashrc_file"
+  cat "$bashrc_append_file" >> "$bashrc_file"
+fi
+
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 config_source_dir="$script_dir/data/config"
 
