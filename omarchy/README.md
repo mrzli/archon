@@ -65,6 +65,10 @@ curl -fsSL https://omarchy.org/install | bash
 
 Enter password when prompted.
 
+Reboot when prompted.
+
+After installation, if you don't see the Omarchy boot option, go to UEFI and disable Limine boot option.
+
 ## Script Steps
 
 Clone the repo locally:
