@@ -69,7 +69,7 @@ Reboot when prompted.
 
 After installation, if you don't see the Omarchy boot option, go to UEFI and disable Limine boot option.
 
-## Script Steps
+## Setup System
 
 Clone the repo locally:
 
