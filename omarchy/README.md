@@ -80,7 +80,7 @@ curl -sSL https://raw.githubusercontent.com/mrzli/archon/master/repo.sh | bash
 Uninstall unneeded packages, install needed packages, configure settings.
 
 ```bash
-~/.config/archon/omarchy/setup.sh
+~/.local/share/archon/omarchy/setup.sh
 ```
 
 ## Manual Steps
