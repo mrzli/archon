@@ -1,0 +1,40 @@
+
+
+# Custom aliases and functions
+
+# Directory navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Listing
+alias ll='ls -lah'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Git shortcuts
+alias gst='git status'
+alias gfa='git fetch --all'
+alias gaa='git add --all'
+alias gp='git push'
+alias gl='git pull'
+alias gd='git diff'
+
+alias gfagl='git fetch --all && git pull'
+
+gcmsg() {
+  git commit -m "${*:-update}"
+}
+
+gu() {
+  local msg="${*:-update}"
+
+  git add --all &&
+  git commit -m "$msg" &&
+  git push
+}
+
+# Misc
+alias grep='grep --color=auto'
+alias h='history'
+alias c='clear'
