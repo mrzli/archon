@@ -36,5 +36,23 @@ gu() {
 
 # Misc
 alias grep='grep --color=auto'
-alias h='history'
-alias c='clear'
+
+# Kill process at port
+killport() {
+  if [ -z "$1" ]; then
+    echo "Error: Port number required"
+    echo "Usage: killport <port>"
+    return 1
+  fi
+
+  local port="$1"
+  local pids=$(lsof -ti tcp:"$port" | tr '\n' ' ')
+
+  if [ -z "$pids" ]; then
+    echo "No process found on port $port"
+    return 1
+  fi
+
+  kill -9 $pids
+  echo "Killed process(es) on port $port: $pids"
+}
