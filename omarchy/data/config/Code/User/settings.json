@@ -28,6 +28,7 @@
   "terminal.integrated.defaultProfile.windows": "Git Bash",
   "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono', monospace",
   "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.stickyScroll.enabled": false,
   "window.customTitleBarVisibility": "auto",
   "workbench.editor.empty.hint": "hidden",
   "workbench.editor.wrapTabs": true,
