@@ -56,3 +56,22 @@ killport() {
   kill -9 $pids
   echo "Killed process(es) on port $port: $pids"
 }
+
+sc2_move_replays() {
+  local downloads_dir="$HOME/Downloads"
+  local replays_dst="/home/mrzli/.steam/root/steamapps/compatdata/3615075630/pfx/drive_c/users/steamuser/Documents/StarCraft II/Accounts/50346065/2-S2-1-553085/Replays/Multiplayer"
+
+  # Count files first (supports both cases for safety)
+  local num_files
+  num_files=$(find "$downloads_dir" -type f \( -iname "*.SC2Replay" \) 2>/dev/null | wc -l)
+
+  if [[ $num_files -eq 0 ]]; then
+    echo "No *.SC2Replay files found in '$downloads_dir'"
+    return 0
+  fi
+
+  # Move them
+  find "$downloads_dir" -type f \( -iname "*.SC2Replay" \) -exec mv -v {} "$replays_dst" \; 2>/dev/null
+
+  echo "Moved $num_files replay(s) to '$replays_dst'"
+}
