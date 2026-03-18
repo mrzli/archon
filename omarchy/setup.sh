@@ -34,6 +34,7 @@ omarchy-webapp-remove "${webapps_to_remove[@]}"
 
 omarchy-install-steam
 omarchy-install-vscode
+omarchy-pkg-aur-add postman-bin
 
 # Install development tools.
 omarchy-install-dev-env ruby
