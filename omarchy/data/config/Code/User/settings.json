@@ -1,4 +1,6 @@
 {
+  "workbench.colorTheme": "Tokyo Night",
+  "chat.viewSessions.orientation": "stacked",
   "diffEditor.renderSideBySide": true,
   "editor.autoClosingBrackets": "never",
   "editor.autoClosingComments": "never",
@@ -21,7 +23,7 @@
     "markdown": true,
     "plaintext": true,
     "scminput": false,
-    "shellscript": true
+    "shellscript": true,
   },
   "github.copilot.nextEditSuggestions.enabled": true,
   "terminal.integrated.defaultProfile.linux": "zsh",
@@ -34,21 +36,27 @@
   "workbench.editor.wrapTabs": true,
   "workbench.secondarySideBar.defaultVisibility": "hidden",
   "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[racket]": {
-    "editor.defaultFormatter": "lishizhen.racket-fmt"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  },
 }
