@@ -33,3 +33,4 @@ shopify.ruby-lsp
 # prisma.prisma
 steoates.autoimport
 unifiedjs.vscode-mdx
+ziglang.vscode-zig
