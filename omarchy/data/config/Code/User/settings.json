@@ -36,6 +36,7 @@
   "workbench.editor.empty.hint": "hidden",
   "workbench.editor.wrapTabs": true,
   "workbench.secondarySideBar.defaultVisibility": "hidden",
+  "zig.zls.enabled": "on",
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
