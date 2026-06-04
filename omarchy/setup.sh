@@ -34,14 +34,37 @@ omarchy-webapp-remove "${webapps_to_remove[@]}"
 
 omarchy-install-steam
 omarchy-install-vscode
-omarchy-pkg-aur-add postman-bin
+
+# Install AUR packages.
+aur_packages_to_add=(
+  postman-bin
+)
+
+for pkg in "${aur_packages_to_add[@]}"; do
+  omarchy-pkg-aur-add "$pkg"
+done
+
+# Install regular packages.
+packages_to_add=(
+  tokei # for counting lines of code in projects
+)
+
+for pkg in "${packages_to_add[@]}"; do
+  omarchy-pkg-add "$pkg"
+done
 
 # Install development tools.
-omarchy-install-dev-env ruby
-omarchy-install-dev-env python
-omarchy-install-dev-env node
-omarchy-install-dev-env bun
-omarchy-install-dev-env zig
+dev_envs=(
+  ruby
+  python
+  node
+  bun
+  zig
+)
+
+for env in "${dev_envs[@]}"; do
+  omarchy-install-dev-env "$env"
+done
 
 # Install VSCode extensions.
 vscode_extensions_file="$repo_root_dir/omarchy/data/vscode-extensions.txt"
