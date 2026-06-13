@@ -143,5 +143,5 @@ Test the SSH connection:
 ### Create Projects
 
 ```bash
-~/.local/share/archon/omarchy/create-projects.sh
+~/.local/share/archon/omarchy/projects-create.sh
 ```
