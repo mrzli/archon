@@ -32,7 +32,7 @@ omarchy-webapp-remove "${webapps_to_remove[@]}"
 
 # Install packages.
 
-omarchy-install-steam
+omarchy-install-gaming-steam
 omarchy-install-vscode
 
 # Install AUR packages.
