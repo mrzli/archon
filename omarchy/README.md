@@ -108,7 +108,11 @@ Reboot after the script finishes.
   - X
   - Grok
 
-- Add BitWarden extension and log in.
+- Add extensions:
+  - Bitwarden.
+    - Also log into it.
+  - StayFocusd.
+  - uBlock Origin Lite.
 
 ### Logins
 
