@@ -1,0 +1,101 @@
+{
+  "Readonly arbitrary type array": {
+    "scope": "typescript,typescriptreact",
+    "prefix": "rta",
+    "description": "Readonly array of arbitrary type items.",
+    "body": "readonly ${1:string}[]"
+  },
+  "Readonly string array": {
+    "scope": "typescript,typescriptreact",
+    "prefix": "rsa",
+    "description": "Readonly array of string items.",
+    "body": "readonly string[]"
+  },
+  "Readonly number array": {
+    "scope": "typescript,typescriptreact",
+    "prefix": "rna",
+    "description": "Readonly array of number items.",
+    "body": "readonly number[]"
+  },
+  "TypeScript multiple 'it' tests": {
+    "scope": "typescript,typescriptreact",
+    "prefix": "iteach",
+    "description": "Multiple 'it' entries generated from example array.",
+    "body": [
+      "describe('${1}', () => {",
+      "  interface Example {",
+      "    readonly input: unknown;",
+      "    readonly expected: unknown;",
+      "  }",
+      "",
+      "  const EXAMPLES: readonly Example[] = [",
+      "    {",
+      "      input: '',",
+      "      expected: '',",
+      "    },",
+      "  ];",
+      "",
+      "  for (const example of EXAMPLES) {",
+      "    it(JSON.stringify(example), () => {",
+      "      const actual = someMethod(example.input);",
+      "      expect(actual).toEqual(example.expected);",
+      "    });",
+      "  }",
+      "});"
+    ]
+  },
+  "React functional component": {
+    "scope": "typescriptreact",
+    "prefix": "rfc",
+    "description": "React functional component.",
+    "body": [
+      "import type { FC } from 'react';",
+      "",
+      "export interface ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Props {",
+      "  readonly value: string;",
+      "}",
+      "",
+      "export const ${1}: FC<${1}Props> = ({ value }) => {",
+      "  return <div>${TM_FILENAME_BASE/(.*)/${1:/kebabcase}/} + {value}</div>;",
+      "};",
+      ""
+    ]
+  },
+  "React functional component (no props)": {
+    "scope": "typescriptreact",
+    "prefix": "rfcnp",
+    "description": "React functional component without props.",
+    "body": [
+      "import type { FC } from 'react';",
+      "",
+      "export const ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}: FC = () => {",
+      "  return <div>${TM_FILENAME_BASE/(.*)/${1:/kebabcase}/}</div>;",
+      "};",
+      ""
+    ]
+  },
+  "React component stories file": {
+    "scope": "typescriptreact",
+    "prefix": "rstories",
+    "description": "Stories boilerplate for React component.",
+    "body": [
+      "import type { Meta, StoryObj } from '@storybook/react-vite';",
+      "",
+      "import { ${1:${TM_FILENAME/(.*)\\.stories\\..*/${1:/pascalcase}/}} } from './${TM_FILENAME/(.*)\\.stories\\..*/${1:/kebabcase}/}';",
+      "",
+      "const meta = {",
+      "  component: ${1},",
+      "  decorators: [],",
+      "} satisfies Meta<typeof ${1}>;",
+      "",
+      "export default meta;",
+      "",
+      "type Story = StoryObj<typeof meta>;",
+      "",
+      "export const Default: Story = {",
+      "  args: {},",
+      "};",
+      ""
+    ]
+  }
+}
