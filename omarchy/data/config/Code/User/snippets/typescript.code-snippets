@@ -85,7 +85,6 @@
       "",
       "const meta = {",
       "  component: ${1},",
-      "  decorators: [],",
       "} satisfies Meta<typeof ${1}>;",
       "",
       "export default meta;",
