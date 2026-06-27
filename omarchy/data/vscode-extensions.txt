@@ -1,6 +1,5 @@
 angular.ng-template
 bradlc.vscode-tailwindcss
-dbaeumer.vscode-eslint
 digitalbrainstem.javascript-ejs-support
 donjayamanne.githistory
 esbenp.prettier-vscode
@@ -19,7 +18,7 @@ ms-python.debugpy
 ms-python.python
 ms-python.vscode-pylance
 ms-python.vscode-python-envs
-rvest.vs-code-prettier-eslint
+oxc.oxc-vscode
 shopify.ruby-lsp
 steoates.autoimport
 unifiedjs.vscode-mdx
