@@ -47,6 +47,14 @@ done
 # Install regular packages.
 packages_to_add=(
   tokei # for counting lines of code in projects
+
+  # utilities
+  img2pdf
+
+  # for scanning documents
+  sane 
+  sane-airscan
+  simple-scan
 )
 
 for pkg in "${packages_to_add[@]}"; do
