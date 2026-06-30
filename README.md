@@ -1,56 +1,147 @@
-# Archon
+# Setup
 
-A set of scripts to set up a new Arch Linux installation.
+## Create Bootable USB
 
-A lot of it is based on, copied from, or inspired by [Omarchy](https://github.com/basecamp/omarchy).
 
-## Clone This Repository
 
-To clone this repository, run the following command in your terminal:
+## Archinstall
+
+Here are the instructions:
+
+- https://learn.omacom.io/2/the-omarchy-manual/96/manual-installation
+
+### Explained Steps
+
+Make sure you have the latest version of archinstall:
+
+```bash
+pacman -Sy archinstall
+```
+
+Run `archinstall` and follow the prompts:
+
+- Mirrors and repositories: Select a region closest to you.
+- Disk configuration:
+  - Partitioning:
+    - Disk configuration type: Use a best-effort default partition layout
+    - Select the disk to partition.
+    - Filesystem: btrfs
+    - Would you like to use BTRFS subvolumes with a default strcucture?: Yes
+    - Would you like to use compression or disable CoW?: Use compression
+  - Disk encryption:
+    - Encryption type: LUKS
+    - Encryption passowrd:
+      - Password: Set a password and confirm.
+    - Iteration time: 2000ms
+    - Partitions: Select your partition.
+- Bootloader: Limine.
+- Hostname: mrzli-arch
+- Authentication:
+  - Root password: Set a password and confirm (same as encryption password).
+  - User account:
+    - Add a user
+      - Username: mrzli
+      - Password: Set a password and confirm (same as root password).
+      - Superuser: Yes
+    - Confirm and exit
+- Applications:
+  - Audio: pipewire
+- Network configuration: Copy ISO network configuration to installation
+- Timezone: Europe/Zagreb (scroll up from UTC, it is faster)
+
+Install.
+
+Select reboot.
+
+Enter disk encryption password to boot into the system, and log in with the user credentials.
+
+## Setup Omarchy
+
+Run:
+
+```bash
+curl -fsSL https://omarchy.org/install | bash
+```
+
+Enter password when prompted.
+
+Reboot when prompted.
+
+After installation, if you don't see the Omarchy boot option, go to UEFI and disable Limine boot option.
+
+## Setup System
+
+Clone the repo locally:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/mrzli/archon/master/repo.sh | bash
 ```
 
-To remove the cloned repository:
+Uninstall unneeded packages, install needed packages, configure settings.
 
 ```bash
-XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share} rm -rf "$XDG_DATA_HOME/archon"
+~/.local/share/archon/omarchy/setup.sh
 ```
 
-## Install Arch Linux
+Reboot after the script finishes.
+
+## Manual Steps
+
+### Wi-Fi
+
+- Go to Wi-Fi settings:
+  - Press `SUPER + ALT + SPACE`.
+  - Select 'Setup' and press `ENTER`.
+  - Select 'Wi-Fi' and press `ENTER`.
+- Select the SSID:
+  - Press `TAB` to focus on the list of available networks:
+  - Use arrow keys to select your network.
+  - Press `ENTER`.
+- Enter the Wi-Fi password and press `ENTER`.
+
+### Chromium
+
+- Log into:
+  - GMail
+  - Youtube
+  - GitHub
+  - X
+  - Grok
+
+- Add extensions:
+  - Bitwarden.
+    - Also log into it.
+  - StayFocusd.
+  - uBlock Origin Lite.
+
+### Logins
+
+- Sign into VS Code Copilot.
+- Log into Steam.
+
+### GitHub SSH Key
 
 ```bash
-python ~/.local/share/archon/setup/arch_install.py
+~/.local/share/archon/omarchy/github-ssh-create.sh
+# Automatically copies the public key to clipboard.
 ```
 
-## Setup Arch Linux
+Setup the SSH key in your GitHub account:
 
-### Setup System
+- Go to https://github.com/settings/keys.
+- Click "New SSH key".
+- Set the name, e.g. "mrzli-arch".
+- Paste the public key from clipboard.
+- Click "Add SSH key".
+
+Test the SSH connection:
 
 ```bash
-python ~/.local/share/archon/setup/setup.py i
-python ~/.local/share/archon/setup/setup.py c
+~/.local/share/archon/omarchy/github-ssh-test.sh
 ```
 
-Change shell to zsh:
+### Create Projects
 
 ```bash
-chsh -s /bin/zsh
+~/.local/share/archon/omarchy/projects-create.sh
 ```
-
-Re login to see changes.
-
-### Remove Setup
-
-```bash
-python ~/.local/share/archon/setup/setup.py u
-```
-
-## Other
-
-Generate font here: https://patorjk.com/software/taag/#p=display&f=Delta+Corps+Priest+1
-
-## License
-
-Archon is released under the [MIT License](https://opensource.org/licenses/MIT).
