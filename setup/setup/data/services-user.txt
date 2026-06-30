@@ -1,3 +1,0 @@
-pipewire
-wireplumber
-pipewire-pulse
