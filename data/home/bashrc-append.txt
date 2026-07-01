@@ -34,6 +34,9 @@ gu() {
   git push
 }
 
+# Rails
+alias railsrefresh='rm -f db/schema.rb && bin/rails db:drop db:create db:migrate'
+
 # Misc
 alias grep='grep --color=auto'
 
