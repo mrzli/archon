@@ -19,6 +19,8 @@ alias gaa='git add --all'
 alias gp='git push'
 alias gl='git pull'
 alias gd='git diff'
+alias gco='git checkout'
+alias gcb='git checkout -b'
 
 alias gfagl='git fetch --all && git pull'
 
