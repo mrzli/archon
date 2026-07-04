@@ -21,6 +21,12 @@ alias gl='git pull'
 alias gd='git diff'
 alias gco='git checkout'
 alias gcb='git checkout -b'
+alias gstl='git stash list'
+alias gsta='git stash push'
+alias gstu='git stash push --include-untracked'
+alias gstp='git stash pop'
+alias gstc='git stash clear'
+alias gstd='git stash drop'
 
 alias gfagl='git fetch --all && git pull'
 
