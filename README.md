@@ -1,73 +1,52 @@
 # Setup
 
+You can follow instructions from [here](https://learn.omacom.io/2/the-omarchy-manual/50/getting-started).
+
 ## Create Bootable USB
 
+Download iso from https://omarchy.org/.
 
+### Install Software
 
-## Archinstall
-
-Here are the instructions:
-
-- https://learn.omacom.io/2/the-omarchy-manual/96/manual-installation
-
-### Explained Steps
-
-Make sure you have the latest version of archinstall:
+Check if you have `caligula` installed:
 
 ```bash
-pacman -Sy archinstall
+caligula --version
 ```
 
-Run `archinstall` and follow the prompts:
-
-- Mirrors and repositories: Select a region closest to you.
-- Disk configuration:
-  - Partitioning:
-    - Disk configuration type: Use a best-effort default partition layout
-    - Select the disk to partition.
-    - Filesystem: btrfs
-    - Would you like to use BTRFS subvolumes with a default strcucture?: Yes
-    - Would you like to use compression or disable CoW?: Use compression
-  - Disk encryption:
-    - Encryption type: LUKS
-    - Encryption passowrd:
-      - Password: Set a password and confirm.
-    - Iteration time: 2000ms
-    - Partitions: Select your partition.
-- Bootloader: Limine.
-- Hostname: mrzli-arch
-- Authentication:
-  - Root password: Set a password and confirm (same as encryption password).
-  - User account:
-    - Add a user
-      - Username: mrzli
-      - Password: Set a password and confirm (same as root password).
-      - Superuser: Yes
-    - Confirm and exit
-- Applications:
-  - Audio: pipewire
-- Network configuration: Copy ISO network configuration to installation
-- Timezone: Europe/Zagreb (scroll up from UTC, it is faster)
-
-Install.
-
-Select reboot.
-
-Enter disk encryption password to boot into the system, and log in with the user credentials.
-
-## Setup Omarchy
-
-Run:
+If you don't have it, install it:
 
 ```bash
-curl -fsSL https://omarchy.org/install | bash
+sudo pacman -S caligula
 ```
 
-Enter password when prompted.
+### Create Bootable USB
 
-Reboot when prompted.
+Find out the device name of your USB drive:
 
-After installation, if you don't see the Omarchy boot option, go to UEFI and disable Limine boot option.
+```bash
+lsblk
+```
+
+Burn the iso to the USB drive:
+
+```bash
+sudo caligula /path/to/omarchy.iso
+```
+
+Skip unnecessary steps, and it will offer you a target device. Select it. Don't know what the exact steps after this are, but should be trivial.
+
+## Install Omarchy
+
+I suspect the system will ask you for some information:
+
+- Username, e.g. `mrzli`.
+- Password.
+- Full name.
+- Email address.
+- Hostname, e.g. `mrzli-arch`.
+- Timezone, e.g. `Europe/Zagreb`.
+- Keyboard layout, e.g. `us`.
 
 ## Setup System
 
@@ -107,6 +86,7 @@ Reboot after the script finishes.
   - GitHub
   - X
   - Grok
+  - ChatGPT
 
 - Add extensions:
   - Bitwarden.
