@@ -93,6 +93,7 @@ Reboot after the script finishes.
     - Also log into it.
   - StayFocusd.
   - uBlock Origin Lite.
+  - Redux DevTools (if you use it).
 
 ### Logins
 
