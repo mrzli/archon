@@ -97,7 +97,9 @@ Reboot after the script finishes.
 
 ### Logins
 
-- Sign into VS Code Copilot.
+- VS Code:
+  - Sign into VS Code Copilot.
+  - Sign into Codex.
 - Log into Steam.
 
 ### GitHub SSH Key
