@@ -27,7 +27,7 @@
   },
   "github.copilot.nextEditSuggestions.enabled": true,
   "tailwindCSS.classFunctions": ["cva", "cn"],
-  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.defaultProfile.windows": "Git Bash",
   "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono', monospace",
   "terminal.integrated.scrollback": 10000,
