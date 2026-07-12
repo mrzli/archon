@@ -43,6 +43,10 @@ alias gbsg='git bisect good'
 
 alias gfagl='git fetch --all && git pull'
 
+git_current_branch() {
+  git symbolic-ref --quiet --short HEAD 2>/dev/null
+}
+
 gcmsg() {
   git commit -m "${*:-update}"
 }
