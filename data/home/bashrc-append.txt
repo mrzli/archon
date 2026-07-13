@@ -12,7 +12,7 @@ alias ll='ls -lah'
 alias la='ls -A'
 alias l='ls -CF'
 
-# Git shortcuts
+# Git - Start
 alias gst='git status'
 alias gb='git branch'
 alias gfa='git fetch --all'
@@ -58,6 +58,7 @@ gu() {
   git commit -m "$msg" &&
   git push
 }
+# Git - End
 
 # Rails
 alias railsrefresh='rm -f db/schema.rb && bin/rails db:drop db:create db:migrate'
