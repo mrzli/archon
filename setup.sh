@@ -58,6 +58,9 @@ packages_to_add=(
 
   # torrent client
   qbittorrent
+
+  # ebook reader
+  foliate
 )
 
 for pkg in "${packages_to_add[@]}"; do
