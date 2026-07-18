@@ -55,6 +55,9 @@ packages_to_add=(
   sane 
   sane-airscan
   simple-scan
+
+  # torrent client
+  qbittorrent
 )
 
 for pkg in "${packages_to_add[@]}"; do
