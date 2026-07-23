@@ -20,6 +20,7 @@ ms-python.vscode-pylance
 ms-python.vscode-python-envs
 openai.chatgpt
 oxc.oxc-vscode
+pomdtr.excalidraw-editor
 shopify.ruby-lsp
 steoates.autoimport
 unifiedjs.vscode-mdx
