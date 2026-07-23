@@ -80,6 +80,16 @@ for env in "${dev_envs[@]}"; do
   omarchy-install-dev-env "$env"
 done
 
+# Install other mise tooling.
+
+mise_tools=(
+  pnpm
+)
+
+for tool in "${mise_tools[@]}"; do
+  mise use --global "$tool"
+done
+
 # Install VSCode extensions.
 vscode_extensions_file="$repo_root_dir/omarchy/data/vscode-extensions.txt"
 mapfile -t vscode_extensions < <(grep -Ev '^\s*(#|$)' "$vscode_extensions_file")
