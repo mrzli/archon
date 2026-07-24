@@ -46,7 +46,10 @@ done
 
 # Install regular packages.
 packages_to_add=(
-  tokei # for counting lines of code in projects
+  tokei          # for counting lines of code in projects
+  foliate        # ebook reader
+  qbittorrent    # torrent client
+  dbeaver        # database management tool
 
   # utilities
   img2pdf
@@ -55,12 +58,6 @@ packages_to_add=(
   sane 
   sane-airscan
   simple-scan
-
-  # torrent client
-  qbittorrent
-
-  # ebook reader
-  foliate
 )
 
 for pkg in "${packages_to_add[@]}"; do
