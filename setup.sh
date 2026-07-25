@@ -129,7 +129,21 @@ if ! grep -q '^source = ~/.config/hypr/hyprland-custom.conf$' "$hyprland_conf_fi
 fi
 cp "$repo_root_dir/data/hyprland-custom.conf" "$XDG_CONFIG_HOME/hypr/hyprland-custom.conf"
 
+# Setup keyboard layouts.
+keyboard_layouts=(
+  us
+  hr
+)
+keyboard_layouts_string="$(IFS=,; echo "${keyboard_layouts[*]}")"
 
+hypr_input_file="$XDG_CONFIG_HOME/hypr/input.conf"
+sed -i -E \
+  -e '/^[[:space:]]*#?[[:space:]]*kb_(layout|options)[[:space:]]*=/d' \
+  -e "/^input \\{/a\\  kb_layout = $keyboard_layouts_string\\n  kb_options = compose:caps,grp:alts_toggle" \
+  "$hypr_input_file"
+
+hyprctl reload
+hyprctl configerrors
 
 # Setup Waybar configuration.
 waybar_config_file="$XDG_CONFIG_HOME/waybar/config.jsonc"
