@@ -150,7 +150,7 @@ waybar_config_file="$XDG_CONFIG_HOME/waybar/config.jsonc"
 jq '
   .["hyprland/workspaces"]["persistent-workspaces"] = {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": [], "10": []}
   | .["modules-right"] = ["group/tray-expander", "bluetooth", "network", "pulseaudio", "hyprland/language", "cpu", "battery"]
-  | .["hyprland/language"] = {"format": "{short}", "on-click": "hyprctl switchxkblayout current next", "on-click-right": "hyprctl switchxkblayout current prev"}
+  | .["hyprland/language"] = {"format": "{short}"}
 ' "$waybar_config_file" > "$waybar_config_file.tmp" && mv "$waybar_config_file.tmp" "$waybar_config_file"
 
 cat >> "$XDG_CONFIG_HOME/waybar/style.css" <<'EOF'
