@@ -37,10 +37,10 @@ ensure_repo() {
   git clone "$repo_url" "$repo_dir"
 }
 
-repo_root_dir="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 projects_dir="$HOME/projects"
 personal_projects_dir="$projects_dir/personal"
-projects_data_dir="$repo_root_dir/omarchy/data/projects"
+projects_data_dir="$repo_root_dir/data/projects"
 
 if [[ ! -d "$projects_data_dir" ]]; then
   echo "Projects data dir not found: $projects_data_dir"

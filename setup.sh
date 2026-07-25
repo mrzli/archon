@@ -7,7 +7,7 @@ set -euo pipefail
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 mkdir -p "$XDG_CONFIG_HOME"
 
-repo_root_dir="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 # Remove unneeded app and packages.
 
@@ -88,7 +88,7 @@ for tool in "${mise_tools[@]}"; do
 done
 
 # Install VSCode extensions.
-vscode_extensions_file="$repo_root_dir/omarchy/data/vscode-extensions.txt"
+vscode_extensions_file="$repo_root_dir/data/vscode-extensions.txt"
 mapfile -t vscode_extensions < <(grep -Ev '^\s*(#|$)' "$vscode_extensions_file")
 
 for extension in "${vscode_extensions[@]}"; do
@@ -99,7 +99,7 @@ done
 
 # Append custom content to ~/.bashrc
 bashrc_file="$HOME/.bashrc"
-bashrc_append_file="$repo_root_dir/omarchy/data/home/bashrc-append.txt"
+bashrc_append_file="$repo_root_dir/data/home/bashrc-append.txt"
 bashrc_marker="# Custom omarchy configuration"
 
 if ! grep -q "^$bashrc_marker$" "$bashrc_file" 2>/dev/null; then
@@ -107,8 +107,7 @@ if ! grep -q "^$bashrc_marker$" "$bashrc_file" 2>/dev/null; then
   cat "$bashrc_append_file" >> "$bashrc_file"
 fi
 
-script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-config_source_dir="$script_dir/data/config"
+config_source_dir="$repo_root_dir/data/config"
 
 for src in "$config_source_dir"/*; do
   [[ -d "$src" ]] || continue
@@ -123,12 +122,12 @@ done
 # Check whether it contains the following line:
 #   source = ~/.config/hypr/hyprland-custom.conf
 # If not, append it to the end of the file.
-# Copy <repo_root>/omarchy/data/hyprland-custom.conf to $XDG_CONFIG_HOME/hypr/hyprland-custom.conf.
+# Copy <repo_root>/data/hyprland-custom.conf to $XDG_CONFIG_HOME/hypr/hyprland-custom.conf.
 hyprland_conf_file="$XDG_CONFIG_HOME/hypr/hyprland.conf"
 if ! grep -q '^source = ~/.config/hypr/hyprland-custom.conf$' "$hyprland_conf_file"; then
   echo -e "\nsource = ~/.config/hypr/hyprland-custom.conf" >> "$hyprland_conf_file"
 fi
-cp "$repo_root_dir/omarchy/data/hyprland-custom.conf" "$XDG_CONFIG_HOME/hypr/hyprland-custom.conf"
+cp "$repo_root_dir/data/hyprland-custom.conf" "$XDG_CONFIG_HOME/hypr/hyprland-custom.conf"
 
 
 

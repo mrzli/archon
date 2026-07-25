@@ -53,13 +53,15 @@ I suspect the system will ask you for some information:
 Clone the repo locally:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mrzli/archon/master/repo.sh | bash
+archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon"
+mkdir -p "$(dirname "$archon_dir")"
+git clone https://github.com/mrzli/archon.git "$archon_dir"
 ```
 
 Uninstall unneeded packages, install needed packages, configure settings.
 
 ```bash
-~/.local/share/archon/omarchy/setup.sh
+~/.local/share/archon/setup.sh
 ```
 
 Reboot after the script finishes.
@@ -105,7 +107,7 @@ Reboot after the script finishes.
 ### GitHub SSH Key
 
 ```bash
-~/.local/share/archon/omarchy/github-ssh-create.sh
+~/.local/share/archon/github-ssh-create.sh
 # Automatically copies the public key to clipboard.
 ```
 
@@ -120,11 +122,11 @@ Setup the SSH key in your GitHub account:
 Test the SSH connection:
 
 ```bash
-~/.local/share/archon/omarchy/github-ssh-test.sh
+~/.local/share/archon/github-ssh-test.sh
 ```
 
 ### Create Projects
 
 ```bash
-~/.local/share/archon/omarchy/projects-create.sh
+~/.local/share/archon/projects-create.sh
 ```
