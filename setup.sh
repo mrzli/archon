@@ -130,25 +130,21 @@ if ! grep -q '^source = ~/.config/hypr/hyprland-custom.conf$' "$hyprland_conf_fi
 fi
 cp "$repo_root_dir/omarchy/data/hyprland-custom.conf" "$XDG_CONFIG_HOME/hypr/hyprland-custom.conf"
 
-# $XDG_CONFIG_HOME/waybar/config.jsonc
-# In the root object, replace "hyprland/workspaces"."persistent-workspaces" content with
-# {
-#   "1": [],
-#   "2": [],
-#   "3": [],
-#   "4": [],
-#   "5": [],
-#   "6": [],
-#   "7": [],
-#   "8": [],
-#   "9": [],
-#   "10": []
-# }
+
+
+# Setup Waybar configuration.
 waybar_config_file="$XDG_CONFIG_HOME/waybar/config.jsonc"
-jq '.["hyprland/workspaces"]["persistent-workspaces"] = {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": [], "10": []}' "$waybar_config_file" > "$waybar_config_file.tmp" && mv "$waybar_config_file.tmp" "$waybar_config_file"
+jq '
+  .["hyprland/workspaces"]["persistent-workspaces"] = {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": [], "10": []}
+  | .["modules-right"] = ["group/tray-expander", "bluetooth", "network", "pulseaudio", "hyprland/language", "cpu", "battery"]
+  | .["hyprland/language"] = {"format": "{short}", "on-click": "hyprctl switchxkblayout current next", "on-click-right": "hyprctl switchxkblayout current prev"}
+' "$waybar_config_file" > "$waybar_config_file.tmp" && mv "$waybar_config_file.tmp" "$waybar_config_file"
+
+cat >> "$XDG_CONFIG_HOME/waybar/style.css" <<'EOF'
+
+#language {
+  padding: 0 4px 0 8px;
+}
+EOF
 
 omarchy-restart-waybar
-
-# Do this manually:
-# - Log into Gmail and YouTube on Chromium.
-# - Log into Grok.
