@@ -125,6 +125,17 @@ Test the SSH connection:
 ~/.local/share/archon/github-ssh-test.sh
 ```
 
+Login to github CLI:
+
+```bash
+gh auth login \
+  --hostname github.com \
+  --git-protocol ssh \
+  --web \
+  --skip-ssh-key
+# Follow the instructions in the terminal, and login via browser.
+```
+
 ### Create Projects
 
 ```bash
