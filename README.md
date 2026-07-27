@@ -125,6 +125,12 @@ Test the SSH connection:
 ~/.local/share/archon/github-ssh-test.sh
 ```
 
+Now that the SSH key is set up, change the `archon` repo to use SSH instead of HTTPS:
+
+```bash
+git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon" remote set-url origin git@github.com:mrzli/archon.git
+```
+
 Login to github CLI:
 
 ```bash
