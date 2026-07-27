@@ -1,4 +1,0 @@
-docs
-generic-docs
-gm-docs
-repos

@@ -1,4 +1,0 @@
-racket
-racket-generator
-rkt-generate-project
-

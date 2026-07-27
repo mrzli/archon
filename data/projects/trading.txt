@@ -1,9 +1,0 @@
-gm-trading
-trading
-trading-chart
-trading-data-server
-trading-experiments
-trading-fetch-eodhd
-trading-general-data
-trading-web
-tradingview-data
