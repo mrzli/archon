@@ -26,6 +26,7 @@
     "shellscript": true,
   },
   "github.copilot.nextEditSuggestions.enabled": true,
+  "security.workspace.trust.startupPrompt": "once",
   "tailwindCSS.classFunctions": ["cva", "cn"],
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.defaultProfile.windows": "Git Bash",
