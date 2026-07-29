@@ -86,25 +86,30 @@ killport() {
   echo "Killed process(es) on port $port: $pids"
 }
 
-mrzli_jslib_relink() {
+mrzli_jslib_unlink() {
   local repos_dir="$HOME/projects/personal/mrzli-jslib"
   local repo_dir
-
-  if [[ ! -d "$repos_dir" ]]; then
-    echo "Repository directory does not exist: $repos_dir" >&2
-    return 1
-  fi
 
   for repo_dir in "$repos_dir"/*/; do
     [[ -d "$repo_dir" ]] || continue
     bun unlink --cwd "$repo_dir" >/dev/null 2>&1 || true
   done
+}
+
+mrzli_jslib_link() {
+  local repos_dir="$HOME/projects/personal/mrzli-jslib"
+  local repo_dir
 
   for repo_dir in "$repos_dir"/*/; do
     [[ -d "$repo_dir" ]] || continue
-    echo "Linking $repo_dir"
+    echo "Linking ${repo_dir%/}"
     bun link --cwd "$repo_dir" || return
   done
+}
+
+mrzli_jslib_relink() {
+  mrzli_jslib_unlink
+  mrzli_jslib_link
 }
 
 mrzli_jslib_build() {
