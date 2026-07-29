@@ -86,6 +86,63 @@ killport() {
   echo "Killed process(es) on port $port: $pids"
 }
 
+mrzli_jslib_relink() {
+  local repos_dir="$HOME/projects/personal/mrzli-jslib"
+  local repo_dir
+
+  if [[ ! -d "$repos_dir" ]]; then
+    echo "Repository directory does not exist: $repos_dir" >&2
+    return 1
+  fi
+
+  for repo_dir in "$repos_dir"/*/; do
+    [[ -d "$repo_dir" ]] || continue
+    bun unlink --cwd "$repo_dir" >/dev/null 2>&1 || true
+  done
+
+  for repo_dir in "$repos_dir"/*/; do
+    [[ -d "$repo_dir" ]] || continue
+    echo "Linking $repo_dir"
+    bun link --cwd "$repo_dir" || return
+  done
+}
+
+mrzli_jslib_build() {
+  local repos_dir="$HOME/projects/personal/mrzli-jslib"
+  local repo_dir
+  local status=0
+  local -a pids=()
+
+  if [[ ! -d "$repos_dir" ]]; then
+    echo "Repository directory does not exist: $repos_dir" >&2
+    return 1
+  fi
+
+  for repo_dir in "$repos_dir"/*/; do
+    [[ -d "$repo_dir" ]] || continue
+
+    (
+      echo "Building ${repo_dir%/}"
+      cd "$repo_dir" || exit 1
+      bun run build
+    ) &
+
+    pids+=("$!")
+  done
+
+  for pid in "${pids[@]}"; do
+    wait "$pid" || status=1
+  done
+
+  if (( status == 0 )); then
+    echo "All libraries built successfully."
+  else
+    echo "One or more library builds failed." >&2
+  fi
+
+  return "$status"
+}
+
 sc2_move_replays() {
   local downloads_dir="$HOME/Downloads"
   local replays_dst="/home/mrzli/.steam/root/steamapps/compatdata/3615075630/pfx/drive_c/users/steamuser/Documents/StarCraft II/Accounts/50346065/2-S2-1-553085/Replays/Multiplayer"
