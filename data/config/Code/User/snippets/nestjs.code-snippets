@@ -1,0 +1,52 @@
+{
+  "Nest Module": {
+    "scope": "typescript",
+    "prefix": "nestmodule",
+    "description": "Empty nest module, with imports.",
+    "body": [
+      "import { Module } from '@nestjs/common';",
+      "",
+      "@Module({",
+      "  imports: [],",
+      "  controllers: [],",
+      "  providers: [],",
+      "  exports: [],",
+      "})",
+      "export class ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} {}",
+      ""
+    ]
+  },
+  "Nest Injectable": {
+    "scope": "typescript",
+    "prefix": "nestinjectable",
+    "description": "Empty nest injectable, with imports.",
+    "body": [
+      "import { Injectable } from '@nestjs/common';",
+      "",
+      "@Injectable()",
+      "export class ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} {",
+      "  public constructor() {}",
+      "}",
+      ""
+    ]
+  },
+  "Nest Controller": {
+    "scope": "typescript",
+    "prefix": "nestcontroller",
+    "description": "Empty nest controller, with imports.",
+    "body": [
+      "import { Controller, Get } from '@nestjs/common';",
+      "",
+      "@Controller('${1:${TM_FILENAME/\\..*//}}')",
+      "export class ${2:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} {",
+      "  public constructor() {}",
+      "",
+      "  @Get('example')",
+      "  public async example(): Promise<string> {",
+      "    return 'some value';",
+      "  }",
+      "}",
+      ""
+    ]
+  }
+}
