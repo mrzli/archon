@@ -1,0 +1,49 @@
+{
+  "React functional component": {
+    "scope": "typescriptreact",
+    "prefix": "rfc",
+    "description": "React functional component.",
+    "body": [
+      "import type { ReactNode } from 'react';",
+      "",
+      "export interface ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Props {",
+      "  readonly value: string;",
+      "}",
+      "",
+      "export function ${1}({ value }: ${1}Props): ReactNode {",
+      "  return <div>${TM_FILENAME_BASE/(.*)/${1:/kebabcase}/} + {value}</div>;",
+      "}",
+      ""
+    ]
+  },
+  "React functional component (no props)": {
+    "scope": "typescriptreact",
+    "prefix": "rfcnp",
+    "description": "React functional component without props.",
+    "body": [
+      "import type { ReactNode } from 'react';",
+      "",
+      "export function ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}(): ReactNode {",
+      "  return <div>${TM_FILENAME_BASE/(.*)/${1:/kebabcase}/}</div>;",
+      "}",
+      ""
+    ]
+  },
+  "React functional component (generic)": {
+    "scope": "typescriptreact",
+    "prefix": "rfcg",
+    "description": "React functional component with generic type.",
+    "body": [
+      "import type { ReactNode } from 'react';",
+      "",
+      "export interface ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Props<${2:T}> {",
+      "  readonly value: ${2};",
+      "}",
+      "",
+      "export function ${1}<${2}>({ value }: ${1}Props<${2}>): ReactNode {",
+      "  return <div>${TM_FILENAME_BASE/(.*)/${1:/kebabcase}/} + {value}</div>;",
+      "}",
+      ""
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "React component stories file": {
+    "scope": "typescriptreact",
+    "prefix": "rstories",
+    "description": "Stories boilerplate for React component.",
+    "body": [
+      "import type { Meta, StoryObj } from '@storybook/react-vite';",
+      "",
+      "import { ${1:${TM_FILENAME/(.*)\\.stories\\..*/${1:/pascalcase}/}} } from './${TM_FILENAME/(.*)\\.stories\\..*/${1:/kebabcase}/}';",
+      "",
+      "const meta = {",
+      "  component: ${1},",
+      "} satisfies Meta<typeof ${1}>;",
+      "",
+      "export default meta;",
+      "",
+      "type Story = StoryObj<typeof meta>;",
+      "",
+      "export const Default: Story = {};",
+      ""
+    ]
+  },
+  "React component stories file (generic)": {
+    "scope": "typescriptreact",
+    "prefix": "rstoriesg",
+    "description": "Stories boilerplate for React component with generic type.",
+    "body": [
+      "import type { Meta, StoryObj } from '@storybook/react-vite';",
+      "import type { ComponentType } from 'react';",
+      "",
+      "import { ${1:${TM_FILENAME/(.*)\\.stories\\..*/${1:/pascalcase}/}}, type ${1}Props } from './${TM_FILENAME/(.*)\\.stories\\..*/${1:/kebabcase}/}';",
+      "",
+      "const Typed${1} = ${1} as ComponentType<${1}Props<${2:string}>>;",
+      "",
+      "const meta = {",
+      "  component: ${1},",
+      "} satisfies Meta<typeof Typed${1}>;",
+      "",
+      "export default meta;",
+      "",
+      "type Story = StoryObj<typeof meta>;",
+      "",
+      "export const Default: Story = {};",
+      ""
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "TypeScript multiple 'it' tests": {
+    "scope": "typescript,typescriptreact",
+    "prefix": "iteach",
+    "description": "Multiple 'it' entries generated from example array.",
+    "body": [
+      "describe('${1}', () => {",
+      "  interface Example {",
+      "    readonly input: unknown;",
+      "    readonly expected: unknown;",
+      "  }",
+      "",
+      "  const EXAMPLES: readonly Example[] = [",
+      "    {",
+      "      input: '',",
+      "      expected: '',",
+      "    },",
+      "  ];",
+      "",
+      "  for (const example of EXAMPLES) {",
+      "    const description = JSON.stringify(example);",
+      "    it(description, () => {",
+      "      const actual = someMethod(example.input);",
+      "      expect(actual).toEqual(example.expected);",
+      "    });",
+      "  }",
+      "});"
+    ]
+  }
+}
