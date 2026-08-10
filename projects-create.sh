@@ -22,10 +22,10 @@ REPO_BLACKLIST=(
 
 usage() {
   cat <<'EOF'
-Usage: projects-create-2.sh [--dry-run]
+Usage: projects-create.sh [-n|--dry-run]
 
 Options:
-  --dry-run  Validate and list repositories without creating or cloning.
+  -n, --dry-run Validate and list repositories without creating or cloning.
   -h, --help Show this help.
 EOF
 }
@@ -69,7 +69,7 @@ dry_run=false
 
 while (( $# > 0 )); do
   case "$1" in
-    --dry-run)
+    -n | --dry-run)
       dry_run=true
       ;;
     -h | --help)
@@ -90,6 +90,8 @@ command -v gh >/dev/null 2>&1 ||
 
 command -v git >/dev/null 2>&1 ||
   die "Git is required but was not found."
+
+bundled_projects_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/data/projects"
 
 if ! gh auth status --active --hostname github.com >/dev/null 2>&1; then
   cat >&2 <<'EOF'
@@ -316,6 +318,7 @@ fi
 echo
 if [[ "$dry_run" == "true" ]]; then
   echo "Repositories would be cloned under '$projects_dir/personal/<owner>/<repository>'."
+  echo "Bundled project files would be copied into '$projects_dir/personal'."
   echo "Dry run complete. No local projects were changed."
   exit 0
 fi
@@ -358,3 +361,7 @@ fi
 
 echo
 echo "Cloned ${#repository_names[@]} repositories into '$projects_dir/personal'."
+
+echo
+echo "Copying bundled project files into '$projects_dir/personal'."
+cp -R "$bundled_projects_dir"/. "$projects_dir/personal"/
