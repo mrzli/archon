@@ -40,5 +40,9 @@
   {
     "key": "ctrl+alt+g",
     "command": "git-graph.view"
+  },
+  {
+    "key": "ctrl+shift+enter",
+    "command": "git.sync"
   }
 ]
