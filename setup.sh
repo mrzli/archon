@@ -99,7 +99,7 @@ done
 
 # Append custom content to ~/.bashrc
 bashrc_file="$HOME/.bashrc"
-bashrc_append_file="$repo_root_dir/data/home/bashrc-append.txt"
+bashrc_append_file="$repo_root_dir/data/fragments/bashrc-append.txt"
 bashrc_marker="# Custom omarchy configuration"
 
 if ! grep -q "^$bashrc_marker$" "$bashrc_file" 2>/dev/null; then
