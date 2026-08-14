@@ -318,7 +318,7 @@ fi
 echo
 if [[ "$dry_run" == "true" ]]; then
   echo "Repositories would be cloned under '$projects_dir/personal/<owner>/<repository>'."
-  echo "Bundled project files would be copied into '$projects_dir/personal'."
+  echo "Bundled project files would be copied into '$projects_dir'."
   echo "Dry run complete. No local projects were changed."
   exit 0
 fi
@@ -363,5 +363,5 @@ echo
 echo "Cloned ${#repository_names[@]} repositories into '$projects_dir/personal'."
 
 echo
-echo "Copying bundled project files into '$projects_dir/personal'."
-cp -R "$bundled_projects_dir"/. "$projects_dir/personal"/
+echo "Copying bundled project files into '$projects_dir'."
+cp -R "$bundled_projects_dir"/. "$projects_dir"/
