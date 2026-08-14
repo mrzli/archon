@@ -29,5 +29,3 @@ create_session() {
 create_session flashcards-fe "$FE" "bun run dev"
 create_session flashcards-be "$BE" "pnpm run dev"
 
-tmux attach-session -t flashcards-fe
-
