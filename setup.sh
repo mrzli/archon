@@ -161,3 +161,6 @@ cat >> "$XDG_CONFIG_HOME/waybar/style.css" <<'EOF'
 EOF
 
 omarchy-restart-waybar
+
+# Delete ~/Projects directory if it exists.
+rm -rf "$HOME/Projects"
