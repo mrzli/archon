@@ -21,10 +21,9 @@ for project in "${PROJECTS[@]}"; do
   tmux send-keys -t "$session:nvim" 'nvim .' Enter
 
   tmux new-window -t "$session" -c "$dir" -n codex
-  tmux send-keys -t "$session:codex" 'codex' Enter
+  tmux send-keys -t "$session:codex" 'codex resume --last' Enter
 
   tmux new-window -t "$session" -c "$dir" -n shell
 
   tmux select-window -t "$session:nvim"
 done
-

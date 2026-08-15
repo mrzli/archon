@@ -16,7 +16,7 @@ create_session() {
   tmux send-keys -t "$name:nvim" 'nvim .' Enter
 
   tmux new-window -t "$name" -c "$dir" -n codex
-  tmux send-keys -t "$name:codex" 'codex' Enter
+  tmux send-keys -t "$name:codex" 'codex resume --last' Enter
 
   tmux new-window -t "$name" -c "$dir" -n dev
   tmux send-keys -t "$name:dev" "$dev_cmd" Enter
@@ -28,4 +28,3 @@ create_session() {
 
 create_session flashcards-fe "$FE" "bun run dev"
 create_session flashcards-be "$BE" "pnpm run dev"
-
