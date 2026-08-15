@@ -1,0 +1,32 @@
+{
+  "name": "mrzli-snippets",
+  "private": true,
+  "contributes": {
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "../../Code/User/snippets/nestjs.code-snippets"
+      },
+      {
+        "language": "typescriptreact",
+        "path": "../../Code/User/snippets/react-storybook.code-snippets"
+      },
+      {
+        "language": "typescriptreact",
+        "path": "../../Code/User/snippets/react.code-snippets"
+      },
+      {
+        "language": ["typescript", "typescriptreact"],
+        "path": "../../Code/User/snippets/redux-observable.code-snippets"
+      },
+      {
+        "language": ["typescript", "typescriptreact"],
+        "path": "../../Code/User/snippets/typescript-test.code-snippets"
+      },
+      {
+        "language": ["typescript", "typescriptreact"],
+        "path": "../../Code/User/snippets/typescript.code-snippets"
+      }
+    ]
+  }
+}

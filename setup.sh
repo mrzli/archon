@@ -113,8 +113,8 @@ for src in "$config_source_dir"/*; do
   [[ -d "$src" ]] || continue
 
   name="$(basename "$src")"
-  rm -rf "$XDG_CONFIG_HOME/$name"
-  cp -R "$src" "$XDG_CONFIG_HOME/$name"
+  mkdir -p "$XDG_CONFIG_HOME/$name"
+  cp -R "$src"/. "$XDG_CONFIG_HOME/$name"/
 done
 
 # $XDG_CONFIG_HOME/hypr/hyprland.conf
