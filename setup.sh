@@ -38,9 +38,7 @@ aur_packages_to_add=(
   postman-bin
 )
 
-for pkg in "${aur_packages_to_add[@]}"; do
-  omarchy-pkg-aur-add "$pkg"
-done
+omarchy pkg aur add "${aur_packages_to_add[@]}"
 
 # Install regular packages.
 packages_to_add=(
@@ -58,9 +56,7 @@ packages_to_add=(
   simple-scan
 )
 
-for pkg in "${packages_to_add[@]}"; do
-  omarchy-pkg-add "$pkg"
-done
+omarchy pkg add "${packages_to_add[@]}"
 
 # Install development tools.
 dev_envs=(
@@ -72,7 +68,7 @@ dev_envs=(
 )
 
 for env in "${dev_envs[@]}"; do
-  omarchy-install-dev-env "$env"
+  omarchy install dev-env "$env"
 done
 
 # Install other mise tooling.
@@ -80,9 +76,7 @@ mise_tools=(
   pnpm
 )
 
-for tool in "${mise_tools[@]}"; do
-  mise use --global "$tool"
-done
+mise use --global "${mise_tools[@]}"
 
 # Install VSCode extensions.
 vscode_extensions_file="$repo_root_dir/data/vscode-extensions.txt"
