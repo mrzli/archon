@@ -163,4 +163,4 @@ else
   log_info "~/Projects does not exist; skipping"
 fi
 
-printf '\nSetup complete.\n'
+printf '\nSetup complete. Open a new terminal or run: source ~/.bashrc\n'

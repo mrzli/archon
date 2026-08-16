@@ -21,5 +21,5 @@ In `~/.bashrc`, delete `# Custom omarchy configuration` and the custom configura
 Run from the repository root:
 
 ```bash
-./setup.sh
+./setup.sh && source ~/.bashrc
 ```
