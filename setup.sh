@@ -12,15 +12,11 @@ repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 # Remove unneeded app and packages.
 
 packages_to_remove=(
-	1password-beta
-  1password-cli
   aether
   obsidian
-  spotify
-  typora
 )
 
-omarchy-pkg-drop "${packages_to_remove[@]}"
+omarchy pkg drop "${packages_to_remove[@]}"
 
 webapps_to_remove=(
   Basecamp
@@ -28,12 +24,14 @@ webapps_to_remove=(
   HEY
 )
 
-omarchy-webapp-remove "${webapps_to_remove[@]}"
+for webapp in "${webapps_to_remove[@]}"; do
+  omarchy webapp remove "$webapp"
+done
 
 # Install packages.
 
-omarchy-install-gaming-steam
-omarchy-install-vscode
+omarchy install gaming steam
+omarchy install editor vscode
 
 # Install AUR packages.
 aur_packages_to_add=(
@@ -78,7 +76,6 @@ for env in "${dev_envs[@]}"; do
 done
 
 # Install other mise tooling.
-
 mise_tools=(
   pnpm
 )
