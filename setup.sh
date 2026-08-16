@@ -88,16 +88,6 @@ done
 
 # Setup configs.
 
-# Append custom content to ~/.bashrc
-bashrc_file="$HOME/.bashrc"
-bashrc_append_file="$repo_root_dir/data/fragments/bashrc-append.txt"
-bashrc_marker="# Custom omarchy configuration"
-
-if ! grep -q "^$bashrc_marker$" "$bashrc_file" 2>/dev/null; then
-  echo -e "\n$bashrc_marker" >> "$bashrc_file"
-  cat "$bashrc_append_file" >> "$bashrc_file"
-fi
-
 config_source_dir="$repo_root_dir/data/config"
 
 for src in "$config_source_dir"/*; do
@@ -107,6 +97,14 @@ for src in "$config_source_dir"/*; do
   mkdir -p "$XDG_CONFIG_HOME/$name"
   cp -R "$src"/. "$XDG_CONFIG_HOME/$name"/
 done
+
+# Load the managed shell configuration from ~/.bashrc.
+bashrc_file="$HOME/.bashrc"
+bashrc_source_line='source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/bashrc"'
+
+if ! grep -qFx "$bashrc_source_line" "$bashrc_file" 2>/dev/null; then
+  printf '\n%s\n' "$bashrc_source_line" >> "$bashrc_file"
+fi
 
 hyprctl reload
 hyprctl configerrors
