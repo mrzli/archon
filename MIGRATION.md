@@ -47,10 +47,9 @@ hyprctl configerrors
 
 ## 5. Move custom Bash configuration out of `.bashrc`
 
-Replace the old appended block with the managed configuration file. Run from the repository root:
+In `~/.bashrc`, delete `# Custom omarchy configuration` and the custom configuration beneath it. Then run from the repository root:
 
 ```bash
-sed -i '/^# Custom omarchy configuration$/,$d' ~/.bashrc
 install -Dm644 data/config/archon/bashrc ~/.config/archon/bashrc
 echo 'source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/bashrc"' >> ~/.bashrc
 ```
