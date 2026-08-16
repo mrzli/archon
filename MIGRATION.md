@@ -52,3 +52,16 @@ for webapp in "${webapps_to_remove[@]}"; do
   omarchy webapp remove "$webapp"
 done
 ```
+
+## 4. Install personal Hyprland configuration
+
+Run from the repository root. These files replace the existing user overrides for monitors, keyboard input, and custom bindings.
+
+```bash
+hypr_config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+mkdir -p "$hypr_config_dir"
+cp data/config/hypr/{monitors.lua,input.lua,bindings.lua} "$hypr_config_dir/"
+
+hyprctl reload
+hyprctl configerrors
+```
