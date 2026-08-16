@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
 
-# Prerequisites.
-
 set -euo pipefail
+
+log_step() {
+  printf '\n==> %s\n' "$1"
+}
+
+log_info() {
+  printf '    %s\n' "$1"
+}
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 mkdir -p "$XDG_CONFIG_HOME"
 
 repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
-# Remove unneeded app and packages.
-
 packages_to_remove=(
   aether
   obsidian
 )
 
+log_step "Removing unwanted packages"
 omarchy pkg drop "${packages_to_remove[@]}"
 
 webapps_to_remove=(
@@ -24,46 +29,51 @@ webapps_to_remove=(
   HEY
 )
 
+log_step "Removing unwanted web apps"
 for webapp in "${webapps_to_remove[@]}"; do
   omarchy webapp remove "$webapp"
 done
 
-# Install packages.
-
-if ! pacman -Q steam &>/dev/null; then
+log_step "Installing optional applications"
+if pacman -Q steam &>/dev/null; then
+  log_info "Steam is already installed; skipping"
+else
+  log_info "Installing Steam"
   omarchy install gaming steam
 fi
 
-if ! pacman -Q visual-studio-code-bin &>/dev/null; then
+if pacman -Q visual-studio-code-bin &>/dev/null; then
+  log_info "VS Code is already installed; skipping"
+else
+  log_info "Installing VS Code"
   omarchy install editor vscode
 fi
 
-# Install AUR packages.
-aur_packages_to_add=(
+aur_packages=(
   postman-bin
 )
 
-omarchy pkg aur add "${aur_packages_to_add[@]}"
+log_step "Installing AUR packages"
+omarchy pkg aur add "${aur_packages[@]}"
 
-# Install regular packages.
-packages_to_add=(
-  tokei          # for counting lines of code in projects
-  foliate        # ebook reader
-  qbittorrent    # torrent client
-  dbeaver        # database management tool
+repository_packages=(
+  tokei       # Count lines of code
+  foliate     # Read ebooks
+  qbittorrent # Download torrents
+  dbeaver     # Manage databases
 
-  # utilities
+  # Utilities
   img2pdf
 
-  # for scanning documents
-  sane 
+  # Document scanning
+  sane
   sane-airscan
   simple-scan
 )
 
-omarchy pkg add "${packages_to_add[@]}"
+log_step "Installing repository packages"
+omarchy pkg add "${repository_packages[@]}"
 
-# Install development tools.
 dev_envs=(
   ruby
   python
@@ -80,56 +90,77 @@ declare -A dev_env_commands=(
   [zig]=zls
 )
 
+log_step "Installing development environments"
 for dev_env in "${dev_envs[@]}"; do
-  if ! command -v "${dev_env_commands[$dev_env]}" &>/dev/null; then
+  if command -v "${dev_env_commands[$dev_env]}" &>/dev/null; then
+    log_info "$dev_env is already installed; skipping"
+  else
+    log_info "Installing $dev_env"
     omarchy install dev-env "$dev_env"
   fi
 done
 
-# Install other mise tooling.
 mise_tools=(
   pnpm
 )
 
-for tool in "${mise_tools[@]}"; do
-  if ! command -v "$tool" &>/dev/null; then
-    mise use --global "$tool"
+log_step "Installing mise tools"
+for mise_tool in "${mise_tools[@]}"; do
+  if command -v "$mise_tool" &>/dev/null; then
+    log_info "$mise_tool is already installed; skipping"
+  else
+    log_info "Installing $mise_tool"
+    mise use --global "$mise_tool"
   fi
 done
 
-# Install VSCode extensions.
 vscode_extensions_file="$repo_root_dir/data/vscode-extensions.txt"
-mapfile -t vscode_extensions < <(grep -Ev '^\s*(#|$)' "$vscode_extensions_file")
+
+log_step "Installing VS Code extensions"
+mapfile -t vscode_extensions < <(grep -Ev '^[[:space:]]*(#|$)' "$vscode_extensions_file")
 installed_vscode_extensions="$(code --list-extensions)"
 
 for extension in "${vscode_extensions[@]}"; do
-  if ! grep -qiFx "$extension" <<< "$installed_vscode_extensions"; then
+  if grep -qiFx "$extension" <<< "$installed_vscode_extensions"; then
+    log_info "$extension is already installed; skipping"
+  else
+    log_info "Installing $extension"
     code --install-extension "$extension"
   fi
 done
 
-# Setup configs.
-
 config_source_dir="$repo_root_dir/data/config"
 
-for src in "$config_source_dir"/*; do
-  [[ -d "$src" ]] || continue
+log_step "Installing configuration"
+for config_source in "$config_source_dir"/*; do
+  [[ -d "$config_source" ]] || continue
 
-  name="$(basename "$src")"
-  mkdir -p "$XDG_CONFIG_HOME/$name"
-  cp -R "$src"/. "$XDG_CONFIG_HOME/$name"/
+  config_name="$(basename "$config_source")"
+  log_info "Installing $config_name configuration"
+  mkdir -p "$XDG_CONFIG_HOME/$config_name"
+  cp -a "$config_source"/. "$XDG_CONFIG_HOME/$config_name"/
 done
 
-# Load the managed shell configuration from ~/.bashrc.
 bashrc_file="$HOME/.bashrc"
 bashrc_source_line='source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/bashrc"'
 
-if ! grep -qFx "$bashrc_source_line" "$bashrc_file" 2>/dev/null; then
+if grep -qFx "$bashrc_source_line" "$bashrc_file" 2>/dev/null; then
+  log_info "Bash configuration is already loaded; skipping"
+else
+  log_info "Adding managed Bash configuration to ~/.bashrc"
   printf '\n%s\n' "$bashrc_source_line" >> "$bashrc_file"
 fi
 
+log_step "Reloading Hyprland configuration"
 hyprctl reload
 hyprctl configerrors
 
-# Delete ~/Projects directory if it exists.
-rm -rf "$HOME/Projects"
+log_step "Removing the default ~/Projects directory"
+if [[ -e "$HOME/Projects" || -L "$HOME/Projects" ]]; then
+  rm -rf "$HOME/Projects"
+  log_info "Removed ~/Projects"
+else
+  log_info "~/Projects does not exist; skipping"
+fi
+
+printf '\nSetup complete.\n'
