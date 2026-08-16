@@ -6,5 +6,6 @@ for workspace = 1, 10 do
     workspace = tostring(workspace),
     monitor = "DP-2",
     default = workspace == 1,
+    persistent = true,
   })
 end
