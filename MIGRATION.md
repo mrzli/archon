@@ -31,3 +31,7 @@ Run from the repository root:
 ```bash
 ./setup.sh && source ~/.bashrc
 ```
+
+## 5. Configure the monitors
+
+After setup, run `hyprctl monitors all` and configure this machine's monitors using their descriptions, resolutions, refresh rates, scales, layout, and default workspaces.
