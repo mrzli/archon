@@ -30,8 +30,13 @@ done
 
 # Install packages.
 
-omarchy install gaming steam
-omarchy install editor vscode
+if ! pacman -Q steam &>/dev/null; then
+  omarchy install gaming steam
+fi
+
+if ! pacman -Q visual-studio-code-bin &>/dev/null; then
+  omarchy install editor vscode
+fi
 
 # Install AUR packages.
 aur_packages_to_add=(
@@ -67,8 +72,18 @@ dev_envs=(
   zig
 )
 
-for env in "${dev_envs[@]}"; do
-  omarchy install dev-env "$env"
+declare -A dev_env_commands=(
+  [ruby]=rails
+  [python]=uv
+  [node]=node
+  [bun]=bun
+  [zig]=zls
+)
+
+for dev_env in "${dev_envs[@]}"; do
+  if ! command -v "${dev_env_commands[$dev_env]}" &>/dev/null; then
+    omarchy install dev-env "$dev_env"
+  fi
 done
 
 # Install other mise tooling.
@@ -76,14 +91,21 @@ mise_tools=(
   pnpm
 )
 
-mise use --global "${mise_tools[@]}"
+for tool in "${mise_tools[@]}"; do
+  if ! command -v "$tool" &>/dev/null; then
+    mise use --global "$tool"
+  fi
+done
 
 # Install VSCode extensions.
 vscode_extensions_file="$repo_root_dir/data/vscode-extensions.txt"
 mapfile -t vscode_extensions < <(grep -Ev '^\s*(#|$)' "$vscode_extensions_file")
+installed_vscode_extensions="$(code --list-extensions)"
 
 for extension in "${vscode_extensions[@]}"; do
-  code --install-extension "$extension" --force
+  if ! grep -qiFx "$extension" <<< "$installed_vscode_extensions"; then
+    code --install-extension "$extension"
+  fi
 done
 
 # Setup configs.
