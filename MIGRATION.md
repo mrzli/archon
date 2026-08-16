@@ -2,36 +2,15 @@
 
 This file records one-time manual changes to apply to an existing installation after upgrading to Omarchy 4. Add steps only when they are actually being handled; do not use this file for predicted work.
 
-## 1. Remove stale application launchers and configuration
+## 1. Remove stale Typora files
 
-Removing a package can leave its application-menu launcher and configuration behind. Perform this cleanup once on each system; the affected applications may differ.
+Remove Typora's leftover launcher and configuration, then refresh the application menu:
 
-1. Check the application menu for entries that no longer launch.
-2. Confirm that the application is absent:
-
-   ```bash
-   command -v <executable>
-   pacman -Q <package>
-   ```
-
-3. Find matching launcher and configuration files:
-
-   ```bash
-   find ~/.local/share/applications ~/.config ~/.local/share ~/.cache \
-     -maxdepth 2 -iname '*<app-name>*' -print
-   ```
-
-4. Inspect the results and preserve any user data. Move only confirmed leftovers to the trash:
-
-   ```bash
-   gio trash <leftover-paths...>
-   ```
-
-5. Refresh the application menu database:
-
-   ```bash
-   update-desktop-database ~/.local/share/applications
-   ```
+```bash
+rm -f ~/.local/share/applications/typora.desktop
+rm -rf ~/.config/Typora
+update-desktop-database ~/.local/share/applications
+```
 
 ## 2. Remove unwanted default packages
 
