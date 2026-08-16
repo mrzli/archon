@@ -16,7 +16,15 @@ update-desktop-database ~/.local/share/applications
 
 In `~/.bashrc`, delete `# Custom omarchy configuration` and the custom configuration beneath it.
 
-## 3. Run the setup script
+## 3. Remove the old Hyprland configuration
+
+Delete the legacy Hyprland `.conf` files before installing the new configuration:
+
+```bash
+rm -f ~/.config/hypr/{autostart,bindings,envs,hypridle,hyprland-custom,hyprland,input,looknfeel,monitors,hyprlock}.conf
+```
+
+## 4. Run the setup script
 
 Run from the repository root:
 
