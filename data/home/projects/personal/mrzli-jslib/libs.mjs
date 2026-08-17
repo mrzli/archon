@@ -692,7 +692,7 @@ function getStashCount(repository) {
 function getAheadBranches(repository, warnings) {
   const output = getGitOutput(repository, [
     'for-each-ref',
-    '--format=%(refname:short)%09%(upstream:short)',
+    '--format=%(refname:short)%09%(refname)%09%(upstream:short)%09%(upstream)',
     'refs/heads',
   ]);
   const branches = output
@@ -700,8 +700,8 @@ function getAheadBranches(repository, warnings) {
     .split('\n')
     .filter((line) => line.length > 0)
     .map((line) => {
-      const [name, upstream = ''] = line.split('\t');
-      return { name, upstream };
+      const [name, ref, upstream = '', upstreamRef = ''] = line.split('\t');
+      return { name, ref, upstream, upstreamRef };
     });
   const ahead = [];
 
@@ -710,7 +710,7 @@ function getAheadBranches(repository, warnings) {
       const result = runGit(repository, [
         'rev-list',
         '--count',
-        `${branch.upstream}..${branch.name}`,
+        `${branch.upstreamRef}..${branch.ref}`,
       ]);
 
       if (result.status === 0) {
@@ -730,7 +730,7 @@ function getAheadBranches(repository, warnings) {
       getGitOutput(repository, [
         'rev-list',
         '--count',
-        branch.name,
+        branch.ref,
         '--not',
         '--remotes',
       ]).trim(),
@@ -1290,11 +1290,8 @@ async function confirmRepositoryDeletion(uncleanStatuses) {
     console.log('');
 
     if (uncleanStatuses.length > 0) {
-      const uncleanNames = uncleanStatuses
-        .map((status) => status.name)
-        .join(', ');
-
-      console.log(`Unclean repositories: ${uncleanNames}`);
+      printUncleanRepositoryReasons(uncleanStatuses);
+      console.log('');
 
       const uncleanAnswer = await readline.question(
         `Type "${confirmation}" to continue: `,
@@ -1311,6 +1308,41 @@ async function confirmRepositoryDeletion(uncleanStatuses) {
     return true;
   } finally {
     readline.close();
+  }
+}
+
+function printUncleanRepositoryReasons(statuses) {
+  console.log('Unclean repositories:');
+
+  for (const status of statuses) {
+    const reasons = [];
+
+    if (status.error === undefined) {
+      if (hasWorkingTreeChanges(status.changes)) {
+        reasons.push(`working tree: ${formatChanges(status.changes)}`);
+      }
+
+      if (status.stashCount > 0) {
+        const label = status.stashCount === 1 ? 'stash' : 'stashes';
+        reasons.push(`${status.stashCount} ${label}`);
+      }
+
+      if (status.ahead.length > 0) {
+        reasons.push(`unpushed commits: ${status.ahead.join(', ')}`);
+      }
+    }
+
+    reasons.push(...status.warnings.map((warning) => `warning: ${warning}`));
+
+    if (status.error !== undefined) {
+      reasons.push(`inspection error: ${toSingleLine(status.error)}`);
+    }
+
+    console.log(`  ${status.name}`);
+
+    for (const reason of reasons) {
+      console.log(`    - ${reason}`);
+    }
   }
 }
 
