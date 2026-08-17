@@ -10,10 +10,8 @@ log_info() {
   printf '    %s\n' "$1"
 }
 
-XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-mkdir -p "$XDG_CONFIG_HOME"
-
 repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+home_source_dir="$repo_root_dir/data/home"
 
 packages_to_remove=(
   aether
@@ -129,17 +127,8 @@ for extension in "${vscode_extensions[@]}"; do
   fi
 done
 
-config_source_dir="$repo_root_dir/data/config"
-
-log_step "Installing configuration"
-for config_source in "$config_source_dir"/*; do
-  [[ -d "$config_source" ]] || continue
-
-  config_name="$(basename "$config_source")"
-  log_info "Installing $config_name configuration"
-  mkdir -p "$XDG_CONFIG_HOME/$config_name"
-  cp -a "$config_source"/. "$XDG_CONFIG_HOME/$config_name"/
-done
+log_step "Installing home files"
+cp -a "$home_source_dir"/. "$HOME"/
 
 bashrc_file="$HOME/.bashrc"
 bashrc_source_line='source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/bashrc"'

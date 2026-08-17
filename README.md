@@ -64,6 +64,10 @@ Uninstall unneeded packages, install needed packages, configure settings.
 ~/.local/share/archon/setup.sh
 ```
 
+The setup script overlays `data/home/` onto the user's home directory. Files
+already present at managed paths are updated; unrelated home files are left
+untouched.
+
 Reboot after the script finishes.
 
 ## Manual Steps
