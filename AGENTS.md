@@ -72,3 +72,71 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 # Project-Specific Instructions
 
+## Purpose
+
+Archon provisions and maintains the desired state of an Omarchy/Arch Linux workstation.
+
+- `setup.sh` is the main provisioning entry point.
+- `data/home/` mirrors files that are copied into the user's home directory.
+- Files present under `data/home/` are managed by this repository and may overwrite the corresponding destination files.
+- Do not delete or overwrite other home-directory files unless explicitly requested.
+
+## Setup Invariants
+
+`setup.sh` must remain convergent and repeat-safe.
+
+Running it repeatedly on an already-configured machine must:
+
+- Succeed without requiring manual cleanup.
+- Converge on the same intended configuration.
+- Avoid duplicate lines, entries, applications, packages, or resources.
+- Tolerate resources that are already present or already absent.
+- Preserve user data outside explicitly managed paths.
+
+Exact filesystem or package state does not need to remain byte-for-byte identical. The following incidental changes are acceptable:
+
+- Package, plugin, or tool versions may be updated.
+- Package metadata and caches may be refreshed.
+- Timestamps and generated metadata may change.
+- Configurations or services may be reloaded.
+- Equivalent output may be regenerated.
+
+These exceptions must not cause configuration drift or accumulate duplicate state.
+
+When adding setup operations:
+
+- Prefer naturally idempotent package-manager and configuration commands.
+- Otherwise, inspect the current state before making a change.
+- Make append operations conditional.
+- Give destructive operations explicit, narrowly scoped targets.
+- Ensure deletion succeeds safely when the target is already absent.
+- Do not generate new credentials, keys, tokens, or other identities on every run.
+- Document any intentionally non-repeatable operation and obtain user approval before adding it.
+
+## Managed Home Files
+
+Treat `data/home/` as an overlay, not a complete home-directory replacement.
+
+- Preserve its directory structure when adding files.
+- Do not add secrets, machine-specific credentials, or private keys.
+- Prefer declarative configuration files over imperative setup logic.
+- If a managed file may replace an existing user file, call that out explicitly.
+
+## Scope and Style
+
+- Target Bash and the current Omarchy/Arch Linux environment; do not add unsupported cross-platform abstractions.
+- Match the existing `setup.sh` logging and naming conventions.
+- Keep changes small and directly related to the requested workstation state.
+- Do not refactor unrelated provisioning steps.
+
+## Verification
+
+For changes to `setup.sh`:
+
+- Run `bash -n setup.sh`.
+- Run `shellcheck setup.sh` when ShellCheck is available.
+- Run `git diff --check`.
+- Do not execute the complete setup script merely as a test because it mutates the workstation.
+- Verify individual operations with safe, focused checks where practical.
+
+For files under `data/home/`, run the relevant syntax or configuration validation without installing them into the real home directory unless requested.
