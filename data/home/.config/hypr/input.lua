@@ -1,6 +1,6 @@
 hl.config({
   input = {
     kb_layout = "us,hr",
-    kb_options = "compose:caps,grp:alts_toggle",
+    kb_options = "caps:escape,compose:menu,grp:alts_toggle",
   },
 })
