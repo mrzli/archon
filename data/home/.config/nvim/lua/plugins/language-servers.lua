@@ -6,7 +6,13 @@ return {
       -- missing. Reapplying this file is therefore idempotent.
       servers = {
         -- Application languages
-        vtsls = {},
+        vtsls = {
+          settings = {
+            vtsls = {
+              autoUseWorkspaceTsdk = true,
+            },
+          },
+        },
         -- Projects provide their own Oxlint executable and configuration.
         oxlint = { mason = false },
         basedpyright = {},
