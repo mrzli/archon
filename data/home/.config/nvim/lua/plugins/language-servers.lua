@@ -7,6 +7,8 @@ return {
       servers = {
         -- Application languages
         vtsls = {},
+        -- Projects provide their own Oxlint executable and configuration.
+        oxlint = { mason = false },
         basedpyright = {},
         lua_ls = {},
         ruby_lsp = {},
