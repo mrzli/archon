@@ -1,12 +1,12 @@
 # `mrzli-jslib` local development orchestrator
 
-The terminal script is [`libs.mjs`](./libs.mjs). Run it with Node.js from this directory.
+The terminal script is [`libs.mjs`](./libs.mjs). Run it directly from this directory; its shebang selects Node.js.
 
 Use either form to show detailed help for a command:
 
 ```sh
-node ./libs.mjs help <command>
-node ./libs.mjs <command> --help
+./libs.mjs help <command>
+./libs.mjs <command> --help
 ```
 
 ## Build local packages
@@ -14,7 +14,7 @@ node ./libs.mjs <command> --help
 Install and build every local `@mrzli-jslib/*` package in dependency order:
 
 ```sh
-node ./libs.mjs build
+./libs.mjs build
 ```
 
 Before running Bun, the command validates every local package reference and build script, detects dependency cycles, and determines an order in which dependencies are built before their dependents. A cycle or other validation error stops the command before any package is installed or built.
@@ -33,7 +33,7 @@ The frozen install fails rather than changing a lockfile that disagrees with its
 Permanently delete every immediate child directory that contains a Git repository:
 
 ```sh
-node ./libs.mjs delete
+./libs.mjs delete
 ```
 
 The command lists every target, silently performs the same non-fetching inspection as the `status` command, and requires you to type `delete` before anything is removed. It refuses to run unless the script itself is inside a directory named exactly `mrzli-jslib`.
@@ -43,8 +43,8 @@ If any repository has staged, unstaged, or untracked changes, stash entries, com
 To inspect the targets without deleting anything or prompting for confirmation:
 
 ```sh
-node ./libs.mjs delete -n
-node ./libs.mjs delete --dry-run
+./libs.mjs delete -n
+./libs.mjs delete --dry-run
 ```
 
 Deletion is permanent and includes uncommitted, ignored, and untracked files inside each repository. It deletes local directories only; it does not delete repositories from GitHub.
@@ -54,7 +54,7 @@ Deletion is permanent and includes uncommitted, ignored, and untracked files ins
 Show the dependencies between local `@mrzli-jslib/*` packages:
 
 ```sh
-node ./libs.mjs graph
+./libs.mjs graph
 ```
 
 Each package is shown on its own line, followed by one indented arrow for each direct local dependency. Packages without local dependencies have nothing printed beneath them.
@@ -76,7 +76,7 @@ The referenced directory must be one of the local repositories and its package n
 Delete local repositories whose directory names no longer appear in the `mrzli-jslib` GitHub organization:
 
 ```sh
-node ./libs.mjs prune
+./libs.mjs prune
 ```
 
 The command refuses to proceed unless it can retrieve a complete remote inventory and the script is inside a directory named exactly `mrzli-jslib`. It lists the candidates, silently inspects their Git state, and requires typing `delete`. If any candidate is unclean, it requires typing `delete` a second time. Immediately before deletion, it retrieves the remote inventory again and aborts if a candidate has reappeared.
@@ -84,8 +84,8 @@ The command refuses to proceed unless it can retrieve a complete remote inventor
 Inspect the candidates without prompting or deleting anything:
 
 ```sh
-node ./libs.mjs prune -n
-node ./libs.mjs prune --dry-run
+./libs.mjs prune -n
+./libs.mjs prune --dry-run
 ```
 
 ## List remote repositories
@@ -93,7 +93,7 @@ node ./libs.mjs prune --dry-run
 This command lists every repository owned by the `mrzli-jslib` GitHub organization that is visible to the currently authenticated GitHub CLI account:
 
 ```sh
-node ./libs.mjs remote
+./libs.mjs remote
 ```
 
 Private and archived repositories are marked with `(private)` and `(archived)` after their names.
@@ -111,7 +111,7 @@ The command only reads remote repository information. It does not change local o
 Show one concise line of Git state for every local repository:
 
 ```sh
-node ./libs.mjs status
+./libs.mjs status
 ```
 
 Each line includes the checked-out branch, staged, unstaged, and untracked file counts, the stash count, and commits ahead across every local branch. Branches without an upstream are identified explicitly when they contain commits that are not present on any remote-tracking branch.
@@ -119,7 +119,7 @@ Each line includes the checked-out branch, staged, unstaged, and untracked file 
 By default, the command uses the existing local remote-tracking information. Refresh it before reporting with:
 
 ```sh
-node ./libs.mjs status --fetch
+./libs.mjs status --fetch
 ```
 
 The `--fetch` option runs `git fetch --all --prune` in each repository. A fetch or inspection failure is reported on that repository's line and causes a non-zero exit code without preventing other repositories from being inspected.
@@ -129,7 +129,7 @@ The `--fetch` option runs `git fetch --all --prune` in each repository. A fetch 
 Update existing local repositories and clone remote repositories that are missing locally:
 
 ```sh
-node ./libs.mjs sync
+./libs.mjs sync
 ```
 
 For each repository, the command runs `git fetch --all --prune`, then fast-forwards the checked-out branch from its configured upstream. It never creates a merge commit or rebases local commits. A divergent branch is reported as an error and left unchanged.
@@ -143,14 +143,14 @@ The command retrieves the repository list from the `mrzli-jslib` GitHub organiza
 Show the command list:
 
 ```sh
-node ./libs.mjs help
+./libs.mjs help
 ```
 
 Show help for one command:
 
 ```sh
-node ./libs.mjs help status
-node ./libs.mjs status --help
+./libs.mjs help status
+./libs.mjs status --help
 ```
 
 Both command-specific forms produce the same output.
