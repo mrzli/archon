@@ -132,6 +132,8 @@ Update existing local repositories and clone remote repositories that are missin
 ./libs.mjs sync
 ```
 
+The command reports progress before starting each repository so long-running fetches and clones remain visible.
+
 For each repository, the command runs `git fetch --all --prune`, then fast-forwards the checked-out branch from its configured upstream. It never creates a merge commit or rebases local commits. A divergent branch is reported as an error and left unchanged.
 
 Fetching still occurs when the working tree has changes, but the checked-out branch is only fast-forwarded when there are no staged, unstaged, or untracked changes. Detached heads, missing upstreams, fetch failures, and update failures are reported without preventing other repositories from being processed.

@@ -832,19 +832,58 @@ function syncRepositories(arguments_) {
   const missingRepositories = remoteRepositories.filter(
     (repository) => !localNames.has(repository.name),
   );
-  const results = [
-    ...localRepositories.map(syncLocalRepository),
-    ...missingRepositories.map(cloneRemoteRepository),
-  ].sort((left, right) => left.name.localeCompare(right.name));
+  const operations = [
+    ...localRepositories.map((repository) => ({
+      repository,
+      run: syncLocalRepository,
+    })),
+    ...missingRepositories.map((repository) => ({
+      repository,
+      run: cloneRemoteRepository,
+    })),
+  ].sort((left, right) =>
+    left.repository.name.localeCompare(right.repository.name),
+  );
 
-  if (results.length === 0) {
+  if (operations.length === 0) {
     console.log('No local or remote Git repositories found.');
     return 0;
   }
 
-  printSyncResults(results);
+  const results = runSyncOperations(operations);
 
   return results.some((result) => !result.succeeded) ? 1 : 0;
+}
+
+function runSyncOperations(operations) {
+  const indexWidth = String(operations.length).length;
+  const nameWidth = Math.max(
+    ...operations.map(({ repository }) => repository.name.length),
+  );
+  const results = [];
+
+  console.log(`Synchronizing ${operations.length} repositories...`);
+
+  for (const [index, { repository, run }] of operations.entries()) {
+    const current = String(index + 1).padStart(indexWidth);
+    const progress = `[${current}/${operations.length}]`;
+    process.stdout.write(
+      `${progress} ${repository.name.padEnd(nameWidth)}  `,
+    );
+
+    let result;
+
+    try {
+      result = run(repository);
+    } catch (error) {
+      result = createSyncFailure(repository, getErrorMessage(error));
+    }
+
+    console.log(result.message);
+    results.push(result);
+  }
+
+  return results;
 }
 
 function cloneRemoteRepository(repository) {
@@ -963,14 +1002,6 @@ function hasWorkingTreeChanges(changes) {
   return (
     changes.staged > 0 || changes.unstaged > 0 || changes.untracked > 0
   );
-}
-
-function printSyncResults(results) {
-  const nameWidth = Math.max(...results.map((result) => result.name.length));
-
-  for (const result of results) {
-    console.log(`${result.name.padEnd(nameWidth)}  ${result.message}`);
-  }
 }
 
 function printSyncHelp() {
