@@ -2,14 +2,14 @@
 
 ROOT="$HOME/projects/personal/mrzli-jslib"
 
-[ -d "$ROOT" ] || exit 0
+for dir in "$ROOT"/*/; do
+  [ -d "$dir/.git" ] || continue
 
-create_session() {
-  local session="$1"
-  local dir="$2"
+  name="$(basename "$dir")"
+  session="jslib-$name"
 
   if tmux has-session -t "$session" 2>/dev/null; then
-    return
+    continue
   fi
 
   tmux new-session -d -s "$session" -c "$dir" -n nvim
@@ -21,13 +21,4 @@ create_session() {
   tmux new-window -t "$session" -c "$dir" -n shell
 
   tmux select-window -t "$session:nvim"
-}
-
-create_session jslibs "$ROOT"
-
-for dir in "$ROOT"/*/; do
-  [ -d "$dir/.git" ] || continue
-
-  name="$(basename "$dir")"
-  create_session "jslib-$name" "$dir"
 done
