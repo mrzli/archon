@@ -33,6 +33,21 @@ end
 
 return {
   {
+    "nvim-mini/mini.pairs",
+    enabled = false,
+  },
+  {
+    "stevearc/conform.nvim",
+    opts = {
+      formatters_by_ft = {
+        javascript = { "oxfmt" },
+        javascriptreact = { "oxfmt" },
+        typescript = { "oxfmt" },
+        typescriptreact = { "oxfmt" },
+      },
+    },
+  },
+  {
     "neovim/nvim-lspconfig",
     opts = {
       -- LazyVim configures these servers and Mason installs any that are
