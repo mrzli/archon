@@ -57,13 +57,32 @@ return {
               codeaction = {
                 matcher = { sort_empty = true },
                 transform = function(item)
-                  local action = item.item and item.item.action
+                  local selection = item.item
+                  local action = selection and selection.action
                   local title = action and action.title or ""
                   local specifier = title:match('from "([^"]+)"') or title:match("from '([^']+)'")
+                  local is_index_import = false
 
-                  if specifier and specifier:match("^%./[^/]+%.js$") and specifier ~= "./index.js" then
+                  if specifier then
+                    local basename = specifier:match("([^/]+)$") or specifier
+                    is_index_import = basename == "index" or basename:match("^index%.") ~= nil
+
+                    local is_relative = specifier == "."
+                      or specifier == ".."
+                      or specifier:match("^%./") ~= nil
+                      or specifier:match("^%.%./") ~= nil
+                    local bufnr = selection and selection.ctx and selection.ctx.bufnr
+                    local filename = bufnr and vim.api.nvim_buf_get_name(bufnr) or ""
+
+                    if is_relative and filename ~= "" then
+                      local module_path = vim.fs.normalize(vim.fs.joinpath(vim.fs.dirname(filename), specifier))
+                      is_index_import = is_index_import or vim.fn.isdirectory(module_path) == 1
+                    end
+                  end
+
+                  if specifier and specifier:match("^%./[^/]+$") and not is_index_import then
                     item.import_priority = 0
-                  elseif specifier and specifier:match("/index%.js$") then
+                  elseif is_index_import then
                     item.import_priority = 1
                   else
                     item.import_priority = 2
