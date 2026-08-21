@@ -48,6 +48,40 @@ return {
     },
   },
   {
+    "folke/snacks.nvim",
+    opts = {
+      picker = {
+        sources = {
+          select = {
+            kinds = {
+              codeaction = {
+                matcher = { sort_empty = true },
+                transform = function(item)
+                  local action = item.item and item.item.action
+                  local title = action and action.title or ""
+                  local specifier = title:match('from "([^"]+)"') or title:match("from '([^']+)'")
+
+                  if specifier and specifier:match("^%./[^/]+%.js$") and specifier ~= "./index.js" then
+                    item.import_priority = 0
+                  elseif specifier and specifier:match("/index%.js$") then
+                    item.import_priority = 1
+                  else
+                    item.import_priority = 2
+                  end
+
+                  return item
+                end,
+                sort = {
+                  fields = { "import_priority", "score:desc", "#text", "idx" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  {
     "neovim/nvim-lspconfig",
     opts = {
       -- LazyVim configures these servers and Mason installs any that are
