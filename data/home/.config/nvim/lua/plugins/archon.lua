@@ -32,7 +32,6 @@ local function native_tsc(root)
 end
 
 return {
-  { import = "lazyvim.plugins.extras.util.rest" },
   {
     "nvim-mini/mini.pairs",
     enabled = false,

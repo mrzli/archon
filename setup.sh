@@ -130,6 +130,25 @@ done
 log_step "Installing home files"
 cp -a "$home_source_dir"/. "$HOME"/
 
+lazyvim_config_file="$HOME/.config/nvim/lazyvim.json"
+lazyvim_rest_extra="lazyvim.plugins.extras.util.rest"
+
+log_step "Enabling LazyVim REST extra"
+mkdir -p "$(dirname "$lazyvim_config_file")"
+if [[ ! -f "$lazyvim_config_file" ]]; then
+  printf '{}\n' > "$lazyvim_config_file"
+fi
+
+if jq -e --arg extra "$lazyvim_rest_extra" '(.extras // []) | index($extra) != null' "$lazyvim_config_file" &>/dev/null; then
+  log_info "LazyVim REST extra is already enabled; skipping"
+else
+  lazyvim_config_tmp_file="$(mktemp)"
+  jq --arg extra "$lazyvim_rest_extra" '.extras = ((.extras // []) + [$extra])' "$lazyvim_config_file" > "$lazyvim_config_tmp_file"
+  install -m 644 "$lazyvim_config_tmp_file" "$lazyvim_config_file"
+  rm -f "$lazyvim_config_tmp_file"
+  log_info "Enabled LazyVim REST extra"
+fi
+
 bashrc_file="$HOME/.bashrc"
 bashrc_source_line='source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/bashrc"'
 
