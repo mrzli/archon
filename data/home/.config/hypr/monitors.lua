@@ -16,6 +16,8 @@ end
 hl.env("GDK_SCALE", "1")
 configure_monitor("", "preferred", 1)
 
+hl.monitor({ output = "eDP-2", mode = "preferred", position = "auto", scale = 1.6 })
+
 configure_monitor(monitors.desktop.left, "preferred", 1, "0x0")
 configure_monitor(monitors.desktop.right, "preferred", 1, "2560x0")
 
