@@ -48,11 +48,13 @@ else
 fi
 
 aur_packages=(
-  postman-bin
+  # package-name
 )
 
-log_step "Installing AUR packages"
-omarchy pkg aur add "${aur_packages[@]}"
+if ((${#aur_packages[@]} > 0)); then
+  log_step "Installing AUR packages"
+  omarchy pkg aur add "${aur_packages[@]}"
+fi
 
 repository_packages=(
   tokei       # Count lines of code
