@@ -1,0 +1,5 @@
+.config/Code/User/snippets
+.config/archon
+.config/git
+.config/nvim/snippets
+projects/workspaces

@@ -129,6 +129,26 @@ for extension in "${vscode_extensions[@]}"; do
   fi
 done
 
+home_replace_directories_file="$repo_root_dir/data/home-replace-directories.txt"
+
+log_step "Removing managed home directories"
+while IFS= read -r relative_dir; do
+  [[ -z "$relative_dir" || "$relative_dir" == \#* ]] && continue
+
+  if [[ "$relative_dir" == /* || "/$relative_dir/" == *"/../"* || "/$relative_dir/" == *"/./"* || ! -d "$home_source_dir/$relative_dir" ]]; then
+    printf 'Invalid managed home directory: %s\n' "$relative_dir" >&2
+    exit 1
+  fi
+
+  destination_dir="$HOME/$relative_dir"
+  if [[ -e "$destination_dir" || -L "$destination_dir" ]]; then
+    rm -rf -- "$destination_dir"
+    log_info "Removed ~/$relative_dir"
+  else
+    log_info "~/$relative_dir does not exist; skipping"
+  fi
+done < "$home_replace_directories_file"
+
 log_step "Installing home files"
 cp -a "$home_source_dir"/. "$HOME"/
 
