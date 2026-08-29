@@ -10,6 +10,34 @@ log_info() {
   printf '    %s\n' "$1"
 }
 
+usage() {
+  printf 'Usage: %s [OPTIONS]\n\n' "${0##*/}"
+  printf 'Options:\n'
+  printf '  %-31s %s\n' '-d, --delete-managed-home-dirs' 'Delete and recreate directories listed in data/home-replace-directories.txt'
+  printf '  %-31s %s\n' '-h, --help' 'Show this help and exit'
+  printf '\nBy default, existing home directories are preserved and data/home is copied as an overlay.\n'
+}
+
+delete_managed_home_dirs=false
+
+while (($# > 0)); do
+  case "$1" in
+    -d | --delete-managed-home-dirs)
+      delete_managed_home_dirs=true
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n\n' "$1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+
 repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 home_source_dir="$repo_root_dir/data/home"
 
@@ -129,25 +157,27 @@ for extension in "${vscode_extensions[@]}"; do
   fi
 done
 
-home_replace_directories_file="$repo_root_dir/data/home-replace-directories.txt"
+if [[ "$delete_managed_home_dirs" == true ]]; then
+  home_replace_directories_file="$repo_root_dir/data/home-replace-directories.txt"
 
-log_step "Removing managed home directories"
-while IFS= read -r relative_dir; do
-  [[ -z "$relative_dir" || "$relative_dir" == \#* ]] && continue
+  log_step "Removing managed home directories"
+  while IFS= read -r relative_dir; do
+    [[ -z "$relative_dir" || "$relative_dir" == \#* ]] && continue
 
-  if [[ "$relative_dir" == /* || "/$relative_dir/" == *"/../"* || "/$relative_dir/" == *"/./"* || ! -d "$home_source_dir/$relative_dir" ]]; then
-    printf 'Invalid managed home directory: %s\n' "$relative_dir" >&2
-    exit 1
-  fi
+    if [[ "$relative_dir" == /* || "/$relative_dir/" == *"/../"* || "/$relative_dir/" == *"/./"* || ! -d "$home_source_dir/$relative_dir" ]]; then
+      printf 'Invalid managed home directory: %s\n' "$relative_dir" >&2
+      exit 1
+    fi
 
-  destination_dir="$HOME/$relative_dir"
-  if [[ -e "$destination_dir" || -L "$destination_dir" ]]; then
-    rm -rf -- "$destination_dir"
-    log_info "Removed ~/$relative_dir"
-  else
-    log_info "~/$relative_dir does not exist; skipping"
-  fi
-done < "$home_replace_directories_file"
+    destination_dir="$HOME/$relative_dir"
+    if [[ -e "$destination_dir" || -L "$destination_dir" ]]; then
+      rm -rf -- "$destination_dir"
+      log_info "Removed ~/$relative_dir"
+    else
+      log_info "~/$relative_dir does not exist; skipping"
+    fi
+  done < "$home_replace_directories_file"
+fi
 
 log_step "Installing home files"
 cp -a "$home_source_dir"/. "$HOME"/
