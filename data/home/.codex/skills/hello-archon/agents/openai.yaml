@@ -1,0 +1,6 @@
+interface:
+  display_name: "Hello Archon"
+  short_description: "Print a simple greeting from Archon"
+  default_prompt: "Use $hello-archon to print its greeting."
+policy:
+  allow_implicit_invocation: false
