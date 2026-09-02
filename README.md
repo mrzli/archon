@@ -50,17 +50,29 @@ I suspect the system will ask you for some information:
 
 ## Setup System
 
+Login to GitHub CLI:
+
+```bash
+gh auth login \
+  --hostname github.com \
+  --git-protocol ssh \
+  --web \
+  --skip-ssh-key
+# Follow the prompts and login via browser.
+```
+
 Clone the repo locally:
 
 ```bash
 archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon"
-rm -rf -- "$archon_dir"
 mkdir -p "$(dirname "$archon_dir")"
-git clone https://github.com/mrzli/archon.git "$archon_dir"
+git \
+  -c credential.helper= \
+  -c credential.helper='!gh auth git-credential' \
+  clone https://github.com/mrzli/archon.git "$archon_dir"
 ```
 
-Run the setup script to provision the workstation and converge its managed
-software and user configuration on the state defined by this repository:
+Run the setup script to apply the managed system configuration:
 
 ```bash
 ~/.local/share/archon/setup.sh
@@ -137,17 +149,6 @@ Now that the SSH key is set up, change the `archon` repo to use SSH instead of H
 git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon" remote set-url origin git@github.com:mrzli/archon.git
 ```
 
-Login to github CLI:
-
-```bash
-gh auth login \
-  --hostname github.com \
-  --git-protocol ssh \
-  --web \
-  --skip-ssh-key
-# Follow the instructions in the terminal, and login via browser.
-```
-
 ### Synchronize Personal Projects
 
 ```bash
@@ -157,3 +158,10 @@ gh auth login \
 This updates existing repositories and clones missing repositories into
 `~/projects/personal/<owner>/<repository>`. It preserves repositories with
 local changes instead of updating their checked-out branches.
+
+## Update Archon Repo
+
+```bash
+archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon"
+git -C "$archon_dir" pull --ff-only
+```
