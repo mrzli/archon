@@ -54,11 +54,13 @@ Clone the repo locally:
 
 ```bash
 archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon"
+rm -rf -- "$archon_dir"
 mkdir -p "$(dirname "$archon_dir")"
 git clone https://github.com/mrzli/archon.git "$archon_dir"
 ```
 
-Uninstall unneeded packages, install needed packages, configure settings.
+Run the setup script to provision the workstation and converge its managed
+software and user configuration on the state defined by this repository:
 
 ```bash
 ~/.local/share/archon/setup.sh
@@ -146,8 +148,12 @@ gh auth login \
 # Follow the instructions in the terminal, and login via browser.
 ```
 
-### Create Projects
+### Synchronize Personal Projects
 
 ```bash
-~/.local/share/archon/projects-create.sh
+"$HOME/projects/personal/projects.mjs" sync
 ```
+
+This updates existing repositories and clones missing repositories into
+`~/projects/personal/<owner>/<repository>`. It preserves repositories with
+local changes instead of updating their checked-out branches.
