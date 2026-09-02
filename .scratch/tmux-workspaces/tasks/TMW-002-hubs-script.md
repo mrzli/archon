@@ -1,6 +1,6 @@
 # TMW-002: Implement `hubs.sh`
 
-Status: pending
+Status: completed
 
 Area: Group launchers
 
@@ -14,15 +14,15 @@ Replace the broad directory-session start/stop pair with one action-based launch
 
 ## Acceptance checklist
 
-- [ ] Create executable `data/home/projects/workspaces/hubs.sh`.
-- [ ] Manage `workspaces` at `$HOME/projects/workspaces`, `projects` at `$HOME/projects/personal`, and `libs` at `$HOME/projects/personal/mrzli-jslib`.
-- [ ] Keep hub definitions straightforward to extend with other broad directory roots later.
-- [ ] On start, report and skip each missing root while continuing with the others.
-- [ ] On start, leave existing sessions unchanged.
-- [ ] New sessions contain one `shell` window, matching current behavior.
-- [ ] On stop, stop all three sessions and succeed when any session is absent.
-- [ ] The script follows the TMW-001 action and failure contract.
+- [x] Create executable `data/home/projects/workspaces/hubs.sh`.
+- [x] Manage `workspaces` at `$HOME/projects/workspaces`, `projects` at `$HOME/projects/personal`, and `libs` at `$HOME/projects/personal/mrzli-jslib`.
+- [x] Keep hub definitions straightforward to extend with other broad directory roots later.
+- [x] On start, report and skip each missing root while continuing with the others.
+- [x] On start, leave existing sessions unchanged.
+- [x] New sessions contain one `shell` window, matching current behavior.
+- [x] On stop, stop all three sessions and succeed when any session is absent.
+- [x] The script follows the TMW-001 action and failure contract.
 
 ## Verification evidence
 
-_Add evidence here when completing the task._
+Implemented the three parallel session/directory definitions in `hubs.sh`. The launcher validates its action, skips and reports missing roots, preserves existing sessions, creates only the `shell` window, ignores absent sessions during stop, and accumulates tmux operation failures.
