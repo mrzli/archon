@@ -81,6 +81,22 @@ Archon provisions and maintains the desired state of an Omarchy/Arch Linux works
 - Files present under `data/home/` are managed by this repository and may overwrite the corresponding destination files.
 - Do not delete or overwrite other home-directory files unless explicitly requested.
 
+## Repository Knowledge
+
+Before planning or implementing a change, search `docs/` and `.scratch/` for
+relevant context when those directories exist. Include hidden paths when
+searching so `.scratch/` is not skipped.
+
+- `docs/` contains durable documentation for the system's current behavior.
+  Keep it consistent with implemented changes.
+- `.scratch/` contains active proposals, specifications, investigations, and
+  implementation tickets. Its contents may describe work that has not been
+  implemented and must not be treated as current behavior without checking the
+  code.
+- When planned work is completed, move any enduring operational knowledge into
+  `docs/` or the relevant README. Then mark the scratch document completed,
+  archive it, or remove it as appropriate for the task.
+
 ## Setup Invariants
 
 `setup.sh` must remain convergent and repeat-safe.
