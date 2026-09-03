@@ -1,6 +1,6 @@
 # TMW-015: Document the completed launcher structure
 
-Status: pending
+Status: completed
 
 Area: Documentation
 
@@ -14,14 +14,13 @@ Move enduring operational knowledge from the proposal into durable project docum
 
 ## Acceptance checklist
 
-- [ ] Document the five final launcher filenames.
-- [ ] Document each group's responsibility.
-- [ ] Document the `start|stop` invocation syntax.
-- [ ] Document aggregate start attachment/switch behavior and partial-failure behavior.
-- [ ] Mention that `projects/workspaces` is a managed replacement directory, so setup removes obsolete destination launchers.
-- [ ] Keep documentation consistent with the verified implementation.
+- [x] Document the five final launcher filenames.
+- [x] Document each group's responsibility.
+- [x] Document the `start|stop` invocation syntax.
+- [x] Document aggregate start attachment/switch behavior and partial-failure behavior.
+- [x] Mention that `projects/workspaces` is a managed replacement directory, so setup removes obsolete destination launchers.
+- [x] Keep documentation consistent with the verified implementation.
 
 ## Verification evidence
 
-_Add evidence here when completing the task._
-
+Added the durable `Tmux Workspaces` section to the root README. It lists all five launchers and responsibilities, invocation syntax, idempotent and missing-directory behavior, aggregate attachment/switch and failure semantics, reverse stop order, and the managed replacement-directory consequence.

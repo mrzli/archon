@@ -82,6 +82,39 @@ The setup script overlays `data/home/` onto the user's home directory. Files
 already present at managed paths are updated; unrelated home files are left
 untouched.
 
+### Tmux Workspaces
+
+Setup installs five tmux launchers in `~/projects/workspaces`:
+
+| Launcher | Responsibility |
+| --- | --- |
+| `hubs.sh` | Persistent shell sessions rooted at the workspace, personal-project, and JavaScript-library directories. |
+| `flashcards.sh` | Frontend and backend flashcards sessions, including their editor, Codex, development, and shell windows. |
+| `jslibs.sh` | One editor, Codex, and shell session for each immediate Git repository under the JavaScript-library root. |
+| `misc-projects.sh` | Editor, Codex, and shell sessions for the configured miscellaneous personal projects. |
+| `all.sh` | Starts or stops all four groups. |
+
+Every launcher requires exactly one action:
+
+```bash
+~/projects/workspaces/hubs.sh start
+~/projects/workspaces/hubs.sh stop
+~/projects/workspaces/all.sh start
+~/projects/workspaces/all.sh stop
+```
+
+Starts leave existing sessions unchanged, stops tolerate absent sessions, and
+missing configured directories are reported and skipped. `all.sh start` runs
+every group and then attaches to the `workspaces` session, or switches the
+current tmux client to it when already inside tmux. If any group fails, all
+remaining groups are still attempted, the aggregate command returns nonzero,
+and it does not attach or switch. Aggregate stop uses reverse group order and
+also reports partial failures.
+
+`projects/workspaces` is a managed replacement directory. On setup, its
+destination is replaced with the repository version, which intentionally
+removes obsolete launcher files from `~/projects/workspaces`.
+
 Reboot after the script finishes.
 
 ## Manual Steps
