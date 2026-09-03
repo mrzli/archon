@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -u
+
+test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd -- "$test_dir/../.." && pwd)"
+launchers_dir="$repo_root/data/home/projects/workspaces"
+temporary_root="$(mktemp -d)"
+
+cleanup() {
+  rm -rf -- "$temporary_root"
+}
+trap cleanup EXIT
+
+export PATH="$test_dir/bin:$PATH"
+unset TMUX
+
+new_case() {
+  case_root="$(mktemp -d "$temporary_root/case.XXXXXX")"
+  export HOME="$case_root/home"
+  export TMW_TMUX_STATE="$case_root/tmux"
+  unset TMW_TMUX_FAIL_COMMAND
+  mkdir -p "$HOME" "$TMW_TMUX_STATE"
+}
+
+fail() {
+  echo "FAIL: $*" >&2
+  return 1
+}
+
+assert_file_contains() {
+  local file="$1"
+  local expected="$2"
+
+  grep -Fqx -- "$expected" "$file" || fail "$file does not contain: $expected"
+}
+
+assert_equals() {
+  local expected="$1"
+  local actual="$2"
+
+  [ "$actual" = "$expected" ] || fail "expected '$expected', got '$actual'"
+}
+
+assert_session_exists() {
+  [ -d "$TMW_TMUX_STATE/sessions/$1" ] || fail "missing session: $1"
+}
+
+test_harness_is_isolated() {
+  new_case
+  local project="$HOME/project"
+  mkdir -p "$project"
+
+  tmux new-session -d -s harness -c "$project" -n shell
+  tmux new-window -t harness -c "$project" -n extra
+  tmux send-keys -t harness:extra 'safe command' Enter
+  tmux select-window -t harness:extra
+
+  assert_session_exists harness
+  assert_equals "$project" "$(<"$TMW_TMUX_STATE/sessions/harness/root")"
+  assert_file_contains "$TMW_TMUX_STATE/sessions/harness/windows" $'shell\t'"$project"
+  assert_file_contains "$TMW_TMUX_STATE/sessions/harness/windows" $'extra\t'"$project"
+  assert_file_contains "$TMW_TMUX_STATE/sessions/harness/commands" $'harness:extra\tsafe command'
+  assert_equals extra "$(<"$TMW_TMUX_STATE/sessions/harness/selected")"
+  assert_file_contains "$TMW_TMUX_STATE/calls" "$test_dir/bin/tmux new-session -d -s harness -c $project -n shell"
+}
+
+tests_run=0
+tests_failed=0
+
+run_test() {
+  local name="$1"
+  shift
+  tests_run=$((tests_run + 1))
+
+  if "$@"; then
+    echo "PASS: $name"
+  else
+    echo "FAIL: $name" >&2
+    tests_failed=$((tests_failed + 1))
+  fi
+}
+
+run_test "isolated tmux harness" test_harness_is_isolated
+
+echo "$tests_run tests, $tests_failed failures"
+[ "$tests_failed" -eq 0 ]

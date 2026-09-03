@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+set -u
+
+state_dir="${TMW_TMUX_STATE:?TMW_TMUX_STATE must be set}"
+sessions_dir="$state_dir/sessions"
+mkdir -p "$sessions_dir"
+
+printf '%q' "$0" >> "$state_dir/calls"
+printf ' %q' "$@" >> "$state_dir/calls"
+printf '\n' >> "$state_dir/calls"
+
+command="${1:-}"
+if [ "$#" -gt 0 ]; then
+  shift
+fi
+
+if [ "${TMW_TMUX_FAIL_COMMAND:-}" = "$command" ]; then
+  echo "forced tmux failure: $command" >&2
+  exit 1
+fi
+
+session=""
+directory=""
+window=""
+target=""
+
+case "$command" in
+  has-session)
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        -t)
+          session="$2"
+          shift 2
+          ;;
+        *) shift ;;
+      esac
+    done
+    [ -d "$sessions_dir/$session" ]
+    ;;
+  new-session)
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        -s)
+          session="$2"
+          shift 2
+          ;;
+        -c)
+          directory="$2"
+          shift 2
+          ;;
+        -n)
+          window="$2"
+          shift 2
+          ;;
+        *) shift ;;
+      esac
+    done
+    [ -n "$session" ] && [ -n "$directory" ] && [ -n "$window" ] || exit 1
+    [ ! -e "$sessions_dir/$session" ] || exit 1
+    mkdir -p "$sessions_dir/$session"
+    printf '%s\n' "$directory" > "$sessions_dir/$session/root"
+    printf '%s\t%s\n' "$window" "$directory" > "$sessions_dir/$session/windows"
+    printf '%s\n' "$window" > "$sessions_dir/$session/selected"
+    : > "$sessions_dir/$session/commands"
+    ;;
+  new-window)
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        -t)
+          session="$2"
+          shift 2
+          ;;
+        -c)
+          directory="$2"
+          shift 2
+          ;;
+        -n)
+          window="$2"
+          shift 2
+          ;;
+        *) shift ;;
+      esac
+    done
+    [ -d "$sessions_dir/$session" ] || exit 1
+    printf '%s\t%s\n' "$window" "$directory" >> "$sessions_dir/$session/windows"
+    ;;
+  send-keys)
+    if [ "${1:-}" = -t ]; then
+      target="$2"
+      shift 2
+    fi
+    session="${target%%:*}"
+    [ -d "$sessions_dir/$session" ] || exit 1
+    printf '%s\t%s\n' "$target" "${1:-}" >> "$sessions_dir/$session/commands"
+    ;;
+  select-window)
+    if [ "${1:-}" = -t ]; then
+      target="$2"
+    fi
+    session="${target%%:*}"
+    window="${target#*:}"
+    [ -d "$sessions_dir/$session" ] || exit 1
+    printf '%s\n' "$window" > "$sessions_dir/$session/selected"
+    ;;
+  kill-session)
+    if [ "${1:-}" = -t ]; then
+      session="$2"
+    fi
+    [ -d "$sessions_dir/$session" ] || exit 1
+    rm -rf -- "$sessions_dir/$session"
+    ;;
+  list-sessions)
+    shopt -s nullglob
+    session_paths=("$sessions_dir"/*)
+    if [ "${#session_paths[@]}" -eq 0 ]; then
+      echo "no server running on fake socket" >&2
+      exit 1
+    fi
+    for session_path in "${session_paths[@]}"; do
+      basename "$session_path"
+    done
+    ;;
+  attach-session | switch-client)
+    ;;
+  *)
+    echo "unsupported fake tmux command: $command" >&2
+    exit 1
+    ;;
+esac
