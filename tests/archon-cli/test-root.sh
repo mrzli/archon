@@ -85,6 +85,25 @@ test_unexpected_help_argument() {
   assert_contains "$command_output" 'Usage: archon <command> [options]'
 }
 
+test_workspaces_dispatch_validation() {
+  capture "$archon" workspaces --help
+  assert_equals 0 "$command_status" || return
+  assert_contains "$command_output" 'Usage: archon workspaces <start|stop> [options]' || return
+  assert_contains "$command_output" '-g, --group <group>' || return
+
+  capture "$archon" workspaces
+  assert_equals 2 "$command_status" || return
+  assert_contains "$command_output" 'Missing workspace action.' || return
+
+  capture "$archon" workspaces launch
+  assert_equals 2 "$command_status" || return
+  assert_contains "$command_output" 'Unknown workspace action: launch' || return
+
+  capture "$archon" workspaces start --group hubs
+  assert_equals 2 "$command_status" || return
+  assert_contains "$command_output" 'Invalid workspace options: --group hubs'
+}
+
 test_projects_dispatch() {
   local home="$temporary_root/projects-home"
   local repository="$home/projects/personal/example-owner/example-project"
@@ -163,6 +182,7 @@ run_test 'unknown root command' test_unknown_command
 run_test 'unexpected root help argument' test_unexpected_help_argument
 run_test 'libraries command dispatch' test_libraries_dispatch
 run_test 'projects command dispatch' test_projects_dispatch
+run_test 'workspaces dispatch validation' test_workspaces_dispatch_validation
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
 [[ "$tests_failed" -eq 0 ]]

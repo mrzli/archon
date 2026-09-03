@@ -2,6 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { main as runWorkspaces } from './workspaces/src/workspaces.mjs';
+
 const ARCHON_LIB_DIR = dirname(fileURLToPath(import.meta.url));
 
 export async function main(arguments_) {
@@ -19,6 +21,9 @@ export async function main(arguments_) {
         join(ARCHON_LIB_DIR, 'projects/src/projects.mjs'),
         extraArguments,
       );
+    }
+    case 'workspaces': {
+      return runWorkspaces(extraArguments);
     }
     case 'help':
     case '-h':
