@@ -20,6 +20,10 @@ function createContext({ failures = {}, tmux = '' } = {}) {
           calls.push(['flashcards', action]);
           return failures.flashcards ?? 0;
         },
+        jslibs(action) {
+          calls.push(['jslibs', action]);
+          return failures.jslibs ?? 0;
+        },
       },
       print: (message) => output.push(message),
       printError: (message) => errors.push(message),

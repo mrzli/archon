@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { manageFlashcards } from './flashcards.mjs';
+import { manageJslibs } from './jslibs.mjs';
 
 const GROUPS = ['flashcards', 'jslibs', 'misc-projects'];
 const AGGREGATE_GROUPS = ['hubs', ...GROUPS];
@@ -11,12 +12,14 @@ const LEGACY_SCRIPTS_DIR = fileURLToPath(
 );
 const GROUP_HANDLERS = {
   flashcards: manageFlashcards,
+  jslibs: manageJslibs,
 };
 
 export function main(arguments_, context = {}) {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
   const run = context.run ?? runCommand;
+  const capture = context.capture ?? captureCommand;
   const environment = context.environment ?? process.env;
   const groupHandlers = context.groupHandlers ?? GROUP_HANDLERS;
   const scriptsDir = context.scriptsDir ?? LEGACY_SCRIPTS_DIR;
@@ -29,6 +32,7 @@ export function main(arguments_, context = {}) {
   if (parsed.group !== undefined) {
     return runGroup(parsed.group, parsed.action, {
       ...context,
+      capture,
       groupHandlers,
       printError,
       run,
@@ -44,6 +48,7 @@ export function main(arguments_, context = {}) {
     if (
       runGroup(group, parsed.action, {
         ...context,
+        capture,
         groupHandlers,
         printError,
         run,
@@ -139,6 +144,24 @@ function runCommand(command, arguments_, options = {}) {
   }
 
   return result.status ?? 1;
+}
+
+function captureCommand(command, arguments_) {
+  const result = spawnSync(command, arguments_, { encoding: 'utf8' });
+
+  if (result.error) {
+    return { status: 1, output: result.error.message };
+  }
+
+  if (result.signal) {
+    process.kill(process.pid, result.signal);
+    return { status: 1, output: '' };
+  }
+
+  return {
+    status: result.status ?? 1,
+    output: `${result.stdout}${result.stderr}`.trimEnd(),
+  };
 }
 
 function getHelpText() {
