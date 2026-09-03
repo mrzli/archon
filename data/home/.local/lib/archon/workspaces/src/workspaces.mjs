@@ -2,17 +2,23 @@ import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { manageFlashcards } from './flashcards.mjs';
+
 const GROUPS = ['flashcards', 'jslibs', 'misc-projects'];
 const AGGREGATE_GROUPS = ['hubs', ...GROUPS];
 const LEGACY_SCRIPTS_DIR = fileURLToPath(
   new URL('../../../../../projects/workspaces/', import.meta.url),
 );
+const GROUP_HANDLERS = {
+  flashcards: manageFlashcards,
+};
 
 export function main(arguments_, context = {}) {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
   const run = context.run ?? runCommand;
   const environment = context.environment ?? process.env;
+  const groupHandlers = context.groupHandlers ?? GROUP_HANDLERS;
   const scriptsDir = context.scriptsDir ?? LEGACY_SCRIPTS_DIR;
   const parsed = parseArguments(arguments_, print, printError);
 
@@ -21,7 +27,13 @@ export function main(arguments_, context = {}) {
   }
 
   if (parsed.group !== undefined) {
-    return runLegacyGroup(parsed.group, parsed.action, scriptsDir, run);
+    return runGroup(parsed.group, parsed.action, {
+      ...context,
+      groupHandlers,
+      printError,
+      run,
+      scriptsDir,
+    });
   }
 
   const groups =
@@ -29,7 +41,15 @@ export function main(arguments_, context = {}) {
   let status = 0;
 
   for (const group of groups) {
-    if (runLegacyGroup(group, parsed.action, scriptsDir, run) !== 0) {
+    if (
+      runGroup(group, parsed.action, {
+        ...context,
+        groupHandlers,
+        printError,
+        run,
+        scriptsDir,
+      }) !== 0
+    ) {
       printError(`Failed to ${parsed.action} tmux group: ${group}`);
       status = 1;
     }
@@ -93,12 +113,20 @@ function parseArguments(arguments_, print, printError) {
   return { status: 2 };
 }
 
-function runLegacyGroup(group, action, scriptsDir, run) {
-  return run(join(scriptsDir, `${group}.sh`), [action]);
+function runGroup(group, action, context) {
+  const handler = context.groupHandlers[group];
+
+  if (handler !== undefined) {
+    return handler(action, context);
+  }
+
+  return context.run(join(context.scriptsDir, `${group}.sh`), [action]);
 }
 
-function runCommand(command, arguments_) {
-  const result = spawnSync(command, arguments_, { stdio: 'inherit' });
+function runCommand(command, arguments_, options = {}) {
+  const result = spawnSync(command, arguments_, {
+    stdio: options.stdio ?? 'inherit',
+  });
 
   if (result.error) {
     console.error(`Could not start command: ${result.error.message}`);

@@ -15,6 +15,12 @@ function createContext({ failures = {}, tmux = '' } = {}) {
     output,
     context: {
       environment: { TMUX: tmux },
+      groupHandlers: {
+        flashcards(action) {
+          calls.push(['flashcards', action]);
+          return failures.flashcards ?? 0;
+        },
+      },
       print: (message) => output.push(message),
       printError: (message) => errors.push(message),
       run(command, arguments_) {
@@ -43,7 +49,7 @@ test('help and invalid invocations do not run commands', () => {
   assert.deepEqual(hubs.calls, []);
 });
 
-test('group options run only their selected legacy launcher', () => {
+test('group options run only their selected group', () => {
   for (const option of ['--group', '-g']) {
     const fixture = createContext();
     assert.equal(main(['start', option, 'flashcards'], fixture.context), 0);

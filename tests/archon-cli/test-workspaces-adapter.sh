@@ -96,8 +96,8 @@ run_test() {
   fi
 }
 
-run_test 'named legacy workspace delegation' test_named_group_delegation
-run_test 'aggregate legacy workspace delegation' test_aggregate_delegation
+run_test 'named workspace delegation' test_named_group_delegation
+run_test 'hybrid aggregate workspace delegation' test_aggregate_delegation
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
 [[ "$tests_failed" -eq 0 ]]
