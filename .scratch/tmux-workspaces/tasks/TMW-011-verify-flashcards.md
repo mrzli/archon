@@ -1,6 +1,6 @@
 # TMW-011: Verify flashcards launcher behavior
 
-Status: pending
+Status: completed
 
 Area: Verification
 
@@ -14,14 +14,13 @@ Exercise flashcards start, stop, repetition, layout, commands, and missing-proje
 
 ## Acceptance checklist
 
-- [ ] Start twice and confirm no sessions or windows are duplicated.
-- [ ] Confirm frontend and backend session roots, window layouts, commands, and selected windows.
-- [ ] Stop twice and confirm both runs succeed.
-- [ ] Test one missing flashcards project and confirm it is reported.
-- [ ] Confirm the missing project does not prevent the other project from being processed or make the group fail.
-- [ ] Record the focused verification evidence.
+- [x] Start twice and confirm no sessions or windows are duplicated.
+- [x] Confirm frontend and backend session roots, window layouts, commands, and selected windows.
+- [x] Stop twice and confirm both runs succeed.
+- [x] Test one missing flashcards project and confirm it is reported.
+- [x] Confirm the missing project does not prevent the other project from being processed or make the group fail.
+- [x] Record the focused verification evidence.
 
 ## Verification evidence
 
-_Add evidence here when completing the task._
-
+The `flashcards start and stop` isolated test passed. It verifies repeated start and stop, both session roots, exact four-window layouts, editor/Codex/development commands, selected windows, and successful backend creation when the missing frontend is reported and skipped.

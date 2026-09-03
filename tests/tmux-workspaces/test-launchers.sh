@@ -100,6 +100,55 @@ test_hubs_start_and_stop() {
   assert_session_absent libs
 }
 
+test_flashcards_start_and_stop() {
+  new_case
+  local frontend="$HOME/projects/personal/mrzli/flashcards-fe"
+  local backend="$HOME/projects/personal/mrzli/flashcards-be"
+  local session directory dev_command expected_windows expected_commands
+  mkdir -p "$frontend" "$backend"
+
+  "$launchers_dir/flashcards.sh" start || fail "first flashcards start failed"
+  "$launchers_dir/flashcards.sh" start || fail "second flashcards start failed"
+
+  for session in flashcards-fe flashcards-be; do
+    if [ "$session" = flashcards-fe ]; then
+      directory="$frontend"
+      dev_command="bun run dev"
+    else
+      directory="$backend"
+      dev_command="pnpm run dev"
+    fi
+
+    assert_session_exists "$session"
+    assert_equals "$directory" "$(<"$TMW_TMUX_STATE/sessions/$session/root")"
+    expected_windows="$(printf 'nvim\t%s\ncodex\t%s\ndev\t%s\nshell\t%s\n' "$directory" "$directory" "$directory" "$directory")"
+    assert_equals "$expected_windows" "$(<"$TMW_TMUX_STATE/sessions/$session/windows")"
+    expected_commands="$(printf '%s:nvim\tnvim .\n%s:codex\tcodex resume --last\n%s:dev\t%s\n' "$session" "$session" "$session" "$dev_command")"
+    assert_equals "$expected_commands" "$(<"$TMW_TMUX_STATE/sessions/$session/commands")"
+    assert_equals nvim "$(<"$TMW_TMUX_STATE/sessions/$session/selected")"
+  done
+
+  "$launchers_dir/flashcards.sh" stop || fail "first flashcards stop failed"
+  "$launchers_dir/flashcards.sh" stop || fail "second flashcards stop failed"
+  assert_session_absent flashcards-fe
+  assert_session_absent flashcards-be
+
+  new_case
+  backend="$HOME/projects/personal/mrzli/flashcards-be"
+  mkdir -p "$backend"
+  local output
+  if ! output="$("$launchers_dir/flashcards.sh" start 2>&1)"; then
+    fail "flashcards start with missing frontend failed: $output"
+    return
+  fi
+  case "$output" in
+    *"Skipping flashcards-fe: directory does not exist:"*) ;;
+    *) fail "missing flashcards project was not reported" ;;
+  esac
+  assert_session_absent flashcards-fe
+  assert_session_exists flashcards-be
+}
+
 tests_run=0
 tests_failed=0
 
@@ -118,6 +167,7 @@ run_test() {
 
 run_test "isolated tmux harness" test_harness_is_isolated
 run_test "hubs start and stop" test_hubs_start_and_stop
+run_test "flashcards start and stop" test_flashcards_start_and_stop
 
 echo "$tests_run tests, $tests_failed failures"
 [ "$tests_failed" -eq 0 ]
