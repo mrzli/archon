@@ -180,7 +180,8 @@ if [[ "$delete_managed_home_dirs" == true ]]; then
 fi
 
 log_step "Installing home files"
-cp -a "$home_source_dir"/. "$HOME"/
+home_copy_ignore_file="$repo_root_dir/data/home-copy-ignore.txt"
+rsync -a --exclude-from="$home_copy_ignore_file" "$home_source_dir"/ "$HOME"/
 
 lazyvim_config_file="$HOME/.config/nvim/lazyvim.json"
 lazyvim_rest_extra="lazyvim.plugins.extras.util.rest"

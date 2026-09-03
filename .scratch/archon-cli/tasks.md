@@ -147,7 +147,7 @@ partial failures, and absence of attach/switch attempts.
 - Add one global home-copy ignore list using paths relative to `data/home`.
 - Update the overlay copy operation to honor that list.
 - Ignore only narrowly scoped Archon tool `AGENTS.md`, READMEs, and tests.
-- Remove exact excluded development files copied by transitional setup runs.
+- Do not retain one-time cleanup for files absent from the target installation.
 
 Verify: copy twice into a temporary home; runtime files exist, development
 files do not, previously copied development files disappear, and unrelated

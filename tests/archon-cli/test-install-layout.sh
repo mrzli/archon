@@ -5,6 +5,7 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 home_source="$repo_root/data/home"
+home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 replace_directories="$repo_root/data/home-replace-directories.txt"
 temporary_root="$(mktemp -d)"
 
@@ -36,16 +37,24 @@ assert_equals() {
 copy_home_overlay() {
   local home="$1"
 
-  cp -a "$home_source"/. "$home"/
+  rsync -a --exclude-from="$home_copy_ignore" "$home_source"/ "$home"/
 }
 
 test_repeated_overlay_copy() {
   local home="$temporary_root/overlay-home"
-  local archon_output alias_output
+  local archon_output alias_output tree_after_first tree_after_second
   mkdir -p "$home"
 
+  mkdir -p "$home/.local/lib/archon/workspaces/tests" "$home/.local/lib/unrelated"
+  : > "$home/.local/lib/archon/workspaces/tests/user-note.txt"
+  : > "$home/.local/lib/unrelated/keep"
+
   copy_home_overlay "$home"
+  tree_after_first="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
   copy_home_overlay "$home"
+  tree_after_second="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
+
+  assert_equals "$tree_after_first" "$tree_after_second" || return
 
   assert_exists "$home/.local/bin/archon" || return
   [[ -x "$home/.local/bin/archon" ]] || fail 'installed archon is not executable' || return
@@ -56,8 +65,23 @@ test_repeated_overlay_copy() {
   alias_output="$(HOME="$home" "$home/.local/bin/a" --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
 
-  assert_exists "$home/.local/AGENTS.md" || return
-  assert_exists "$home/.local/lib/archon/projects/AGENTS.md"
+  assert_absent "$home/.local/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/libs/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/projects/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/workspaces/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/workspaces/README.md" || return
+
+  local source_test
+  for source_test in "$home_source/.local/lib/archon/workspaces/tests"/*; do
+    assert_absent "$home/.local/lib/archon/workspaces/tests/${source_test##*/}" || return
+  done
+
+  assert_exists "$home/.local/lib/archon/cli.mjs" || return
+  assert_exists "$home/.local/lib/archon/libs/src/libs.mjs" || return
+  assert_exists "$home/.local/lib/archon/projects/src/projects.mjs" || return
+  assert_exists "$home/.local/lib/archon/workspaces/src/workspaces.mjs" || return
+  assert_exists "$home/.local/lib/archon/workspaces/tests/user-note.txt" || return
+  assert_exists "$home/.local/lib/unrelated/keep"
 }
 
 test_managed_library_replacement_scope() {

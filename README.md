@@ -80,7 +80,8 @@ Run the setup script to apply the managed system configuration:
 
 The setup script overlays `data/home/` onto the user's home directory. Files
 already present at managed paths are updated; unrelated home files are left
-untouched.
+untouched. Repository-only files listed in `data/home-copy-ignore.txt` are not
+installed.
 
 ## Manual Steps
 

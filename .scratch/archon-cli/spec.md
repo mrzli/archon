@@ -246,12 +246,10 @@ files, rather than global filename patterns such as `**/README.md`. The list
 excludes the tool's `AGENTS.md` files, READMEs, and tests while leaving runtime
 files eligible for the normal overlay.
 
-That later task also removes any excluded development files copied by an
-earlier setup run. Ignoring a source does not itself remove an existing
-destination. Removal must therefore use exact previously managed paths and
-must not affect sibling directories or unrelated files. Future removal of a
-runtime module similarly requires an explicit migration cleanup, consistent
-with the overlay model.
+The setup script does not carry one-time cleanup for excluded development
+files. If such files were copied by a transitional development run, remove
+them manually. Future removal of a runtime module similarly requires an
+explicit migration decision, consistent with the overlay model.
 
 The `~/.local/bin/archon` executable is copied with executable permissions as a
 managed home file.
