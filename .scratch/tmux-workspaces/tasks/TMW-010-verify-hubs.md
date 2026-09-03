@@ -1,6 +1,6 @@
 # TMW-010: Verify hub launcher behavior
 
-Status: pending
+Status: completed
 
 Area: Verification
 
@@ -14,13 +14,13 @@ Exercise hub start, stop, repetition, and missing-root behavior in isolation.
 
 ## Acceptance checklist
 
-- [ ] Start twice and confirm no sessions or windows are duplicated.
-- [ ] Stop twice and confirm both runs succeed.
-- [ ] Test at least one missing hub root and confirm it is reported.
-- [ ] Confirm a missing root does not prevent other hub sessions from being processed.
-- [ ] Confirm a missing root does not make an otherwise successful start fail.
-- [ ] Record the focused verification evidence.
+- [x] Start twice and confirm no sessions or windows are duplicated.
+- [x] Stop twice and confirm both runs succeed.
+- [x] Test at least one missing hub root and confirm it is reported.
+- [x] Confirm a missing root does not prevent other hub sessions from being processed.
+- [x] Confirm a missing root does not make an otherwise successful start fail.
+- [x] Record the focused verification evidence.
 
 ## Verification evidence
 
-_Add evidence here when completing the task._
+The `hubs start and stop` isolated test passed. It starts twice with the libraries root absent, confirms the skip message and successful creation of both remaining one-window sessions without duplication, then stops twice and confirms all hub sessions are absent.

@@ -46,6 +46,10 @@ assert_session_exists() {
   [ -d "$TMW_TMUX_STATE/sessions/$1" ] || fail "missing session: $1"
 }
 
+assert_session_absent() {
+  [ ! -e "$TMW_TMUX_STATE/sessions/$1" ] || fail "unexpected session: $1"
+}
+
 test_harness_is_isolated() {
   new_case
   local project="$HOME/project"
@@ -65,6 +69,37 @@ test_harness_is_isolated() {
   assert_file_contains "$TMW_TMUX_STATE/calls" "$test_dir/bin/tmux new-session -d -s harness -c $project -n shell"
 }
 
+test_hubs_start_and_stop() {
+  new_case
+  mkdir -p "$HOME/projects/workspaces" "$HOME/projects/personal"
+
+  local output
+  if ! output="$("$launchers_dir/hubs.sh" start 2>&1)"; then
+    fail "first hubs start failed: $output"
+    return
+  fi
+  if ! "$launchers_dir/hubs.sh" start; then
+    fail "second hubs start failed"
+    return
+  fi
+
+  assert_session_exists workspaces
+  assert_session_exists projects
+  assert_session_absent libs
+  assert_equals $'shell\t'"$HOME/projects/workspaces" "$(<"$TMW_TMUX_STATE/sessions/workspaces/windows")"
+  assert_equals $'shell\t'"$HOME/projects/personal" "$(<"$TMW_TMUX_STATE/sessions/projects/windows")"
+  case "$output" in
+    *"Skipping libs: directory does not exist: $HOME/projects/personal/mrzli-jslib"*) ;;
+    *) fail "missing hub root was not reported" ;;
+  esac
+
+  "$launchers_dir/hubs.sh" stop || fail "first hubs stop failed"
+  "$launchers_dir/hubs.sh" stop || fail "second hubs stop failed"
+  assert_session_absent workspaces
+  assert_session_absent projects
+  assert_session_absent libs
+}
+
 tests_run=0
 tests_failed=0
 
@@ -82,6 +117,7 @@ run_test() {
 }
 
 run_test "isolated tmux harness" test_harness_is_isolated
+run_test "hubs start and stop" test_hubs_start_and_stop
 
 echo "$tests_run tests, $tests_failed failures"
 [ "$tests_failed" -eq 0 ]
