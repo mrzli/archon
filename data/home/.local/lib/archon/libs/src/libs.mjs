@@ -3,12 +3,14 @@
 import {
   readFileSync,
   realpathSync,
-  rmSync,
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { createInterface } from 'node:readline/promises';
 
+import {
+  deleteRepositories,
+  pruneRepositories,
+} from '../../shared/destructive-workflows.mjs';
 import { getErrorMessage, toSingleLine } from '../../shared/errors.mjs';
 import { getGitOutput } from '../../shared/git.mjs';
 import { runProcess } from '../../shared/process.mjs';
@@ -256,63 +258,14 @@ function getBuildHelpText() {
 // =============================================================================
 
 async function deleteLocalRepositories(arguments_) {
-  if (isHelpRequest(arguments_)) {
-    printDeleteHelp();
-    return 0;
-  }
-
-  const dryRun = parseDeleteArguments(arguments_);
-
-  if (dryRun === undefined) {
-    return 1;
-  }
-
-  if (!isDeletionRootSafe()) {
-    return 1;
-  }
-
-  const repositories = findLocalRepositories();
-
-  if (repositories.length === 0) {
-    console.log(`No local Git repositories found in ${ROOT_DIR}.`);
-    return 0;
-  }
-
-  if (dryRun) {
-    console.log('Dry run; the following directories would be deleted:');
-    printRepositoryPaths(repositories);
-    return 0;
-  }
-
-  const statuses = inspectLocalRepositories(repositories, false);
-  const uncleanStatuses = statuses.filter(isLocalRepositoryUnclean);
-
-  console.log('The following directories will be permanently deleted:');
-  printRepositoryPaths(repositories);
-  console.log('');
-
-  if (!(await confirmRepositoryDeletion(uncleanStatuses))) {
-    return 1;
-  }
-
-  return removeLocalRepositories(repositories);
-}
-
-function parseDeleteArguments(arguments_) {
-  if (arguments_.length === 0) {
-    return false;
-  }
-
-  if (
-    arguments_.length === 1 &&
-    (arguments_[0] === '--dry-run' || arguments_[0] === '-n')
-  ) {
-    return true;
-  }
-
-  console.error(`Unexpected delete option: ${arguments_[0]}`);
-  printDeleteHelp();
-  return undefined;
+  return deleteRepositories(arguments_, {
+    emptyMessage: `No local Git repositories found in ${ROOT_DIR}.`,
+    findRepositories: findLocalRepositories,
+    inspectRepositories: inspectLocalRepositories,
+    printHelp: printDeleteHelp,
+    requiredRootDir: REQUIRED_ROOT_DIR,
+    rootDir: ROOT_DIR,
+  });
 }
 
 function printDeleteHelp() {
@@ -399,115 +352,41 @@ function getGraphHelpText() {
 // =============================================================================
 
 async function pruneLocalRepositories(arguments_) {
-  if (isHelpRequest(arguments_)) {
-    printPruneHelp();
-    return 0;
-  }
+  return pruneRepositories(arguments_, {
+    findPrunableRepositories,
+    findRestoredRepositories,
+    getRemoteRepositories: () => getRemoteRepositories(),
+    getRepositoryName: (repository) => repository.name,
+    inspectRepositories: inspectLocalRepositories,
+    printHelp: printPruneHelp,
+    requiredRootDir: REQUIRED_ROOT_DIR,
+    rootDir: ROOT_DIR,
+  });
+}
 
-  const dryRun = parsePruneArguments(arguments_);
-
-  if (dryRun === undefined) {
-    return 1;
-  }
-
-  if (!isDeletionRootSafe()) {
-    return 1;
-  }
-
-  let remoteRepositories;
-
-  try {
-    remoteRepositories = getRemoteRepositories();
-  } catch (error) {
-    console.error(`Could not list remote repositories: ${getErrorMessage(error)}`);
-    return 1;
-  }
-
+function findPrunableRepositories(remoteRepositories) {
   if (remoteRepositories.length >= 1000) {
     console.error(
       'Refusing to prune: the remote repository list may be truncated at 1000 entries.',
     );
-    return 1;
+    return undefined;
   }
 
   const remoteNames = new Set(
     remoteRepositories.map((repository) => repository.name),
   );
-  const repositories = findLocalRepositories().filter(
+  return findLocalRepositories().filter(
     (repository) => !remoteNames.has(repository.name),
   );
-
-  if (repositories.length === 0) {
-    console.log('No obsolete local Git repositories found.');
-    return 0;
-  }
-
-  if (dryRun) {
-    console.log('Dry run; the following directories would be deleted:');
-    printRepositoryPaths(repositories);
-    return 0;
-  }
-
-  const statuses = inspectLocalRepositories(repositories, false);
-  const uncleanStatuses = statuses.filter(isLocalRepositoryUnclean);
-
-  console.log(
-    'The following local repositories no longer exist remotely and will be permanently deleted:',
-  );
-  printRepositoryPaths(repositories);
-  console.log('');
-
-  if (!(await confirmRepositoryDeletion(uncleanStatuses))) {
-    return 1;
-  }
-
-  let refreshedRemoteRepositories;
-
-  try {
-    refreshedRemoteRepositories = getRemoteRepositories();
-  } catch (error) {
-    console.error(
-      `Could not verify remote repositories: ${getErrorMessage(error)}`,
-    );
-    console.error('Nothing was deleted.');
-    return 1;
-  }
-
-  const refreshedRemoteNames = new Set(
-    refreshedRemoteRepositories.map((repository) => repository.name),
-  );
-  const restoredRepositories = repositories.filter((repository) =>
-    refreshedRemoteNames.has(repository.name),
-  );
-
-  if (restoredRepositories.length > 0) {
-    console.error(
-      'Remote repository state changed during confirmation. Nothing was deleted.',
-    );
-    console.error(
-      `Now present remotely: ${restoredRepositories.map((repository) => repository.name).join(', ')}`,
-    );
-    return 1;
-  }
-
-  return removeLocalRepositories(repositories);
 }
 
-function parsePruneArguments(arguments_) {
-  if (arguments_.length === 0) {
-    return false;
-  }
-
-  if (
-    arguments_.length === 1 &&
-    (arguments_[0] === '--dry-run' || arguments_[0] === '-n')
-  ) {
-    return true;
-  }
-
-  console.error(`Unexpected prune option: ${arguments_[0]}`);
-  printPruneHelp();
-  return undefined;
+function findRestoredRepositories(repositories, remoteRepositories) {
+  const remoteNames = new Set(
+    remoteRepositories.map((repository) => repository.name),
+  );
+  return repositories.filter((repository) =>
+    remoteNames.has(repository.name),
+  );
 }
 
 function printPruneHelp() {
@@ -1106,143 +985,6 @@ function getRemoteRepositories() {
   } catch (error) {
     throw new Error(`Could not read GitHub CLI output: ${getErrorMessage(error)}`);
   }
-}
-
-function isDeletionRootSafe() {
-  if (resolve(ROOT_DIR) === REQUIRED_ROOT_DIR) {
-    return true;
-  }
-
-  console.error(`Refusing to delete: unexpected operation root: ${ROOT_DIR}`);
-  console.error(`Expected operation root: ${REQUIRED_ROOT_DIR}`);
-  return false;
-}
-
-async function confirmRepositoryDeletion(uncleanStatuses) {
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    console.error('Deletion requires an interactive terminal. Nothing was deleted.');
-    return false;
-  }
-
-  const confirmation = 'delete';
-  const readline = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  try {
-    const answer = await readline.question(
-      `Type "${confirmation}" to continue: `,
-    );
-
-    if (answer !== confirmation) {
-      console.log('Deletion cancelled. Nothing was deleted.');
-      return false;
-    }
-
-    console.log('');
-
-    if (uncleanStatuses.length > 0) {
-      printUncleanRepositoryReasons(uncleanStatuses);
-      console.log('');
-
-      const uncleanAnswer = await readline.question(
-        `Type "${confirmation}" to continue: `,
-      );
-
-      if (uncleanAnswer !== confirmation) {
-        console.log('Deletion cancelled. Nothing was deleted.');
-        return false;
-      }
-
-      console.log('');
-    }
-
-    return true;
-  } finally {
-    readline.close();
-  }
-}
-
-function printUncleanRepositoryReasons(statuses) {
-  console.log('Unclean repositories:');
-
-  for (const status of statuses) {
-    const reasons = [];
-
-    if (status.error === undefined) {
-      if (hasWorkingTreeChanges(status.changes)) {
-        reasons.push(`working tree: ${formatChanges(status.changes)}`);
-      }
-
-      if (status.stashCount > 0) {
-        const label = status.stashCount === 1 ? 'stash' : 'stashes';
-        reasons.push(`${status.stashCount} ${label}`);
-      }
-
-      if (status.ahead.length > 0) {
-        reasons.push(`unpushed commits: ${status.ahead.join(', ')}`);
-      }
-    }
-
-    reasons.push(...status.warnings.map((warning) => `warning: ${warning}`));
-
-    if (status.error !== undefined) {
-      reasons.push(`inspection error: ${toSingleLine(status.error)}`);
-    }
-
-    console.log(`  ${status.name}`);
-
-    for (const reason of reasons) {
-      console.log(`    - ${reason}`);
-    }
-  }
-}
-
-function isLocalRepositoryUnclean(status) {
-  if (status.error !== undefined || status.warnings.length > 0) {
-    return true;
-  }
-
-  return (
-    status.changes.staged > 0 ||
-    status.changes.unstaged > 0 ||
-    status.changes.untracked > 0 ||
-    status.stashCount > 0 ||
-    status.ahead.length > 0
-  );
-}
-
-function printRepositoryPaths(repositories) {
-  for (const repository of repositories) {
-    console.log(`  ${repository.path}`);
-  }
-}
-
-function removeLocalRepositories(repositories) {
-  const failures = [];
-
-  for (const repository of repositories) {
-    try {
-      rmSync(repository.path, { recursive: true, force: false });
-      console.log(`Deleted ${repository.path}`);
-    } catch (error) {
-      failures.push(repository.path);
-      console.error(
-        `Could not delete ${repository.path}: ${getErrorMessage(error)}`,
-      );
-    }
-  }
-
-  if (failures.length > 0) {
-    console.error(
-      `Failed to delete ${failures.length} of ${repositories.length} repositories.`,
-    );
-    return 1;
-  }
-
-  console.log(`Deleted ${repositories.length} repositories.`);
-  return 0;
 }
 
 function inspectLocalRepositories(repositories, fetch) {
