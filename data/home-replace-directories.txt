@@ -2,4 +2,5 @@
 .config/archon
 .config/git
 .config/nvim/snippets
+.local/lib/archon
 projects/workspaces
