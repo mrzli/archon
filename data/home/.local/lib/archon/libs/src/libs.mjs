@@ -2,7 +2,6 @@
 
 import {
   readFileSync,
-  readdirSync,
   realpathSync,
   rmSync,
 } from 'node:fs';
@@ -11,13 +10,18 @@ import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
 import { getErrorMessage, toSingleLine } from '../../shared/errors.mjs';
-import {
-  getGitOutput,
-  runGit,
-  throwGitError,
-} from '../../shared/git.mjs';
-import { isGitRepository } from '../../shared/paths.mjs';
+import { getGitOutput } from '../../shared/git.mjs';
 import { runProcess } from '../../shared/process.mjs';
+import {
+  findChildGitRepositories,
+  formatChanges,
+  getBranchUpstream,
+  getSymbolicCurrentBranch,
+  getWorkingTreeChanges,
+  hasWorkingTreeChanges,
+  inspectLocalRepositories as inspectRepositories,
+  printLocalRepositoryStatuses,
+} from '../../shared/repository-inspection.mjs';
 
 const GITHUB_OWNER = 'mrzli-jslib';
 const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
@@ -639,165 +643,6 @@ function parseStatusArguments(arguments_) {
   return undefined;
 }
 
-function inspectLocalRepository(repository, fetch) {
-  const warnings = [];
-
-  if (fetch) {
-    try {
-      getGitOutput(repository, ['fetch', '--all', '--prune']);
-    } catch (error) {
-      warnings.push(`fetch failed: ${getErrorMessage(error)}`);
-    }
-  }
-
-  try {
-    const branch = getCurrentBranch(repository);
-    const changes = getWorkingTreeChanges(repository);
-    const stashCount = getStashCount(repository);
-    const ahead = getAheadBranches(repository, warnings);
-
-    return {
-      name: repository.name,
-      branch,
-      changes,
-      stashCount,
-      ahead,
-      warnings,
-    };
-  } catch (error) {
-    return {
-      name: repository.name,
-      error: getErrorMessage(error),
-      warnings,
-    };
-  }
-}
-
-function getCurrentBranch(repository) {
-  const branchResult = runGit(repository, [
-    'symbolic-ref',
-    '--quiet',
-    '--short',
-    'HEAD',
-  ]);
-
-  if (branchResult.status === 0) {
-    return branchResult.stdout.trim();
-  }
-
-  if (branchResult.status !== 1) {
-    throwGitError(branchResult, 'could not determine current branch');
-  }
-
-  const commit = getGitOutput(repository, ['rev-parse', '--short', 'HEAD']);
-  return `detached@${commit.trim()}`;
-}
-
-function getStashCount(repository) {
-  const output = getGitOutput(repository, ['stash', 'list', '--format=%gd']);
-
-  if (output.length === 0) {
-    return 0;
-  }
-
-  return output.trimEnd().split('\n').length;
-}
-
-function getAheadBranches(repository, warnings) {
-  const output = getGitOutput(repository, [
-    'for-each-ref',
-    '--format=%(refname:short)%09%(refname)%09%(upstream:short)%09%(upstream)',
-    'refs/heads',
-  ]);
-  const branches = output
-    .trimEnd()
-    .split('\n')
-    .filter((line) => line.length > 0)
-    .map((line) => {
-      const [name, ref, upstream = '', upstreamRef = ''] = line.split('\t');
-      return { name, ref, upstream, upstreamRef };
-    });
-  const ahead = [];
-
-  for (const branch of branches) {
-    if (branch.upstream.length > 0) {
-      const result = runGit(repository, [
-        'rev-list',
-        '--count',
-        `${branch.upstreamRef}..${branch.ref}`,
-      ]);
-
-      if (result.status === 0) {
-        const count = Number.parseInt(result.stdout.trim(), 10);
-
-        if (count > 0) {
-          ahead.push(`${branch.name}=${count}`);
-        }
-
-        continue;
-      }
-
-      warnings.push(`${branch.name} upstream is missing`);
-    }
-
-    const count = Number.parseInt(
-      getGitOutput(repository, [
-        'rev-list',
-        '--count',
-        branch.ref,
-        '--not',
-        '--remotes',
-      ]).trim(),
-      10,
-    );
-
-    if (count > 0) {
-      const reason =
-        branch.upstream.length > 0 ? 'upstream missing' : 'no upstream';
-      ahead.push(`${branch.name}=${count} (${reason})`);
-    }
-  }
-
-  return ahead;
-}
-
-function printLocalRepositoryStatuses(statuses) {
-  const nameWidth = Math.max(...statuses.map((status) => status.name.length));
-  const validStatuses = statuses.filter((status) => status.error === undefined);
-  const branchWidth = Math.max(
-    0,
-    ...validStatuses.map((status) => status.branch.length),
-  );
-  const changeTexts = new Map(
-    validStatuses.map((status) => [status, formatChanges(status.changes)]),
-  );
-  const changesWidth = Math.max(
-    0,
-    ...[...changeTexts.values()].map((text) => text.length),
-  );
-
-  for (const status of statuses) {
-    const name = status.name.padEnd(nameWidth);
-
-    if (status.error !== undefined) {
-      console.log(`${name}  ERROR: ${toSingleLine(status.error)}`);
-      continue;
-    }
-
-    const branch = `[${status.branch.padEnd(branchWidth)}]`;
-    const changes = changeTexts.get(status).padEnd(changesWidth);
-    const ahead = status.ahead.length > 0 ? status.ahead.join(', ') : 'none';
-    const warnings =
-      status.warnings.length > 0
-        ? `  warnings: ${status.warnings.map(toSingleLine).join(', ')}`
-        : '';
-
-    console.log(
-      `${name}  ${branch}  ${changes}  stash: ${status.stashCount}  ahead: ${ahead}${warnings}`,
-    );
-  }
-}
-
 function printStatusHelp() {
   console.log(getStatusHelpText());
 }
@@ -981,41 +826,6 @@ function createSyncFailure(repository, message) {
     succeeded: false,
     message: `ERROR: ${toSingleLine(message)}`,
   };
-}
-
-function getSymbolicCurrentBranch(repository) {
-  const result = runGit(repository, [
-    'symbolic-ref',
-    '--quiet',
-    '--short',
-    'HEAD',
-  ]);
-
-  if (result.status === 0) {
-    return result.stdout.trim();
-  }
-
-  if (result.status === 1) {
-    return undefined;
-  }
-
-  throwGitError(result, 'could not determine current branch');
-}
-
-function getBranchUpstream(repository, branch) {
-  const output = getGitOutput(repository, [
-    'for-each-ref',
-    '--format=%(upstream:short)',
-    `refs/heads/${branch}`,
-  ]).trim();
-
-  return output.length > 0 ? output : undefined;
-}
-
-function hasWorkingTreeChanges(changes) {
-  return (
-    changes.staged > 0 || changes.unstaged > 0 || changes.untracked > 0
-  );
 }
 
 function printSyncHelp() {
@@ -1436,81 +1246,11 @@ function removeLocalRepositories(repositories) {
 }
 
 function inspectLocalRepositories(repositories, fetch) {
-  return repositories.map((repository) =>
-    inspectLocalRepository(repository, fetch),
-  );
-}
-
-function getWorkingTreeChanges(repository) {
-  const output = getGitOutput(repository, [
-    'status',
-    '--porcelain=v1',
-    '-z',
-    '--untracked-files=normal',
-  ]);
-  const entries = output.split('\0');
-  const changes = {
-    staged: 0,
-    unstaged: 0,
-    untracked: 0,
-  };
-
-  for (let index = 0; index < entries.length; index += 1) {
-    const entry = entries[index];
-
-    if (entry.length === 0) {
-      continue;
-    }
-
-    const status = entry.slice(0, 2);
-
-    if (status === '??') {
-      changes.untracked += 1;
-      continue;
-    }
-
-    if (status[0] !== ' ') {
-      changes.staged += 1;
-    }
-
-    if (status[1] !== ' ') {
-      changes.unstaged += 1;
-    }
-
-    if ('RC'.includes(status[0]) || 'RC'.includes(status[1])) {
-      index += 1;
-    }
-  }
-
-  return changes;
-}
-
-function formatChanges(changes) {
-  const parts = [];
-
-  if (changes.staged > 0) {
-    parts.push(`staged: ${changes.staged}`);
-  }
-
-  if (changes.unstaged > 0) {
-    parts.push(`unstaged: ${changes.unstaged}`);
-  }
-
-  if (changes.untracked > 0) {
-    parts.push(`untracked: ${changes.untracked}`);
-  }
-
-  return parts.length > 0 ? parts.join(', ') : 'clean';
+  return inspectRepositories(repositories, fetch, (repository) => repository.name);
 }
 
 function findLocalRepositories() {
-  return readdirSync(ROOT_DIR, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .filter((entry) => isGitRepository(join(ROOT_DIR, entry.name)))
-    .map((entry) => ({
-      name: entry.name,
-      path: join(ROOT_DIR, entry.name),
-    }))
+  return findChildGitRepositories(ROOT_DIR)
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 

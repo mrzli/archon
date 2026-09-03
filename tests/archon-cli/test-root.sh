@@ -5,6 +5,8 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon="${ARCHON_COMMAND:-$repo_root/data/home/.local/bin/archon}"
+legacy_libs="$repo_root/data/home/projects/personal/mrzli-jslib/libs.mjs"
+legacy_projects="$repo_root/data/home/projects/personal/projects.mjs"
 libs_module="$repo_root/data/home/.local/lib/archon/libs/src/libs.mjs"
 module_harness="$test_dir/run-module.mjs"
 projects_module="$repo_root/data/home/.local/lib/archon/projects/src/projects.mjs"
@@ -52,6 +54,29 @@ assert_contains() {
 
 assert_exists() {
   [[ -e "$1" ]] || fail "expected path to exist: $1"
+}
+
+initialize_repository() {
+  local directory="$1"
+
+  mkdir -p "$directory"
+  git init -q -b main "$directory"
+  git -C "$directory" config user.email test@example.com
+  git -C "$directory" config user.name 'Archon Test'
+  printf 'initial\n' > "$directory/tracked.txt"
+  git -C "$directory" add tracked.txt
+  git -C "$directory" commit -qm initial
+}
+
+add_repository_state() {
+  local directory="$1"
+
+  printf 'stashed\n' >> "$directory/tracked.txt"
+  git -C "$directory" stash push -qm test-stash
+  printf 'unstaged\n' >> "$directory/tracked.txt"
+  printf 'staged\n' > "$directory/staged.txt"
+  printf 'untracked\n' > "$directory/untracked.txt"
+  git -C "$directory" add staged.txt
 }
 
 test_help() {
@@ -197,6 +222,68 @@ test_direct_module_dispatch() {
   assert_equals "$archon_output" "$module_output"
 }
 
+assert_status_parity() {
+  local home="$1"
+  local legacy_script="$2"
+  local command="$3"
+  shift 3
+  local legacy_output legacy_status
+
+  capture_with_home "$home" node "$legacy_script" status "$@"
+  legacy_output="$command_output"
+  legacy_status="$command_status"
+
+  capture_with_home "$home" "$archon" "$command" status "$@"
+  assert_equals "$legacy_status" "$command_status" || return
+  assert_equals "$legacy_output" "$command_output"
+}
+
+test_repository_status_parity() {
+  local home="$temporary_root/status-home"
+  local projects_root="$home/projects/personal"
+  local libs_root="$projects_root/mrzli-jslib"
+  local project_clean="$projects_root/example/clean"
+  local project_changed="$projects_root/example/changed"
+  local library_clean="$libs_root/clean"
+  local library_changed="$libs_root/changed"
+
+  initialize_repository "$project_clean"
+  initialize_repository "$project_changed"
+  initialize_repository "$library_clean"
+  initialize_repository "$library_changed"
+  add_repository_state "$project_changed"
+  add_repository_state "$library_changed"
+
+  mkdir -p \
+    "$projects_root/example/not-a-repository" \
+    "$projects_root/broken-owner/broken" \
+    "$libs_root/broken" \
+    "$libs_root/not-a-repository/nested"
+  : > "$projects_root/broken-owner/broken/.git"
+  : > "$libs_root/broken/.git"
+  initialize_repository "$libs_root/not-a-repository/nested"
+  git -C "$project_clean" remote add origin "$temporary_root/missing-remote"
+  git -C "$library_clean" remote add origin "$temporary_root/missing-remote"
+
+  assert_status_parity "$home" "$legacy_projects" projects || return
+  assert_contains "$command_output" 'example/changed' || return
+  assert_contains "$command_output" 'staged: 1, unstaged: 1, untracked: 1' || return
+  assert_contains "$command_output" 'stash: 1' || return
+  assert_contains "$command_output" 'broken-owner/broken  ERROR:' || return
+  [[ "$command_output" != *'not-a-repository'* ]] || fail 'projects inventory included a non-repository' || return
+
+  assert_status_parity "$home" "$legacy_libs" libs || return
+  assert_contains "$command_output" 'changed' || return
+  assert_contains "$command_output" 'broken' || return
+  assert_contains "$command_output" 'ERROR:' || return
+  [[ "$command_output" != *'not-a-repository'* ]] || fail 'libs inventory included a non-repository' || return
+
+  assert_status_parity "$home" "$legacy_projects" projects --fetch || return
+  assert_contains "$command_output" 'warnings: fetch failed:' || return
+  assert_status_parity "$home" "$legacy_libs" libs --fetch || return
+  assert_contains "$command_output" 'warnings: fetch failed:'
+}
+
 tests_run=0
 tests_failed=0
 
@@ -220,6 +307,7 @@ run_test 'unexpected root help argument' test_unexpected_help_argument
 run_test 'libraries command dispatch' test_libraries_dispatch
 run_test 'direct module dispatch' test_direct_module_dispatch
 run_test 'projects command dispatch' test_projects_dispatch
+run_test 'repository status parity' test_repository_status_parity
 run_test 'workspaces dispatch validation' test_workspaces_dispatch_validation
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
