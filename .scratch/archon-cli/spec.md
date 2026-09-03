@@ -51,7 +51,7 @@ The public commands are:
 archon projects <command> [options]
 archon libs <command> [options]
 archon workspaces <start|stop>
-archon workspaces <group> <start|stop>
+archon workspaces <start|stop> [--group <group>]
 ```
 
 `a` is an exact alias for `archon`:
@@ -115,12 +115,12 @@ archon workspaces start
 archon workspaces stop
 ```
 
-A named group limits the action to that group:
+A group option limits the action to that group. `-g` is its short alias:
 
 ```text
-archon workspaces flashcards start
-archon workspaces jslibs stop
-archon workspaces misc-projects start
+archon workspaces start --group flashcards
+archon workspaces stop -g jslibs
+archon workspaces start -g misc-projects
 ```
 
 The action remains required. Bare `archon workspaces` displays workspace help;
@@ -162,14 +162,15 @@ window intentionally needs to receive a command string.
 
 ## Repository layout
 
-`tools/` is shaped like an installation prefix:
+The tool lives directly in the existing home-overlay tree, matching its
+installed paths:
 
 ```text
-tools/
+data/home/.local/
 ├── AGENTS.md
-├── README.md
 ├── bin/
-│   └── archon
+│   ├── archon
+│   └── a -> archon
 └── lib/
     └── archon/
         ├── cli.mjs
@@ -198,24 +199,25 @@ tools/
                 └── ...
 ```
 
-`tools/AGENTS.md` defines conventions shared by the complete CLI. Each tool's
-`AGENTS.md` contains only its narrower domain rules and overrides. Existing
-useful projects and libraries instructions are migrated rather than discarded.
+`data/home/.local/AGENTS.md` defines conventions shared by the complete CLI.
+Each tool's `AGENTS.md` contains only its narrower domain rules and overrides.
+Existing useful projects and libraries instructions are migrated rather than
+discarded.
 
 The entry point imports `../lib/archon/cli.mjs`. That relative path resolves in
 both environments:
 
 ```text
-tools/bin/archon                    -> tools/lib/archon/cli.mjs
+data/home/.local/bin/archon        -> data/home/.local/lib/archon/cli.mjs
 ~/.local/bin/archon                -> ~/.local/lib/archon/cli.mjs
 ```
 
 The repository command can therefore be exercised without installation:
 
 ```bash
-./tools/bin/archon --help
-./tools/bin/archon projects status
-./tools/bin/archon workspaces start
+./data/home/.local/bin/archon --help
+./data/home/.local/bin/archon projects status
+./data/home/.local/bin/archon workspaces start
 ```
 
 Tests must use temporary roots and controlled subprocesses where a command
@@ -223,33 +225,41 @@ could otherwise mutate real projects or tmux state.
 
 ## Installation
 
-Tool installation is separate from the `data/home/` overlay.
-
-`setup.sh` installs:
+The existing `data/home/` overlay installs the tools in the same operation as
+the rest of the managed home files:
 
 ```text
-tools/bin/archon       -> ~/.local/bin/archon
-tools/lib/archon/...   -> ~/.local/lib/archon/...
-~/.local/bin/a         -> archon
+data/home/.local/bin/archon       -> ~/.local/bin/archon
+data/home/.local/bin/a            -> ~/.local/bin/a
+data/home/.local/lib/archon/...   -> ~/.local/lib/archon/...
 ```
 
-Only the executable and runtime module directories are installed. The install
-operation uses an explicit runtime allowlist; it does not copy `AGENTS.md`,
-READMEs, or tests.
+Initially, setup continues using its current `cp -a` overlay unchanged. This
+temporarily copies development files located inside the tool tree as well as
+runtime files. The initial CLI and relocation tasks must not add special copy
+or installation behavior.
 
-No general home-overlay ignore file is introduced. `data/home/` remains a
-literal managed overlay, while `tools/` has separate installation semantics.
-An ignore file would make all home copying depend on negative exclusions and
-would make accidental installation easier when new development files are
-added. An explicit runtime allowlist makes the deployment boundary visible.
+A later isolated task adds one repository-wide home-copy ignore list and
+updates the overlay implementation to honor it. Ignore entries are paths
+relative to `data/home` and are narrowly scoped to Archon tool development
+files, rather than global filename patterns such as `**/README.md`. The list
+excludes the tool's `AGENTS.md` files, READMEs, and tests while leaving runtime
+files eligible for the normal overlay.
 
-`~/.local/lib/archon` is an explicitly managed replacement directory. Setup
-may replace that exact directory to remove obsolete runtime modules, but must
-not remove or alter sibling directories under `~/.local/lib`.
+That later task also removes any excluded development files copied by an
+earlier setup run. Ignoring a source does not itself remove an existing
+destination. Removal must therefore use exact previously managed paths and
+must not affect sibling directories or unrelated files. Future removal of a
+runtime module similarly requires an explicit migration cleanup, consistent
+with the overlay model.
 
-The `~/.local/bin/archon` executable is installed with executable permissions.
-Before replacing it, setup must accept only an absent path or the expected
-Archon-managed file. It must refuse to overwrite an unrelated file or symlink.
+The `~/.local/bin/archon` executable is copied with executable permissions as a
+managed home file.
+
+`.local/lib/archon` is added to `data/home-replace-directories.txt`. When setup
+is run with `--delete-managed-home-dirs`, the existing implementation replaces
+that exact directory before applying the overlay. Normal setup remains an
+overlay and does not delete the directory.
 
 The alias is a relative symlink:
 
@@ -257,8 +267,8 @@ The alias is a relative symlink:
 ~/.local/bin/a -> archon
 ```
 
-Setup leaves the correct symlink unchanged, creates it when absent, and refuses
-to overwrite any unexpected file or symlink at that path.
+The relative symlink is stored in `data/home/.local/bin` and preserved by the
+home overlay. Both command paths are explicitly managed by Archon.
 
 Omarchy already includes `~/.local/bin` in `PATH`; Archon does not add a second
 PATH modification.
@@ -313,31 +323,40 @@ five-launcher documentation. Archive the completed tmux-workspaces scratch
 specification as historical context; do not rewrite it as if the earlier work
 had never existed.
 
-## Implementation plan and verification
+## Migration strategy
 
-1. Establish `tools/` instructions and the Node entry point.
-   Verify root help, alias-independent invocation, exit statuses, and
-   `node --check` for every module.
-2. Move the projects implementation behind `archon projects` without changing
-   its command behavior.
-   Run focused help/status tests and deletion/prune dry-runs against controlled
-   fixtures.
-3. Move the libraries implementation behind `archon libs` without changing its
-   command behavior.
-   Run focused help/status/graph tests and deletion/prune dry-runs against
-   controlled fixtures.
-4. Reimplement workspace management in JavaScript, omitting hubs and aggregate
-   attach/switch behavior.
-   Port the fake-tmux harness and verify each group, aggregate ordering,
-   idempotency, missing directories, and injected failures.
-5. Add explicit repeat-safe tool installation and guarded `a` symlink creation
-   to `setup.sh`.
-   Test installation twice into a temporary home and compare the resulting
-   runtime tree and links.
-6. Remove the exact legacy managed launchers and script files after their new
-   commands pass.
-   Verify that unrelated home/project fixtures remain untouched.
-7. Update durable documentation and close or archive this proposal.
+Implementation follows the compatibility-first task sequence in
+[`tasks.md`](./tasks.md). Moving each tool, changing its implementation, sharing
+its code, and removing its legacy entry point are separate changes.
+
+During migration:
+
+- Existing direct commands remain available until their `archon` replacements
+  pass equivalent focused tests.
+- The new root command is installed alongside the old commands before any old
+  command is removed.
+- Projects and libraries are first relocated with minimal internal changes and
+  invoked as child Node processes. Converting them into imported modules is not
+  coupled to relocation.
+- The Node workspace command initially delegates to the existing shell
+  launchers. Each workspace group is then replaced individually while the
+  aggregate command supports a mixture of Bash and JavaScript groups.
+- Hubs and aggregate attach/switch behavior remain until all retained workspace
+  groups have JavaScript implementations. Their removal is one explicit
+  behavior-changing task.
+- The unchanged home overlay initially copies development metadata inside the
+  tool tree. A global, path-scoped ignore list and cleanup are added in a later
+  isolated task, before the migration is considered complete.
+- Shared projects/libraries behavior is extracted one coherent behavior family
+  at a time only after both relocated commands have parity coverage.
+- Legacy source and installed files are removed one tool collection at a time,
+  after no new command depends on them.
+
+Every task must leave `setup.sh` repeat-safe and at least one verified command
+path available for each migrated behavior. No task may require running the
+complete setup against the real home directory.
+
+## Final verification
 
 For the final change set:
 
