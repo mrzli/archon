@@ -111,6 +111,36 @@ test_projects_dispatch() {
   assert_contains "$(<"$ARCHON_TEST_GH_CALLS")" 'user/repos?affiliation=owner&visibility=all&per_page=100'
 }
 
+test_libraries_dispatch() {
+  local home="$temporary_root/libs-home"
+  local repository="$home/projects/personal/mrzli-jslib/example-library"
+  mkdir -p "$repository/.git"
+
+  capture_with_home "$home" "$archon" libs --help
+  assert_equals 0 "$command_status" || return
+  assert_contains "$command_output" 'Usage: ./libs.mjs <command>' || return
+
+  capture_with_home "$home" "$archon" libs unknown
+  assert_equals 1 "$command_status" || return
+  assert_contains "$command_output" 'Unknown command: unknown' || return
+
+  capture_with_home "$home" "$archon" libs graph
+  assert_equals 1 "$command_status" || return
+  assert_contains "$command_output" 'example-library/package.json could not be read' || return
+
+  capture_with_home "$home" "$archon" libs delete --dry-run
+  assert_equals 0 "$command_status" || return
+  assert_contains "$command_output" "$repository" || return
+  assert_exists "$repository" || return
+
+  : > "$ARCHON_TEST_GH_CALLS"
+  capture_with_home "$home" "$archon" libs prune --dry-run
+  assert_equals 0 "$command_status" || return
+  assert_contains "$command_output" "$repository" || return
+  assert_exists "$repository" || return
+  assert_contains "$(<"$ARCHON_TEST_GH_CALLS")" 'repo list mrzli-jslib'
+}
+
 tests_run=0
 tests_failed=0
 
@@ -131,6 +161,7 @@ run_test 'root help' test_help
 run_test 'missing root command' test_missing_command
 run_test 'unknown root command' test_unknown_command
 run_test 'unexpected root help argument' test_unexpected_help_argument
+run_test 'libraries command dispatch' test_libraries_dispatch
 run_test 'projects command dispatch' test_projects_dispatch
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"

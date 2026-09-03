@@ -2,6 +2,8 @@
 
 The terminal script is [`libs.mjs`](./libs.mjs). Run it directly from this directory; its shebang selects Node.js.
 
+The same commands are also available through `archon libs <command>`.
+
 Use either form to show detailed help for a command:
 
 ```sh

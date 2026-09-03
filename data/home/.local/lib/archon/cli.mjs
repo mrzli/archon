@@ -8,6 +8,12 @@ export async function main(arguments_) {
   const [command, ...extraArguments] = arguments_;
 
   switch (command) {
+    case 'libs': {
+      return runNodeCommand(
+        join(ARCHON_LIB_DIR, 'libs/src/libs.mjs'),
+        extraArguments,
+      );
+    }
     case 'projects': {
       return runNodeCommand(
         join(ARCHON_LIB_DIR, 'projects/src/projects.mjs'),
