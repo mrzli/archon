@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { basename } from 'node:path';
 import test from 'node:test';
 
 import { main } from '../src/workspaces.mjs';
@@ -31,12 +30,9 @@ function createContext({ failures = {}, tmux = '' } = {}) {
       },
       print: (message) => output.push(message),
       printError: (message) => errors.push(message),
-      run(command, arguments_) {
-        const name = command === 'tmux' ? command : basename(command, '.sh');
-        calls.push([name, ...arguments_]);
-        return failures[name] ?? 0;
+      run: () => {
+        throw new Error('orchestrator unexpectedly ran a direct command');
       },
-      scriptsDir: '/legacy-workspaces',
     },
   };
 }
@@ -59,40 +55,28 @@ test('help and invalid invocations do not run commands', () => {
 
 test('group options run only their selected group', () => {
   for (const option of ['--group', '-g']) {
-    const fixture = createContext();
-    assert.equal(main(['start', option, 'flashcards'], fixture.context), 0);
-    assert.deepEqual(fixture.calls, [['flashcards', 'start']]);
+    for (const group of ['flashcards', 'jslibs', 'misc-projects']) {
+      const fixture = createContext();
+      assert.equal(main(['start', option, group], fixture.context), 0);
+      assert.deepEqual(fixture.calls, [[group, 'start']]);
+    }
   }
 });
 
-test('aggregate start runs every legacy group then attaches', () => {
-  const fixture = createContext();
+test('aggregate start runs every group without attaching or switching', () => {
+  const fixture = createContext({ tmux: 'client' });
   assert.equal(main(['start'], fixture.context), 0);
   assert.deepEqual(fixture.calls, [
-    ['hubs', 'start'],
     ['flashcards', 'start'],
     ['jslibs', 'start'],
     ['misc-projects', 'start'],
-    ['tmux', 'attach-session', '-t', 'workspaces'],
   ]);
 });
 
-test('aggregate start switches an existing tmux client', () => {
-  const fixture = createContext({ tmux: 'client' });
-  assert.equal(main(['start'], fixture.context), 0);
-  assert.deepEqual(fixture.calls.at(-1), [
-    'tmux',
-    'switch-client',
-    '-t',
-    'workspaces',
-  ]);
-});
-
-test('aggregate start continues after failure and does not attach', () => {
+test('aggregate start continues after failure', () => {
   const fixture = createContext({ failures: { flashcards: 1 } });
   assert.equal(main(['start'], fixture.context), 1);
   assert.deepEqual(fixture.calls, [
-    ['hubs', 'start'],
     ['flashcards', 'start'],
     ['jslibs', 'start'],
     ['misc-projects', 'start'],
@@ -102,13 +86,23 @@ test('aggregate start continues after failure and does not attach', () => {
   ]);
 });
 
-test('aggregate stop uses reverse order and does not attach', () => {
+test('aggregate stop uses reverse order', () => {
   const fixture = createContext();
   assert.equal(main(['stop'], fixture.context), 0);
   assert.deepEqual(fixture.calls, [
     ['misc-projects', 'stop'],
     ['jslibs', 'stop'],
     ['flashcards', 'stop'],
-    ['hubs', 'stop'],
   ]);
+});
+
+test('aggregate stop continues after failure', () => {
+  const fixture = createContext({ failures: { jslibs: 1 } });
+  assert.equal(main(['stop'], fixture.context), 1);
+  assert.deepEqual(fixture.calls, [
+    ['misc-projects', 'stop'],
+    ['jslibs', 'stop'],
+    ['flashcards', 'stop'],
+  ]);
+  assert.deepEqual(fixture.errors, ['Failed to stop tmux group: jslibs']);
 });

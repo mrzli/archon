@@ -56,19 +56,21 @@ test_named_group_delegation() {
   assert_session_absent flashcards-be
 }
 
-test_aggregate_delegation() {
+test_aggregate_groups() {
   create_fixtures
 
   "$archon" workspaces start || return
-  assert_session_exists workspaces || return
-  assert_session_exists projects || return
-  assert_session_exists libs || return
+  assert_session_absent workspaces || return
+  assert_session_absent projects || return
+  assert_session_absent libs || return
   assert_session_exists flashcards-fe || return
   assert_session_exists flashcards-be || return
   assert_session_exists jslib-example || return
   assert_session_exists project-mrzli-archon || return
-  grep -Fqx -- "$repo_root/tests/tmux-workspaces/bin/tmux attach-session -t workspaces" "$TMW_TMUX_STATE/calls" ||
-    fail 'aggregate start did not attach to workspaces' || return
+  if grep -Eq -- 'tmux (attach-session|switch-client)' "$TMW_TMUX_STATE/calls"; then
+    fail 'aggregate start unexpectedly attached or switched clients'
+    return
+  fi
 
   "$archon" workspaces stop || return
   assert_session_absent workspaces || return
@@ -97,7 +99,7 @@ run_test() {
 }
 
 run_test 'named workspace delegation' test_named_group_delegation
-run_test 'hybrid aggregate workspace delegation' test_aggregate_delegation
+run_test 'aggregate workspace groups' test_aggregate_groups
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
 [[ "$tests_failed" -eq 0 ]]

@@ -1,16 +1,10 @@
 import { spawnSync } from 'node:child_process';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { manageFlashcards } from './flashcards.mjs';
 import { manageJslibs } from './jslibs.mjs';
 import { manageMiscProjects } from './misc-projects.mjs';
 
 const GROUPS = ['flashcards', 'jslibs', 'misc-projects'];
-const AGGREGATE_GROUPS = ['hubs', ...GROUPS];
-const LEGACY_SCRIPTS_DIR = fileURLToPath(
-  new URL('../../../../../projects/workspaces/', import.meta.url),
-);
 const GROUP_HANDLERS = {
   flashcards: manageFlashcards,
   jslibs: manageJslibs,
@@ -22,9 +16,7 @@ export function main(arguments_, context = {}) {
   const printError = context.printError ?? console.error;
   const run = context.run ?? runCommand;
   const capture = context.capture ?? captureCommand;
-  const environment = context.environment ?? process.env;
   const groupHandlers = context.groupHandlers ?? GROUP_HANDLERS;
-  const scriptsDir = context.scriptsDir ?? LEGACY_SCRIPTS_DIR;
   const parsed = parseArguments(arguments_, print, printError);
 
   if (parsed.status !== undefined) {
@@ -38,12 +30,11 @@ export function main(arguments_, context = {}) {
       groupHandlers,
       printError,
       run,
-      scriptsDir,
     });
   }
 
   const groups =
-    parsed.action === 'start' ? AGGREGATE_GROUPS : [...AGGREGATE_GROUPS].reverse();
+    parsed.action === 'start' ? GROUPS : [...GROUPS].reverse();
   let status = 0;
 
   for (const group of groups) {
@@ -54,7 +45,6 @@ export function main(arguments_, context = {}) {
         groupHandlers,
         printError,
         run,
-        scriptsDir,
       }) !== 0
     ) {
       printError(`Failed to ${parsed.action} tmux group: ${group}`);
@@ -62,21 +52,7 @@ export function main(arguments_, context = {}) {
     }
   }
 
-  if (parsed.action === 'stop' || status !== 0) {
-    return status;
-  }
-
-  if (environment.TMUX) {
-    if (run('tmux', ['switch-client', '-t', 'workspaces']) !== 0) {
-      printError('Failed to switch to tmux session: workspaces');
-      return 1;
-    }
-  } else if (run('tmux', ['attach-session', '-t', 'workspaces']) !== 0) {
-    printError('Failed to attach to tmux session: workspaces');
-    return 1;
-  }
-
-  return 0;
+  return status;
 }
 
 function parseArguments(arguments_, print, printError) {
@@ -121,13 +97,7 @@ function parseArguments(arguments_, print, printError) {
 }
 
 function runGroup(group, action, context) {
-  const handler = context.groupHandlers[group];
-
-  if (handler !== undefined) {
-    return handler(action, context);
-  }
-
-  return context.run(join(context.scriptsDir, `${group}.sh`), [action]);
+  return context.groupHandlers[group](action, context);
 }
 
 function runCommand(command, arguments_, options = {}) {
