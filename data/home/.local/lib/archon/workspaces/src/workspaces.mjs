@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { manageFlashcards } from './flashcards.mjs';
 import { manageJslibs } from './jslibs.mjs';
+import { manageMiscProjects } from './misc-projects.mjs';
 
 const GROUPS = ['flashcards', 'jslibs', 'misc-projects'];
 const AGGREGATE_GROUPS = ['hubs', ...GROUPS];
@@ -13,6 +14,7 @@ const LEGACY_SCRIPTS_DIR = fileURLToPath(
 const GROUP_HANDLERS = {
   flashcards: manageFlashcards,
   jslibs: manageJslibs,
+  'misc-projects': manageMiscProjects,
 };
 
 export function main(arguments_, context = {}) {

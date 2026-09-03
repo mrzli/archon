@@ -24,6 +24,10 @@ function createContext({ failures = {}, tmux = '' } = {}) {
           calls.push(['jslibs', action]);
           return failures.jslibs ?? 0;
         },
+        'misc-projects'(action) {
+          calls.push(['misc-projects', action]);
+          return failures['misc-projects'] ?? 0;
+        },
       },
       print: (message) => output.push(message),
       printError: (message) => errors.push(message),

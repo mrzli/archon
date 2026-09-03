@@ -1,6 +1,6 @@
 # ARC-011: Convert the miscellaneous-projects workspace group
 
-Status: proposed
+Status: completed
 
 Area: Workspaces
 
@@ -15,13 +15,17 @@ temporary hubs compatibility path in Bash.
 
 ## Acceptance checklist
 
-- [ ] The fixed project mapping is represented once in JavaScript.
-- [ ] Named and aggregate operations use the new implementation.
-- [ ] Existing shared workspace primitives are reused.
-- [ ] Hubs alone remain delegated to Bash.
+- [x] The fixed project mapping is represented once in JavaScript.
+- [x] Named and aggregate operations use the new implementation.
+- [x] Existing shared workspace primitives are reused.
+- [x] Hubs alone remain delegated to Bash.
 
 ## Verification
 
 - Verify project mapping, missing directories, repeated start/stop, exact
   windows and commands, and injected failures.
 - Run Node syntax checks and `git diff --check`.
+
+Completed with dedicated Node tests, the workspace adapter and legacy launcher
+regression suites, repository-level CLI and installation tests, Node syntax
+checks, and `git diff --check`.
