@@ -21,8 +21,11 @@ fail() {
   return 1
 }
 
-capture() {
-  command_output="$("$@" 2>&1)"
+capture_with_home() {
+  local home="$1"
+  shift
+
+  command_output="$(HOME="$home" "$@" 2>&1)"
   command_status=$?
 }
 
@@ -46,73 +49,81 @@ assert_exists() {
 
 assert_global_contract() {
   local script="$1"
-  shift
+  local home="$2"
+  shift 2
   local command
 
   for command in '' help -h --help; do
     if [[ -z "$command" ]]; then
-      capture node "$script"
+      capture_with_home "$home" node "$script"
     else
-      capture node "$script" "$command"
+      capture_with_home "$home" node "$script" "$command"
     fi
     assert_equals 0 "$command_status" || return
     assert_contains "$command_output" 'Usage: ./' || return
     assert_contains "$command_output" 'Commands:' || return
   done
 
-  capture node "$script" unknown
+  capture_with_home "$home" node "$script" unknown
   assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'Unknown command: unknown' || return
 
   for command in "$@"; do
-    capture node "$script" help "$command"
+    capture_with_home "$home" node "$script" help "$command"
     assert_equals 0 "$command_status" || return
     assert_contains "$command_output" "Usage: ./${script##*/} $command" || return
   done
 
-  capture node "$script" help unknown
+  capture_with_home "$home" node "$script" help unknown
   assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'Unknown command: unknown' || return
 
-  capture node "$script" status --unexpected
+  capture_with_home "$home" node "$script" status --unexpected
   assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'Unexpected status option: --unexpected'
 }
 
 test_projects_command_contract() {
-  local fixture="$temporary_root/projects-contract/personal"
-  mkdir -p "$fixture"
-  cp "$projects_source" "$fixture/projects.mjs"
+  local fixture="$temporary_root/projects-contract"
+  local home="$fixture/home"
+  local script="$fixture/bin/projects.mjs"
+  mkdir -p "$home/projects/personal" "${script%/*}"
+  cp "$projects_source" "$script"
 
   assert_global_contract \
-    "$fixture/projects.mjs" \
+    "$script" \
+    "$home" \
     delete prune remote status sync help
 }
 
 test_libraries_command_contract() {
   local fixture="$temporary_root/libs-contract/mrzli-jslib"
+  local home="$temporary_root/libs-contract/home"
   mkdir -p "$fixture"
   cp "$libs_source" "$fixture/libs.mjs"
 
   assert_global_contract \
     "$fixture/libs.mjs" \
+    "$home" \
     build delete graph prune remote status sync help
 }
 
 test_projects_destructive_dry_runs() {
-  local fixture="$temporary_root/projects-dry-run/personal"
-  local repository="$fixture/example-owner/example-project"
-  mkdir -p "$repository/.git"
-  cp "$projects_source" "$fixture/projects.mjs"
+  local fixture="$temporary_root/projects-dry-run"
+  local home="$fixture/home"
+  local script="$fixture/bin/projects.mjs"
+  local repository="$home/projects/personal/example-owner/example-project"
+  mkdir -p "$repository/.git" "${script%/*}"
+  cp "$projects_source" "$script"
 
-  capture node "$fixture/projects.mjs" delete --dry-run
+  capture_with_home "$home" node "$script" delete --dry-run
   assert_equals 0 "$command_status" || return
   assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
   assert_contains "$command_output" "$repository" || return
   assert_exists "$repository" || return
 
   : > "$ARCHON_TEST_GH_CALLS"
-  capture node "$fixture/projects.mjs" prune --dry-run
+  capture_with_home "$home" node "$script" prune --dry-run
   assert_equals 0 "$command_status" || return
   assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
   assert_contains "$command_output" "$repository" || return
@@ -122,18 +133,19 @@ test_projects_destructive_dry_runs() {
 
 test_libraries_destructive_dry_runs() {
   local fixture="$temporary_root/libs-dry-run/mrzli-jslib"
+  local home="$temporary_root/libs-dry-run/home"
   local repository="$fixture/example-library"
   mkdir -p "$repository/.git"
   cp "$libs_source" "$fixture/libs.mjs"
 
-  capture node "$fixture/libs.mjs" delete --dry-run
+  capture_with_home "$home" node "$fixture/libs.mjs" delete --dry-run
   assert_equals 0 "$command_status" || return
   assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
   assert_contains "$command_output" "$repository" || return
   assert_exists "$repository" || return
 
   : > "$ARCHON_TEST_GH_CALLS"
-  capture node "$fixture/libs.mjs" prune --dry-run
+  capture_with_home "$home" node "$fixture/libs.mjs" prune --dry-run
   assert_equals 0 "$command_status" || return
   assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
   assert_contains "$command_output" "$repository" || return

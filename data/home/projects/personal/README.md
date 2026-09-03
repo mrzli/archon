@@ -42,8 +42,8 @@ node ./projects.mjs delete
 
 The command lists every target, silently performs the same non-fetching
 inspection as the `status` command, and requires you to type `delete` before
-anything is removed. It refuses to run unless the script itself is inside a
-directory named exactly `personal`.
+anything is removed. It operates on the fixed `~/projects/personal` root and
+refuses deletion if the resolved operation root differs from that path.
 
 If any repository has staged, unstaged, or untracked changes, stash entries,
 commits ahead, status warnings, or an inspection error, it is considered
@@ -73,10 +73,10 @@ node ./projects.mjs prune
 ```
 
 The command refuses to proceed unless it can retrieve every complete remote
-inventory and the script is inside a directory named exactly `personal`. It
-lists the candidates, silently inspects their Git state, and requires you to
-type `delete`. If any candidate is unclean, it requires typing `delete` a
-second time. Immediately before deletion, it retrieves the remote inventories
+inventory and the resolved operation root is the fixed `~/projects/personal`
+path. It lists the candidates, silently inspects their Git state, and requires
+you to type `delete`. If any candidate is unclean, it requires typing `delete`
+a second time. Immediately before deletion, it retrieves the remote inventories
 again and aborts if a candidate has reappeared.
 
 Repositories covered by either blacklist are ignored by `prune`; exclusion

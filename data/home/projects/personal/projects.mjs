@@ -5,12 +5,11 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
-  realpathSync,
   rmSync,
 } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { homedir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
-import { fileURLToPath } from 'node:url';
 
 const ORGANIZATION_BLACKLIST = [
   'mrzli-courses',
@@ -19,8 +18,8 @@ const ORGANIZATION_BLACKLIST = [
   'mrzli-vscode-extensions',
 ];
 const REPOSITORY_BLACKLIST = [];
-const REQUIRED_ROOT_NAME = 'personal';
-const ROOT_DIR = realpathSync(dirname(fileURLToPath(import.meta.url)));
+const REQUIRED_ROOT_DIR = resolve(homedir(), 'projects/personal');
+const ROOT_DIR = REQUIRED_ROOT_DIR;
 const REPOSITORY_QUERY = [
   '.[]',
   '| [',
@@ -884,7 +883,7 @@ function getGlobalHelpText() {
     'Usage: ./projects.mjs <command>',
     '',
     'Commands:',
-    `  delete  Delete all local repositories inside ${REQUIRED_ROOT_NAME}`,
+    '  delete  Delete all local repositories inside personal',
     '  prune   Delete local repositories that no longer exist remotely',
     '  remote  List included repositories owned by the GitHub user',
     '  status  Show concise local Git status for every repository',
@@ -1146,14 +1145,12 @@ function getGitHubOutput(arguments_) {
 }
 
 function isDeletionRootSafe() {
-  if (basename(ROOT_DIR) === REQUIRED_ROOT_NAME) {
+  if (resolve(ROOT_DIR) === REQUIRED_ROOT_DIR) {
     return true;
   }
 
-  console.error(
-    `Refusing to delete: script directory must be named exactly "${REQUIRED_ROOT_NAME}".`,
-  );
-  console.error(`Resolved script directory: ${ROOT_DIR}`);
+  console.error(`Refusing to delete: unexpected operation root: ${ROOT_DIR}`);
+  console.error(`Expected operation root: ${REQUIRED_ROOT_DIR}`);
   return false;
 }
 
