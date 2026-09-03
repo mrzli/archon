@@ -1,26 +1,16 @@
-import { spawnSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
+import { main as runLibraries } from './libs/src/libs.mjs';
+import { main as runProjects } from './projects/src/projects.mjs';
 import { main as runWorkspaces } from './workspaces/src/workspaces.mjs';
-
-const ARCHON_LIB_DIR = dirname(fileURLToPath(import.meta.url));
 
 export async function main(arguments_) {
   const [command, ...extraArguments] = arguments_;
 
   switch (command) {
     case 'libs': {
-      return runNodeCommand(
-        join(ARCHON_LIB_DIR, 'libs/src/libs.mjs'),
-        extraArguments,
-      );
+      return runLibraries(extraArguments);
     }
     case 'projects': {
-      return runNodeCommand(
-        join(ARCHON_LIB_DIR, 'projects/src/projects.mjs'),
-        extraArguments,
-      );
+      return runProjects(extraArguments);
     }
     case 'workspaces': {
       return runWorkspaces(extraArguments);
@@ -49,24 +39,6 @@ export async function main(arguments_) {
   console.error('');
   printGlobalHelp(console.error);
   return 2;
-}
-
-function runNodeCommand(script, arguments_) {
-  const result = spawnSync(process.execPath, [script, ...arguments_], {
-    stdio: 'inherit',
-  });
-
-  if (result.error) {
-    console.error(`Could not start command: ${result.error.message}`);
-    return 1;
-  }
-
-  if (result.signal) {
-    process.kill(process.pid, result.signal);
-    return 1;
-  }
-
-  return result.status ?? 1;
 }
 
 function printGlobalHelp(print = console.log) {

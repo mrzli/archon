@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
 import {
-  lstatSync,
   mkdirSync,
   readdirSync,
   rmSync,
@@ -11,6 +9,15 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
+import { getErrorMessage, toSingleLine } from '../../shared/errors.mjs';
+import {
+  getGitOutput,
+  runGit,
+  throwGitError,
+} from '../../shared/git.mjs';
+import { isGitRepository, pathExists } from '../../shared/paths.mjs';
+import { runProcess } from '../../shared/process.mjs';
+
 const ORGANIZATION_BLACKLIST = [
   'mrzli-courses',
   'mrzli-gh-actions',
@@ -18,8 +25,8 @@ const ORGANIZATION_BLACKLIST = [
   'mrzli-vscode-extensions',
 ];
 const REPOSITORY_BLACKLIST = [];
-const REQUIRED_ROOT_DIR = resolve(homedir(), 'projects/personal');
-const ROOT_DIR = REQUIRED_ROOT_DIR;
+let REQUIRED_ROOT_DIR;
+let ROOT_DIR;
 const REPOSITORY_QUERY = [
   '.[]',
   '| [',
@@ -36,19 +43,21 @@ const REPOSITORY_QUERY = [
 // Entry point and command routing
 // =============================================================================
 
-async function main() {
+export async function main(arguments_, context = {}) {
+  const homeDir = context.homeDir ?? homedir();
+  REQUIRED_ROOT_DIR = resolve(homeDir, 'projects/personal');
+  ROOT_DIR = resolve(context.rootDir ?? REQUIRED_ROOT_DIR);
+
   try {
-    process.exitCode = await runCommand();
+    return await runCommand(arguments_);
   } catch (error) {
     console.error(`Unexpected error: ${getErrorMessage(error)}`);
-    process.exitCode = 1;
+    return 1;
   }
 }
 
-main();
-
-async function runCommand() {
-  const [command, ...extraArguments] = process.argv.slice(2);
+async function runCommand(arguments_) {
+  const [command, ...extraArguments] = arguments_;
 
   switch (command) {
     case 'delete': {
@@ -699,7 +708,7 @@ function cloneRemoteRepository(repository) {
     );
   }
 
-  const result = spawnSync('git', ['clone', repository.sshUrl, destination], {
+  const result = runProcess('git', ['clone', repository.sshUrl, destination], {
     encoding: 'utf8',
   });
 
@@ -1114,7 +1123,7 @@ function addRemoteRepositories(repositoriesByName, repositories) {
 }
 
 function getGitHubOutput(arguments_) {
-  const result = spawnSync(
+  const result = runProcess(
     'gh',
     ['api', '--hostname', 'github.com', ...arguments_],
     { encoding: 'utf8' },
@@ -1349,39 +1358,6 @@ function formatChanges(changes) {
   return parts.length > 0 ? parts.join(', ') : 'clean';
 }
 
-function runGit(repository, arguments_) {
-  return spawnSync('git', ['-C', repository.path, ...arguments_], {
-    encoding: 'utf8',
-  });
-}
-
-function getGitOutput(repository, arguments_) {
-  const result = runGit(repository, arguments_);
-
-  if (result.error) {
-    throw new Error(`could not start Git: ${result.error.message}`);
-  }
-
-  if (result.signal) {
-    throw new Error(`Git was terminated by signal ${result.signal}`);
-  }
-
-  if (result.status !== 0) {
-    throwGitError(result, `git ${arguments_[0]} failed`);
-  }
-
-  return result.stdout;
-}
-
-function throwGitError(result, fallbackMessage) {
-  const message = result.stderr.trim() || fallbackMessage;
-  throw new Error(toSingleLine(message));
-}
-
-function toSingleLine(value) {
-  return String(value).replaceAll(/\s+/g, ' ').trim();
-}
-
 function findLocalRepositories() {
   const repositories = [];
   const owners = readdirSync(ROOT_DIR, { withFileTypes: true })
@@ -1440,23 +1416,6 @@ function compareNames(left, right) {
   return left.localeCompare(right, undefined, { sensitivity: 'base' });
 }
 
-function isGitRepository(directory) {
-  return pathExists(join(directory, '.git'));
-}
-
-function pathExists(path) {
-  try {
-    lstatSync(path);
-    return true;
-  } catch (error) {
-    if (error?.code === 'ENOENT') {
-      return false;
-    }
-
-    throw error;
-  }
-}
-
 function acceptsNoArguments(command, arguments_, printCommandHelp_) {
   if (arguments_.length === 0) {
     return true;
@@ -1504,8 +1463,4 @@ function printCommandHelp(command) {
       return false;
     }
   }
-}
-
-function getErrorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
 }

@@ -1,6 +1,6 @@
 # ARC-014: Extract shared low-level JavaScript utilities
 
-Status: proposed
+Status: completed
 
 Area: Shared code
 
@@ -15,12 +15,16 @@ low-level mechanics.
 
 ## Acceptance checklist
 
-- [ ] Both tools expose `main(arguments, context)` without top-level execution on import.
-- [ ] The root CLI imports them instead of spawning child Node processes.
-- [ ] Process, Git invocation, path, and error-normalization utilities are shared.
-- [ ] Domain behavior and output remain unchanged.
+- [x] Both tools expose `main(arguments, context)` without top-level execution on import.
+- [x] The root CLI imports them instead of spawning child Node processes.
+- [x] Process, Git invocation, path, and error-normalization utilities are shared.
+- [x] Domain behavior and output remain unchanged.
 
 ## Verification
 
 - Run parity checks through direct module harnesses and `archon`.
 - Run Node syntax checks and `git diff --check`.
+
+Completed with silent-import and direct-module parity coverage, the existing
+legacy and root CLI contract suites, installation and workspace regressions,
+Node syntax checks, and `git diff --check`.

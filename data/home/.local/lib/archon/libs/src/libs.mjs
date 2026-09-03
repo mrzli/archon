@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
 import {
-  lstatSync,
   readFileSync,
   readdirSync,
   realpathSync,
@@ -12,16 +10,21 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
+import { getErrorMessage, toSingleLine } from '../../shared/errors.mjs';
+import {
+  getGitOutput,
+  runGit,
+  throwGitError,
+} from '../../shared/git.mjs';
+import { isGitRepository } from '../../shared/paths.mjs';
+import { runProcess } from '../../shared/process.mjs';
+
 const GITHUB_OWNER = 'mrzli-jslib';
 const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
 const LOCAL_PACKAGE_PREFIX = `${LOCAL_PACKAGE_SCOPE}/`;
 const REQUIRED_ROOT_NAME = 'mrzli-jslib';
-const REQUIRED_ROOT_DIR = resolve(
-  homedir(),
-  'projects/personal',
-  REQUIRED_ROOT_NAME,
-);
-const ROOT_DIR = REQUIRED_ROOT_DIR;
+let REQUIRED_ROOT_DIR;
+let ROOT_DIR;
 const DEPENDENCY_FIELDS = [
   'dependencies',
   'devDependencies',
@@ -33,19 +36,25 @@ const DEPENDENCY_FIELDS = [
 // Entry point and command routing
 // =============================================================================
 
-async function main() {
+export async function main(arguments_, context = {}) {
+  const homeDir = context.homeDir ?? homedir();
+  REQUIRED_ROOT_DIR = resolve(
+    homeDir,
+    'projects/personal',
+    REQUIRED_ROOT_NAME,
+  );
+  ROOT_DIR = resolve(context.rootDir ?? REQUIRED_ROOT_DIR);
+
   try {
-    process.exitCode = await runCommand();
+    return await runCommand(arguments_);
   } catch (error) {
     console.error(`Unexpected error: ${getErrorMessage(error)}`);
-    process.exitCode = 1;
+    return 1;
   }
 }
 
-main();
-
-async function runCommand() {
-  const [command, ...extraArguments] = process.argv.slice(2);
+async function runCommand(arguments_) {
+  const [command, ...extraArguments] = arguments_;
 
   switch (command) {
     case 'build': {
@@ -190,7 +199,7 @@ function orderPackagesForBuild(graph) {
 }
 
 function runBunForPackage(package_, arguments_, action) {
-  const result = spawnSync('bun', arguments_, {
+  const result = runProcess('bun', arguments_, {
     cwd: package_.path,
     stdio: 'inherit',
   });
@@ -892,7 +901,7 @@ function runSyncOperations(operations) {
 }
 
 function cloneRemoteRepository(repository) {
-  const result = spawnSync(
+  const result = runProcess(
     'gh',
     ['repo', 'clone', repository.nameWithOwner, join(ROOT_DIR, repository.name)],
     { encoding: 'utf8' },
@@ -1232,7 +1241,7 @@ function resolveLocalPackageDependency(
 }
 
 function getRemoteRepositories() {
-  const result = spawnSync(
+  const result = runProcess(
     'gh',
     [
       'repo',
@@ -1494,39 +1503,6 @@ function formatChanges(changes) {
   return parts.length > 0 ? parts.join(', ') : 'clean';
 }
 
-function runGit(repository, arguments_) {
-  return spawnSync('git', ['-C', repository.path, ...arguments_], {
-    encoding: 'utf8',
-  });
-}
-
-function getGitOutput(repository, arguments_) {
-  const result = runGit(repository, arguments_);
-
-  if (result.error) {
-    throw new Error(`could not start Git: ${result.error.message}`);
-  }
-
-  if (result.signal) {
-    throw new Error(`Git was terminated by signal ${result.signal}`);
-  }
-
-  if (result.status !== 0) {
-    throwGitError(result, `git ${arguments_[0]} failed`);
-  }
-
-  return result.stdout;
-}
-
-function throwGitError(result, fallbackMessage) {
-  const message = result.stderr.trim() || fallbackMessage;
-  throw new Error(toSingleLine(message));
-}
-
-function toSingleLine(value) {
-  return String(value).replaceAll(/\s+/g, ' ').trim();
-}
-
 function findLocalRepositories() {
   return readdirSync(ROOT_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -1536,19 +1512,6 @@ function findLocalRepositories() {
       path: join(ROOT_DIR, entry.name),
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
-}
-
-function isGitRepository(directory) {
-  try {
-    lstatSync(join(directory, '.git'));
-    return true;
-  } catch (error) {
-    if (error?.code === 'ENOENT') {
-      return false;
-    }
-
-    throw error;
-  }
 }
 
 function acceptsNoArguments(command, arguments_, printCommandHelp_) {
@@ -1606,8 +1569,4 @@ function printCommandHelp(command) {
       return false;
     }
   }
-}
-
-function getErrorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
 }

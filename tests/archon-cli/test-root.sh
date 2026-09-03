@@ -5,6 +5,9 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon="${ARCHON_COMMAND:-$repo_root/data/home/.local/bin/archon}"
+libs_module="$repo_root/data/home/.local/lib/archon/libs/src/libs.mjs"
+module_harness="$test_dir/run-module.mjs"
+projects_module="$repo_root/data/home/.local/lib/archon/projects/src/projects.mjs"
 temporary_root="$(mktemp -d)"
 
 cleanup() {
@@ -160,6 +163,40 @@ test_libraries_dispatch() {
   assert_contains "$(<"$ARCHON_TEST_GH_CALLS")" 'repo list mrzli-jslib'
 }
 
+test_direct_module_dispatch() {
+  local home="$temporary_root/module-home"
+  local repository="$home/projects/personal/example-owner/example-project"
+  local library="$home/projects/personal/mrzli-jslib/example-library"
+  local archon_output archon_status module_output module_status
+  mkdir -p "$repository/.git" "$library/.git"
+
+  capture node "$module_harness" "$projects_module" --import-only
+  assert_equals 0 "$command_status" || return
+  assert_equals '' "$command_output" || return
+
+  capture node "$module_harness" "$libs_module" --import-only
+  assert_equals 0 "$command_status" || return
+  assert_equals '' "$command_output" || return
+
+  capture_with_home "$home" "$archon" projects delete --dry-run
+  archon_output="$command_output"
+  archon_status="$command_status"
+  capture_with_home "$home" node "$module_harness" "$projects_module" delete --dry-run
+  module_output="$command_output"
+  module_status="$command_status"
+  assert_equals "$archon_status" "$module_status" || return
+  assert_equals "$archon_output" "$module_output" || return
+
+  capture_with_home "$home" "$archon" libs delete --dry-run
+  archon_output="$command_output"
+  archon_status="$command_status"
+  capture_with_home "$home" node "$module_harness" "$libs_module" delete --dry-run
+  module_output="$command_output"
+  module_status="$command_status"
+  assert_equals "$archon_status" "$module_status" || return
+  assert_equals "$archon_output" "$module_output"
+}
+
 tests_run=0
 tests_failed=0
 
@@ -181,6 +218,7 @@ run_test 'missing root command' test_missing_command
 run_test 'unknown root command' test_unknown_command
 run_test 'unexpected root help argument' test_unexpected_help_argument
 run_test 'libraries command dispatch' test_libraries_dispatch
+run_test 'direct module dispatch' test_direct_module_dispatch
 run_test 'projects command dispatch' test_projects_dispatch
 run_test 'workspaces dispatch validation' test_workspaces_dispatch_validation
 
