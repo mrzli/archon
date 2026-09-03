@@ -1,6 +1,12 @@
 # Tmux Workspace Restructuring
 
-Status: proposed
+Status: completed and archived
+
+Completed: 2026-09-03
+
+The implementation and isolated verification are complete. Enduring operational
+instructions are documented in the root README; this specification is retained
+as the archived design and requirement record.
 
 ## Context
 

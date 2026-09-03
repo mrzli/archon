@@ -2,7 +2,12 @@
 
 Source: [spec.md](./spec.md)
 
-Status: not started
+Status: completed and archived
+
+Completed: 2026-09-03
+
+This index and its task files are retained as the archived implementation and
+verification record. Enduring operational instructions are in the root README.
 
 Each file below is an independently actionable implementation, migration,
 verification, documentation, or completion task. Small requirements remain as
@@ -24,37 +29,37 @@ acceptance checklists within the task that owns them.
 
 ### Interface
 
-- [ ] [TMW-001: Define the launcher command contract](./tasks/TMW-001-command-contract.md)
+- [x] [TMW-001: Define the launcher command contract](./tasks/TMW-001-command-contract.md)
 
 ### Group launchers
 
-- [ ] [TMW-002: Implement `hubs.sh`](./tasks/TMW-002-hubs-script.md)
-- [ ] [TMW-003: Implement `flashcards.sh`](./tasks/TMW-003-flashcards-script.md)
-- [ ] [TMW-004: Implement `jslibs.sh`](./tasks/TMW-004-jslibs-script.md)
-- [ ] [TMW-005: Implement `misc-projects.sh`](./tasks/TMW-005-misc-projects-script.md)
+- [x] [TMW-002: Implement `hubs.sh`](./tasks/TMW-002-hubs-script.md)
+- [x] [TMW-003: Implement `flashcards.sh`](./tasks/TMW-003-flashcards-script.md)
+- [x] [TMW-004: Implement `jslibs.sh`](./tasks/TMW-004-jslibs-script.md)
+- [x] [TMW-005: Implement `misc-projects.sh`](./tasks/TMW-005-misc-projects-script.md)
 
 ### Aggregate launcher
 
-- [ ] [TMW-006: Implement `all.sh`](./tasks/TMW-006-aggregate-script.md)
+- [x] [TMW-006: Implement `all.sh`](./tasks/TMW-006-aggregate-script.md)
 
 ### Migration
 
-- [ ] [TMW-007: Remove the replaced launcher files](./tasks/TMW-007-remove-legacy-launchers.md)
+- [x] [TMW-007: Remove the replaced launcher files](./tasks/TMW-007-remove-legacy-launchers.md)
 
 ### Verification
 
-- [ ] [TMW-008: Run static and command-interface validation](./tasks/TMW-008-static-validation.md)
-- [ ] [TMW-009: Prepare isolated tmux behavior verification](./tasks/TMW-009-safe-verification-environment.md)
-- [ ] [TMW-010: Verify hub launcher behavior](./tasks/TMW-010-verify-hubs.md)
-- [ ] [TMW-011: Verify flashcards launcher behavior](./tasks/TMW-011-verify-flashcards.md)
-- [ ] [TMW-012: Verify JavaScript-library launcher behavior](./tasks/TMW-012-verify-jslibs.md)
-- [ ] [TMW-013: Verify miscellaneous-project launcher behavior](./tasks/TMW-013-verify-misc-projects.md)
-- [ ] [TMW-014: Verify aggregate launcher behavior](./tasks/TMW-014-verify-aggregate.md)
+- [x] [TMW-008: Run static and command-interface validation](./tasks/TMW-008-static-validation.md)
+- [x] [TMW-009: Prepare isolated tmux behavior verification](./tasks/TMW-009-safe-verification-environment.md)
+- [x] [TMW-010: Verify hub launcher behavior](./tasks/TMW-010-verify-hubs.md)
+- [x] [TMW-011: Verify flashcards launcher behavior](./tasks/TMW-011-verify-flashcards.md)
+- [x] [TMW-012: Verify JavaScript-library launcher behavior](./tasks/TMW-012-verify-jslibs.md)
+- [x] [TMW-013: Verify miscellaneous-project launcher behavior](./tasks/TMW-013-verify-misc-projects.md)
+- [x] [TMW-014: Verify aggregate launcher behavior](./tasks/TMW-014-verify-aggregate.md)
 
 ### Documentation
 
-- [ ] [TMW-015: Document the completed launcher structure](./tasks/TMW-015-durable-documentation.md)
+- [x] [TMW-015: Document the completed launcher structure](./tasks/TMW-015-durable-documentation.md)
 
 ### Completion
 
-- [ ] [TMW-016: Review and close the restructuring spec](./tasks/TMW-016-close-spec.md)
+- [x] [TMW-016: Review and close the restructuring spec](./tasks/TMW-016-close-spec.md)
