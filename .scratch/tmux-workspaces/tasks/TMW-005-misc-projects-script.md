@@ -1,6 +1,6 @@
 # TMW-005: Implement `misc-projects.sh`
 
-Status: pending
+Status: completed
 
 Area: Group launchers
 
@@ -14,17 +14,16 @@ Replace the miscellaneous-project start/stop pair with one launcher whose fixed 
 
 ## Acceptance checklist
 
-- [ ] Create executable `data/home/projects/workspaces/misc-projects.sh`.
-- [ ] Define `mrzli/docs`, `mrzli/repos`, `mrzli/archon`, and `mrzli/js-templates` once for both actions.
-- [ ] Use `$HOME/projects/personal` as the project root.
-- [ ] Preserve the `project-<slash-separated-path-with-dashes>` session naming rule.
-- [ ] On start, report and skip each missing project while continuing with the others.
-- [ ] On start, leave existing sessions unchanged.
-- [ ] Preserve `nvim`, `codex`, and `shell` windows, their existing commands, and `nvim` as the selected window.
-- [ ] On stop, derive sessions from the shared project list and succeed when sessions are absent.
-- [ ] The script follows the TMW-001 action and failure contract.
+- [x] Create executable `data/home/projects/workspaces/misc-projects.sh`.
+- [x] Define `mrzli/docs`, `mrzli/repos`, `mrzli/archon`, and `mrzli/js-templates` once for both actions.
+- [x] Use `$HOME/projects/personal` as the project root.
+- [x] Preserve the `project-<slash-separated-path-with-dashes>` session naming rule.
+- [x] On start, report and skip each missing project while continuing with the others.
+- [x] On start, leave existing sessions unchanged.
+- [x] Preserve `nvim`, `codex`, and `shell` windows, their existing commands, and `nvim` as the selected window.
+- [x] On stop, derive sessions from the shared project list and succeed when sessions are absent.
+- [x] The script follows the TMW-001 action and failure contract.
 
 ## Verification evidence
 
-_Add evidence here when completing the task._
-
+Implemented the four projects as one shared list used by both actions in `misc-projects.sh`. Session names, the existing three-window layout, commands, missing-directory skips, idempotency, and tmux failure propagation are preserved.
