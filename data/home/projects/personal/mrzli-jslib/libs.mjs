@@ -8,15 +8,20 @@ import {
   realpathSync,
   rmSync,
 } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { homedir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
-import { fileURLToPath } from 'node:url';
 
 const GITHUB_OWNER = 'mrzli-jslib';
 const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
 const LOCAL_PACKAGE_PREFIX = `${LOCAL_PACKAGE_SCOPE}/`;
 const REQUIRED_ROOT_NAME = 'mrzli-jslib';
-const ROOT_DIR = realpathSync(dirname(fileURLToPath(import.meta.url)));
+const REQUIRED_ROOT_DIR = resolve(
+  homedir(),
+  'projects/personal',
+  REQUIRED_ROOT_NAME,
+);
+const ROOT_DIR = REQUIRED_ROOT_DIR;
 const DEPENDENCY_FIELDS = [
   'dependencies',
   'devDependencies',
@@ -1285,14 +1290,12 @@ function getRemoteRepositories() {
 }
 
 function isDeletionRootSafe() {
-  if (basename(ROOT_DIR) === REQUIRED_ROOT_NAME) {
+  if (resolve(ROOT_DIR) === REQUIRED_ROOT_DIR) {
     return true;
   }
 
-  console.error(
-    `Refusing to delete: script directory must be named exactly "${REQUIRED_ROOT_NAME}".`,
-  );
-  console.error(`Resolved script directory: ${ROOT_DIR}`);
+  console.error(`Refusing to delete: unexpected operation root: ${ROOT_DIR}`);
+  console.error(`Expected operation root: ${REQUIRED_ROOT_DIR}`);
   return false;
 }
 

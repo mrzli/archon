@@ -36,7 +36,7 @@ Permanently delete every immediate child directory that contains a Git repositor
 ./libs.mjs delete
 ```
 
-The command lists every target, silently performs the same non-fetching inspection as the `status` command, and requires you to type `delete` before anything is removed. It refuses to run unless the script itself is inside a directory named exactly `mrzli-jslib`.
+The command lists every target, silently performs the same non-fetching inspection as the `status` command, and requires you to type `delete` before anything is removed. It operates on the fixed `~/projects/personal/mrzli-jslib` root and refuses deletion if the resolved operation root differs from that path.
 
 If any repository has staged, unstaged, or untracked changes, stash entries, commits ahead, status warnings, or an inspection error, it is considered unclean. After the normal confirmation, deleting any unclean repositories requires typing `delete` a second time.
 
@@ -79,7 +79,7 @@ Delete local repositories whose directory names no longer appear in the `mrzli-j
 ./libs.mjs prune
 ```
 
-The command refuses to proceed unless it can retrieve a complete remote inventory and the script is inside a directory named exactly `mrzli-jslib`. It lists the candidates, silently inspects their Git state, and requires typing `delete`. If any candidate is unclean, it requires typing `delete` a second time. Immediately before deletion, it retrieves the remote inventory again and aborts if a candidate has reappeared.
+The command refuses to proceed unless it can retrieve a complete remote inventory and the resolved operation root is the fixed `~/projects/personal/mrzli-jslib` path. It lists the candidates, silently inspects their Git state, and requires typing `delete`. If any candidate is unclean, it requires typing `delete` a second time. Immediately before deletion, it retrieves the remote inventory again and aborts if a candidate has reappeared.
 
 Inspect the candidates without prompting or deleting anything:
 

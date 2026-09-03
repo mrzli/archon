@@ -97,13 +97,14 @@ test_projects_command_contract() {
 }
 
 test_libraries_command_contract() {
-  local fixture="$temporary_root/libs-contract/mrzli-jslib"
-  local home="$temporary_root/libs-contract/home"
-  mkdir -p "$fixture"
-  cp "$libs_source" "$fixture/libs.mjs"
+  local fixture="$temporary_root/libs-contract"
+  local home="$fixture/home"
+  local script="$fixture/bin/libs.mjs"
+  mkdir -p "$home/projects/personal/mrzli-jslib" "${script%/*}"
+  cp "$libs_source" "$script"
 
   assert_global_contract \
-    "$fixture/libs.mjs" \
+    "$script" \
     "$home" \
     build delete graph prune remote status sync help
 }
@@ -132,20 +133,21 @@ test_projects_destructive_dry_runs() {
 }
 
 test_libraries_destructive_dry_runs() {
-  local fixture="$temporary_root/libs-dry-run/mrzli-jslib"
-  local home="$temporary_root/libs-dry-run/home"
-  local repository="$fixture/example-library"
-  mkdir -p "$repository/.git"
-  cp "$libs_source" "$fixture/libs.mjs"
+  local fixture="$temporary_root/libs-dry-run"
+  local home="$fixture/home"
+  local script="$fixture/bin/libs.mjs"
+  local repository="$home/projects/personal/mrzli-jslib/example-library"
+  mkdir -p "$repository/.git" "${script%/*}"
+  cp "$libs_source" "$script"
 
-  capture_with_home "$home" node "$fixture/libs.mjs" delete --dry-run
+  capture_with_home "$home" node "$script" delete --dry-run
   assert_equals 0 "$command_status" || return
   assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
   assert_contains "$command_output" "$repository" || return
   assert_exists "$repository" || return
 
   : > "$ARCHON_TEST_GH_CALLS"
-  capture_with_home "$home" node "$fixture/libs.mjs" prune --dry-run
+  capture_with_home "$home" node "$script" prune --dry-run
   assert_equals 0 "$command_status" || return
   assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
   assert_contains "$command_output" "$repository" || return
