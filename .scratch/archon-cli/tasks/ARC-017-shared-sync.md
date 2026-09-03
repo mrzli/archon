@@ -1,6 +1,6 @@
 # ARC-017: Extract shared synchronization behavior
 
-Status: proposed
+Status: completed
 
 Area: Shared code
 
@@ -15,12 +15,15 @@ different domain behavior into one abstraction.
 
 ## Acceptance checklist
 
-- [ ] Equivalent clone/update planning and execution are shared.
-- [ ] GitHub inventory differences remain within each tool.
-- [ ] Library build and dependency behavior remains library-specific.
-- [ ] Output and failure behavior remain unchanged.
+- [x] Equivalent clone/update planning and execution are shared.
+- [x] GitHub inventory differences remain within each tool.
+- [x] Library build and dependency behavior remains library-specific.
+- [x] Output and failure behavior remain unchanged.
 
 ## Verification
 
 - Compare controlled sync plans, successes, failures, and output for both tools.
 - Run Node syntax checks and `git diff --check`.
+
+Verified with `tests/archon-cli/sync-workflow.test.mjs`, the complete Archon CLI
+test suite, Node syntax checks, and `git diff --check`.

@@ -12,18 +12,16 @@ import {
   pruneRepositories,
 } from '../../shared/destructive-workflows.mjs';
 import { getErrorMessage, toSingleLine } from '../../shared/errors.mjs';
-import { getGitOutput } from '../../shared/git.mjs';
 import { runProcess } from '../../shared/process.mjs';
 import {
   findChildGitRepositories,
-  formatChanges,
-  getBranchUpstream,
-  getSymbolicCurrentBranch,
-  getWorkingTreeChanges,
-  hasWorkingTreeChanges,
   inspectLocalRepositories as inspectRepositories,
   printLocalRepositoryStatuses,
 } from '../../shared/repository-inspection.mjs';
+import {
+  createSyncFailure as createRepositorySyncFailure,
+  syncRepositories as runSyncWorkflow,
+} from '../../shared/sync-workflow.mjs';
 
 const GITHUB_OWNER = 'mrzli-jslib';
 const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
@@ -545,83 +543,15 @@ function getStatusHelpText() {
 // =============================================================================
 
 function syncRepositories(arguments_) {
-  if (isHelpRequest(arguments_)) {
-    printSyncHelp();
-    return 0;
-  }
-
-  if (!acceptsNoArguments('sync', arguments_, printSyncHelp)) {
-    return 1;
-  }
-
-  let remoteRepositories;
-
-  try {
-    remoteRepositories = getRemoteRepositories();
-  } catch (error) {
-    console.error(`Could not list remote repositories: ${getErrorMessage(error)}`);
-    return 1;
-  }
-
-  const localRepositories = findLocalRepositories();
-  const localNames = new Set(
-    localRepositories.map((repository) => repository.name),
-  );
-  const missingRepositories = remoteRepositories.filter(
-    (repository) => !localNames.has(repository.name),
-  );
-  const operations = [
-    ...localRepositories.map((repository) => ({
-      repository,
-      run: syncLocalRepository,
-    })),
-    ...missingRepositories.map((repository) => ({
-      repository,
-      run: cloneRemoteRepository,
-    })),
-  ].sort((left, right) =>
-    left.repository.name.localeCompare(right.repository.name),
-  );
-
-  if (operations.length === 0) {
-    console.log('No local or remote Git repositories found.');
-    return 0;
-  }
-
-  const results = runSyncOperations(operations);
-
-  return results.some((result) => !result.succeeded) ? 1 : 0;
-}
-
-function runSyncOperations(operations) {
-  const indexWidth = String(operations.length).length;
-  const nameWidth = Math.max(
-    ...operations.map(({ repository }) => repository.name.length),
-  );
-  const results = [];
-
-  console.log(`Synchronizing ${operations.length} repositories...`);
-
-  for (const [index, { repository, run }] of operations.entries()) {
-    const current = String(index + 1).padStart(indexWidth);
-    const progress = `[${current}/${operations.length}]`;
-    process.stdout.write(
-      `${progress} ${repository.name.padEnd(nameWidth)}  `,
-    );
-
-    let result;
-
-    try {
-      result = run(repository);
-    } catch (error) {
-      result = createSyncFailure(repository, getErrorMessage(error));
-    }
-
-    console.log(result.message);
-    results.push(result);
-  }
-
-  return results;
+  return runSyncWorkflow(arguments_, {
+    cloneRepository: cloneRemoteRepository,
+    compareRepositories: (left, right) => left.name.localeCompare(right.name),
+    findLocalRepositories,
+    getRemoteRepositories,
+    getRepositoryKey: (repository) => repository.name,
+    getRepositoryName: (repository) => repository.name,
+    printHelp: printSyncHelp,
+  });
 }
 
 function cloneRemoteRepository(repository) {
@@ -659,52 +589,12 @@ function cloneRemoteRepository(repository) {
   };
 }
 
-function syncLocalRepository(repository) {
-  try {
-    getGitOutput(repository, ['fetch', '--all', '--prune']);
-
-    const branch = getSymbolicCurrentBranch(repository);
-
-    if (branch === undefined) {
-      return createSyncFailure(repository, 'detached HEAD');
-    }
-
-    const changes = getWorkingTreeChanges(repository);
-
-    if (hasWorkingTreeChanges(changes)) {
-      return createSyncFailure(
-        repository,
-        `working tree is not clean (${formatChanges(changes)})`,
-      );
-    }
-
-    const upstream = getBranchUpstream(repository, branch);
-
-    if (upstream === undefined) {
-      return createSyncFailure(repository, `${branch} has no upstream`);
-    }
-
-    const previousHead = getGitOutput(repository, ['rev-parse', 'HEAD']).trim();
-    getGitOutput(repository, ['merge', '--ff-only', upstream]);
-    const currentHead = getGitOutput(repository, ['rev-parse', 'HEAD']).trim();
-    const state = currentHead === previousHead ? 'up to date' : 'updated';
-
-    return {
-      name: repository.name,
-      succeeded: true,
-      message: `[${branch} -> ${upstream}]  ${state}`,
-    };
-  } catch (error) {
-    return createSyncFailure(repository, getErrorMessage(error));
-  }
-}
-
 function createSyncFailure(repository, message) {
-  return {
-    name: repository.name,
-    succeeded: false,
-    message: `ERROR: ${toSingleLine(message)}`,
-  };
+  return createRepositorySyncFailure(
+    repository,
+    message,
+    (repository_) => repository_.name,
+  );
 }
 
 function printSyncHelp() {
