@@ -149,6 +149,55 @@ test_flashcards_start_and_stop() {
   assert_session_exists flashcards-be
 }
 
+test_jslibs_start_and_stop() {
+  new_case
+  local root="$HOME/projects/personal/mrzli-jslib"
+  local directory session expected_windows expected_commands
+  mkdir -p "$root/alpha/.git" "$root/beta/.git" "$root/not-a-repository" "$root/nested/child/.git"
+
+  "$launchers_dir/jslibs.sh" start || fail "first jslibs start failed"
+  "$launchers_dir/jslibs.sh" start || fail "second jslibs start failed"
+
+  for session in jslib-alpha jslib-beta; do
+    directory="$root/${session#jslib-}/"
+    assert_session_exists "$session"
+    assert_equals "$directory" "$(<"$TMW_TMUX_STATE/sessions/$session/root")"
+    expected_windows="$(printf 'nvim\t%s\ncodex\t%s\nshell\t%s\n' "$directory" "$directory" "$directory")"
+    assert_equals "$expected_windows" "$(<"$TMW_TMUX_STATE/sessions/$session/windows")"
+    expected_commands="$(printf '%s:nvim\tnvim .\n%s:codex\tcodex resume --last\n' "$session" "$session")"
+    assert_equals "$expected_commands" "$(<"$TMW_TMUX_STATE/sessions/$session/commands")"
+    assert_equals nvim "$(<"$TMW_TMUX_STATE/sessions/$session/selected")"
+  done
+  assert_session_absent jslib-not-a-repository
+  assert_session_absent jslib-nested
+
+  tmux new-session -d -s unrelated -c "$HOME" -n shell
+  "$launchers_dir/jslibs.sh" stop || fail "jslibs stop with matching sessions failed"
+  assert_session_absent jslib-alpha
+  assert_session_absent jslib-beta
+  assert_session_exists unrelated
+  "$launchers_dir/jslibs.sh" stop || fail "jslibs stop with only a nonmatching session failed"
+  tmux kill-session -t unrelated
+  "$launchers_dir/jslibs.sh" stop || fail "jslibs stop without a tmux server failed"
+
+  new_case
+  local output
+  if ! output="$("$launchers_dir/jslibs.sh" start 2>&1)"; then
+    fail "jslibs start with missing root failed: $output"
+    return
+  fi
+  case "$output" in
+    *"Skipping JavaScript libraries: directory does not exist:"*) ;;
+    *) fail "missing JavaScript-library root was not reported" ;;
+  esac
+
+  export TMW_TMUX_FAIL_COMMAND=list-sessions
+  if "$launchers_dir/jslibs.sh" stop >/dev/null 2>&1; then
+    fail "unexpected list-sessions failure was hidden"
+  fi
+  unset TMW_TMUX_FAIL_COMMAND
+}
+
 tests_run=0
 tests_failed=0
 
@@ -168,6 +217,7 @@ run_test() {
 run_test "isolated tmux harness" test_harness_is_isolated
 run_test "hubs start and stop" test_hubs_start_and_stop
 run_test "flashcards start and stop" test_flashcards_start_and_stop
+run_test "JavaScript libraries start and stop" test_jslibs_start_and_stop
 
 echo "$tests_run tests, $tests_failed failures"
 [ "$tests_failed" -eq 0 ]
