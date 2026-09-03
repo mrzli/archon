@@ -198,6 +198,55 @@ test_jslibs_start_and_stop() {
   unset TMW_TMUX_FAIL_COMMAND
 }
 
+test_misc_projects_start_and_stop() {
+  new_case
+  local root="$HOME/projects/personal"
+  local projects=(mrzli/docs mrzli/repos mrzli/archon mrzli/js-templates)
+  local project session directory expected_windows expected_commands
+
+  for project in "${projects[@]}"; do
+    mkdir -p "$root/$project"
+  done
+
+  "$launchers_dir/misc-projects.sh" start || fail "first miscellaneous-project start failed"
+  "$launchers_dir/misc-projects.sh" start || fail "second miscellaneous-project start failed"
+
+  for project in "${projects[@]}"; do
+    directory="$root/$project"
+    session="project-${project//\//-}"
+    assert_session_exists "$session"
+    assert_equals "$directory" "$(<"$TMW_TMUX_STATE/sessions/$session/root")"
+    expected_windows="$(printf 'nvim\t%s\ncodex\t%s\nshell\t%s\n' "$directory" "$directory" "$directory")"
+    assert_equals "$expected_windows" "$(<"$TMW_TMUX_STATE/sessions/$session/windows")"
+    expected_commands="$(printf '%s:nvim\tnvim .\n%s:codex\tcodex resume --last\n' "$session" "$session")"
+    assert_equals "$expected_commands" "$(<"$TMW_TMUX_STATE/sessions/$session/commands")"
+    assert_equals nvim "$(<"$TMW_TMUX_STATE/sessions/$session/selected")"
+  done
+
+  "$launchers_dir/misc-projects.sh" stop || fail "first miscellaneous-project stop failed"
+  "$launchers_dir/misc-projects.sh" stop || fail "second miscellaneous-project stop failed"
+  for project in "${projects[@]}"; do
+    assert_session_absent "project-${project//\//-}"
+  done
+
+  new_case
+  root="$HOME/projects/personal"
+  mkdir -p "$root/mrzli/docs" "$root/mrzli/archon" "$root/mrzli/js-templates"
+  local output
+  if ! output="$("$launchers_dir/misc-projects.sh" start 2>&1)"; then
+    fail "miscellaneous-project start with a missing project failed: $output"
+    return
+  fi
+  case "$output" in
+    *"Skipping project-mrzli-repos: directory does not exist:"*) ;;
+    *) fail "missing miscellaneous project was not reported" ;;
+  esac
+  assert_session_exists project-mrzli-docs
+  assert_session_absent project-mrzli-repos
+  assert_session_exists project-mrzli-archon
+  assert_session_exists project-mrzli-js-templates
+}
+
 tests_run=0
 tests_failed=0
 
@@ -218,6 +267,7 @@ run_test "isolated tmux harness" test_harness_is_isolated
 run_test "hubs start and stop" test_hubs_start_and_stop
 run_test "flashcards start and stop" test_flashcards_start_and_stop
 run_test "JavaScript libraries start and stop" test_jslibs_start_and_stop
+run_test "miscellaneous projects start and stop" test_misc_projects_start_and_stop
 
 echo "$tests_run tests, $tests_failed failures"
 [ "$tests_failed" -eq 0 ]
