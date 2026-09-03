@@ -35,6 +35,15 @@ assert_file_contains() {
   grep -Fqx -- "$expected" "$file" || fail "$file does not contain: $expected"
 }
 
+assert_file_lacks() {
+  local file="$1"
+  local unexpected="$2"
+
+  if [ -e "$file" ] && grep -Fq -- "$unexpected" "$file"; then
+    fail "$file unexpectedly contains: $unexpected"
+  fi
+}
+
 assert_equals() {
   local expected="$1"
   local actual="$2"
@@ -247,6 +256,113 @@ test_misc_projects_start_and_stop() {
   assert_session_exists project-mrzli-js-templates
 }
 
+create_all_project_fixtures() {
+  mkdir -p \
+    "$HOME/projects/workspaces" \
+    "$HOME/projects/personal/mrzli/flashcards-fe" \
+    "$HOME/projects/personal/mrzli/flashcards-be" \
+    "$HOME/projects/personal/mrzli-jslib/alpha/.git" \
+    "$HOME/projects/personal/mrzli/docs" \
+    "$HOME/projects/personal/mrzli/repos" \
+    "$HOME/projects/personal/mrzli/archon" \
+    "$HOME/projects/personal/mrzli/js-templates"
+}
+
+test_aggregate_start_and_stop() {
+  new_case
+  create_all_project_fixtures
+
+  "$launchers_dir/all.sh" start || fail "first aggregate start failed"
+  "$launchers_dir/all.sh" start || fail "second aggregate start failed"
+
+  local session_count attach_count kill_order expected_kill_order
+  session_count="$(find "$TMW_TMUX_STATE/sessions" -mindepth 1 -maxdepth 1 -type d | wc -l)"
+  assert_equals 10 "$session_count"
+  attach_count="$(grep -c ' attach-session -t workspaces$' "$TMW_TMUX_STATE/calls")"
+  assert_equals 2 "$attach_count"
+  assert_file_lacks "$TMW_TMUX_STATE/calls" " switch-client -t workspaces"
+
+  "$launchers_dir/all.sh" stop || fail "first aggregate stop failed"
+  "$launchers_dir/all.sh" stop || fail "second aggregate stop failed"
+  session_count="$(find "$TMW_TMUX_STATE/sessions" -mindepth 1 -maxdepth 1 -type d | wc -l)"
+  assert_equals 0 "$session_count"
+
+  kill_order="$(sed -n 's/.* kill-session -t //p' "$TMW_TMUX_STATE/calls")"
+  expected_kill_order="$(printf '%s\n' \
+    project-mrzli-docs \
+    project-mrzli-repos \
+    project-mrzli-archon \
+    project-mrzli-js-templates \
+    jslib-alpha \
+    flashcards-fe \
+    flashcards-be \
+    workspaces \
+    projects \
+    libs)"
+  assert_equals "$expected_kill_order" "$kill_order"
+
+  new_case
+  create_all_project_fixtures
+  export TMUX=fake-client
+  "$launchers_dir/all.sh" start || fail "aggregate start inside tmux failed"
+  assert_file_contains "$TMW_TMUX_STATE/calls" "$test_dir/bin/tmux switch-client -t workspaces"
+  assert_file_lacks "$TMW_TMUX_STATE/calls" " attach-session -t workspaces"
+  unset TMUX
+}
+
+create_aggregate_stub_fixture() {
+  aggregate_dir="$case_root/aggregate"
+  export TMW_CHILD_CALLS="$case_root/child-calls"
+  mkdir -p "$aggregate_dir"
+  cp "$launchers_dir/all.sh" "$aggregate_dir/all.sh"
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'group="$(basename "$0" .sh)"' \
+    'printf "%s %s\\n" "$group" "$1" >> "$TMW_CHILD_CALLS"' \
+    '[ "${TMW_FAIL_GROUP:-}" != "$group" ]' \
+    > "$aggregate_dir/group-stub.sh"
+  chmod +x "$aggregate_dir/all.sh" "$aggregate_dir/group-stub.sh"
+
+  local group
+  for group in hubs flashcards jslibs misc-projects; do
+    ln -s group-stub.sh "$aggregate_dir/$group.sh"
+  done
+}
+
+test_aggregate_failure_propagation() {
+  new_case
+  create_aggregate_stub_fixture
+  export TMW_FAIL_GROUP=flashcards
+
+  local output calls
+  if output="$(cd "$HOME" && "$aggregate_dir/all.sh" start 2>&1)"; then
+    fail "aggregate start succeeded despite a child failure"
+    return
+  fi
+  calls="$(<"$TMW_CHILD_CALLS")"
+  assert_equals $'hubs start\nflashcards start\njslibs start\nmisc-projects start' "$calls"
+  case "$output" in
+    *"Failed to start tmux group: flashcards"*) ;;
+    *) fail "aggregate start did not identify its failing child" ;;
+  esac
+  assert_file_lacks "$TMW_TMUX_STATE/calls" "attach-session"
+  assert_file_lacks "$TMW_TMUX_STATE/calls" "switch-client"
+
+  : > "$TMW_CHILD_CALLS"
+  export TMW_FAIL_GROUP=jslibs
+  if output="$(cd "$HOME" && "$aggregate_dir/all.sh" stop 2>&1)"; then
+    fail "aggregate stop succeeded despite a child failure"
+    return
+  fi
+  calls="$(<"$TMW_CHILD_CALLS")"
+  assert_equals $'misc-projects stop\njslibs stop\nflashcards stop\nhubs stop' "$calls"
+  case "$output" in
+    *"Failed to stop tmux group: jslibs"*) ;;
+    *) fail "aggregate stop did not identify its failing child" ;;
+  esac
+  unset TMW_FAIL_GROUP
+}
+
 tests_run=0
 tests_failed=0
 
@@ -268,6 +384,8 @@ run_test "hubs start and stop" test_hubs_start_and_stop
 run_test "flashcards start and stop" test_flashcards_start_and_stop
 run_test "JavaScript libraries start and stop" test_jslibs_start_and_stop
 run_test "miscellaneous projects start and stop" test_misc_projects_start_and_stop
+run_test "aggregate start and stop" test_aggregate_start_and_stop
+run_test "aggregate failure propagation" test_aggregate_failure_propagation
 
 echo "$tests_run tests, $tests_failed failures"
 [ "$tests_failed" -eq 0 ]
