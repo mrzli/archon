@@ -1,0 +1,1511 @@
+#!/usr/bin/env node
+
+import { spawnSync } from 'node:child_process';
+import {
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+} from 'node:fs';
+import { homedir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { createInterface } from 'node:readline/promises';
+
+const ORGANIZATION_BLACKLIST = [
+  'mrzli-courses',
+  'mrzli-gh-actions',
+  'mrzli-other',
+  'mrzli-vscode-extensions',
+];
+const REPOSITORY_BLACKLIST = [];
+const REQUIRED_ROOT_DIR = resolve(homedir(), 'projects/personal');
+const ROOT_DIR = REQUIRED_ROOT_DIR;
+const REPOSITORY_QUERY = [
+  '.[]',
+  '| [',
+  '    .id,',
+  '    .full_name,',
+  '    .ssh_url,',
+  '    .archived,',
+  '    (.visibility // (if .private then "private" else "public" end))',
+  '  ]',
+  '| @tsv',
+].join('\n');
+
+// =============================================================================
+// Entry point and command routing
+// =============================================================================
+
+async function main() {
+  try {
+    process.exitCode = await runCommand();
+  } catch (error) {
+    console.error(`Unexpected error: ${getErrorMessage(error)}`);
+    process.exitCode = 1;
+  }
+}
+
+main();
+
+async function runCommand() {
+  const [command, ...extraArguments] = process.argv.slice(2);
+
+  switch (command) {
+    case 'delete': {
+      return deleteLocalRepositories(extraArguments);
+    }
+    case 'prune': {
+      return pruneLocalRepositories(extraArguments);
+    }
+    case 'remote': {
+      return listRemoteRepositories(extraArguments);
+    }
+    case 'status': {
+      return showLocalRepositoryStatuses(extraArguments);
+    }
+    case 'sync': {
+      return syncRepositories(extraArguments);
+    }
+    case 'help':
+    case '--help':
+    case '-h':
+    case undefined: {
+      return showHelp(extraArguments);
+    }
+    default: {
+      console.error(`Unknown command: ${command}`);
+      printGlobalHelp();
+      return 1;
+    }
+  }
+}
+
+// =============================================================================
+// Command: delete
+// =============================================================================
+
+async function deleteLocalRepositories(arguments_) {
+  if (isHelpRequest(arguments_)) {
+    printDeleteHelp();
+    return 0;
+  }
+
+  const dryRun = parseDeleteArguments(arguments_);
+
+  if (dryRun === undefined) {
+    return 1;
+  }
+
+  if (!isDeletionRootSafe()) {
+    return 1;
+  }
+
+  const repositories = findLocalRepositories();
+
+  if (repositories.length === 0) {
+    console.log(
+      `No local Git repositories found under ${ROOT_DIR}/<owner>/<repository>.`,
+    );
+    return 0;
+  }
+
+  if (dryRun) {
+    console.log('Dry run; the following directories would be deleted:');
+    printRepositoryPaths(repositories);
+    return 0;
+  }
+
+  const statuses = inspectLocalRepositories(repositories, false);
+  const uncleanStatuses = statuses.filter(isLocalRepositoryUnclean);
+
+  console.log('The following directories will be permanently deleted:');
+  printRepositoryPaths(repositories);
+  console.log('');
+
+  if (!(await confirmRepositoryDeletion(uncleanStatuses))) {
+    return 1;
+  }
+
+  return removeLocalRepositories(repositories);
+}
+
+function parseDeleteArguments(arguments_) {
+  if (arguments_.length === 0) {
+    return false;
+  }
+
+  if (
+    arguments_.length === 1 &&
+    (arguments_[0] === '--dry-run' || arguments_[0] === '-n')
+  ) {
+    return true;
+  }
+
+  console.error(`Unexpected delete option: ${arguments_[0]}`);
+  printDeleteHelp();
+  return undefined;
+}
+
+function printDeleteHelp() {
+  console.log(getDeleteHelpText());
+}
+
+function getDeleteHelpText() {
+  const lines = [
+    'Usage: ./projects.mjs delete [options]',
+    '',
+    'Permanently delete every local <owner>/<repository>.',
+    '',
+    'Options:',
+    '  -n, --dry-run  List repositories without deleting them',
+    '  -h, --help     Show help for this command',
+  ];
+
+  return lines.join('\n');
+}
+
+// =============================================================================
+// Command: prune
+// =============================================================================
+
+async function pruneLocalRepositories(arguments_) {
+  if (isHelpRequest(arguments_)) {
+    printPruneHelp();
+    return 0;
+  }
+
+  const dryRun = parsePruneArguments(arguments_);
+
+  if (dryRun === undefined) {
+    return 1;
+  }
+
+  if (!isDeletionRootSafe()) {
+    return 1;
+  }
+
+  let remoteRepositories;
+
+  try {
+    remoteRepositories = getRemoteRepositories((message) => {
+      console.log(message);
+    });
+  } catch (error) {
+    console.error(`Could not list remote repositories: ${getErrorMessage(error)}`);
+    return 1;
+  }
+
+  const remoteNames = new Set(
+    remoteRepositories.map(repositoryKey),
+  );
+  const repositories = findLocalRepositories().filter(
+    (repository) =>
+      !isRepositoryBlacklisted(repository) &&
+      !remoteNames.has(repositoryKey(repository)),
+  );
+
+  if (repositories.length === 0) {
+    console.log('No obsolete local Git repositories found.');
+    return 0;
+  }
+
+  if (dryRun) {
+    console.log('Dry run; the following directories would be deleted:');
+    printRepositoryPaths(repositories);
+    return 0;
+  }
+
+  const statuses = inspectLocalRepositories(repositories, false);
+  const uncleanStatuses = statuses.filter(isLocalRepositoryUnclean);
+
+  console.log(
+    'The following local repositories no longer exist remotely and will be permanently deleted:',
+  );
+  printRepositoryPaths(repositories);
+  console.log('');
+
+  if (!(await confirmRepositoryDeletion(uncleanStatuses))) {
+    return 1;
+  }
+
+  let refreshedRemoteRepositories;
+
+  try {
+    refreshedRemoteRepositories = getRemoteRepositories();
+  } catch (error) {
+    console.error(
+      `Could not verify remote repositories: ${getErrorMessage(error)}`,
+    );
+    console.error('Nothing was deleted.');
+    return 1;
+  }
+
+  const refreshedRemoteNames = new Set(
+    refreshedRemoteRepositories.map(repositoryKey),
+  );
+  const restoredRepositories = repositories.filter((repository) =>
+    refreshedRemoteNames.has(repositoryKey(repository)),
+  );
+
+  if (restoredRepositories.length > 0) {
+    console.error(
+      'Remote repository state changed during confirmation. Nothing was deleted.',
+    );
+    console.error(
+      `Now present remotely: ${restoredRepositories.map((repository) => repository.nameWithOwner).join(', ')}`,
+    );
+    return 1;
+  }
+
+  return removeLocalRepositories(repositories);
+}
+
+function parsePruneArguments(arguments_) {
+  if (arguments_.length === 0) {
+    return false;
+  }
+
+  if (
+    arguments_.length === 1 &&
+    (arguments_[0] === '--dry-run' || arguments_[0] === '-n')
+  ) {
+    return true;
+  }
+
+  console.error(`Unexpected prune option: ${arguments_[0]}`);
+  printPruneHelp();
+  return undefined;
+}
+
+function printPruneHelp() {
+  console.log(getPruneHelpText());
+}
+
+function getPruneHelpText() {
+  const lines = [
+    'Usage: ./projects.mjs prune [options]',
+    '',
+    'Delete local repositories that no longer exist remotely.',
+    '',
+    'Options:',
+    '  -n, --dry-run  List repositories without deleting them',
+    '  -h, --help     Show help for this command',
+  ];
+
+  return lines.join('\n');
+}
+
+// =============================================================================
+// Command: remote
+// =============================================================================
+
+function listRemoteRepositories(arguments_) {
+  if (isHelpRequest(arguments_)) {
+    printRemoteHelp();
+    return 0;
+  }
+
+  if (!acceptsNoArguments('remote', arguments_, printRemoteHelp)) {
+    return 1;
+  }
+
+  try {
+    const repositories = getRemoteRepositories();
+
+    if (repositories.length === 0) {
+      console.log('No remote repositories found after applying the blacklists.');
+      return 0;
+    }
+
+    const nameWidth = Math.max(
+      0,
+      ...repositories.map((repository) => repository.nameWithOwner.length),
+    );
+
+    for (const repository of repositories) {
+      console.log(formatRemoteRepository(repository, nameWidth));
+    }
+  } catch (error) {
+    console.error(getErrorMessage(error));
+    return 1;
+  }
+
+  return 0;
+}
+
+function formatRemoteRepository(repository, nameWidth) {
+  const labels = [];
+
+  if (repository.visibility !== 'public') {
+    labels.push(repository.visibility);
+  }
+
+  if (repository.isArchived) {
+    labels.push('archived');
+  }
+
+  if (labels.length === 0) {
+    return repository.nameWithOwner;
+  }
+
+  return `${repository.nameWithOwner.padEnd(nameWidth)} (${labels.join(', ')})`;
+}
+
+function printRemoteHelp() {
+  console.log(getRemoteHelpText());
+}
+
+function getRemoteHelpText() {
+  const lines = [
+    'Usage: ./projects.mjs remote [options]',
+    '',
+    'List included repositories owned by the authenticated GitHub user.',
+    '',
+    'Options:',
+    '  -h, --help  Show help for this command',
+  ];
+
+  return lines.join('\n');
+}
+
+// =============================================================================
+// Command: status
+// =============================================================================
+
+function showLocalRepositoryStatuses(arguments_) {
+  if (isHelpRequest(arguments_)) {
+    printStatusHelp();
+    return 0;
+  }
+
+  const fetch = parseStatusArguments(arguments_);
+
+  if (fetch === undefined) {
+    return 1;
+  }
+
+  const repositories = findLocalRepositories();
+
+  if (repositories.length === 0) {
+    console.log(
+      `No local Git repositories found under ${ROOT_DIR}/<owner>/<repository>.`,
+    );
+    return 0;
+  }
+
+  const statuses = inspectLocalRepositories(repositories, fetch);
+
+  printLocalRepositoryStatuses(statuses);
+
+  return statuses.some(
+    (status) => status.error !== undefined || status.warnings.length > 0,
+  )
+    ? 1
+    : 0;
+}
+
+function parseStatusArguments(arguments_) {
+  if (arguments_.length === 0) {
+    return false;
+  }
+
+  if (arguments_.length === 1 && arguments_[0] === '--fetch') {
+    return true;
+  }
+
+  console.error(`Unexpected status option: ${arguments_[0]}`);
+  printStatusHelp();
+  return undefined;
+}
+
+function inspectLocalRepository(repository, fetch) {
+  const warnings = [];
+
+  if (fetch) {
+    try {
+      getGitOutput(repository, ['fetch', '--all', '--prune']);
+    } catch (error) {
+      warnings.push(`fetch failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  try {
+    const branch = getCurrentBranch(repository);
+    const changes = getWorkingTreeChanges(repository);
+    const stashCount = getStashCount(repository);
+    const ahead = getAheadBranches(repository, warnings);
+
+    return {
+      name: repository.nameWithOwner,
+      branch,
+      changes,
+      stashCount,
+      ahead,
+      warnings,
+    };
+  } catch (error) {
+    return {
+      name: repository.nameWithOwner,
+      error: getErrorMessage(error),
+      warnings,
+    };
+  }
+}
+
+function getCurrentBranch(repository) {
+  const branchResult = runGit(repository, [
+    'symbolic-ref',
+    '--quiet',
+    '--short',
+    'HEAD',
+  ]);
+
+  if (branchResult.status === 0) {
+    return branchResult.stdout.trim();
+  }
+
+  if (branchResult.status !== 1) {
+    throwGitError(branchResult, 'could not determine current branch');
+  }
+
+  const commit = getGitOutput(repository, ['rev-parse', '--short', 'HEAD']);
+  return `detached@${commit.trim()}`;
+}
+
+function getStashCount(repository) {
+  const output = getGitOutput(repository, ['stash', 'list', '--format=%gd']);
+
+  if (output.length === 0) {
+    return 0;
+  }
+
+  return output.trimEnd().split('\n').length;
+}
+
+function getAheadBranches(repository, warnings) {
+  const output = getGitOutput(repository, [
+    'for-each-ref',
+    '--format=%(refname:short)%09%(refname)%09%(upstream:short)%09%(upstream)',
+    'refs/heads',
+  ]);
+  const branches = output
+    .trimEnd()
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const [name, ref, upstream = '', upstreamRef = ''] = line.split('\t');
+      return { name, ref, upstream, upstreamRef };
+    });
+  const ahead = [];
+
+  for (const branch of branches) {
+    if (branch.upstream.length > 0) {
+      const result = runGit(repository, [
+        'rev-list',
+        '--count',
+        `${branch.upstreamRef}..${branch.ref}`,
+      ]);
+
+      if (result.status === 0) {
+        const count = Number.parseInt(result.stdout.trim(), 10);
+
+        if (count > 0) {
+          ahead.push(`${branch.name}=${count}`);
+        }
+
+        continue;
+      }
+
+      warnings.push(`${branch.name} upstream is missing`);
+    }
+
+    const count = Number.parseInt(
+      getGitOutput(repository, [
+        'rev-list',
+        '--count',
+        branch.ref,
+        '--not',
+        '--remotes',
+      ]).trim(),
+      10,
+    );
+
+    if (count > 0) {
+      const reason =
+        branch.upstream.length > 0 ? 'upstream missing' : 'no upstream';
+      ahead.push(`${branch.name}=${count} (${reason})`);
+    }
+  }
+
+  return ahead;
+}
+
+function printLocalRepositoryStatuses(statuses) {
+  const nameWidth = Math.max(...statuses.map((status) => status.name.length));
+  const validStatuses = statuses.filter((status) => status.error === undefined);
+  const branchWidth = Math.max(
+    0,
+    ...validStatuses.map((status) => status.branch.length),
+  );
+  const changeTexts = new Map(
+    validStatuses.map((status) => [status, formatChanges(status.changes)]),
+  );
+  const changesWidth = Math.max(
+    0,
+    ...[...changeTexts.values()].map((text) => text.length),
+  );
+
+  for (const status of statuses) {
+    const name = status.name.padEnd(nameWidth);
+
+    if (status.error !== undefined) {
+      console.log(`${name}  ERROR: ${toSingleLine(status.error)}`);
+      continue;
+    }
+
+    const branch = `[${status.branch.padEnd(branchWidth)}]`;
+    const changes = changeTexts.get(status).padEnd(changesWidth);
+    const ahead = status.ahead.length > 0 ? status.ahead.join(', ') : 'none';
+    const warnings =
+      status.warnings.length > 0
+        ? `  warnings: ${status.warnings.map(toSingleLine).join(', ')}`
+        : '';
+
+    console.log(
+      `${name}  ${branch}  ${changes}  stash: ${status.stashCount}  ahead: ${ahead}${warnings}`,
+    );
+  }
+}
+
+function printStatusHelp() {
+  console.log(getStatusHelpText());
+}
+
+function getStatusHelpText() {
+  const lines = [
+    'Usage: ./projects.mjs status [options]',
+    '',
+    'Show concise local Git status for every owner/repository.',
+    '',
+    'Options:',
+    '  --fetch      Fetch and prune all remotes before showing status',
+    '  -h, --help   Show help for this command',
+  ];
+
+  return lines.join('\n');
+}
+
+// =============================================================================
+// Command: sync
+// =============================================================================
+
+function syncRepositories(arguments_) {
+  if (isHelpRequest(arguments_)) {
+    printSyncHelp();
+    return 0;
+  }
+
+  if (!acceptsNoArguments('sync', arguments_, printSyncHelp)) {
+    return 1;
+  }
+
+  let remoteRepositories;
+
+  try {
+    remoteRepositories = getRemoteRepositories();
+  } catch (error) {
+    console.error(`Could not list remote repositories: ${getErrorMessage(error)}`);
+    return 1;
+  }
+
+  const localRepositories = findLocalRepositories();
+  const localNames = new Set(
+    localRepositories.map(repositoryKey),
+  );
+  const missingRepositories = remoteRepositories.filter(
+    (repository) => !localNames.has(repositoryKey(repository)),
+  );
+  const operations = [
+    ...localRepositories.map((repository) => ({
+      repository,
+      run: syncLocalRepository,
+    })),
+    ...missingRepositories.map((repository) => ({
+      repository,
+      run: cloneRemoteRepository,
+    })),
+  ].sort((left, right) =>
+    compareRepositories(left.repository, right.repository),
+  );
+
+  if (operations.length === 0) {
+    console.log('No local or remote Git repositories found.');
+    return 0;
+  }
+
+  const results = runSyncOperations(operations);
+
+  return results.some((result) => !result.succeeded) ? 1 : 0;
+}
+
+function runSyncOperations(operations) {
+  const indexWidth = String(operations.length).length;
+  const nameWidth = Math.max(
+    ...operations.map(({ repository }) => repository.nameWithOwner.length),
+  );
+  const results = [];
+
+  console.log(`Synchronizing ${operations.length} repositories...`);
+
+  for (const [index, { repository, run }] of operations.entries()) {
+    const current = String(index + 1).padStart(indexWidth);
+    const progress = `[${current}/${operations.length}]`;
+    process.stdout.write(
+      `${progress} ${repository.nameWithOwner.padEnd(nameWidth)}  `,
+    );
+
+    let result;
+
+    try {
+      result = run(repository);
+    } catch (error) {
+      result = createSyncFailure(repository, getErrorMessage(error));
+    }
+
+    console.log(result.message);
+    results.push(result);
+  }
+
+  return results;
+}
+
+function cloneRemoteRepository(repository) {
+  const ownerPath = join(ROOT_DIR, repository.owner);
+  const destination = join(ownerPath, repository.name);
+
+  if (pathExists(destination)) {
+    return createSyncFailure(
+      repository,
+      `destination already exists and is not a repository: ${destination}`,
+    );
+  }
+
+  try {
+    mkdirSync(ownerPath, { recursive: true });
+  } catch (error) {
+    return createSyncFailure(
+      repository,
+      `could not create owner directory: ${getErrorMessage(error)}`,
+    );
+  }
+
+  const result = spawnSync('git', ['clone', repository.sshUrl, destination], {
+    encoding: 'utf8',
+  });
+
+  if (result.error) {
+    return createSyncFailure(
+      repository,
+      `could not start Git: ${result.error.message}`,
+    );
+  }
+
+  if (result.signal) {
+    return createSyncFailure(
+      repository,
+      `Git was terminated by signal ${result.signal}`,
+    );
+  }
+
+  if (result.status !== 0) {
+    return createSyncFailure(
+      repository,
+      toSingleLine(result.stderr) || 'git clone failed',
+    );
+  }
+
+  return {
+    name: repository.nameWithOwner,
+    succeeded: true,
+    message: 'cloned',
+  };
+}
+
+function syncLocalRepository(repository) {
+  try {
+    getGitOutput(repository, ['fetch', '--all', '--prune']);
+
+    const branch = getSymbolicCurrentBranch(repository);
+
+    if (branch === undefined) {
+      return createSyncFailure(repository, 'detached HEAD');
+    }
+
+    const changes = getWorkingTreeChanges(repository);
+
+    if (hasWorkingTreeChanges(changes)) {
+      return createSyncFailure(
+        repository,
+        `working tree is not clean (${formatChanges(changes)})`,
+      );
+    }
+
+    const upstream = getBranchUpstream(repository, branch);
+
+    if (upstream === undefined) {
+      return createSyncFailure(repository, `${branch} has no upstream`);
+    }
+
+    const previousHead = getGitOutput(repository, ['rev-parse', 'HEAD']).trim();
+    getGitOutput(repository, ['merge', '--ff-only', upstream]);
+    const currentHead = getGitOutput(repository, ['rev-parse', 'HEAD']).trim();
+    const state = currentHead === previousHead ? 'up to date' : 'updated';
+
+    return {
+      name: repository.nameWithOwner,
+      succeeded: true,
+      message: `[${branch} -> ${upstream}]  ${state}`,
+    };
+  } catch (error) {
+    return createSyncFailure(repository, getErrorMessage(error));
+  }
+}
+
+function createSyncFailure(repository, message) {
+  return {
+    name: repository.nameWithOwner,
+    succeeded: false,
+    message: `ERROR: ${toSingleLine(message)}`,
+  };
+}
+
+function getSymbolicCurrentBranch(repository) {
+  const result = runGit(repository, [
+    'symbolic-ref',
+    '--quiet',
+    '--short',
+    'HEAD',
+  ]);
+
+  if (result.status === 0) {
+    return result.stdout.trim();
+  }
+
+  if (result.status === 1) {
+    return undefined;
+  }
+
+  throwGitError(result, 'could not determine current branch');
+}
+
+function getBranchUpstream(repository, branch) {
+  const output = getGitOutput(repository, [
+    'for-each-ref',
+    '--format=%(upstream:short)',
+    `refs/heads/${branch}`,
+  ]).trim();
+
+  return output.length > 0 ? output : undefined;
+}
+
+function hasWorkingTreeChanges(changes) {
+  return (
+    changes.staged > 0 || changes.unstaged > 0 || changes.untracked > 0
+  );
+}
+
+function printSyncHelp() {
+  console.log(getSyncHelpText());
+}
+
+function getSyncHelpText() {
+  const lines = [
+    'Usage: ./projects.mjs sync [options]',
+    '',
+    'Update existing local repositories and clone missing remote repositories.',
+    '',
+    'Options:',
+    '  -h, --help  Show help for this command',
+  ];
+
+  return lines.join('\n');
+}
+
+// =============================================================================
+// Command: help
+// =============================================================================
+
+function showHelp(arguments_) {
+  if (arguments_.length === 0) {
+    printGlobalHelp();
+    return 0;
+  }
+
+  if (isHelpRequest(arguments_)) {
+    printHelpHelp();
+    return 0;
+  }
+
+  if (arguments_.length === 1 && printCommandHelp(arguments_[0])) {
+    return 0;
+  }
+
+  if (arguments_.length > 1) {
+    console.error(`Unexpected help argument: ${arguments_[1]}`);
+  } else {
+    console.error(`Unknown command: ${arguments_[0]}`);
+  }
+
+  printHelpHelp();
+  return 1;
+}
+
+function printHelpHelp() {
+  console.log(getHelpHelpText());
+}
+
+function getHelpHelpText() {
+  const lines = [
+    'Usage: ./projects.mjs help [command]',
+    '',
+    'Show global help or detailed help for one command.',
+  ];
+
+  return lines.join('\n');
+}
+
+function printGlobalHelp() {
+  console.log(getGlobalHelpText());
+}
+
+function getGlobalHelpText() {
+  const lines = [
+    'Usage: ./projects.mjs <command>',
+    '',
+    'Commands:',
+    '  delete  Delete all local repositories inside personal',
+    '  prune   Delete local repositories that no longer exist remotely',
+    '  remote  List included repositories owned by the GitHub user',
+    '  status  Show concise local Git status for every repository',
+    '  sync    Update existing repositories and clone missing repositories',
+    '  help    Show global or command-specific help',
+    '',
+    'Run "./projects.mjs help <command>" for detailed command help.',
+  ];
+
+  return lines.join('\n');
+}
+
+// =============================================================================
+// Shared utilities
+// =============================================================================
+
+function getRemoteRepositories(reportProgress) {
+  reportProgress?.('Discovering the authenticated GitHub user...');
+  const username = getAuthenticatedGitHubUser();
+
+  reportProgress?.('Discovering owned GitHub organizations...');
+  const organizations = getOwnedGitHubOrganizations();
+
+  reportProgress?.('Validating repository exclusions...');
+  const {
+    blacklistedOrganizations,
+    blacklistedRepositories,
+  } = validateBlacklists(username, organizations);
+  const repositoriesByName = new Map();
+
+  reportProgress?.(`Listing repositories for ${username}...`);
+  addRemoteRepositories(
+    repositoriesByName,
+    getRemoteRepositoriesAt(
+      'user/repos?affiliation=owner&visibility=all&per_page=100',
+    ),
+  );
+
+  for (const organization of organizations) {
+    if (blacklistedOrganizations.has(organization.toLowerCase())) {
+      continue;
+    }
+
+    reportProgress?.(`Listing repositories for ${organization}...`);
+    addRemoteRepositories(
+      repositoriesByName,
+      getRemoteRepositoriesAt(
+        `orgs/${organization}/repos?type=all&per_page=100`,
+      ),
+    );
+  }
+
+  for (const repository of blacklistedRepositories) {
+    repositoriesByName.delete(repository);
+  }
+
+  return [...repositoriesByName.values()].sort(compareRepositories);
+}
+
+function getAuthenticatedGitHubUser() {
+  const username = getGitHubOutput(['user', '--jq', '.login']).trim();
+
+  if (username.length === 0) {
+    throw new Error('GitHub returned an empty username.');
+  }
+
+  return username;
+}
+
+function getOwnedGitHubOrganizations() {
+  const output = getGitHubOutput([
+    '--paginate',
+    'user/memberships/orgs?state=active&per_page=100',
+    '--jq',
+    '.[] | select(.role == "admin") | .organization.login',
+  ]);
+
+  return output
+    .split('\n')
+    .map((organization) => organization.trim())
+    .filter((organization) => organization.length > 0)
+    .sort(compareNames);
+}
+
+function validateBlacklists(username, organizations) {
+  const errors = [];
+  const organizationsByName = new Map(
+    organizations.map((organization) => [organization.toLowerCase(), organization]),
+  );
+  const blacklistedOrganizations = new Set();
+
+  for (const organization of ORGANIZATION_BLACKLIST) {
+    const key = organization.toLowerCase();
+
+    if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(organization)) {
+      errors.push(`Invalid organization blacklist entry "${organization}".`);
+      continue;
+    }
+
+    if (blacklistedOrganizations.has(key)) {
+      errors.push(`Duplicate organization blacklist entry "${organization}".`);
+      continue;
+    }
+
+    blacklistedOrganizations.add(key);
+
+    if (!organizationsByName.has(key)) {
+      errors.push(
+        `Blacklisted organization "${organization}" is not an active organization owned by "${username}".`,
+      );
+    }
+  }
+
+  const blacklistedRepositories = new Set();
+
+  for (const nameWithOwner of REPOSITORY_BLACKLIST) {
+    const key = nameWithOwner.toLowerCase();
+
+    if (!/^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9._-]+$/.test(nameWithOwner)) {
+      errors.push(
+        `Invalid repository blacklist entry "${nameWithOwner}"; expected "owner/repository".`,
+      );
+      continue;
+    }
+
+    if (blacklistedRepositories.has(key)) {
+      errors.push(`Duplicate repository blacklist entry "${nameWithOwner}".`);
+      continue;
+    }
+
+    blacklistedRepositories.add(key);
+
+    let canonicalName;
+
+    try {
+      canonicalName = getGitHubOutput([
+        `repos/${nameWithOwner}`,
+        '--jq',
+        '.full_name',
+      ]).trim();
+    } catch {
+      errors.push(
+        `Blacklisted repository "${nameWithOwner}" does not exist or is not accessible.`,
+      );
+      continue;
+    }
+
+    if (canonicalName.toLowerCase() !== key) {
+      errors.push(
+        `Blacklisted repository "${nameWithOwner}" is now "${canonicalName}".`,
+      );
+      continue;
+    }
+
+    const owner = canonicalName.slice(0, canonicalName.indexOf('/'));
+    const ownerKey = owner.toLowerCase();
+
+    if (
+      ownerKey !== username.toLowerCase() &&
+      !organizationsByName.has(ownerKey)
+    ) {
+      errors.push(
+        `Blacklisted repository "${nameWithOwner}" is not owned by "${username}" or an organization owned by that user.`,
+      );
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      ['Blacklist validation failed:', ...errors.map((error) => `  - ${error}`)].join(
+        '\n',
+      ),
+    );
+  }
+
+  return { blacklistedOrganizations, blacklistedRepositories };
+}
+
+function getRemoteRepositoriesAt(endpoint) {
+  const output = getGitHubOutput([
+    '--paginate',
+    endpoint,
+    '--jq',
+    REPOSITORY_QUERY,
+  ]);
+
+  return output
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map(parseRemoteRepository);
+}
+
+function parseRemoteRepository(row) {
+  const fields = row.split('\t');
+  const [id, nameWithOwner, sshUrl, archived, visibility] = fields;
+  const separator = nameWithOwner?.indexOf('/') ?? -1;
+
+  if (
+    fields.length !== 5 ||
+    typeof id !== 'string' ||
+    id.length === 0 ||
+    separator <= 0 ||
+    separator === nameWithOwner.length - 1 ||
+    typeof sshUrl !== 'string' ||
+    sshUrl.length === 0 ||
+    !['true', 'false'].includes(archived) ||
+    typeof visibility !== 'string' ||
+    visibility.length === 0
+  ) {
+    throw new Error(`GitHub returned incomplete repository data: ${row}`);
+  }
+
+  return {
+    id,
+    owner: nameWithOwner.slice(0, separator),
+    name: nameWithOwner.slice(separator + 1),
+    nameWithOwner,
+    sshUrl,
+    isArchived: archived === 'true',
+    visibility,
+  };
+}
+
+function addRemoteRepositories(repositoriesByName, repositories) {
+  for (const repository of repositories) {
+    repositoriesByName.set(repositoryKey(repository), repository);
+  }
+}
+
+function getGitHubOutput(arguments_) {
+  const result = spawnSync(
+    'gh',
+    ['api', '--hostname', 'github.com', ...arguments_],
+    { encoding: 'utf8' },
+  );
+
+  if (result.error) {
+    if (result.error.code === 'ENOENT') {
+      throw new Error(
+        'GitHub CLI (`gh`) was not found. Install it and run `gh auth login` first.',
+      );
+    }
+
+    throw new Error(`Could not start GitHub CLI: ${result.error.message}`);
+  }
+
+  if (result.signal) {
+    throw new Error(`GitHub CLI was terminated by signal ${result.signal}.`);
+  }
+
+  if (result.status !== 0) {
+    throw new Error(
+      toSingleLine(result.stderr) ||
+        `GitHub CLI exited with status ${result.status ?? 'unknown'}.`,
+    );
+  }
+
+  return result.stdout;
+}
+
+function isDeletionRootSafe() {
+  if (resolve(ROOT_DIR) === REQUIRED_ROOT_DIR) {
+    return true;
+  }
+
+  console.error(`Refusing to delete: unexpected operation root: ${ROOT_DIR}`);
+  console.error(`Expected operation root: ${REQUIRED_ROOT_DIR}`);
+  return false;
+}
+
+async function confirmRepositoryDeletion(uncleanStatuses) {
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    console.error('Deletion requires an interactive terminal. Nothing was deleted.');
+    return false;
+  }
+
+  const confirmation = 'delete';
+  const readline = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  try {
+    const answer = await readline.question(
+      `Type "${confirmation}" to continue: `,
+    );
+
+    if (answer !== confirmation) {
+      console.log('Deletion cancelled. Nothing was deleted.');
+      return false;
+    }
+
+    console.log('');
+
+    if (uncleanStatuses.length > 0) {
+      printUncleanRepositoryReasons(uncleanStatuses);
+      console.log('');
+
+      const uncleanAnswer = await readline.question(
+        `Type "${confirmation}" to continue: `,
+      );
+
+      if (uncleanAnswer !== confirmation) {
+        console.log('Deletion cancelled. Nothing was deleted.');
+        return false;
+      }
+
+      console.log('');
+    }
+
+    return true;
+  } finally {
+    readline.close();
+  }
+}
+
+function printUncleanRepositoryReasons(statuses) {
+  console.log('Unclean repositories:');
+
+  for (const status of statuses) {
+    const reasons = [];
+
+    if (status.error === undefined) {
+      if (hasWorkingTreeChanges(status.changes)) {
+        reasons.push(`working tree: ${formatChanges(status.changes)}`);
+      }
+
+      if (status.stashCount > 0) {
+        const label = status.stashCount === 1 ? 'stash' : 'stashes';
+        reasons.push(`${status.stashCount} ${label}`);
+      }
+
+      if (status.ahead.length > 0) {
+        reasons.push(`unpushed commits: ${status.ahead.join(', ')}`);
+      }
+    }
+
+    reasons.push(...status.warnings.map((warning) => `warning: ${warning}`));
+
+    if (status.error !== undefined) {
+      reasons.push(`inspection error: ${toSingleLine(status.error)}`);
+    }
+
+    console.log(`  ${status.name}`);
+
+    for (const reason of reasons) {
+      console.log(`    - ${reason}`);
+    }
+  }
+}
+
+function isLocalRepositoryUnclean(status) {
+  if (status.error !== undefined || status.warnings.length > 0) {
+    return true;
+  }
+
+  return (
+    status.changes.staged > 0 ||
+    status.changes.unstaged > 0 ||
+    status.changes.untracked > 0 ||
+    status.stashCount > 0 ||
+    status.ahead.length > 0
+  );
+}
+
+function printRepositoryPaths(repositories) {
+  for (const repository of repositories) {
+    console.log(`  ${repository.path}`);
+  }
+}
+
+function removeLocalRepositories(repositories) {
+  const failures = [];
+
+  for (const repository of repositories) {
+    try {
+      rmSync(repository.path, { recursive: true, force: false });
+      console.log(`Deleted ${repository.path}`);
+    } catch (error) {
+      failures.push(repository.path);
+      console.error(
+        `Could not delete ${repository.path}: ${getErrorMessage(error)}`,
+      );
+    }
+  }
+
+  if (failures.length > 0) {
+    console.error(
+      `Failed to delete ${failures.length} of ${repositories.length} repositories.`,
+    );
+    return 1;
+  }
+
+  console.log(`Deleted ${repositories.length} repositories.`);
+  return 0;
+}
+
+function inspectLocalRepositories(repositories, fetch) {
+  return repositories.map((repository) =>
+    inspectLocalRepository(repository, fetch),
+  );
+}
+
+function getWorkingTreeChanges(repository) {
+  const output = getGitOutput(repository, [
+    'status',
+    '--porcelain=v1',
+    '-z',
+    '--untracked-files=normal',
+  ]);
+  const entries = output.split('\0');
+  const changes = {
+    staged: 0,
+    unstaged: 0,
+    untracked: 0,
+  };
+
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+
+    if (entry.length === 0) {
+      continue;
+    }
+
+    const status = entry.slice(0, 2);
+
+    if (status === '??') {
+      changes.untracked += 1;
+      continue;
+    }
+
+    if (status[0] !== ' ') {
+      changes.staged += 1;
+    }
+
+    if (status[1] !== ' ') {
+      changes.unstaged += 1;
+    }
+
+    if ('RC'.includes(status[0]) || 'RC'.includes(status[1])) {
+      index += 1;
+    }
+  }
+
+  return changes;
+}
+
+function formatChanges(changes) {
+  const parts = [];
+
+  if (changes.staged > 0) {
+    parts.push(`staged: ${changes.staged}`);
+  }
+
+  if (changes.unstaged > 0) {
+    parts.push(`unstaged: ${changes.unstaged}`);
+  }
+
+  if (changes.untracked > 0) {
+    parts.push(`untracked: ${changes.untracked}`);
+  }
+
+  return parts.length > 0 ? parts.join(', ') : 'clean';
+}
+
+function runGit(repository, arguments_) {
+  return spawnSync('git', ['-C', repository.path, ...arguments_], {
+    encoding: 'utf8',
+  });
+}
+
+function getGitOutput(repository, arguments_) {
+  const result = runGit(repository, arguments_);
+
+  if (result.error) {
+    throw new Error(`could not start Git: ${result.error.message}`);
+  }
+
+  if (result.signal) {
+    throw new Error(`Git was terminated by signal ${result.signal}`);
+  }
+
+  if (result.status !== 0) {
+    throwGitError(result, `git ${arguments_[0]} failed`);
+  }
+
+  return result.stdout;
+}
+
+function throwGitError(result, fallbackMessage) {
+  const message = result.stderr.trim() || fallbackMessage;
+  throw new Error(toSingleLine(message));
+}
+
+function toSingleLine(value) {
+  return String(value).replaceAll(/\s+/g, ' ').trim();
+}
+
+function findLocalRepositories() {
+  const repositories = [];
+  const owners = readdirSync(ROOT_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name !== '.git')
+    .sort((left, right) => compareNames(left.name, right.name));
+
+  for (const owner of owners) {
+    const ownerPath = join(ROOT_DIR, owner.name);
+    const entries = readdirSync(ownerPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      const path = join(ownerPath, entry.name);
+
+      if (!isGitRepository(path)) {
+        continue;
+      }
+
+      repositories.push({
+        owner: owner.name,
+        name: entry.name,
+        nameWithOwner: `${owner.name}/${entry.name}`,
+        path,
+      });
+    }
+  }
+
+  return repositories.sort(compareRepositories);
+}
+
+function repositoryKey(repository) {
+  return repository.nameWithOwner.toLowerCase();
+}
+
+function isRepositoryBlacklisted(repository) {
+  const owner = repository.owner.toLowerCase();
+
+  return (
+    ORGANIZATION_BLACKLIST.some(
+      (organization) => organization.toLowerCase() === owner,
+    ) ||
+    REPOSITORY_BLACKLIST.some(
+      (nameWithOwner) => nameWithOwner.toLowerCase() === repositoryKey(repository),
+    )
+  );
+}
+
+function compareRepositories(left, right) {
+  return compareNames(left.nameWithOwner, right.nameWithOwner);
+}
+
+function compareNames(left, right) {
+  return left.localeCompare(right, undefined, { sensitivity: 'base' });
+}
+
+function isGitRepository(directory) {
+  return pathExists(join(directory, '.git'));
+}
+
+function pathExists(path) {
+  try {
+    lstatSync(path);
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+function acceptsNoArguments(command, arguments_, printCommandHelp_) {
+  if (arguments_.length === 0) {
+    return true;
+  }
+
+  console.error(`Unexpected ${command} option: ${arguments_[0]}`);
+  printCommandHelp_();
+  return false;
+}
+
+function isHelpRequest(arguments_) {
+  return (
+    arguments_.length === 1 &&
+    (arguments_[0] === '--help' || arguments_[0] === '-h')
+  );
+}
+
+function printCommandHelp(command) {
+  switch (command) {
+    case 'delete': {
+      printDeleteHelp();
+      return true;
+    }
+    case 'prune': {
+      printPruneHelp();
+      return true;
+    }
+    case 'remote': {
+      printRemoteHelp();
+      return true;
+    }
+    case 'status': {
+      printStatusHelp();
+      return true;
+    }
+    case 'sync': {
+      printSyncHelp();
+      return true;
+    }
+    case 'help': {
+      printHelpHelp();
+      return true;
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
+function getErrorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}

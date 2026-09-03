@@ -3,6 +3,8 @@
 The terminal script is [`projects.mjs`](./projects.mjs). Run it with Node.js
 from this directory.
 
+The same commands are also available through `archon projects <command>`.
+
 Local repositories use exactly this layout:
 
 ```text
