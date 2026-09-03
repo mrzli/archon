@@ -1,6 +1,6 @@
 # TMW-007: Remove the replaced launcher files
 
-Status: pending
+Status: completed
 
 Area: Migration
 
@@ -14,15 +14,14 @@ Remove the ten legacy start/stop files after their replacements are ready and up
 
 ## Acceptance checklist
 
-- [ ] Remove `all-start.sh` and `all-stop.sh`.
-- [ ] Remove `flashcards-start.sh` and `flashcards-stop.sh`.
-- [ ] Remove `jslibs-start.sh` and `jslibs-stop.sh`.
-- [ ] Remove `other-start.sh` and `other-stop.sh`.
-- [ ] Remove `workspaces-start.sh` and `workspaces-stop.sh`.
-- [ ] Search the repository for removed filenames and update all real callers or documentation.
-- [ ] Confirm `data/home-replace-directories.txt` still intentionally manages the entire `projects/workspaces` destination.
+- [x] Remove `all-start.sh` and `all-stop.sh`.
+- [x] Remove `flashcards-start.sh` and `flashcards-stop.sh`.
+- [x] Remove `jslibs-start.sh` and `jslibs-stop.sh`.
+- [x] Remove `other-start.sh` and `other-stop.sh`.
+- [x] Remove `workspaces-start.sh` and `workspaces-stop.sh`.
+- [x] Search the repository for removed filenames and update all real callers or documentation.
+- [x] Confirm `data/home-replace-directories.txt` still intentionally manages the entire `projects/workspaces` destination.
 
 ## Verification evidence
 
-_Add evidence here when completing the task._
-
+Removed all ten legacy launchers. A repository-wide search found no real callers outside those aggregate legacy scripts; remaining filename mentions are historical context in the specification and this migration record. `data/home-replace-directories.txt` still lists `projects/workspaces`, ensuring obsolete destination files are removed during setup.
