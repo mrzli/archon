@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -u
+
+if [[ -n "${ARCHON_TEST_GH_CALLS:-}" ]]; then
+  printf '%s\n' "$*" >> "$ARCHON_TEST_GH_CALLS"
+fi
+
+case "$*" in
+  "api --hostname github.com user --jq .login")
+    printf 'test-user\n'
+    ;;
+  *"user/memberships/orgs?state=active&per_page=100"*)
+    printf '%s\n' \
+      mrzli-courses \
+      mrzli-gh-actions \
+      mrzli-other \
+      mrzli-vscode-extensions
+    ;;
+  *"user/repos?affiliation=owner&visibility=all&per_page=100"*)
+    ;;
+  "repo list mrzli-jslib --limit 1000 --json name,nameWithOwner,isPrivate,isArchived")
+    printf '[]\n'
+    ;;
+  *)
+    printf 'Unexpected fake gh invocation: %s\n' "$*" >&2
+    exit 99
+    ;;
+esac
