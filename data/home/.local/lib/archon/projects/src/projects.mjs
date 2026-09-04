@@ -116,7 +116,7 @@ function printDeleteHelp() {
 
 function getDeleteHelpText() {
   const lines = [
-    'Usage: ./projects.mjs delete [options]',
+    'Usage: archon projects delete [options]',
     '',
     'Permanently delete every local <owner>/<repository>.',
     '',
@@ -171,7 +171,7 @@ function printPruneHelp() {
 
 function getPruneHelpText() {
   const lines = [
-    'Usage: ./projects.mjs prune [options]',
+    'Usage: archon projects prune [options]',
     '',
     'Delete local repositories that no longer exist remotely.',
     '',
@@ -245,7 +245,7 @@ function printRemoteHelp() {
 
 function getRemoteHelpText() {
   const lines = [
-    'Usage: ./projects.mjs remote [options]',
+    'Usage: archon projects remote [options]',
     '',
     'List included repositories owned by the authenticated GitHub user.',
     '',
@@ -312,7 +312,7 @@ function printStatusHelp() {
 
 function getStatusHelpText() {
   const lines = [
-    'Usage: ./projects.mjs status [options]',
+    'Usage: archon projects status [options]',
     '',
     'Show concise local Git status for every owner/repository.',
     '',
@@ -406,7 +406,7 @@ function printSyncHelp() {
 
 function getSyncHelpText() {
   const lines = [
-    'Usage: ./projects.mjs sync [options]',
+    'Usage: archon projects sync [options]',
     '',
     'Update existing local repositories and clone missing remote repositories.',
     '',
@@ -452,7 +452,7 @@ function printHelpHelp() {
 
 function getHelpHelpText() {
   const lines = [
-    'Usage: ./projects.mjs help [command]',
+    'Usage: archon projects help [command]',
     '',
     'Show global help or detailed help for one command.',
   ];
@@ -466,7 +466,7 @@ function printGlobalHelp() {
 
 function getGlobalHelpText() {
   const lines = [
-    'Usage: ./projects.mjs <command>',
+    'Usage: archon projects <command>',
     '',
     'Commands:',
     '  delete  Delete all local repositories inside personal',
@@ -476,7 +476,7 @@ function getGlobalHelpText() {
     '  sync    Update existing repositories and clone missing repositories',
     '  help    Show global or command-specific help',
     '',
-    'Run "./projects.mjs help <command>" for detailed command help.',
+    'Run "archon projects help <command>" for detailed command help.',
   ];
 
   return lines.join('\n');

@@ -4,7 +4,6 @@ set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
-projects_source="${PROJECTS_SCRIPT:-$repo_root/data/home/projects/personal/projects.mjs}"
 libs_source="${LIBS_SCRIPT:-$repo_root/data/home/projects/personal/mrzli-jslib/libs.mjs}"
 temporary_root="$(mktemp -d)"
 
@@ -83,19 +82,6 @@ assert_global_contract() {
   assert_contains "$command_output" 'Unexpected status option: --unexpected'
 }
 
-test_projects_command_contract() {
-  local fixture="$temporary_root/projects-contract"
-  local home="$fixture/home"
-  local script="$fixture/bin/projects.mjs"
-  mkdir -p "$home/projects/personal" "${script%/*}"
-  cp "$projects_source" "$script"
-
-  assert_global_contract \
-    "$script" \
-    "$home" \
-    delete prune remote status sync help
-}
-
 test_libraries_command_contract() {
   local fixture="$temporary_root/libs-contract"
   local home="$fixture/home"
@@ -107,29 +93,6 @@ test_libraries_command_contract() {
     "$script" \
     "$home" \
     build delete graph prune remote status sync help
-}
-
-test_projects_destructive_dry_runs() {
-  local fixture="$temporary_root/projects-dry-run"
-  local home="$fixture/home"
-  local script="$fixture/bin/projects.mjs"
-  local repository="$home/projects/personal/example-owner/example-project"
-  mkdir -p "$repository/.git" "${script%/*}"
-  cp "$projects_source" "$script"
-
-  capture_with_home "$home" node "$script" delete --dry-run
-  assert_equals 0 "$command_status" || return
-  assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
-  assert_contains "$command_output" "$repository" || return
-  assert_exists "$repository" || return
-
-  : > "$ARCHON_TEST_GH_CALLS"
-  capture_with_home "$home" node "$script" prune --dry-run
-  assert_equals 0 "$command_status" || return
-  assert_contains "$command_output" 'Dry run; the following directories would be deleted:' || return
-  assert_contains "$command_output" "$repository" || return
-  assert_exists "$repository" || return
-  assert_contains "$(<"$ARCHON_TEST_GH_CALLS")" 'user/repos?affiliation=owner&visibility=all&per_page=100'
 }
 
 test_libraries_destructive_dry_runs() {
@@ -171,9 +134,7 @@ run_test() {
   fi
 }
 
-run_test 'projects command contract' test_projects_command_contract
 run_test 'libraries command contract' test_libraries_command_contract
-run_test 'projects destructive dry-runs' test_projects_destructive_dry_runs
 run_test 'libraries destructive dry-runs' test_libraries_destructive_dry_runs
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"

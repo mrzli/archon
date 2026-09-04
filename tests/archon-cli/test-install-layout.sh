@@ -68,6 +68,7 @@ test_repeated_overlay_copy() {
   assert_absent "$home/.local/AGENTS.md" || return
   assert_absent "$home/.local/lib/archon/libs/AGENTS.md" || return
   assert_absent "$home/.local/lib/archon/projects/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/projects/README.md" || return
   assert_absent "$home/.local/lib/archon/workspaces/AGENTS.md" || return
   assert_absent "$home/.local/lib/archon/workspaces/README.md" || return
 

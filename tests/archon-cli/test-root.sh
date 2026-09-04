@@ -6,7 +6,6 @@ test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon="${ARCHON_COMMAND:-$repo_root/data/home/.local/bin/archon}"
 legacy_libs="$repo_root/data/home/projects/personal/mrzli-jslib/libs.mjs"
-legacy_projects="$repo_root/data/home/projects/personal/projects.mjs"
 libs_module="$repo_root/data/home/.local/lib/archon/libs/src/libs.mjs"
 module_harness="$test_dir/run-module.mjs"
 projects_module="$repo_root/data/home/.local/lib/archon/projects/src/projects.mjs"
@@ -135,11 +134,18 @@ test_workspaces_dispatch_validation() {
 test_projects_dispatch() {
   local home="$temporary_root/projects-home"
   local repository="$home/projects/personal/example-owner/example-project"
+  local command
   mkdir -p "$repository/.git"
 
   capture_with_home "$home" "$archon" projects --help
   assert_equals 0 "$command_status" || return
-  assert_contains "$command_output" 'Usage: ./projects.mjs <command>' || return
+  assert_contains "$command_output" 'Usage: archon projects <command>' || return
+
+  for command in delete prune remote status sync help; do
+    capture_with_home "$home" "$archon" projects help "$command"
+    assert_equals 0 "$command_status" || return
+    assert_contains "$command_output" "Usage: archon projects $command" || return
+  done
 
   capture_with_home "$home" "$archon" projects unknown
   assert_equals 1 "$command_status" || return
@@ -238,7 +244,7 @@ assert_status_parity() {
   assert_equals "$legacy_output" "$command_output"
 }
 
-test_repository_status_parity() {
+test_repository_status() {
   local home="$temporary_root/status-home"
   local projects_root="$home/projects/personal"
   local libs_root="$projects_root/mrzli-jslib"
@@ -265,7 +271,8 @@ test_repository_status_parity() {
   git -C "$project_clean" remote add origin "$temporary_root/missing-remote"
   git -C "$library_clean" remote add origin "$temporary_root/missing-remote"
 
-  assert_status_parity "$home" "$legacy_projects" projects || return
+  capture_with_home "$home" "$archon" projects status
+  assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'example/changed' || return
   assert_contains "$command_output" 'staged: 1, unstaged: 1, untracked: 1' || return
   assert_contains "$command_output" 'stash: 1' || return
@@ -278,7 +285,8 @@ test_repository_status_parity() {
   assert_contains "$command_output" 'ERROR:' || return
   [[ "$command_output" != *'not-a-repository'* ]] || fail 'libs inventory included a non-repository' || return
 
-  assert_status_parity "$home" "$legacy_projects" projects --fetch || return
+  capture_with_home "$home" "$archon" projects status --fetch
+  assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'warnings: fetch failed:' || return
   assert_status_parity "$home" "$legacy_libs" libs --fetch || return
   assert_contains "$command_output" 'warnings: fetch failed:'
@@ -307,7 +315,7 @@ run_test 'unexpected root help argument' test_unexpected_help_argument
 run_test 'libraries command dispatch' test_libraries_dispatch
 run_test 'direct module dispatch' test_direct_module_dispatch
 run_test 'projects command dispatch' test_projects_dispatch
-run_test 'repository status parity' test_repository_status_parity
+run_test 'repository status' test_repository_status
 run_test 'workspaces dispatch validation' test_workspaces_dispatch_validation
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
