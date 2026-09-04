@@ -148,16 +148,6 @@ Now that the SSH key is set up, change the `archon` repo to use SSH instead of H
 git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon" remote set-url origin git@github.com:mrzli/archon.git
 ```
 
-### Synchronize Personal Projects
-
-```bash
-"$HOME/projects/personal/projects.mjs" sync
-```
-
-This updates existing repositories and clones missing repositories into
-`~/projects/personal/<owner>/<repository>`. It preserves repositories with
-local changes instead of updating their checked-out branches.
-
 ## Update Archon Repo
 
 ```bash
