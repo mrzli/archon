@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+# Output helpers.
 log_step() {
   printf '\n==> %s\n' "$1"
 }
@@ -18,6 +19,7 @@ usage() {
   printf '\nBy default, existing home directories are preserved and data/home is copied as an overlay.\n'
 }
 
+# Parse command-line options.
 delete_managed_home_dirs=false
 
 while (($# > 0)); do
@@ -38,9 +40,11 @@ while (($# > 0)); do
   shift
 done
 
+# Resolve managed file locations.
 repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 home_source_dir="$repo_root_dir/data/home"
 
+# Remove unwanted packages.
 packages_to_remove=(
   aether
   obsidian
@@ -49,6 +53,7 @@ packages_to_remove=(
 log_step "Removing unwanted packages"
 omarchy pkg drop "${packages_to_remove[@]}"
 
+# Remove unwanted web apps.
 webapps_to_remove=(
   Basecamp
   Fizzy
@@ -60,6 +65,7 @@ for webapp in "${webapps_to_remove[@]}"; do
   omarchy webapp remove "$webapp"
 done
 
+# Install optional desktop applications.
 log_step "Installing optional applications"
 if pacman -Q steam &>/dev/null; then
   log_info "Steam is already installed; skipping"
@@ -75,6 +81,7 @@ else
   omarchy install editor vscode
 fi
 
+# Install configured AUR packages.
 aur_packages=(
   # package-name
 )
@@ -84,6 +91,7 @@ if ((${#aur_packages[@]} > 0)); then
   omarchy pkg aur add "${aur_packages[@]}"
 fi
 
+# Install repository packages.
 repository_packages=(
   tokei       # Count lines of code
   foliate     # Read ebooks
@@ -102,6 +110,7 @@ repository_packages=(
 log_step "Installing repository packages"
 omarchy pkg add "${repository_packages[@]}"
 
+# Install development environments.
 dev_envs=(
   ruby
   python
@@ -128,6 +137,7 @@ for dev_env in "${dev_envs[@]}"; do
   fi
 done
 
+# Install globally managed mise tools.
 mise_tools=(
   pnpm
 )
@@ -142,6 +152,7 @@ for mise_tool in "${mise_tools[@]}"; do
   fi
 done
 
+# Install configured VS Code extensions.
 vscode_extensions_file="$repo_root_dir/data/vscode-extensions.txt"
 
 log_step "Installing VS Code extensions"
@@ -157,6 +168,7 @@ for extension in "${vscode_extensions[@]}"; do
   fi
 done
 
+# Optionally replace managed home directories.
 if [[ "$delete_managed_home_dirs" == true ]]; then
   home_replace_directories_file="$repo_root_dir/data/home-replace-directories.txt"
 
@@ -179,10 +191,12 @@ if [[ "$delete_managed_home_dirs" == true ]]; then
   done < "$home_replace_directories_file"
 fi
 
+# Copy the managed home overlay.
 log_step "Installing home files"
 home_copy_ignore_file="$repo_root_dir/data/home-copy-ignore.txt"
 rsync -a --exclude-from="$home_copy_ignore_file" "$home_source_dir"/ "$HOME"/
 
+# Enable the LazyVim REST extra.
 lazyvim_config_file="$HOME/.config/nvim/lazyvim.json"
 lazyvim_rest_extra="lazyvim.plugins.extras.util.rest"
 
@@ -202,6 +216,7 @@ else
   log_info "Enabled LazyVim REST extra"
 fi
 
+# Load the managed Bash configuration.
 bashrc_file="$HOME/.bashrc"
 bashrc_source_line='source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/bashrc"'
 
@@ -212,10 +227,12 @@ else
   printf '\n%s\n' "$bashrc_source_line" >> "$bashrc_file"
 fi
 
+# Apply and validate Hyprland configuration.
 log_step "Reloading Hyprland configuration"
 hyprctl reload
 hyprctl configerrors
 
+# Remove the default projects directory.
 log_step "Removing the default ~/Projects directory"
 if [[ -e "$HOME/Projects" || -L "$HOME/Projects" ]]; then
   rm -rf "$HOME/Projects"
