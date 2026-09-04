@@ -33,7 +33,6 @@ assert_session_absent() {
 
 create_fixtures() {
   mkdir -p \
-    "$HOME/projects/workspaces" \
     "$HOME/projects/personal/mrzli-jslib/example/.git" \
     "$HOME/projects/personal/mrzli/flashcards-fe" \
     "$HOME/projects/personal/mrzli/flashcards-be" \
@@ -43,7 +42,7 @@ create_fixtures() {
     "$HOME/projects/personal/mrzli/js-templates"
 }
 
-test_named_group_delegation() {
+test_named_group() {
   create_fixtures
 
   "$archon" workspaces start --group flashcards || return
@@ -98,7 +97,7 @@ run_test() {
   fi
 }
 
-run_test 'named workspace delegation' test_named_group_delegation
+run_test 'named workspace group' test_named_group
 run_test 'aggregate workspace groups' test_aggregate_groups
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"

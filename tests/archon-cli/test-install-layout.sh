@@ -95,6 +95,10 @@ test_managed_library_replacement_scope() {
 
   grep -qFx '.local/lib/archon' "$replace_directories" ||
     fail '.local/lib/archon is not a managed replacement directory' || return
+  if grep -qFx 'projects/workspaces' "$replace_directories"; then
+    fail 'projects/workspaces remains a managed replacement directory'
+    return
+  fi
 
   mkdir -p "$library" "${sibling%/*}"
   : > "$library/stale.mjs"
