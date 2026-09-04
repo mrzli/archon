@@ -6,8 +6,6 @@
   `~/.local/lib/archon`.
 - Use dependency-free Node.js ECMAScript modules, not Bun or npm packages.
 - Keep fixed workstation paths derived from the current user's home directory.
-- Treat `AGENTS.md`, READMEs, and tests as development files even though the
-  home overlay temporarily installs them until ARC-013.
 
 ## Code conventions
 
