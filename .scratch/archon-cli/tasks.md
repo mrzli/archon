@@ -199,9 +199,12 @@ tools.
 ### [ARC-018: Remove the legacy projects entry point](./tasks/ARC-018-remove-projects-legacy.md)
 
 - Stop copying the old `projects.mjs` from `data/home`.
-- Add narrowly targeted cleanup for only the previously managed installed
-  script after `archon projects` is present.
-- Migrate enduring usage documentation to Archon's root README.
+- Establish a dedicated, explicitly invoked, repeat-safe CLI migration for all
+  legacy runtime files retired by this specification; setup performs no
+  one-time cleanup.
+- Remove only the previously managed projects script after all replacement
+  commands are installed.
+- Migrate enduring usage documentation to the Archon projects README.
 - Do not delete a destination README or `AGENTS.md` without separately proving
   it belongs only to the retired installed tool.
 
@@ -211,8 +214,8 @@ project fixtures remain unchanged.
 ### [ARC-019: Remove the legacy libraries entry point](./tasks/ARC-019-remove-libs-legacy.md)
 
 - Stop copying the old `libs.mjs` from `data/home`.
-- Add narrowly targeted cleanup for only the previously managed installed
-  script after `archon libs` is present.
+- Retain the exact previously managed libraries script in the dedicated CLI
+  migration after removing it from the overlay.
 - Preserve files belonging to the independent `mrzli-jslib` repository.
 
 Verify: `archon libs` passes after legacy cleanup and unrelated library
@@ -221,7 +224,8 @@ repository files remain unchanged.
 ### [ARC-020: Remove the legacy workspace launchers](./tasks/ARC-020-remove-workspaces-legacy.md)
 
 - Stop copying the five shell launchers from `data/home`.
-- Remove only those exact previously managed destination files.
+- Retain only those exact previously managed destination files in the dedicated
+  CLI migration after removing them from the overlay.
 - Remove `projects/workspaces` from the replacement-directory list if it no
   longer contains managed files; do not delete the destination directory.
 - Retire or adapt the legacy Bash-only test harness after equivalent Node
@@ -233,8 +237,8 @@ under `~/projects/workspaces` remain unchanged.
 ### [ARC-021: Complete documentation and archive the proposal](./tasks/ARC-021-document-and-close.md)
 
 - Document the final CLI, fixed roots, installation paths, alias, and workspace
-  groups in the root README.
-- Confirm installed help and durable documentation agree.
+  groups in Archon's tool-local READMEs; keep the root README setup-focused.
+- Confirm installed help and tool-local documentation agree.
 - Mark this specification and task index completed and archive them in place.
 
 Verify: full focused test suite, all Node syntax checks, `bash -n setup.sh`,

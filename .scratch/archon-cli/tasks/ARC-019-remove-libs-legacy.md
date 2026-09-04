@@ -16,12 +16,12 @@ repository's files.
 ## Acceptance checklist
 
 - [ ] `libs.mjs` is removed from the home overlay.
-- [ ] Setup removes only the exact previously managed destination script.
+- [ ] The dedicated CLI migration retains the exact previously managed destination script entry.
 - [ ] README, `AGENTS.md`, Git data, packages, and unrelated repository files are preserved.
-- [ ] `archon libs` is the documented replacement.
+- [ ] The Archon libraries README documents `archon libs` as the replacement.
 
 ## Verification
 
-- Test migration in a temporary library repository fixture.
+- Test the dedicated migration in a temporary library repository fixture.
 - Run the full libraries suite through `archon`.
 - Run setup syntax checks and `git diff --check`.

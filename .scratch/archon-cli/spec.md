@@ -173,6 +173,7 @@ data/home/.local/
 │   └── a -> archon
 └── lib/
     └── archon/
+        ├── README.md
         ├── cli.mjs
         ├── shared/
         │   └── ...
@@ -246,10 +247,10 @@ files, rather than global filename patterns such as `**/README.md`. The list
 excludes the tool's `AGENTS.md` files, READMEs, and tests while leaving runtime
 files eligible for the normal overlay.
 
-The setup script does not carry one-time cleanup for excluded development
-files. If such files were copied by a transitional development run, remove
-them manually. Future removal of a runtime module similarly requires an
-explicit migration decision, consistent with the overlay model.
+The setup script does not carry one-time cleanup. If excluded development files
+were copied by a transitional development run, remove them manually. Retired
+runtime files are handled by the dedicated, explicitly invoked CLI migration,
+consistent with the overlay model.
 
 The `~/.local/bin/archon` executable is copied with executable permissions as a
 managed home file.
@@ -306,20 +307,24 @@ data/home/projects/workspaces/jslibs.sh
 data/home/projects/workspaces/misc-projects.sh
 ```
 
-Setup must remove only the corresponding legacy files previously managed by
-Archon. It must not delete project directories or unrelated contents. Any
-legacy README or `AGENTS.md` cleanup must be enumerated separately after
-confirming that the destination file exists solely for the old installed tool;
-it must not remove documentation belonging to an independent repository.
+A dedicated `migrations/archon-cli.sh` script must remove only the corresponding
+legacy files previously managed by Archon. It runs explicitly after setup,
+verifies that every replacement is installed before removing anything, and is
+repeat-safe. Setup itself contains no migration cleanup. The migration must not
+delete project directories or unrelated contents. Any legacy README or
+`AGENTS.md` cleanup must be enumerated separately after confirming that the
+destination file exists solely for the old installed tool; it must not remove
+documentation belonging to an independent repository.
 
 Remove `projects/workspaces` from `data/home-replace-directories.txt` if Archon
 no longer manages any content in that directory. Do not delete the destination
 directory merely because its launcher files moved.
 
-Update the root README with the installed CLI interface and remove the obsolete
-five-launcher documentation. Archive the completed tmux-workspaces scratch
-specification as historical context; do not rewrite it as if the earlier work
-had never existed.
+Document the installed CLI in Archon's tool-local READMEs, remove obsolete
+launcher instructions from durable documentation, and keep the repository root
+README focused on workstation setup. Archive the completed tmux-workspaces
+scratch specification as historical context; do not rewrite it as if the
+earlier work had never existed.
 
 ## Migration strategy
 
