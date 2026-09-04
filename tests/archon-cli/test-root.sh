@@ -5,7 +5,6 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon="${ARCHON_COMMAND:-$repo_root/data/home/.local/bin/archon}"
-legacy_libs="$repo_root/data/home/projects/personal/mrzli-jslib/libs.mjs"
 libs_module="$repo_root/data/home/.local/lib/archon/libs/src/libs.mjs"
 module_harness="$test_dir/run-module.mjs"
 projects_module="$repo_root/data/home/.local/lib/archon/projects/src/projects.mjs"
@@ -167,11 +166,18 @@ test_projects_dispatch() {
 test_libraries_dispatch() {
   local home="$temporary_root/libs-home"
   local repository="$home/projects/personal/mrzli-jslib/example-library"
+  local command
   mkdir -p "$repository/.git"
 
   capture_with_home "$home" "$archon" libs --help
   assert_equals 0 "$command_status" || return
-  assert_contains "$command_output" 'Usage: ./libs.mjs <command>' || return
+  assert_contains "$command_output" 'Usage: archon libs <command>' || return
+
+  for command in build delete graph prune remote status sync help; do
+    capture_with_home "$home" "$archon" libs help "$command"
+    assert_equals 0 "$command_status" || return
+    assert_contains "$command_output" "Usage: archon libs $command" || return
+  done
 
   capture_with_home "$home" "$archon" libs unknown
   assert_equals 1 "$command_status" || return
@@ -228,22 +234,6 @@ test_direct_module_dispatch() {
   assert_equals "$archon_output" "$module_output"
 }
 
-assert_status_parity() {
-  local home="$1"
-  local legacy_script="$2"
-  local command="$3"
-  shift 3
-  local legacy_output legacy_status
-
-  capture_with_home "$home" node "$legacy_script" status "$@"
-  legacy_output="$command_output"
-  legacy_status="$command_status"
-
-  capture_with_home "$home" "$archon" "$command" status "$@"
-  assert_equals "$legacy_status" "$command_status" || return
-  assert_equals "$legacy_output" "$command_output"
-}
-
 test_repository_status() {
   local home="$temporary_root/status-home"
   local projects_root="$home/projects/personal"
@@ -279,7 +269,8 @@ test_repository_status() {
   assert_contains "$command_output" 'broken-owner/broken  ERROR:' || return
   [[ "$command_output" != *'not-a-repository'* ]] || fail 'projects inventory included a non-repository' || return
 
-  assert_status_parity "$home" "$legacy_libs" libs || return
+  capture_with_home "$home" "$archon" libs status
+  assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'changed' || return
   assert_contains "$command_output" 'broken' || return
   assert_contains "$command_output" 'ERROR:' || return
@@ -288,7 +279,8 @@ test_repository_status() {
   capture_with_home "$home" "$archon" projects status --fetch
   assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'warnings: fetch failed:' || return
-  assert_status_parity "$home" "$legacy_libs" libs --fetch || return
+  capture_with_home "$home" "$archon" libs status --fetch
+  assert_equals 1 "$command_status" || return
   assert_contains "$command_output" 'warnings: fetch failed:'
 }
 

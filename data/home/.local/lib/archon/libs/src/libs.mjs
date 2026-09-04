@@ -238,7 +238,7 @@ function printBuildHelp() {
 
 function getBuildHelpText() {
   const lines = [
-    'Usage: ./libs.mjs build [options]',
+    'Usage: archon libs build [options]',
     '',
     `Build local ${LOCAL_PACKAGE_SCOPE}/* packages in dependency order.`,
     '',
@@ -272,7 +272,7 @@ function printDeleteHelp() {
 
 function getDeleteHelpText() {
   const lines = [
-    'Usage: ./libs.mjs delete [options]',
+    'Usage: archon libs delete [options]',
     '',
     'Permanently delete every local Git repository in this directory.',
     '',
@@ -332,7 +332,7 @@ function printGraphHelp() {
 
 function getGraphHelpText() {
   const lines = [
-    'Usage: ./libs.mjs graph [options]',
+    'Usage: archon libs graph [options]',
     '',
     `Show dependencies between local ${LOCAL_PACKAGE_SCOPE}/* packages.`,
     '',
@@ -393,7 +393,7 @@ function printPruneHelp() {
 
 function getPruneHelpText() {
   const lines = [
-    'Usage: ./libs.mjs prune [options]',
+    'Usage: archon libs prune [options]',
     '',
     'Delete local repositories that no longer exist remotely.',
     '',
@@ -461,7 +461,7 @@ function printRemoteHelp() {
 
 function getRemoteHelpText() {
   const lines = [
-    'Usage: ./libs.mjs remote [options]',
+    'Usage: archon libs remote [options]',
     '',
     `List repositories owned by the ${GITHUB_OWNER} GitHub organization.`,
     '',
@@ -526,7 +526,7 @@ function printStatusHelp() {
 
 function getStatusHelpText() {
   const lines = [
-    'Usage: ./libs.mjs status [options]',
+    'Usage: archon libs status [options]',
     '',
     'Show concise local Git status for every repository.',
     '',
@@ -603,7 +603,7 @@ function printSyncHelp() {
 
 function getSyncHelpText() {
   const lines = [
-    'Usage: ./libs.mjs sync [options]',
+    'Usage: archon libs sync [options]',
     '',
     'Update existing local repositories and clone missing remote repositories.',
     '',
@@ -649,7 +649,7 @@ function printHelpHelp() {
 
 function getHelpHelpText() {
   const lines = [
-    'Usage: ./libs.mjs help [command]',
+    'Usage: archon libs help [command]',
     '',
     'Show global help or detailed help for one command.',
   ];
@@ -663,7 +663,7 @@ function printGlobalHelp() {
 
 function getGlobalHelpText() {
   const lines = [
-    'Usage: ./libs.mjs <command>',
+    'Usage: archon libs <command>',
     '',
     'Commands:',
     `  build   Build local ${LOCAL_PACKAGE_SCOPE}/* packages in dependency order`,
@@ -675,7 +675,7 @@ function getGlobalHelpText() {
     '  sync    Update existing repositories and clone missing repositories',
     '  help    Show global or command-specific help',
     '',
-    'Run "./libs.mjs help <command>" for detailed command help.',
+    'Run "archon libs help <command>" for detailed command help.',
   ];
 
   return lines.join('\n');
