@@ -1,6 +1,12 @@
 # Archon CLI and Managed Tools
 
-Status: proposed
+Status: completed and archived
+
+Completed: 2026-09-04
+
+The implementation and isolated verification are complete. Durable command
+documentation is kept with the Archon tool sources; this specification is
+retained as the archived design and migration record.
 
 ## Context
 
@@ -371,3 +377,8 @@ For the final change set:
 - Run `git diff --check`.
 - Do not execute the complete setup script against the real home directory as
   a test.
+
+The final audit passed on 2026-09-04: all Node and Bash syntax checks passed,
+all 15 shell-suite checks and 29 Node tests passed, the dedicated migration was
+repeat-safe in a temporary home, and `git diff --check` passed. ShellCheck was
+unavailable.

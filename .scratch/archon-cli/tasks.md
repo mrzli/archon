@@ -1,6 +1,12 @@
 # Archon CLI implementation tasks
 
-Status: proposed
+Status: completed and archived
+
+Completed: 2026-09-04
+
+This index and its task files are retained as the archived implementation and
+verification record. Durable command documentation is kept with the Archon
+tool sources.
 
 Source: [Archon CLI and Managed Tools](./spec.md)
 
