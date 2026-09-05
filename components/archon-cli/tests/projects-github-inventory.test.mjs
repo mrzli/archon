@@ -9,7 +9,7 @@ import {
   parseRemoteRepository,
   repositoryKey,
   validateBlacklists,
-} from '../../data/home/.local/lib/archon/projects/src/github-inventory.mjs';
+} from '../lib/archon/projects/src/github-inventory.mjs';
 
 test('project repository rows are parsed into normalized inventory records', () => {
   assert.deepEqual(

@@ -4,6 +4,7 @@ set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
+archon_cli_source="$repo_root/components/archon-cli"
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 migration="$repo_root/migrations/archon-cli.sh"
@@ -25,6 +26,12 @@ assert_exists() {
 
 assert_absent() {
   [[ ! -e "$1" && ! -L "$1" ]] || fail "expected path to be absent: $1"
+}
+
+install_archon_cli() {
+  local home="$1"
+
+  "$archon_cli_source/install.sh" "$home"
 }
 
 test_requires_installed_replacements() {
@@ -56,6 +63,7 @@ test_removes_only_legacy_files() {
   )
   mkdir -p "$home"
   rsync -a --exclude-from="$home_copy_ignore" "$home_source"/ "$home"/
+  install_archon_cli "$home"
 
   mkdir -p \
     "$home/projects/personal/example-owner/example-project" \

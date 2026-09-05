@@ -1,10 +1,13 @@
 # Archon CLI tests
 
-Run the complete suite from the repository root:
+Run the component suite from the repository root:
 
 ```bash
-tests/archon-cli/run.sh
+components/archon-cli/test.sh
 ```
+
+The repository-level `tests/archon-cli/run.sh` command adds installation,
+migration, shell syntax, ShellCheck, and whitespace checks.
 
 Test behavior at the lowest layer that fully protects the contract:
 
@@ -16,8 +19,8 @@ Test behavior at the lowest layer that fully protects the contract:
 - `*-missing-root.test.mjs` keeps the empty-state regression matrix explicit.
 - `repository-status.test.mjs` exercises the shared inspection behavior with
   temporary real Git repositories.
-- Workspace module tests remain beside the workspace sources.
-- Shell tests are reserved for Bash-owned installation and migration behavior,
-  plus the fake-tmux end-to-end adapter check.
+- Workspace module tests live under `tests/workspaces`.
+- Repository-level shell tests cover installation and migration behavior plus
+  the fake-tmux end-to-end adapter check.
 
 Tests must not use the real home directory, GitHub account, or tmux server.

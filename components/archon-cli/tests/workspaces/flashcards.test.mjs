@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { manageFlashcards } from '../src/flashcards.mjs';
+import { manageFlashcards } from '../../lib/archon/workspaces/src/flashcards.mjs';
 
 function createContext({
   cleanupFails = false,

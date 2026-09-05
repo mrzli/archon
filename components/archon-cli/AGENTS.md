@@ -21,8 +21,8 @@
 
 ## Verification
 
-- Run `tests/archon-cli/run.sh` from the Archon repository for the complete
-  focused CLI suite.
+- Run `components/archon-cli/test.sh` for the component suite and
+  `tests/archon-cli/run.sh` for complete installation integration checks.
 - Update the relevant README whenever command usage or behavior changes.
 - Run `node --check` on every changed executable and `.mjs` module.
 - Use temporary roots and fake external commands for destructive or

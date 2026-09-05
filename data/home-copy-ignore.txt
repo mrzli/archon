@@ -1,3 +1,2 @@
 # Paths are relative to data/home.
 .local/**.md
-.local/lib/archon/workspaces/tests/

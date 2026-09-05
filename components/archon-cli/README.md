@@ -21,6 +21,6 @@ Commands use these exit statuses:
 
 Detailed behavior is documented with each command collection:
 
-- [Projects](./projects/README.md)
-- [Libraries](./libs/README.md)
-- [Workspaces](./workspaces/README.md)
+- [Projects](./lib/archon/projects/README.md)
+- [Libraries](./lib/archon/libs/README.md)
+- [Workspaces](./lib/archon/workspaces/README.md)

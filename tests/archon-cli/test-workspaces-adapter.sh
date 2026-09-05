@@ -4,7 +4,7 @@ set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
-archon="$repo_root/data/home/.local/bin/archon"
+archon="$repo_root/components/archon-cli/bin/archon"
 temporary_root="$(mktemp -d)"
 
 cleanup() {

@@ -4,6 +4,7 @@ set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
+archon_cli_source="$repo_root/components/archon-cli"
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 replace_directories="$repo_root/data/home-replace-directories.txt"
@@ -40,6 +41,19 @@ copy_home_overlay() {
   rsync -a --exclude-from="$home_copy_ignore" "$home_source"/ "$home"/
 }
 
+install_archon_cli() {
+  local home="$1"
+
+  "$archon_cli_source/install.sh" "$home"
+}
+
+install_home() {
+  local home="$1"
+
+  copy_home_overlay "$home"
+  install_archon_cli "$home"
+}
+
 test_repeated_overlay_copy() {
   local home="$temporary_root/overlay-home"
   local archon_output alias_output tree_after_first tree_after_second
@@ -49,9 +63,9 @@ test_repeated_overlay_copy() {
   : > "$home/.local/lib/archon/workspaces/tests/user-note.txt"
   : > "$home/.local/lib/unrelated/keep"
 
-  copy_home_overlay "$home"
+  install_home "$home"
   tree_after_first="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
-  copy_home_overlay "$home"
+  install_home "$home"
   tree_after_second="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
 
   assert_equals "$tree_after_first" "$tree_after_second" || return
@@ -74,7 +88,7 @@ test_repeated_overlay_copy() {
   assert_absent "$home/.local/lib/archon/workspaces/README.md" || return
 
   local source_test
-  for source_test in "$home_source/.local/lib/archon/workspaces/tests"/*; do
+  for source_test in "$archon_cli_source/tests/workspaces"/*; do
     assert_absent "$home/.local/lib/archon/workspaces/tests/${source_test##*/}" || return
   done
 
@@ -94,7 +108,7 @@ test_managed_library_replacement_scope() {
   local library="$home/.local/lib/archon"
   local sibling="$home/.local/lib/unrelated/keep"
   mkdir -p "$home"
-  copy_home_overlay "$home"
+  install_home "$home"
 
   grep -qFx '.local/lib/archon' "$replace_directories" ||
     fail '.local/lib/archon is not a managed replacement directory' || return
@@ -108,7 +122,7 @@ test_managed_library_replacement_scope() {
   : > "$sibling"
 
   rm -rf -- "$library"
-  copy_home_overlay "$home"
+  install_home "$home"
 
   assert_absent "$library/stale.mjs" || return
   assert_exists "$library/cli.mjs" || return

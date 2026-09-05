@@ -43,6 +43,7 @@ done
 # Resolve managed file locations.
 repo_root_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 home_source_dir="$repo_root_dir/data/home"
+archon_cli_source_dir="$repo_root_dir/components/archon-cli"
 
 # Remove unwanted packages.
 packages_to_remove=(
@@ -172,17 +173,19 @@ done
 # Optionally replace managed home directories.
 if [[ "$delete_managed_home_dirs" == true ]]; then
   home_replace_directories_file="$repo_root_dir/data/home-replace-directories.txt"
+  canonical_home_dir="$(realpath -m -- "$HOME")"
 
   log_step "Removing managed home directories"
   while IFS= read -r relative_dir; do
     [[ -z "$relative_dir" || "$relative_dir" == \#* ]] && continue
 
-    if [[ "$relative_dir" == /* || "/$relative_dir/" == *"/../"* || "/$relative_dir/" == *"/./"* || ! -d "$home_source_dir/$relative_dir" ]]; then
+    destination_dir="$HOME/$relative_dir"
+    canonical_destination_dir="$(realpath -m -- "$destination_dir")"
+    if [[ "$canonical_destination_dir" != "$canonical_home_dir/"* ]]; then
       printf 'Invalid managed home directory: %s\n' "$relative_dir" >&2
       exit 1
     fi
 
-    destination_dir="$HOME/$relative_dir"
     if [[ -e "$destination_dir" || -L "$destination_dir" ]]; then
       rm -rf -- "$destination_dir"
       log_info "Removed ~/$relative_dir"
@@ -196,6 +199,10 @@ fi
 log_step "Installing home files"
 home_copy_ignore_file="$repo_root_dir/data/home-copy-ignore.txt"
 rsync -a --exclude-from="$home_copy_ignore_file" "$home_source_dir"/ "$HOME"/
+
+# Install the Archon CLI from its repository component.
+log_step "Installing Archon CLI"
+"$archon_cli_source_dir/install.sh" "$HOME"
 
 # Enable the LazyVim REST extra.
 lazyvim_config_file="$HOME/.config/nvim/lazyvim.json"

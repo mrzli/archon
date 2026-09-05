@@ -10,8 +10,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
-const archon = join(repoRoot, 'data/home/.local/bin/archon');
+const componentRoot = fileURLToPath(new URL('..', import.meta.url));
+const archon = join(componentRoot, 'bin/archon');
 
 export function createFixture(name) {
   const root = mkdtempSync(join(tmpdir(), `archon-${name}-`));

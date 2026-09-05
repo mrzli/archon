@@ -6,7 +6,7 @@ import {
   deleteRepositories,
   pruneRepositories,
   removeLocalRepositories,
-} from '../../data/home/.local/lib/archon/shared/destructive-workflows.mjs';
+} from '../lib/archon/shared/destructive-workflows.mjs';
 
 const repositories = [{ name: 'obsolete', path: '/safe/obsolete' }];
 

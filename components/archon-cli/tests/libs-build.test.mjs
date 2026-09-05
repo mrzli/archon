@@ -7,7 +7,7 @@ import {
   createDependencyGraph,
   orderPackagesForBuild,
   validateBuildScripts,
-} from '../../data/home/.local/lib/archon/libs/src/build.mjs';
+} from '../lib/archon/libs/src/build.mjs';
 import {
   createFixture,
   removeFixture,
