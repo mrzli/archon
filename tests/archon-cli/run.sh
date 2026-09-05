@@ -30,7 +30,9 @@ bash_check_paths=(
 )
 
 printf '\n%s\n' 'Archon CLI Bash syntax checks'
-bash -n "${bash_check_paths[@]}"
+for path in "${bash_check_paths[@]}"; do
+  bash -n "$path"
+done
 
 printf '\n%s\n' 'Archon CLI ShellCheck'
 if command -v shellcheck >/dev/null 2>&1; then
