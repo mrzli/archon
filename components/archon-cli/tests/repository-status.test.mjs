@@ -5,8 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 
 import {
-  createFixture,
-  removeFixture,
+  withGitFixture,
   runArchon,
 } from './test-helpers.mjs';
 
@@ -33,8 +32,7 @@ function addRepositoryChanges(directory) {
   runGit(directory, 'add', 'staged.txt');
 }
 
-test('status reports repository changes, errors, and fetch warnings', () => {
-  const fixture = createFixture('repository-status');
+test('status reports repository changes, errors, and fetch warnings', () => withGitFixture('repository-status', (fixture) => {
   const projectsRoot = join(fixture.home, 'projects/personal');
   const librariesRoot = join(projectsRoot, 'mrzli-jslib');
   const projectClean = join(projectsRoot, 'example/clean');
@@ -42,46 +40,42 @@ test('status reports repository changes, errors, and fetch warnings', () => {
   const libraryClean = join(librariesRoot, 'clean');
   const libraryChanged = join(librariesRoot, 'changed');
 
-  try {
-    for (const repository of [
-      projectClean,
-      projectChanged,
-      libraryClean,
-      libraryChanged,
-    ]) {
-      initializeRepository(repository);
-    }
-    addRepositoryChanges(projectChanged);
-    addRepositoryChanges(libraryChanged);
-
-    mkdirSync(join(projectsRoot, 'example/not-a-repository'), {
-      recursive: true,
-    });
-    mkdirSync(join(projectsRoot, 'broken-owner/broken'), { recursive: true });
-    mkdirSync(join(librariesRoot, 'broken'), { recursive: true });
-    writeFileSync(join(projectsRoot, 'broken-owner/broken/.git'), 'broken\n');
-    writeFileSync(join(librariesRoot, 'broken/.git'), 'broken\n');
-    runGit(projectClean, 'remote', 'add', 'origin', join(fixture.root, 'missing'));
-    runGit(libraryClean, 'remote', 'add', 'origin', join(fixture.root, 'missing'));
-
-    for (const [domain, changedName, brokenName] of [
-      ['projects', 'example/changed', 'broken-owner/broken'],
-      ['libs', 'changed', 'broken'],
-    ]) {
-      const result = runArchon(fixture, [domain, 'status']);
-
-      assert.equal(result.status, 1);
-      assert.match(result.stdout, new RegExp(changedName));
-      assert.match(result.stdout, /staged: 1, unstaged: 1, untracked: 1/);
-      assert.match(result.stdout, /stash: 1/);
-      assert.match(result.stdout, new RegExp(`${brokenName} +ERROR:`));
-      assert.doesNotMatch(result.stdout, /not-a-repository/);
-
-      const fetched = runArchon(fixture, [domain, 'status', '--fetch']);
-      assert.equal(fetched.status, 1);
-      assert.match(fetched.stdout, /warnings: fetch failed:/);
-    }
-  } finally {
-    removeFixture(fixture);
+  for (const repository of [
+    projectClean,
+    projectChanged,
+    libraryClean,
+    libraryChanged,
+  ]) {
+    initializeRepository(repository);
   }
-});
+  addRepositoryChanges(projectChanged);
+  addRepositoryChanges(libraryChanged);
+
+  mkdirSync(join(projectsRoot, 'example/not-a-repository'), {
+    recursive: true,
+  });
+  mkdirSync(join(projectsRoot, 'broken-owner/broken'), { recursive: true });
+  mkdirSync(join(librariesRoot, 'broken'), { recursive: true });
+  writeFileSync(join(projectsRoot, 'broken-owner/broken/.git'), 'broken\n');
+  writeFileSync(join(librariesRoot, 'broken/.git'), 'broken\n');
+  runGit(projectClean, 'remote', 'add', 'origin', join(fixture.root, 'missing'));
+  runGit(libraryClean, 'remote', 'add', 'origin', join(fixture.root, 'missing'));
+
+  for (const [domain, changedName, brokenName] of [
+    ['projects', 'example/changed', 'broken-owner/broken'],
+    ['libs', 'changed', 'broken'],
+  ]) {
+    const result = runArchon(fixture, [domain, 'status']);
+
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, new RegExp(changedName));
+    assert.match(result.stdout, /staged: 1, unstaged: 1, untracked: 1/);
+    assert.match(result.stdout, /stash: 1/);
+    assert.match(result.stdout, new RegExp(`${brokenName} +ERROR:`));
+    assert.doesNotMatch(result.stdout, /not-a-repository/);
+
+    const fetched = runArchon(fixture, [domain, 'status', '--fetch']);
+    assert.equal(fetched.status, 1);
+    assert.match(fetched.stdout, /warnings: fetch failed:/);
+  }
+}));

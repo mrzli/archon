@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+
+import { withGitFixture } from './test-helpers.mjs';
 
 import {
   createSyncFailure,
@@ -123,57 +124,52 @@ test('operation failures are reported and do not stop later operations', () => {
   ]);
 });
 
-test('local Git update reports up-to-date, updated, and dirty states', () => {
-  const root = mkdtempSync(join(tmpdir(), 'archon-sync-'));
+test('local Git update reports up-to-date, updated, and dirty states', () => withGitFixture('sync', ({ root }) => {
   const remote = join(root, 'remote.git');
   const local = join(root, 'local');
   const contributor = join(root, 'contributor');
   const runGit = (directory, ...arguments_) =>
     execFileSync('git', ['-C', directory, ...arguments_], { stdio: 'ignore' });
 
-  try {
-    execFileSync(
-      'git',
-      ['init', '--bare', '--initial-branch=main', remote],
-      { stdio: 'ignore' },
-    );
-    execFileSync('git', ['clone', remote, local], { stdio: 'ignore' });
-    runGit(local, 'config', 'user.email', 'test@example.com');
-    runGit(local, 'config', 'user.name', 'Archon Test');
-    writeFileSync(join(local, 'tracked.txt'), 'initial\n');
-    runGit(local, 'add', 'tracked.txt');
-    runGit(local, 'commit', '-m', 'initial');
-    runGit(local, 'push', '--set-upstream', 'origin', 'main');
+  execFileSync(
+    'git',
+    ['init', '--bare', '--initial-branch=main', remote],
+    { stdio: 'ignore' },
+  );
+  execFileSync('git', ['clone', remote, local], { stdio: 'ignore' });
+  runGit(local, 'config', 'user.email', 'test@example.com');
+  runGit(local, 'config', 'user.name', 'Archon Test');
+  writeFileSync(join(local, 'tracked.txt'), 'initial\n');
+  runGit(local, 'add', 'tracked.txt');
+  runGit(local, 'commit', '-m', 'initial');
+  runGit(local, 'push', '--set-upstream', 'origin', 'main');
 
-    const repository = { name: 'example', path: local };
-    const getName = (repository_) => repository_.name;
-    assert.deepEqual(updateLocalRepository(repository, getName), {
-      message: '[main -> origin/main]  up to date',
-      name: 'example',
-      succeeded: true,
-    });
+  const repository = { name: 'example', path: local };
+  const getName = (repository_) => repository_.name;
+  assert.deepEqual(updateLocalRepository(repository, getName), {
+    message: '[main -> origin/main]  up to date',
+    name: 'example',
+    succeeded: true,
+  });
 
-    execFileSync('git', ['clone', remote, contributor], { stdio: 'ignore' });
-    runGit(contributor, 'config', 'user.email', 'test@example.com');
-    runGit(contributor, 'config', 'user.name', 'Archon Test');
-    writeFileSync(join(contributor, 'remote.txt'), 'remote\n');
-    runGit(contributor, 'add', 'remote.txt');
-    runGit(contributor, 'commit', '-m', 'remote');
-    runGit(contributor, 'push');
+  execFileSync('git', ['clone', remote, contributor], { stdio: 'ignore' });
+  runGit(contributor, 'config', 'user.email', 'test@example.com');
+  runGit(contributor, 'config', 'user.name', 'Archon Test');
+  writeFileSync(join(contributor, 'remote.txt'), 'remote\n');
+  runGit(contributor, 'add', 'remote.txt');
+  runGit(contributor, 'commit', '-m', 'remote');
+  runGit(contributor, 'push');
 
-    assert.deepEqual(updateLocalRepository(repository, getName), {
-      message: '[main -> origin/main]  updated',
-      name: 'example',
-      succeeded: true,
-    });
+  assert.deepEqual(updateLocalRepository(repository, getName), {
+    message: '[main -> origin/main]  updated',
+    name: 'example',
+    succeeded: true,
+  });
 
-    writeFileSync(join(local, 'untracked.txt'), 'dirty\n');
-    assert.deepEqual(updateLocalRepository(repository, getName), {
-      message: 'ERROR: working tree is not clean (untracked: 1)',
-      name: 'example',
-      succeeded: false,
-    });
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});
+  writeFileSync(join(local, 'untracked.txt'), 'dirty\n');
+  assert.deepEqual(updateLocalRepository(repository, getName), {
+    message: 'ERROR: working tree is not clean (untracked: 1)',
+    name: 'example',
+    succeeded: false,
+  });
+}));

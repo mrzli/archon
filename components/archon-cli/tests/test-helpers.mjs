@@ -30,15 +30,49 @@ export function removeFixture(fixture) {
   rmSync(fixture.root, { recursive: true, force: true });
 }
 
+export function createGitEnvironment(fixture, overrides = {}) {
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
+  );
+  return {
+    ...inherited,
+    HOME: fixture.home,
+    XDG_CONFIG_HOME: join(fixture.home, '.config'),
+    PATH: `${fixture.bin}:${process.env.PATH}`,
+    GIT_CONFIG_NOSYSTEM: '1',
+    GIT_CONFIG_SYSTEM: '/dev/null',
+    GIT_CONFIG_GLOBAL: '/dev/null',
+    GIT_CONFIG_COUNT: '4',
+    GIT_CONFIG_KEY_0: 'core.hooksPath',
+    GIT_CONFIG_VALUE_0: '/dev/null',
+    GIT_CONFIG_KEY_1: 'commit.gpgSign',
+    GIT_CONFIG_VALUE_1: 'false',
+    GIT_CONFIG_KEY_2: 'user.name',
+    GIT_CONFIG_VALUE_2: 'Archon Test',
+    GIT_CONFIG_KEY_3: 'user.email',
+    GIT_CONFIG_VALUE_3: 'test@example.com',
+    GIT_TERMINAL_PROMPT: '0',
+    ...overrides,
+  };
+}
+
+// Synchronous scope for real Git fixtures and workflows running in this process.
+export function withGitFixture(name, run) {
+  const fixture = createFixture(name);
+  const previousEnvironment = process.env;
+  try {
+    process.env = createGitEnvironment(fixture);
+    return run(fixture);
+  } finally {
+    process.env = previousEnvironment;
+    removeFixture(fixture);
+  }
+}
+
 export function runArchon(fixture, arguments_, environment = {}) {
   return spawnSync(archon, arguments_, {
     encoding: 'utf8',
-    env: {
-      ...process.env,
-      HOME: fixture.home,
-      PATH: `${fixture.bin}:${process.env.PATH}`,
-      ...environment,
-    },
+    env: createGitEnvironment(fixture, environment),
   });
 }
 
