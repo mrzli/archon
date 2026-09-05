@@ -1,12 +1,14 @@
 # Archon CLI test pruning tasks
 
-Status: planned
+Status: completed and archived
+
+Completed: 2026-09-06
 
 Source: [Specification](./spec.md)
 
-All tasks are pending. Production changes and new tests are prohibited.
-Execute in the order below, one commit per task. The final task depends on all
-six pruning tasks. The earlier reliability plan remains an archived record.
+All seven tasks are complete, one commit per task, on `test/prune-archon-cli`.
+Production files are unchanged and no new tests were added. The earlier
+reliability plan remains an archived record.
 
 ## [ATP-001: Remove tests of Git test helpers](./tasks/ATP-001-remove-helper-tests.md)
 
@@ -55,3 +57,11 @@ Verify: Run `tests/archon-cli/run.sh` and audit the final path list and diff.
 All intended pruning is complete, the remaining suite passes, production code
 is unchanged, no tests were added, and actual reductions and accepted coverage
 losses are documented.
+
+## Final results
+
+- Test code: 363 fewer lines net relative to `a9dee70`.
+- Node tests: 140 → 126; shell integration cases: 10 → 8.
+- Remaining full suite passed with terminal and non-terminal stdin.
+- Node/Bash syntax and whitespace checks passed; ShellCheck was unavailable.
+- No production changes, added tests, or new fixture abstractions.

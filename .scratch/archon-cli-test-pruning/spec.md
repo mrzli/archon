@@ -1,6 +1,8 @@
 # Archon CLI test pruning
 
-Status: proposed
+Status: completed and archived
+
+Completed: 2026-09-06
 
 Created: 2026-09-06
 
@@ -83,3 +85,16 @@ test paths, no production changes or added tests may be present, and test code
 must have a net reduction. Record the actual reduction without a numerical
 target. Update test documentation, record verification results and limitations,
 and mark this plan completed only after implementation and checks finish.
+
+## Completion record
+
+All seven tasks are complete on `test/prune-archon-cli`, one commit per task.
+Compared with baseline `a9dee70`, test code was reduced by 363 lines net;
+Node cases went from 140 to 126 and shell integration cases from 10 to 8.
+No production files changed and no tests or test infrastructure were added.
+
+The remaining complete suite passed with terminal and non-terminal stdin:
+126 Node cases, five workspace adapter cases, one installation-layout case,
+and two migration cases. Node/Bash syntax and whitespace checks passed.
+ShellCheck was unavailable. The coverage omissions in this spec are intentional;
+the retained consequential behavior tests and isolation helpers remain.

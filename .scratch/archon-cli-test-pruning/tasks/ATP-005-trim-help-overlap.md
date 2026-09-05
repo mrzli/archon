@@ -31,5 +31,5 @@ Some spelling/entry-point combinations cease to have standalone tests; the retai
 Completed: 2026-09-06. Removed ten overlapping help variants while retaining
 root/domain flag help and all four alias-forwarding mappings. The existing
 alias case now requires successful exit statuses, not merely matching statuses.
-All 38 retained exit-status cases passed; parser-error and operational-failure
+All 37 retained exit-status cases passed; parser-error and operational-failure
 cases remain unchanged.

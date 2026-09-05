@@ -25,6 +25,12 @@ Test behavior at the lowest layer that fully protects the contract:
 
 Tests must not use the real home directory, GitHub account, or tmux server.
 
+Keep detailed editor-session command sequences in `workspaces/tmux.test.mjs`.
+Group tests check their session definitions, discovery, and repeat/failure
+behavior without duplicating the shared window-creation transcript. Adapter
+cases use exact session-set assertions instead of repeating individual checks.
+Test helpers and fakes support these cases without dedicated self-test suites.
+
 ## Complete verification
 
 ```bash
