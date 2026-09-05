@@ -5,18 +5,35 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon="$repo_root/components/archon-cli/bin/archon"
-temporary_root="$(mktemp -d)"
-
-cleanup() {
-  rm -rf -- "$temporary_root"
-}
-trap cleanup EXIT
-
-export HOME="$temporary_root/home"
 export PATH="$repo_root/tests/tmux-workspaces/bin:$PATH"
-export TMW_TMUX_STATE="$temporary_root/tmux"
-unset TMUX
-mkdir -p "$HOME" "$TMW_TMUX_STATE"
+
+run_case() (
+  temporary_root="$(mktemp -d)" || exit
+  trap 'rm -rf -- "$temporary_root"' EXIT
+  fixture_home="$temporary_root/home"
+  export TMW_TMUX_STATE="$temporary_root/tmux"
+  unset TMUX TMW_TMUX_FAIL_COMMAND
+  mkdir -p "$fixture_home" "$TMW_TMUX_STATE" || exit
+  "$@"
+)
+
+run_archon() {
+  env HOME="$fixture_home" "$archon" "$@" < /dev/null
+}
+
+assert_sessions() {
+  local actual expected
+  actual="$(find "$TMW_TMUX_STATE/sessions" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)"
+  expected="$(printf '%s\n' "$@" | sort)"
+  [[ "$actual" == "$expected" ]] || fail "unexpected session set: $actual"
+}
+
+assert_no_attachment() {
+  if grep -Eq -- 'tmux (attach-session|switch-client)' "$TMW_TMUX_STATE/calls"; then
+    fail 'non-interactive command unexpectedly attached or switched clients'
+    return 1
+  fi
+}
 
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -33,32 +50,37 @@ assert_session_absent() {
 
 create_fixtures() {
   mkdir -p \
-    "$HOME/projects/personal/mrzli-jslib/example/.git" \
-    "$HOME/projects/personal/mrzli/flashcards-fe" \
-    "$HOME/projects/personal/mrzli/flashcards-be" \
-    "$HOME/projects/personal/mrzli/docs" \
-    "$HOME/projects/personal/mrzli/repos" \
-    "$HOME/projects/personal/mrzli/archon" \
-    "$HOME/projects/personal/mrzli/js-templates"
+    "$fixture_home/projects/personal/mrzli-jslib/example/.git" \
+    "$fixture_home/projects/personal/mrzli/flashcards-fe" \
+    "$fixture_home/projects/personal/mrzli/flashcards-be" \
+    "$fixture_home/projects/personal/mrzli/docs" \
+    "$fixture_home/projects/personal/mrzli/repos" \
+    "$fixture_home/projects/personal/mrzli/archon" \
+    "$fixture_home/projects/personal/mrzli/js-templates"
 }
 
 test_named_group() {
-  create_fixtures
+  create_fixtures || return
 
-  "$archon" workspaces start --group flashcards || return
+  run_archon workspaces start --group flashcards || return
+  assert_sessions flashcards-fe flashcards-be || return
   assert_session_exists flashcards-fe || return
   assert_session_exists flashcards-be || return
   assert_session_absent workspaces || return
 
-  "$archon" workspaces stop -g flashcards || return
+  run_archon workspaces stop -g flashcards || return
   assert_session_absent flashcards-fe || return
-  assert_session_absent flashcards-be
+  assert_session_absent flashcards-be || return
+  assert_sessions || return
+  assert_no_attachment
 }
 
 test_aggregate_groups() {
-  create_fixtures
+  create_fixtures || return
 
-  "$archon" workspaces start || return
+  run_archon workspaces start || return
+  assert_sessions main flashcards-fe flashcards-be jslib-example \
+    project-mrzli-docs project-mrzli-repos project-mrzli-archon project-mrzli-js-templates || return
   assert_session_exists main || return
   assert_session_absent workspaces || return
   assert_session_absent projects || return
@@ -67,12 +89,7 @@ test_aggregate_groups() {
   assert_session_exists flashcards-be || return
   assert_session_exists jslib-example || return
   assert_session_exists project-mrzli-archon || return
-  if grep -Eq -- 'tmux (attach-session|switch-client)' "$TMW_TMUX_STATE/calls"; then
-    fail 'aggregate start unexpectedly attached or switched clients'
-    return
-  fi
-
-  "$archon" workspaces stop || return
+  run_archon workspaces stop || return
   assert_session_absent main || return
   assert_session_absent workspaces || return
   assert_session_absent projects || return
@@ -80,7 +97,9 @@ test_aggregate_groups() {
   assert_session_absent flashcards-fe || return
   assert_session_absent flashcards-be || return
   assert_session_absent jslib-example || return
-  assert_session_absent project-mrzli-archon
+  assert_session_absent project-mrzli-archon || return
+  assert_sessions || return
+  assert_no_attachment
 }
 
 tests_run=0
@@ -91,7 +110,7 @@ run_test() {
   shift
   tests_run=$((tests_run + 1))
 
-  if "$@"; then
+  if run_case "$@"; then
     printf 'PASS: %s\n' "$name"
   else
     printf 'FAIL: %s\n' "$name" >&2
