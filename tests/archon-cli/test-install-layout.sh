@@ -79,7 +79,10 @@ test_repeated_overlay_copy() {
   done
 
   assert_exists "$home/.local/lib/archon/cli.mjs" || return
+  assert_exists "$home/.local/lib/archon/libs/src/build.mjs" || return
+  assert_exists "$home/.local/lib/archon/libs/src/github-inventory.mjs" || return
   assert_exists "$home/.local/lib/archon/libs/src/libs.mjs" || return
+  assert_exists "$home/.local/lib/archon/projects/src/github-inventory.mjs" || return
   assert_exists "$home/.local/lib/archon/projects/src/projects.mjs" || return
   assert_exists "$home/.local/lib/archon/workspaces/src/workspaces.mjs" || return
   assert_exists "$home/.local/lib/archon/workspaces/tests/user-note.txt" || return

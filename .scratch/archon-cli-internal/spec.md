@@ -1,6 +1,12 @@
 # Archon CLI internal architecture improvements
 
-Status: provisional
+Status: completed and archived
+
+Completed: 2026-09-05
+
+The behavior-preserving implementation and isolated verification are complete.
+Durable verification and module-ownership guidance is kept with the Archon
+sources; this specification is retained as the archived architecture record.
 
 ## Context
 

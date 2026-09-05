@@ -1,6 +1,11 @@
 # Archon CLI internal improvement tasks
 
-Status: provisional
+Status: completed and archived
+
+Completed: 2026-09-05
+
+This index and its task files are retained as the archived implementation and
+verification record. The separate functional proposal remains provisional.
 
 Source: [Archon CLI internal architecture improvements](./spec.md)
 
@@ -73,3 +78,11 @@ Verify: focused pure tests and all remote, sync, and prune contracts pass.
 
 Verify: the full audit passes and durable user-facing command documentation
 does not claim any unimplemented functional behavior.
+
+## Final verification
+
+The completed checkpoint passed all 59 Node tests and all 15 shell-suite checks
+on 2026-09-05. The installation-layout and migration suites also passed when
+run explicitly. Node and Bash syntax checks and `git diff --check` passed;
+ShellCheck was unavailable. The functional proposal remains provisional and
+unchanged.
