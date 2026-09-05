@@ -320,6 +320,10 @@ function getStatusHelpText() {
 // =============================================================================
 
 function syncRepositories(arguments_, rootDir) {
+  if (arguments_.length === 0) {
+    mkdirSync(rootDir, { recursive: true });
+  }
+
   return runSyncWorkflow(arguments_, {
     cloneRepository: (repository) =>
       cloneRemoteRepository(repository, rootDir),
@@ -624,7 +628,19 @@ function inspectLocalRepositories(repositories, fetch) {
 
 function findLocalRepositories(rootDir) {
   const repositories = [];
-  const owners = readdirSync(rootDir, { withFileTypes: true })
+  let entries;
+
+  try {
+    entries = readdirSync(rootDir, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return repositories;
+    }
+
+    throw error;
+  }
+
+  const owners = entries
     .filter((entry) => entry.isDirectory() && entry.name !== '.git')
     .sort((left, right) => compareNames(left.name, right.name));
 
