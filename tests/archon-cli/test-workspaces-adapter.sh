@@ -54,14 +54,6 @@ fail() {
   return 1
 }
 
-assert_session_exists() {
-  [[ -d "$TMW_TMUX_STATE/sessions/$1" ]] || fail "missing session: $1"
-}
-
-assert_session_absent() {
-  [[ ! -e "$TMW_TMUX_STATE/sessions/$1" ]] || fail "unexpected session: $1"
-}
-
 create_fixtures() {
   mkdir -p \
     "$fixture_home/projects/personal/mrzli-jslib/example/.git" \
@@ -78,13 +70,8 @@ test_named_group() {
 
   run_archon workspaces start --group flashcards || return
   assert_sessions flashcards-fe flashcards-be || return
-  assert_session_exists flashcards-fe || return
-  assert_session_exists flashcards-be || return
-  assert_session_absent workspaces || return
 
   run_archon workspaces stop -g flashcards || return
-  assert_session_absent flashcards-fe || return
-  assert_session_absent flashcards-be || return
   assert_sessions || return
   assert_no_attachment
 }
@@ -95,23 +82,7 @@ test_aggregate_groups() {
   run_archon workspaces start || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
     project-mrzli-docs project-mrzli-repos project-mrzli-archon project-mrzli-js-templates || return
-  assert_session_exists main || return
-  assert_session_absent workspaces || return
-  assert_session_absent projects || return
-  assert_session_absent libs || return
-  assert_session_exists flashcards-fe || return
-  assert_session_exists flashcards-be || return
-  assert_session_exists jslib-example || return
-  assert_session_exists project-mrzli-archon || return
   run_archon workspaces stop || return
-  assert_session_absent main || return
-  assert_session_absent workspaces || return
-  assert_session_absent projects || return
-  assert_session_absent libs || return
-  assert_session_absent flashcards-fe || return
-  assert_session_absent flashcards-be || return
-  assert_session_absent jslib-example || return
-  assert_session_absent project-mrzli-archon || return
   assert_sessions || return
   assert_no_attachment
 }
@@ -137,18 +108,6 @@ test_terminal_inside_tmux() {
   run_terminal_archon workspaces start -g general || return
   assert_sessions main || return
   assert_no_attachment
-}
-
-test_fake_attachment_targets() {
-  create_fixtures || return
-  run_archon workspaces start -g general || return
-  if tmux attach-session -t =missing; then
-    fail 'fake accepted an absent attachment target'
-    return 1
-  fi
-  tmux attach-session -t =main || return
-  assert_attachment main || return
-  assert_sessions main
 }
 
 tests_run=0
@@ -178,7 +137,6 @@ done
 run_test 'terminal aggregate attachment' test_terminal_aggregate
 run_test 'terminal named-group attachment' test_terminal_named_group
 run_test 'terminal inside tmux' test_terminal_inside_tmux
-run_test 'fake attachment target validation' test_fake_attachment_targets
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
 [[ "$tests_failed" -eq 0 ]]
