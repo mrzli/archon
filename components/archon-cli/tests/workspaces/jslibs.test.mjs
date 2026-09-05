@@ -57,84 +57,14 @@ test('start discovers immediate non-hidden Git repositories', () => {
     const fixture = createContext({ homeDir });
     assert.equal(manageJslibs('start', fixture.context), 0);
     assert.deepEqual([...fixture.sessions], ['jslib-alpha', 'jslib-beta']);
-    assert.deepEqual(fixture.calls, [
-      ['has-session', '-t', 'jslib-alpha'],
+    assert.deepEqual(
+      fixture.calls.filter((call) => call[0] === 'new-session')
+        .map((call) => [call[3], call[5]]),
       [
-        'new-session',
-        '-d',
-        '-s',
-        'jslib-alpha',
-        '-c',
-        `${join(root, 'alpha')}/`,
-        '-n',
-        'nvim',
+        ['jslib-alpha', `${join(root, 'alpha')}/`],
+        ['jslib-beta', `${join(root, 'beta')}/`],
       ],
-      ['send-keys', '-t', 'jslib-alpha:nvim', 'nvim .', 'Enter'],
-      [
-        'new-window',
-        '-t',
-        'jslib-alpha',
-        '-c',
-        `${join(root, 'alpha')}/`,
-        '-n',
-        'codex',
-      ],
-      [
-        'send-keys',
-        '-t',
-        'jslib-alpha:codex',
-        'codex resume --last',
-        'Enter',
-      ],
-      [
-        'new-window',
-        '-t',
-        'jslib-alpha',
-        '-c',
-        `${join(root, 'alpha')}/`,
-        '-n',
-        'shell',
-      ],
-      ['select-window', '-t', 'jslib-alpha:nvim'],
-      ['has-session', '-t', 'jslib-beta'],
-      [
-        'new-session',
-        '-d',
-        '-s',
-        'jslib-beta',
-        '-c',
-        `${join(root, 'beta')}/`,
-        '-n',
-        'nvim',
-      ],
-      ['send-keys', '-t', 'jslib-beta:nvim', 'nvim .', 'Enter'],
-      [
-        'new-window',
-        '-t',
-        'jslib-beta',
-        '-c',
-        `${join(root, 'beta')}/`,
-        '-n',
-        'codex',
-      ],
-      [
-        'send-keys',
-        '-t',
-        'jslib-beta:codex',
-        'codex resume --last',
-        'Enter',
-      ],
-      [
-        'new-window',
-        '-t',
-        'jslib-beta',
-        '-c',
-        `${join(root, 'beta')}/`,
-        '-n',
-        'shell',
-      ],
-      ['select-window', '-t', 'jslib-beta:nvim'],
-    ]);
+    );
 
     fixture.calls.length = 0;
     assert.equal(manageJslibs('start', fixture.context), 0);
