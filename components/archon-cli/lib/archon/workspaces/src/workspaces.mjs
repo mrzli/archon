@@ -1,12 +1,14 @@
 import { spawnSync } from 'node:child_process';
 
 import { manageFlashcards } from './flashcards.mjs';
+import { manageGeneral } from './general.mjs';
 import { manageJslibs } from './jslibs.mjs';
 import { manageMiscProjects } from './misc-projects.mjs';
 
-const GROUPS = ['flashcards', 'jslibs', 'misc-projects'];
+const GROUPS = ['general', 'flashcards', 'jslibs', 'misc-projects'];
 const GROUP_HANDLERS = {
   flashcards: manageFlashcards,
+  general: manageGeneral,
   jslibs: manageJslibs,
   'misc-projects': manageMiscProjects,
 };
@@ -24,13 +26,14 @@ export function main(arguments_, context = {}) {
   }
 
   if (parsed.group !== undefined) {
-    return runGroup(parsed.group, parsed.action, {
+    const status = runGroup(parsed.group, parsed.action, {
       ...context,
       capture,
       groupHandlers,
       printError,
       run,
     });
+    return attachAfterStart(status, parsed, { ...context, capture, run });
   }
 
   const groups =
@@ -52,7 +55,39 @@ export function main(arguments_, context = {}) {
     }
   }
 
-  return status;
+  return attachAfterStart(status, parsed, { ...context, capture, run });
+}
+
+function attachAfterStart(status, parsed, context) {
+  const environment = context.environment ?? process.env;
+  const isTTY = context.isTTY ?? process.stdin.isTTY;
+  if (status !== 0 || parsed.action !== 'start' || environment.TMUX || !isTTY) {
+    return status;
+  }
+
+  const result = context.capture('tmux', ['list-sessions', '-F', '#S']);
+  if (result.status !== 0) {
+    if (/no server running|no sessions|error connecting/.test(result.output)) {
+      return 0;
+    }
+    (context.printError ?? console.error)(`Failed to list tmux sessions: ${result.output}`);
+    return 1;
+  }
+
+  const sessions = result.output.split('\n').filter((session) => {
+    switch (parsed.group) {
+      case 'general': { return session === 'main'; }
+      case 'flashcards': { return ['flashcards-fe', 'flashcards-be'].includes(session); }
+      case 'jslibs': { return session.startsWith('jslib-'); }
+      case 'misc-projects': { return session.startsWith('project-'); }
+      default: {
+        return session === 'main' || ['flashcards-fe', 'flashcards-be'].includes(session)
+          || session.startsWith('jslib-') || session.startsWith('project-');
+      }
+    }
+  });
+  const session = sessions.includes('main') ? 'main' : sessions[0];
+  return session ? context.run('tmux', ['attach-session', '-t', `=${session}`]) : 0;
 }
 
 function parseArguments(arguments_, print, printError) {
@@ -139,7 +174,7 @@ function getHelpText() {
     'Usage: archon workspaces <start|stop> [options]',
     '',
     'Options:',
-    '  -g, --group <group>  Run only flashcards, jslibs, or misc-projects',
+    '  -g, --group <group>  Run only flashcards, general, jslibs, or misc-projects',
     '  -h, --help           Show this help',
   ].join('\n');
 }

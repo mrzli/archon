@@ -59,6 +59,7 @@ test_aggregate_groups() {
   create_fixtures
 
   "$archon" workspaces start || return
+  assert_session_exists main || return
   assert_session_absent workspaces || return
   assert_session_absent projects || return
   assert_session_absent libs || return
@@ -72,6 +73,7 @@ test_aggregate_groups() {
   fi
 
   "$archon" workspaces stop || return
+  assert_session_absent main || return
   assert_session_absent workspaces || return
   assert_session_absent projects || return
   assert_session_absent libs || return

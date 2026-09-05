@@ -14,7 +14,12 @@ function createContext({ failures = {}, tmux = '' } = {}) {
     output,
     context: {
       environment: { TMUX: tmux },
+      isTTY: false,
       groupHandlers: {
+        general(action) {
+          calls.push(['general', action]);
+          return failures.general ?? 0;
+        },
         flashcards(action) {
           calls.push(['flashcards', action]);
           return failures.flashcards ?? 0;
@@ -55,7 +60,7 @@ test('help and invalid invocations do not run commands', () => {
 
 test('group options run only their selected group', () => {
   for (const option of ['--group', '-g']) {
-    for (const group of ['flashcards', 'jslibs', 'misc-projects']) {
+    for (const group of ['flashcards', 'general', 'jslibs', 'misc-projects']) {
       const fixture = createContext();
       assert.equal(main(['start', option, group], fixture.context), 0);
       assert.deepEqual(fixture.calls, [[group, 'start']]);
@@ -67,6 +72,7 @@ test('aggregate start runs every group without attaching or switching', () => {
   const fixture = createContext({ tmux: 'client' });
   assert.equal(main(['start'], fixture.context), 0);
   assert.deepEqual(fixture.calls, [
+    ['general', 'start'],
     ['flashcards', 'start'],
     ['jslibs', 'start'],
     ['misc-projects', 'start'],
@@ -77,6 +83,7 @@ test('aggregate start continues after failure', () => {
   const fixture = createContext({ failures: { flashcards: 1 } });
   assert.equal(main(['start'], fixture.context), 1);
   assert.deepEqual(fixture.calls, [
+    ['general', 'start'],
     ['flashcards', 'start'],
     ['jslibs', 'start'],
     ['misc-projects', 'start'],
@@ -93,6 +100,7 @@ test('aggregate stop uses reverse order', () => {
     ['misc-projects', 'stop'],
     ['jslibs', 'stop'],
     ['flashcards', 'stop'],
+    ['general', 'stop'],
   ]);
 });
 
@@ -103,6 +111,64 @@ test('aggregate stop continues after failure', () => {
     ['misc-projects', 'stop'],
     ['jslibs', 'stop'],
     ['flashcards', 'stop'],
+    ['general', 'stop'],
   ]);
   assert.deepEqual(fixture.errors, ['Failed to stop tmux group: jslibs']);
+});
+
+test('interactive starts attach to an existing session in the requested group', () => {
+  for (const [group, target] of [
+    [undefined, 'main'],
+    ['general', 'main'],
+    ['flashcards', 'flashcards-be'],
+    ['jslibs', 'jslib-example'],
+    ['misc-projects', 'project-mrzli-archon'],
+  ]) {
+    const fixture = createContext();
+    fixture.context.isTTY = true;
+    fixture.context.capture = (command, arguments_) => {
+      assert.equal(command, 'tmux');
+      assert.deepEqual(arguments_, ['list-sessions', '-F', '#S']);
+      return { status: 0, output: '0\nflashcards-be\njslib-example\nmain\nproject-mrzli-archon' };
+    };
+    const attachments = [];
+    fixture.context.run = (command, arguments_) => {
+      attachments.push([command, ...arguments_]);
+      return 0;
+    };
+    assert.equal(main(group ? ['start', '-g', group] : ['start'], fixture.context), 0);
+    assert.deepEqual(attachments, [['tmux', 'attach-session', '-t', `=${target}`]]);
+  }
+});
+
+test('interactive calls inside tmux, stop, help, and failed starts do not attach', () => {
+  for (const [arguments_, options, status] of [
+    [['start'], { tmux: 'client' }, 0],
+    [['stop'], {}, 0],
+    [['--help'], {}, 0],
+    [['start'], { failures: { general: 1 } }, 1],
+  ]) {
+    const fixture = createContext(options);
+    fixture.context.isTTY = true;
+    fixture.context.capture = () => { throw new Error('unexpected session lookup'); };
+    assert.equal(main(arguments_, fixture.context), status);
+  }
+});
+
+test('attachment skips absent group sessions and propagates failures', () => {
+  for (const [result, attachStatus, expected] of [
+    [{ status: 0, output: 'unrelated' }, 0, 0],
+    [{ status: 1, output: 'no server running on socket' }, 0, 0],
+    [{ status: 1, output: 'permission denied' }, 0, 1],
+    [{ status: 0, output: 'main' }, 1, 1],
+  ]) {
+    const fixture = createContext();
+    fixture.context.isTTY = true;
+    fixture.context.capture = () => result;
+    fixture.context.run = () => {
+      assert.equal(result.output, 'main');
+      return attachStatus;
+    };
+    assert.equal(main(['start', '-g', 'general'], fixture.context), expected);
+  }
 });
