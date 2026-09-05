@@ -31,8 +31,6 @@ const ORGANIZATION_BLACKLIST = [
   'mrzli-vscode-extensions',
 ];
 const REPOSITORY_BLACKLIST = [];
-let REQUIRED_ROOT_DIR;
-let ROOT_DIR;
 const REPOSITORY_QUERY = [
   '.[]',
   '| [',
@@ -51,35 +49,35 @@ const REPOSITORY_QUERY = [
 
 export async function main(arguments_, context = {}) {
   const homeDir = context.homeDir ?? homedir();
-  REQUIRED_ROOT_DIR = resolve(homeDir, 'projects/personal');
-  ROOT_DIR = resolve(context.rootDir ?? REQUIRED_ROOT_DIR);
+  const requiredRootDir = resolve(homeDir, 'projects/personal');
+  const rootDir = resolve(context.rootDir ?? requiredRootDir);
 
   try {
-    return await runCommand(arguments_);
+    return await runCommand(arguments_, { requiredRootDir, rootDir });
   } catch (error) {
     console.error(`Unexpected error: ${getErrorMessage(error)}`);
     return 1;
   }
 }
 
-async function runCommand(arguments_) {
+async function runCommand(arguments_, paths) {
   const [command, ...extraArguments] = arguments_;
 
   switch (command) {
     case 'delete': {
-      return deleteLocalRepositories(extraArguments);
+      return deleteLocalRepositories(extraArguments, paths);
     }
     case 'prune': {
-      return pruneLocalRepositories(extraArguments);
+      return pruneLocalRepositories(extraArguments, paths);
     }
     case 'remote': {
       return listRemoteRepositories(extraArguments);
     }
     case 'status': {
-      return showLocalRepositoryStatuses(extraArguments);
+      return showLocalRepositoryStatuses(extraArguments, paths.rootDir);
     }
     case 'sync': {
-      return syncRepositories(extraArguments);
+      return syncRepositories(extraArguments, paths.rootDir);
     }
     case 'help':
     case '--help':
@@ -99,14 +97,14 @@ async function runCommand(arguments_) {
 // Command: delete
 // =============================================================================
 
-async function deleteLocalRepositories(arguments_) {
+async function deleteLocalRepositories(arguments_, paths) {
   return deleteRepositories(arguments_, {
-    emptyMessage: `No local Git repositories found under ${ROOT_DIR}/<owner>/<repository>.`,
-    findRepositories: findLocalRepositories,
+    emptyMessage: `No local Git repositories found under ${paths.rootDir}/<owner>/<repository>.`,
+    findRepositories: () => findLocalRepositories(paths.rootDir),
     inspectRepositories: inspectLocalRepositories,
     printHelp: printDeleteHelp,
-    requiredRootDir: REQUIRED_ROOT_DIR,
-    rootDir: ROOT_DIR,
+    requiredRootDir: paths.requiredRootDir,
+    rootDir: paths.rootDir,
   });
 }
 
@@ -132,9 +130,10 @@ function getDeleteHelpText() {
 // Command: prune
 // =============================================================================
 
-async function pruneLocalRepositories(arguments_) {
+async function pruneLocalRepositories(arguments_, paths) {
   return pruneRepositories(arguments_, {
-    findPrunableRepositories,
+    findPrunableRepositories: (remoteRepositories) =>
+      findPrunableRepositories(remoteRepositories, paths.rootDir),
     findRestoredRepositories,
     getRemoteRepositories: (refresh) =>
       refresh
@@ -143,15 +142,15 @@ async function pruneLocalRepositories(arguments_) {
     getRepositoryName: (repository) => repository.nameWithOwner,
     inspectRepositories: inspectLocalRepositories,
     printHelp: printPruneHelp,
-    requiredRootDir: REQUIRED_ROOT_DIR,
-    rootDir: ROOT_DIR,
+    requiredRootDir: paths.requiredRootDir,
+    rootDir: paths.rootDir,
   });
 }
 
-function findPrunableRepositories(remoteRepositories) {
+function findPrunableRepositories(remoteRepositories, rootDir) {
   const remoteNames = new Set(remoteRepositories.map(repositoryKey));
 
-  return findLocalRepositories().filter(
+  return findLocalRepositories(rootDir).filter(
     (repository) =>
       !isRepositoryBlacklisted(repository) &&
       !remoteNames.has(repositoryKey(repository)),
@@ -260,7 +259,7 @@ function getRemoteHelpText() {
 // Command: status
 // =============================================================================
 
-function showLocalRepositoryStatuses(arguments_) {
+function showLocalRepositoryStatuses(arguments_, rootDir) {
   if (isHelpRequest(arguments_)) {
     printStatusHelp();
     return 0;
@@ -272,11 +271,11 @@ function showLocalRepositoryStatuses(arguments_) {
     return 1;
   }
 
-  const repositories = findLocalRepositories();
+  const repositories = findLocalRepositories(rootDir);
 
   if (repositories.length === 0) {
     console.log(
-      `No local Git repositories found under ${ROOT_DIR}/<owner>/<repository>.`,
+      `No local Git repositories found under ${rootDir}/<owner>/<repository>.`,
     );
     return 0;
   }
@@ -328,11 +327,12 @@ function getStatusHelpText() {
 // Command: sync
 // =============================================================================
 
-function syncRepositories(arguments_) {
+function syncRepositories(arguments_, rootDir) {
   return runSyncWorkflow(arguments_, {
-    cloneRepository: cloneRemoteRepository,
+    cloneRepository: (repository) =>
+      cloneRemoteRepository(repository, rootDir),
     compareRepositories,
-    findLocalRepositories,
+    findLocalRepositories: () => findLocalRepositories(rootDir),
     getRemoteRepositories,
     getRepositoryKey: repositoryKey,
     getRepositoryName: (repository) => repository.nameWithOwner,
@@ -340,8 +340,8 @@ function syncRepositories(arguments_) {
   });
 }
 
-function cloneRemoteRepository(repository) {
-  const ownerPath = join(ROOT_DIR, repository.owner);
+function cloneRemoteRepository(repository, rootDir) {
+  const ownerPath = join(rootDir, repository.owner);
   const destination = join(ownerPath, repository.name);
 
   if (pathExists(destination)) {
@@ -738,14 +738,14 @@ function inspectLocalRepositories(repositories, fetch) {
   );
 }
 
-function findLocalRepositories() {
+function findLocalRepositories(rootDir) {
   const repositories = [];
-  const owners = readdirSync(ROOT_DIR, { withFileTypes: true })
+  const owners = readdirSync(rootDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name !== '.git')
     .sort((left, right) => compareNames(left.name, right.name));
 
   for (const owner of owners) {
-    const ownerPath = join(ROOT_DIR, owner.name);
+    const ownerPath = join(rootDir, owner.name);
     for (const repository of findChildGitRepositories(ownerPath)) {
       repositories.push({
         owner: owner.name,

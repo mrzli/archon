@@ -1,6 +1,8 @@
 # ACI-003: Replace mutable root globals
 
-Status: pending
+Status: completed
+
+Completed: 2026-09-05
 
 Area: Projects and libraries architecture
 
@@ -15,19 +17,19 @@ general dependency-injection design or changing command behavior.
 
 ## Acceptance checklist
 
-- [ ] Remove mutable `ROOT_DIR` and `REQUIRED_ROOT_DIR` module variables from
+- [x] Remove mutable `ROOT_DIR` and `REQUIRED_ROOT_DIR` module variables from
       projects.
-- [ ] Remove mutable `ROOT_DIR` and `REQUIRED_ROOT_DIR` module variables from
+- [x] Remove mutable `ROOT_DIR` and `REQUIRED_ROOT_DIR` module variables from
       libraries.
-- [ ] Derive both roots locally for every `main(arguments, context)` call.
-- [ ] Pass paths to handlers or narrowly scoped closures that need them.
-- [ ] Do not pass root state into pure helpers that do not need it.
-- [ ] Preserve support for temporary `homeDir` and `rootDir` test contexts.
-- [ ] Demonstrate that invocations with distinct roots cannot overwrite one
+- [x] Derive both roots locally for every `main(arguments, context)` call.
+- [x] Pass paths to handlers or narrowly scoped closures that need them.
+- [x] Do not pass root state into pure helpers that do not need it.
+- [x] Preserve support for temporary `homeDir` and `rootDir` test contexts.
+- [x] Demonstrate that invocations with distinct roots cannot overwrite one
       another's state.
-- [ ] Preserve current missing-root failures, output, streams, exit statuses,
+- [x] Preserve current missing-root failures, output, streams, exit statuses,
       and side effects.
-- [ ] Do not introduce a runtime service container or class hierarchy.
+- [x] Do not introduce a runtime service container or class hierarchy.
 
 ## Verification
 
@@ -36,3 +38,10 @@ general dependency-injection design or changing command behavior.
 - Run `tests/archon-cli/run.sh`.
 - Run `node --check` on changed modules.
 - Run `git diff --check`.
+
+Completed by deriving a two-value `{ requiredRootDir, rootDir }` paths object in
+each domain `main()` invocation and passing only the required path values to
+command handlers and local-discovery closures. A direct-module regression
+covers repeated projects and libraries invocations with distinct roots. All 45
+Node tests and all 15 shell-suite checks pass. Node and Bash syntax checks and
+`git diff --check` pass; ShellCheck is unavailable.

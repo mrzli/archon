@@ -27,8 +27,6 @@ const GITHUB_OWNER = 'mrzli-jslib';
 const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
 const LOCAL_PACKAGE_PREFIX = `${LOCAL_PACKAGE_SCOPE}/`;
 const REQUIRED_ROOT_NAME = 'mrzli-jslib';
-let REQUIRED_ROOT_DIR;
-let ROOT_DIR;
 const DEPENDENCY_FIELDS = [
   'dependencies',
   'devDependencies',
@@ -42,45 +40,45 @@ const DEPENDENCY_FIELDS = [
 
 export async function main(arguments_, context = {}) {
   const homeDir = context.homeDir ?? homedir();
-  REQUIRED_ROOT_DIR = resolve(
+  const requiredRootDir = resolve(
     homeDir,
     'projects/personal',
     REQUIRED_ROOT_NAME,
   );
-  ROOT_DIR = resolve(context.rootDir ?? REQUIRED_ROOT_DIR);
+  const rootDir = resolve(context.rootDir ?? requiredRootDir);
 
   try {
-    return await runCommand(arguments_);
+    return await runCommand(arguments_, { requiredRootDir, rootDir });
   } catch (error) {
     console.error(`Unexpected error: ${getErrorMessage(error)}`);
     return 1;
   }
 }
 
-async function runCommand(arguments_) {
+async function runCommand(arguments_, paths) {
   const [command, ...extraArguments] = arguments_;
 
   switch (command) {
     case 'build': {
-      return buildLocalPackages(extraArguments);
+      return buildLocalPackages(extraArguments, paths.rootDir);
     }
     case 'delete': {
-      return deleteLocalRepositories(extraArguments);
+      return deleteLocalRepositories(extraArguments, paths);
     }
     case 'graph': {
-      return showDependencyGraph(extraArguments);
+      return showDependencyGraph(extraArguments, paths.rootDir);
     }
     case 'prune': {
-      return pruneLocalRepositories(extraArguments);
+      return pruneLocalRepositories(extraArguments, paths);
     }
     case 'remote': {
       return listRemoteRepositories(extraArguments);
     }
     case 'status': {
-      return showLocalRepositoryStatuses(extraArguments);
+      return showLocalRepositoryStatuses(extraArguments, paths.rootDir);
     }
     case 'sync': {
-      return syncRepositories(extraArguments);
+      return syncRepositories(extraArguments, paths.rootDir);
     }
     case 'help':
     case '--help':
@@ -100,7 +98,7 @@ async function runCommand(arguments_) {
 // Command: build
 // =============================================================================
 
-function buildLocalPackages(arguments_) {
+function buildLocalPackages(arguments_, rootDir) {
   if (isHelpRequest(arguments_)) {
     printBuildHelp();
     return 0;
@@ -113,7 +111,7 @@ function buildLocalPackages(arguments_) {
   let packages;
 
   try {
-    const graph = createDependencyGraph(findLocalRepositories());
+    const graph = createDependencyGraph(findLocalRepositories(rootDir));
 
     validateBuildScripts(graph);
     packages = orderPackagesForBuild(graph);
@@ -123,7 +121,7 @@ function buildLocalPackages(arguments_) {
   }
 
   if (packages.length === 0) {
-    console.log(`No local Git repositories found in ${ROOT_DIR}.`);
+    console.log(`No local Git repositories found in ${rootDir}.`);
     return 0;
   }
 
@@ -255,14 +253,14 @@ function getBuildHelpText() {
 // Command: delete
 // =============================================================================
 
-async function deleteLocalRepositories(arguments_) {
+async function deleteLocalRepositories(arguments_, paths) {
   return deleteRepositories(arguments_, {
-    emptyMessage: `No local Git repositories found in ${ROOT_DIR}.`,
-    findRepositories: findLocalRepositories,
+    emptyMessage: `No local Git repositories found in ${paths.rootDir}.`,
+    findRepositories: () => findLocalRepositories(paths.rootDir),
     inspectRepositories: inspectLocalRepositories,
     printHelp: printDeleteHelp,
-    requiredRootDir: REQUIRED_ROOT_DIR,
-    rootDir: ROOT_DIR,
+    requiredRootDir: paths.requiredRootDir,
+    rootDir: paths.rootDir,
   });
 }
 
@@ -288,7 +286,7 @@ function getDeleteHelpText() {
 // Command: graph
 // =============================================================================
 
-function showDependencyGraph(arguments_) {
+function showDependencyGraph(arguments_, rootDir) {
   if (isHelpRequest(arguments_)) {
     printGraphHelp();
     return 0;
@@ -299,9 +297,9 @@ function showDependencyGraph(arguments_) {
   }
 
   try {
-    const graph = createDependencyGraph(findLocalRepositories());
+    const graph = createDependencyGraph(findLocalRepositories(rootDir));
 
-    printDependencyGraph(graph);
+    printDependencyGraph(graph, rootDir);
     return 0;
   } catch (error) {
     console.error(
@@ -311,9 +309,9 @@ function showDependencyGraph(arguments_) {
   }
 }
 
-function printDependencyGraph(graph) {
+function printDependencyGraph(graph, rootDir) {
   if (graph.length === 0) {
-    console.log(`No local Git repositories found in ${ROOT_DIR}.`);
+    console.log(`No local Git repositories found in ${rootDir}.`);
     return;
   }
 
@@ -349,20 +347,21 @@ function getGraphHelpText() {
 // Command: prune
 // =============================================================================
 
-async function pruneLocalRepositories(arguments_) {
+async function pruneLocalRepositories(arguments_, paths) {
   return pruneRepositories(arguments_, {
-    findPrunableRepositories,
+    findPrunableRepositories: (remoteRepositories) =>
+      findPrunableRepositories(remoteRepositories, paths.rootDir),
     findRestoredRepositories,
     getRemoteRepositories: () => getRemoteRepositories(),
     getRepositoryName: (repository) => repository.name,
     inspectRepositories: inspectLocalRepositories,
     printHelp: printPruneHelp,
-    requiredRootDir: REQUIRED_ROOT_DIR,
-    rootDir: ROOT_DIR,
+    requiredRootDir: paths.requiredRootDir,
+    rootDir: paths.rootDir,
   });
 }
 
-function findPrunableRepositories(remoteRepositories) {
+function findPrunableRepositories(remoteRepositories, rootDir) {
   if (remoteRepositories.length >= 1000) {
     console.error(
       'Refusing to prune: the remote repository list may be truncated at 1000 entries.',
@@ -373,7 +372,7 @@ function findPrunableRepositories(remoteRepositories) {
   const remoteNames = new Set(
     remoteRepositories.map((repository) => repository.name),
   );
-  return findLocalRepositories().filter(
+  return findLocalRepositories(rootDir).filter(
     (repository) => !remoteNames.has(repository.name),
   );
 }
@@ -476,7 +475,7 @@ function getRemoteHelpText() {
 // Command: status
 // =============================================================================
 
-function showLocalRepositoryStatuses(arguments_) {
+function showLocalRepositoryStatuses(arguments_, rootDir) {
   if (isHelpRequest(arguments_)) {
     printStatusHelp();
     return 0;
@@ -488,10 +487,10 @@ function showLocalRepositoryStatuses(arguments_) {
     return 1;
   }
 
-  const repositories = findLocalRepositories();
+  const repositories = findLocalRepositories(rootDir);
 
   if (repositories.length === 0) {
-    console.log(`No local Git repositories found in ${ROOT_DIR}.`);
+    console.log(`No local Git repositories found in ${rootDir}.`);
     return 0;
   }
 
@@ -542,11 +541,12 @@ function getStatusHelpText() {
 // Command: sync
 // =============================================================================
 
-function syncRepositories(arguments_) {
+function syncRepositories(arguments_, rootDir) {
   return runSyncWorkflow(arguments_, {
-    cloneRepository: cloneRemoteRepository,
+    cloneRepository: (repository) =>
+      cloneRemoteRepository(repository, rootDir),
     compareRepositories: (left, right) => left.name.localeCompare(right.name),
-    findLocalRepositories,
+    findLocalRepositories: () => findLocalRepositories(rootDir),
     getRemoteRepositories,
     getRepositoryKey: (repository) => repository.name,
     getRepositoryName: (repository) => repository.name,
@@ -554,10 +554,10 @@ function syncRepositories(arguments_) {
   });
 }
 
-function cloneRemoteRepository(repository) {
+function cloneRemoteRepository(repository, rootDir) {
   const result = runProcess(
     'gh',
-    ['repo', 'clone', repository.nameWithOwner, join(ROOT_DIR, repository.name)],
+    ['repo', 'clone', repository.nameWithOwner, join(rootDir, repository.name)],
     { encoding: 'utf8' },
   );
 
@@ -881,8 +881,8 @@ function inspectLocalRepositories(repositories, fetch) {
   return inspectRepositories(repositories, fetch, (repository) => repository.name);
 }
 
-function findLocalRepositories() {
-  return findChildGitRepositories(ROOT_DIR)
+function findLocalRepositories(rootDir) {
+  return findChildGitRepositories(rootDir)
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
