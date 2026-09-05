@@ -7,7 +7,7 @@ Status: provisional
 Archon CLI already provides the intended core command surface for personal
 repositories, JavaScript libraries, and tmux workspaces. This specification
 defines focused user-visible improvements to reliability, empty-state
-behavior, domain clarity, and command conventions.
+behavior, and command conventions.
 
 Behavior-preserving preparatory work is specified separately in
 [`../archon-cli-internal/spec.md`](../archon-cli-internal/spec.md). Completing
@@ -19,8 +19,6 @@ requirements do not, however, depend on a particular internal file layout.
 
 - Make workspace startup recover from partially completed tmux setup.
 - Treat absent managed roots as normal empty or bootstrap states.
-- Establish `projects` as the umbrella repository view and `libs` as its
-  specialized JavaScript-library subset.
 - Use consistent exit statuses for usage and operational failures.
 - Preserve existing destructive-operation safeguards.
 
@@ -34,33 +32,6 @@ requirements do not, however, depend on a particular internal file layout.
 - Changing repository synchronization, build, graph, prune, or deletion
   semantics except where this specification says otherwise.
 - Implementing optional new commands as part of the required baseline.
-
-## Projects is the umbrella domain
-
-The command roots intentionally overlap:
-
-```text
-projects: ~/projects/personal/<owner>/<repository>
-libs:     ~/projects/personal/mrzli-jslib/<repository>
-```
-
-`projects` is the complete personal repository view. `libs` is a specialized
-view over the `mrzli-jslib` subset, adding dependency graph and build behavior.
-
-Existing local discovery, remote inventory, status, synchronization, prune,
-and deletion behavior remains unchanged. In particular, projects operations
-continue to include repositories beneath `mrzli-jslib`.
-
-Command help and durable documentation must make this relationship explicit:
-
-- Projects documentation must state that it includes `mrzli-jslib`.
-- Libraries documentation must state that its repositories are also visible
-  through projects commands.
-- `projects delete` and `projects prune` help must explicitly warn that their
-  target set can include the library repositories.
-
-This section clarifies current behavior; it does not add a new exclusion or
-inventory rule.
 
 ## Recoverable workspace creation
 
@@ -170,11 +141,10 @@ and claim that the helper returns an ordinary status result.
 After the behavior-preserving internal work, implement the functional changes
 as separate checkpoints:
 
-1. Document and test the umbrella domain semantics.
-2. Add transactional workspace rollback and retry coverage.
-3. Add missing-root behavior one command domain at a time.
-4. Standardize usage-error exit statuses.
-5. Run the complete focused suite after every checkpoint.
+1. Add transactional workspace rollback and retry coverage.
+2. Add missing-root behavior one command domain at a time.
+3. Standardize usage-error exit statuses.
+4. Run the complete focused suite after every checkpoint.
 
 The workspace fix may be implemented before the repository empty-state work;
 the two behaviors are independent. Do not combine optional commands with the
@@ -222,9 +192,7 @@ This feature is not part of the required acceptance criteria.
 When implemented:
 
 - Update the root Archon CLI README with exit-status conventions.
-- Update projects and libraries READMEs with the umbrella relationship and
-  missing-root behavior.
-- Update projects destructive command help with the library-overlap warning.
+- Update projects and libraries READMEs with missing-root behavior.
 - Update workspace documentation with rollback behavior only if it is useful
   operational knowledge; internal cleanup mechanics need not be exposed.
 - If an optional command is later implemented, update its command help and
@@ -250,9 +218,6 @@ repository's scratch-document policy.
 
 The required functional work is complete when:
 
-- Projects is explicitly documented as the umbrella repository view,
-  including libraries managed by the specialized `libs` command.
-- Destructive projects help makes the library overlap clear.
 - A failure after tmux session creation cannot leave an unrecoverable managed
   workspace.
 - Repeating workspace start after an injected partial failure creates the full
