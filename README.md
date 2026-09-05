@@ -84,6 +84,12 @@ untouched. Repository-only files listed in `data/home-copy-ignore.txt` are not
 installed. It separately installs the runtime-only Archon CLI from
 `components/archon-cli` into `~/.local/bin` and `~/.local/lib/archon`.
 
+These operations live in `scripts/install-home.sh`, which setup and the
+installation tests both invoke with explicit repository and destination paths.
+The default is an overlay; `setup.sh --delete-managed-home-dirs` first removes
+directories listed in `data/home-replace-directories.txt`. Tests exercise both
+modes against temporary homes without running workstation provisioning.
+
 ## Manual Steps
 
 ### Wi-Fi
