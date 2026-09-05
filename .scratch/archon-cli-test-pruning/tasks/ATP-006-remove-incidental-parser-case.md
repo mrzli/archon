@@ -1,6 +1,6 @@
 # ATP-006: Remove the incidental parser-permissiveness test
 
-Status: pending
+Status: completed
 
 Source: [Task index](../tasks.md) · [Specification](../spec.md)
 
@@ -12,9 +12,9 @@ Production changes and new tests are prohibited.
 
 ## Acceptance checklist
 
-- [ ] Delete `library GitHub non-name fields retain current values`.
-- [ ] Keep normal inventory parsing and malformed-input/name-field rejection cases.
-- [ ] Do not change parser behavior or add stricter-validation tests.
+- [x] Delete `library GitHub non-name fields retain current values`.
+- [x] Keep normal inventory parsing and malformed-input/name-field rejection cases.
+- [x] Do not change parser behavior or add stricter-validation tests.
 
 ## Verification
 
@@ -25,3 +25,7 @@ Production changes and new tests are prohibited.
 ## Coverage decision
 
 Empty names and undefined flags are no longer pinned as a required contract by a dedicated test.
+
+Completed: 2026-09-06. Removed the empty-name/undefined-flag case. The existing
+library inventory test file and Node syntax check passed. Normal parsing and
+malformed-input rejection tests remain; the parser is unchanged.

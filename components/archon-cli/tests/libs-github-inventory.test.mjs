@@ -48,22 +48,3 @@ test('library GitHub repositories require string name fields', () => {
     );
   }
 });
-
-test('library GitHub non-name fields retain current values', () => {
-  assert.deepEqual(
-    parseRemoteRepositories(JSON.stringify([
-      {
-        name: '',
-        nameWithOwner: '',
-      },
-    ])),
-    [
-      {
-        name: '',
-        nameWithOwner: '',
-        isPrivate: undefined,
-        isArchived: undefined,
-      },
-    ],
-  );
-});
