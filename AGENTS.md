@@ -99,6 +99,11 @@ searching so `.scratch/` is not skipped.
 
 ## Setup Invariants
 
+Keep `setup.sh` focused on provisioning and maintaining the current desired
+state. Do not add one-time migration or cleanup steps for superseded
+configurations, names, or paths. Put those operations in a separate migration
+script or provide explicit manual commands instead.
+
 `setup.sh` must remain convergent and repeat-safe.
 
 Running it repeatedly on an already-configured machine must:
