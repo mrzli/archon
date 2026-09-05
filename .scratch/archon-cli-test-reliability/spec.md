@@ -1,6 +1,8 @@
 # Archon CLI test reliability
 
-Status: proposed
+Status: completed and archived
+
+Completed: 2026-09-06
 
 Implementation plan: [Task index](./tasks.md)
 
@@ -185,3 +187,16 @@ options solely to support test isolation.
 - Record verification results and any unavailable checks, then mark this
   specification completed and archived. Enduring operational guidance belongs
   in the relevant README or `docs/`, not only in this proposal.
+
+## Completion record
+
+All six tasks were implemented in separate commits. The complete suite passed
+with terminal and non-terminal stdin. Focused verification rejected a later
+invalid Bash file, confirmed valid paths containing spaces, validated attachment
+targets without real tmux, and exercised production replacement and isolated
+Git workflows under synthetic conflicting settings. Node and individual Bash
+syntax checks and whitespace checks passed. ShellCheck was unavailable.
+
+The installation extraction preserves the existing default overlay and optional
+managed-directory replacement modes. Full workstation setup was not executed.
+Maintained guidance is in the root README and `components/archon-cli/tests/README.md`.

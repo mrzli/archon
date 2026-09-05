@@ -24,3 +24,59 @@ Test behavior at the lowest layer that fully protects the contract:
   the fake-tmux end-to-end adapter check.
 
 Tests must not use the real home directory, GitHub account, or tmux server.
+
+## Complete verification
+
+```bash
+bash tests/archon-cli/run.sh
+bash tests/archon-cli/run.sh < /dev/null
+```
+
+Both invocations must pass. The complete runner includes the component suite,
+workspace adapter, production installation and migration checks, individual
+Bash syntax checks, and whitespace validation. ShellCheck runs when installed
+and is explicitly reported as unavailable otherwise.
+
+The suite requires Bash, Node.js, Git, rsync, standard Arch command-line tools,
+and the util-linux `script` utility. Terminal tests use coreutils `timeout` to
+bound each pseudo-terminal command to 15 seconds. A missing terminal-test
+prerequisite fails the adapter explicitly.
+
+## Workspace fixtures
+
+Each adapter case owns a temporary home, project roots, fake tmux state, and
+command log, cleaned up by its subshell's exit trap. Non-interactive CLI calls
+read stdin from `/dev/null`; terminal cases run the actual CLI through `script`
+with fake tmux on PATH. The fake validates existing attachment targets, including
+exact `=name` targets, and records attachments without opening a tmux client.
+Keep module tests for failure and routing policy; use terminal integration
+tests for actual environment and stdin wiring.
+
+## Git fixtures
+
+Use `createGitEnvironment` for child processes and the synchronous
+`withGitFixture` scope for in-process real-Git workflows. `runArchon` applies
+the same environment automatically. These helpers strip inherited `GIT_*`
+settings, use a temporary home/config location, disable global/system Git
+configuration, hooks, and commit signing, and provide a test identity.
+Pass intentional per-test environment overrides explicitly.
+
+`withGitFixture` restores the original process environment and removes its
+fixture in `finally`. Its callback must be synchronous; do not run concurrent
+tests that change process environment within the same test process. Real Git
+repositories and remotes must remain local to temporary fixtures. The Git
+environment regression test runs the real-Git suites under synthetic conflicting
+settings and verifies that sentinel hooks/signers and a decoy index are unused.
+
+## Installation fixtures
+
+Setup and layout tests share [scripts/install-home.sh](../../../scripts/install-home.sh).
+It receives an explicit repository root, destination home, and `true`/`false`
+replacement mode. Default setup uses overlay mode; `--delete-managed-home-dirs`
+selects replacement using `data/home-replace-directories.txt` before installation.
+
+Tests invoke this phase against temporary homes, including a path containing
+spaces. They must let the production replacement operation remove seeded stale
+modules. Keep overlay preservation assertions separate from managed-directory
+replacement assertions, and verify unrelated sibling files survive both modes.
+Never run complete workstation setup as a verification step.

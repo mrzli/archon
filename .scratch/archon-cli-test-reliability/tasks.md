@@ -1,12 +1,13 @@
 # Archon CLI test reliability tasks
 
-Status: planned
+Status: completed and archived
+
+Completed: 2026-09-06
 
 Source: [Archon CLI test reliability](./spec.md)
 
-Execute in the order below. All tasks are pending; creating this plan does not
-mark any implementation complete. The source specification remains the full
-requirements record.
+All six tasks below are complete, each in a separate commit. This index and the
+source specification remain the archived implementation and requirements record.
 
 Keep CLI behavior unchanged. Use temporary installation targets and Git
 repositories, fake tmux, and bounded terminal subprocesses. Never execute full
@@ -71,3 +72,10 @@ Verify: Audit every acceptance case in the source spec against test coverage or 
 - Real Git tests are insulated from personal configuration and inherited overrides.
 - Durable documentation and final verification records are complete.
 
+## Final verification
+
+Terminal and non-terminal runs of the canonical suite passed. The workspace
+adapter passed all six cases; installation and migration checks passed two
+cases each. The Git isolation regression passed with synthetic external signing,
+hook, index, and repository settings. Individual Bash and Node syntax checks and
+whitespace checks passed. ShellCheck was unavailable and explicitly skipped.
