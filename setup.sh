@@ -202,7 +202,10 @@ rsync -a --exclude-from="$home_copy_ignore_file" "$home_source_dir"/ "$HOME"/
 
 # Install the Archon CLI from its repository component.
 log_step "Installing Archon CLI"
-"$archon_cli_source_dir/install.sh" "$HOME"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/lib/archon"
+rsync -a --exclude='*.md' "$archon_cli_source_dir/lib/archon"/ "$HOME/.local/lib/archon"/
+install -m 755 "$archon_cli_source_dir/bin/archon" "$HOME/.local/bin/archon"
+ln -sfn archon "$HOME/.local/bin/a"
 
 # Enable the LazyVim REST extra.
 lazyvim_config_file="$HOME/.config/nvim/lazyvim.json"

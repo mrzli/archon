@@ -41,17 +41,20 @@ copy_home_overlay() {
   rsync -a --exclude-from="$home_copy_ignore" "$home_source"/ "$home"/
 }
 
-install_archon_cli() {
+copy_archon_cli() {
   local home="$1"
 
-  "$archon_cli_source/install.sh" "$home"
+  mkdir -p "$home/.local/bin" "$home/.local/lib/archon"
+  rsync -a --exclude='*.md' "$archon_cli_source/lib/archon"/ "$home/.local/lib/archon"/
+  install -m 755 "$archon_cli_source/bin/archon" "$home/.local/bin/archon"
+  ln -sfn archon "$home/.local/bin/a"
 }
 
 install_home() {
   local home="$1"
 
   copy_home_overlay "$home"
-  install_archon_cli "$home"
+  copy_archon_cli "$home"
 }
 
 test_repeated_overlay_copy() {
