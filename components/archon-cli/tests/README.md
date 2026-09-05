@@ -33,7 +33,7 @@ bash tests/archon-cli/run.sh < /dev/null
 ```
 
 Both invocations must pass. The complete runner includes the component suite,
-workspace adapter, production installation and migration checks, individual
+workspace adapter, installation-layout and migration checks, individual
 Bash syntax checks, and whitespace validation. ShellCheck runs when installed
 and is explicitly reported as unavailable otherwise.
 
@@ -70,13 +70,9 @@ settings and verifies that sentinel hooks/signers and a decoy index are unused.
 
 ## Installation fixtures
 
-Setup and layout tests share [scripts/install-home.sh](../../../scripts/install-home.sh).
-It receives an explicit repository root, destination home, and `true`/`false`
-replacement mode. Default setup uses overlay mode; `--delete-managed-home-dirs`
-selects replacement using `data/home-replace-directories.txt` before installation.
-
-Tests invoke this phase against temporary homes, including a path containing
-spaces. They must let the production replacement operation remove seeded stale
-modules. Keep overlay preservation assertions separate from managed-directory
-replacement assertions, and verify unrelated sibling files survive both modes.
-Never run complete workstation setup as a verification step.
+Layout tests reproduce the CLI copy operations in temporary homes and check
+runtime imports, the shortcut, filtering, and repeated installation. Their
+replacement case simulates removal of the managed library directory; it does
+not execute or verify setup's removal implementation. Keep that limitation
+explicit when interpreting these checks. Production home-installation commands
+remain in `setup.sh`; never run complete workstation setup as a test.

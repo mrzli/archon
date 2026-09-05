@@ -2,6 +2,10 @@
 
 Status: completed
 
+Subsequent amendment: ACT-004 was reverted at the user's request on 2026-09-06.
+The test README now documents the restored layout checks and their limitation.
+The verification record below describes the original six-task implementation.
+
 Area: Documentation and final verification
 
 Depends on: ACT-001 through ACT-005

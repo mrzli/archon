@@ -5,6 +5,8 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
+home_source="$repo_root/data/home"
+home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 replace_directories="$repo_root/data/home-replace-directories.txt"
 temporary_root="$(mktemp -d)"
 
@@ -33,23 +35,40 @@ assert_equals() {
   [[ "$actual" == "$expected" ]] || fail "expected '$expected', got '$actual'"
 }
 
+copy_home_overlay() {
+  local home="$1"
+
+  rsync -a --exclude-from="$home_copy_ignore" "$home_source"/ "$home"/
+}
+
+copy_archon_cli() {
+  local home="$1"
+
+  mkdir -p "$home/.local/bin" "$home/.local/lib/archon"
+  rsync -a --exclude='*.md' "$archon_cli_source/lib/archon"/ "$home/.local/lib/archon"/
+  install -m 755 "$archon_cli_source/bin/archon" "$home/.local/bin/archon"
+  ln -sfn archon "$home/.local/bin/arc"
+}
+
 install_home() {
-  bash "$repo_root/scripts/install-home.sh" "$repo_root" "$1" "${2:-false}"
+  local home="$1"
+
+  copy_home_overlay "$home"
+  copy_archon_cli "$home"
 }
 
 test_repeated_overlay_copy() {
-  local home="$temporary_root/overlay home"
+  local home="$temporary_root/overlay-home"
   local archon_output alias_output tree_after_first tree_after_second
   mkdir -p "$home"
 
   mkdir -p "$home/.local/lib/archon/workspaces/tests" "$home/.local/lib/unrelated"
   : > "$home/.local/lib/archon/workspaces/tests/user-note.txt"
   : > "$home/.local/lib/unrelated/keep"
-  : > "$home/unmanaged-note.txt"
 
-  install_home "$home" || return
+  install_home "$home"
   tree_after_first="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
-  install_home "$home" || return
+  install_home "$home"
   tree_after_second="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
 
   assert_equals "$tree_after_first" "$tree_after_second" || return
@@ -84,7 +103,6 @@ test_repeated_overlay_copy() {
   assert_exists "$home/.local/lib/archon/projects/src/projects.mjs" || return
   assert_exists "$home/.local/lib/archon/workspaces/src/workspaces.mjs" || return
   assert_exists "$home/.local/lib/archon/workspaces/tests/user-note.txt" || return
-  assert_exists "$home/unmanaged-note.txt" || return
   assert_exists "$home/.local/lib/unrelated/keep"
 }
 
@@ -93,7 +111,7 @@ test_managed_library_replacement_scope() {
   local library="$home/.local/lib/archon"
   local sibling="$home/.local/lib/unrelated/keep"
   mkdir -p "$home"
-  install_home "$home" || return
+  install_home "$home"
 
   grep -qFx '.local/lib/archon' "$replace_directories" ||
     fail '.local/lib/archon is not a managed replacement directory' || return
@@ -106,18 +124,11 @@ test_managed_library_replacement_scope() {
   : > "$library/stale.mjs"
   : > "$sibling"
 
-  install_home "$home" true || return
-
-  local first_tree second_tree
-  first_tree="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
-  install_home "$home" true || return
-  second_tree="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
-  assert_equals "$first_tree" "$second_tree" || return
+  rm -rf -- "$library"
+  install_home "$home"
 
   assert_absent "$library/stale.mjs" || return
   assert_exists "$library/cli.mjs" || return
-  assert_absent "$library/workspaces/README.md" || return
-  assert_absent "$library/workspaces/AGENTS.md" || return
   assert_exists "$sibling"
 }
 

@@ -2,6 +2,12 @@
 
 Status: completed and archived
 
+Amendment (2026-09-06): the shared installation extraction in section 3 and
+ACT-004 was reverted at the user's request. Production installation stays in
+`setup.sh`; layout tests retain their original simulation and its coverage
+limitation. Other test improvements remain. The original requirements and
+completion record below are retained as history.
+
 Completed: 2026-09-06
 
 Implementation plan: [Task index](./tasks.md)

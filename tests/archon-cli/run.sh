@@ -26,7 +26,6 @@ mapfile -t bash_check_paths < <(
 bash_check_paths=(
   "$repo_root/setup.sh"
   "$repo_root/migrations/archon-cli.sh"
-  "$repo_root/scripts/install-home.sh"
   "${bash_check_paths[@]}"
 )
 

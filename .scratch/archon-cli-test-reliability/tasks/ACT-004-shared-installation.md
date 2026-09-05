@@ -1,6 +1,11 @@
 # ACT-004: Test shared production installation operations
 
-Status: completed
+Status: reverted at user request
+
+Reverted: 2026-09-06. The extraction was judged too broad for the test benefit.
+Home installation remains in `setup.sh`, and layout tests retain their original
+simulation. The completed checklist below records the implementation before
+reversion; it does not describe the current code.
 
 Area: CLI installation and layout tests
 

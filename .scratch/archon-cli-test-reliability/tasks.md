@@ -6,8 +6,10 @@ Completed: 2026-09-06
 
 Source: [Archon CLI test reliability](./spec.md)
 
-All six tasks below are complete, each in a separate commit. This index and the
-source specification remain the archived implementation and requirements record.
+All six tasks were implemented in separate commits. ACT-004 was subsequently
+reverted at the user's request because the installation extraction was too broad.
+The other improvements remain. The task descriptions and original verification
+record below are retained as history, not instructions to restore ACT-004.
 
 Keep CLI behavior unchanged. Use temporary installation targets and Git
 repositories, fake tmux, and bounded terminal subprocesses. Never execute full
