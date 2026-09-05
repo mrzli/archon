@@ -1,6 +1,8 @@
 # ACI-004: Extract libraries build logic
 
-Status: pending
+Status: completed
+
+Completed: 2026-09-05
 
 Area: Libraries architecture
 
@@ -15,19 +17,19 @@ independently tested domain unit while preserving command orchestration.
 
 ## Acceptance checklist
 
-- [ ] Extract manifest reading/validation only where it supports a coherent
+- [x] Extract manifest reading/validation only where it supports a coherent
       boundary between filesystem orchestration and pure policy.
-- [ ] Extract local dependency resolution and graph construction.
-- [ ] Extract duplicate-name and dependency-cycle detection.
-- [ ] Extract dependency-first build ordering and build-script validation.
-- [ ] Expose pure functions needed by focused tests without adding a CLI API.
-- [ ] Keep Bun invocation and user-facing build progress in the libraries
+- [x] Extract local dependency resolution and graph construction.
+- [x] Extract duplicate-name and dependency-cycle detection.
+- [x] Extract dependency-first build ordering and build-script validation.
+- [x] Expose pure functions needed by focused tests without adding a CLI API.
+- [x] Keep Bun invocation and user-facing build progress in the libraries
       command orchestration.
-- [ ] Preserve supported dependency fields and `file:` protocol rules.
-- [ ] Preserve frozen Bun installs, disabled lifecycle scripts, and one explicit
+- [x] Preserve supported dependency fields and `file:` protocol rules.
+- [x] Preserve frozen Bun installs, disabled lifecycle scripts, and one explicit
       build per package.
-- [ ] Preserve all graph and build output, ordering, errors, and exit statuses.
-- [ ] Avoid one-file-per-command fragmentation or a generic graph framework.
+- [x] Preserve all graph and build output, ordering, errors, and exit statuses.
+- [x] Avoid one-file-per-command fragmentation or a generic graph framework.
 
 ## Verification
 
@@ -37,3 +39,11 @@ independently tested domain unit while preserving command orchestration.
 - Run `tests/archon-cli/run.sh`.
 - Run `node --check` on changed modules.
 - Run `git diff --check`.
+
+Completed by moving package manifest loading, dependency validation, graph
+construction, cycle detection, build ordering, and build-script validation to
+one `libs/src/build.mjs` domain module. Bun execution and all CLI output remain
+in `libs.mjs`. Four focused module tests cover canonical-path graph resolution,
+dependency-first ordering, exact cycle errors, and build-script validation.
+All 49 Node tests and all 15 shell-suite checks pass. Node and Bash syntax
+checks and `git diff --check` pass; ShellCheck is unavailable.
