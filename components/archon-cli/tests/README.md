@@ -64,9 +64,7 @@ Pass intentional per-test environment overrides explicitly.
 `withGitFixture` restores the original process environment and removes its
 fixture in `finally`. Its callback must be synchronous; do not run concurrent
 tests that change process environment within the same test process. Real Git
-repositories and remotes must remain local to temporary fixtures. The Git
-environment regression test runs the real-Git suites under synthetic conflicting
-settings and verifies that sentinel hooks/signers and a decoy index are unused.
+repositories and remotes must remain local to temporary fixtures.
 
 ## Installation fixtures
 
