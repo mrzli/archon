@@ -140,6 +140,7 @@ done
 # Install globally managed mise tools.
 mise_tools=(
   pnpm
+  go
 )
 
 log_step "Installing mise tools"
