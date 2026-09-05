@@ -8,9 +8,12 @@ import {
   removeFixture,
   runArchon,
   writeExecutable,
-} from './characterization-helpers.mjs';
+} from './test-helpers.mjs';
 
 const USAGE_CASES = [
+  [],
+  ['unknown'],
+  ['help', 'extra'],
   ['projects'],
   ['projects', 'unknown'],
   ['projects', 'delete', '--invalid'],
@@ -31,10 +34,13 @@ const USAGE_CASES = [
   ['libs', 'sync', '--invalid'],
   ['libs', 'help', 'unknown'],
   ['libs', 'help', 'status', 'extra'],
+  ['workspaces'],
+  ['workspaces', 'launch'],
+  ['workspaces', 'start', '--group', 'hubs'],
 ];
 
 for (const arguments_ of USAGE_CASES) {
-  test(`${arguments_.join(' ')} is a usage error`, () => {
+  test(`${arguments_.join(' ') || 'archon'} is a usage error`, () => {
     const fixture = createFixture('usage-status');
 
     try {
@@ -49,6 +55,7 @@ for (const arguments_ of USAGE_CASES) {
 
 for (const arguments_ of [
   ['help'],
+  ['-h'],
   ['--help'],
   ['projects', '--help'],
   ['projects', 'help'],

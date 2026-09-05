@@ -8,7 +8,7 @@ import { main as runProjects } from '../../data/home/.local/lib/archon/projects/
 import {
   createFixture,
   removeFixture,
-} from './characterization-helpers.mjs';
+} from './test-helpers.mjs';
 
 test('projects and libraries invocations keep distinct root paths', async () => {
   const fixture = createFixture('root-context');

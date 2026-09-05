@@ -14,7 +14,7 @@ import {
   removeFixture,
   runArchon,
   writeExecutable,
-} from './characterization-helpers.mjs';
+} from './test-helpers.mjs';
 
 const BLACKLISTED_ORGANIZATIONS = [
   'mrzli-courses',

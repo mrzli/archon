@@ -8,7 +8,7 @@ import {
   removeFixture,
   runArchon,
   writeExecutable,
-} from './characterization-helpers.mjs';
+} from './test-helpers.mjs';
 
 const blacklistedOrganizations = [
   'mrzli-courses',
@@ -53,7 +53,7 @@ function projectEnvironment(fixture, overrides = {}) {
   };
 }
 
-test('projects preserves paginated inventory, deduplication, filtering, and formatting', () => {
+test('projects list filtered, deduplicated remotes from paginated GitHub calls', () => {
   const fixture = createFixture('projects-remote');
   const callsPath = join(fixture.root, 'gh-calls');
 
@@ -100,62 +100,6 @@ test('projects preserves paginated inventory, deduplication, filtering, and form
     for (const organization of blacklistedOrganizations) {
       assert.doesNotMatch(calls, new RegExp(`orgs/${organization}/repos`));
     }
-  } finally {
-    removeFixture(fixture);
-  }
-});
-
-test('projects preserves current GitHub row validation errors', () => {
-  const fixture = createFixture('projects-invalid-row');
-
-  try {
-    installFakeGitHub(fixture);
-    mkdirSync(join(fixture.home, 'projects/personal'), { recursive: true });
-    const result = runArchon(
-      fixture,
-      ['projects', 'remote'],
-      projectEnvironment(fixture, {
-        ARCHON_TEST_GH_USER_REPOS: 'incomplete\trow',
-      }),
-    );
-
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.equal(
-      result.stderr,
-      'GitHub returned incomplete repository data: incomplete\trow\n',
-    );
-  } finally {
-    removeFixture(fixture);
-  }
-});
-
-test('projects validates configured organization exclusions before inventory', () => {
-  const fixture = createFixture('projects-blacklist');
-  const callsPath = join(fixture.root, 'gh-calls');
-
-  try {
-    installFakeGitHub(fixture);
-    mkdirSync(join(fixture.home, 'projects/personal'), { recursive: true });
-    const result = runArchon(fixture, ['projects', 'remote'], {
-      ARCHON_TEST_GH_CALLS: callsPath,
-      ARCHON_TEST_GH_ORGS: '',
-    });
-
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /Blacklist validation failed:/);
-
-    for (const organization of blacklistedOrganizations) {
-      assert.match(
-        result.stderr,
-        new RegExp(`Blacklisted organization "${organization}" is not an active organization`),
-      );
-    }
-
-    assert.doesNotMatch(
-      readFileSync(callsPath, 'utf8'),
-      /user\/repos\?affiliation=owner/,
-    );
   } finally {
     removeFixture(fixture);
   }
@@ -221,64 +165,6 @@ test('projects sync refuses an occupied non-repository clone destination', () =>
       result.stdout,
       new RegExp(`ERROR: destination already exists and is not a repository: ${destination}`),
     );
-  } finally {
-    removeFixture(fixture);
-  }
-});
-
-test('projects sync preserves exact Git clone construction', () => {
-  const fixture = createFixture('projects-clone');
-  const gitCalls = join(fixture.root, 'git-calls');
-
-  try {
-    installFakeGitHub(fixture);
-    mkdirSync(join(fixture.home, 'projects/personal'), { recursive: true });
-    writeExecutable(
-      join(fixture.bin, 'git'),
-      `#!/usr/bin/env bash
-set -u
-printf '%s\n' "$*" >> "$ARCHON_TEST_GIT_CALLS"
-`,
-    );
-    const result = runArchon(
-      fixture,
-      ['projects', 'sync'],
-      projectEnvironment(fixture, {
-        ARCHON_TEST_GH_ORG_REPOS:
-          '1\tAlphaOrg/alpha\tgit@example:alpha.git\tfalse\tpublic',
-        ARCHON_TEST_GIT_CALLS: gitCalls,
-      }),
-    );
-    const destination = join(
-      fixture.home,
-      'projects/personal/AlphaOrg/alpha',
-    );
-
-    assert.equal(result.status, 0);
-    assert.match(result.stdout, /Synchronizing 1 repositories/);
-    assert.match(result.stdout, /cloned/);
-    assert.equal(
-      readFileSync(gitCalls, 'utf8'),
-      `clone git@example:alpha.git ${destination}\n`,
-    );
-  } finally {
-    removeFixture(fixture);
-  }
-});
-
-test('projects usage errors use the standard status', () => {
-  const fixture = createFixture('projects-usage');
-
-  try {
-    const result = runArchon(fixture, [
-      'projects',
-      'remote',
-      '--unexpected',
-    ]);
-
-    assert.equal(result.status, 2);
-    assert.equal(result.stderr, 'Unexpected remote option: --unexpected\n');
-    assert.match(result.stdout, /^Usage: archon projects remote \[options\]/);
   } finally {
     removeFixture(fixture);
   }

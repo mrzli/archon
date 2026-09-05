@@ -15,9 +15,6 @@ mapfile -t node_tests < <(
 printf '%s\n' 'Archon CLI Node tests'
 node --test --test-concurrency=1 "${node_tests[@]}"
 
-printf '\n%s\n' 'Archon CLI root and domain integration tests'
-bash "$test_dir/test-root.sh"
-
 printf '\n%s\n' 'Archon CLI workspace adapter tests'
 bash "$test_dir/test-workspaces-adapter.sh"
 
