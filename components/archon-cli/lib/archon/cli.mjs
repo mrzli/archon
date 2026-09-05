@@ -3,7 +3,14 @@ import { main as runProjects } from './projects/src/projects.mjs';
 import { main as runWorkspaces } from './workspaces/src/workspaces.mjs';
 
 export async function main(arguments_) {
-  const [command, ...extraArguments] = arguments_;
+  const [commandOrAlias, ...extraArguments] = arguments_;
+  const aliases = new Map([
+    ['h', 'help'],
+    ['l', 'libs'],
+    ['p', 'projects'],
+    ['w', 'workspaces'],
+  ]);
+  const command = aliases.get(commandOrAlias) ?? commandOrAlias;
 
   switch (command) {
     case 'libs': {
@@ -50,9 +57,9 @@ function getGlobalHelpText() {
     'Usage: archon <command> [options]',
     '',
     'Commands:',
-    '  libs        Manage local JavaScript libraries',
-    '  projects    Manage personal project repositories',
-    '  workspaces  Manage tmux workspace sessions',
-    '  help        Show this help',
+    '  help (h)        Show this help',
+    '  libs (l)        Manage local JavaScript libraries',
+    '  projects (p)    Manage personal project repositories',
+    '  workspaces (w)  Manage tmux workspace sessions',
   ].join('\n');
 }

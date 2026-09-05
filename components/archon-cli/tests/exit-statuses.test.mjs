@@ -11,6 +11,10 @@ import {
 } from './test-helpers.mjs';
 
 const USAGE_CASES = [
+  ['h', 'extra'],
+  ['p', 's'],
+  ['l', 'b'],
+  ['w', 's'],
   [],
   ['unknown'],
   ['help', 'extra'],
@@ -54,6 +58,10 @@ for (const arguments_ of USAGE_CASES) {
 }
 
 for (const arguments_ of [
+  ['h'],
+  ['p', '--help'],
+  ['l', '--help'],
+  ['w', '--help'],
   ['help'],
   ['-h'],
   ['--help'],
@@ -77,6 +85,26 @@ for (const arguments_ of [
     }
   });
 }
+
+test('direct command aliases preserve help output and argument forwarding', () => {
+  const fixture = createFixture('command-aliases');
+  try {
+    for (const [alias, command, arguments_] of [
+      ['h', 'help', []],
+      ['l', 'libs', ['help', 'build']],
+      ['p', 'projects', ['help', 'status']],
+      ['w', 'workspaces', ['--help']],
+    ]) {
+      const short = runArchon(fixture, [alias, ...arguments_]);
+      const full = runArchon(fixture, [command, ...arguments_]);
+      assert.equal(short.status, full.status);
+      assert.equal(short.stdout, full.stdout);
+      assert.equal(short.stderr, full.stderr);
+    }
+  } finally {
+    removeFixture(fixture);
+  }
+});
 
 test('a signaled tmux operation is an operational failure', () => {
   const fixture = createFixture('tmux-signal');

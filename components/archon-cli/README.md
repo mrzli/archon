@@ -12,6 +12,19 @@ archon workspaces <start|stop> [options]
 `a` is an exact alias for `archon`, so `a projects status` and
 `archon projects status` are equivalent.
 
+Direct subcommands also have one-letter aliases: `h` for `help`, `l` for
+`libs`, `p` for `projects`, and `w` for `workspaces`. These work with both
+`archon` and `a`, for example:
+
+```bash
+a p status
+a l build
+a w start
+a h
+```
+
+Aliases apply only to direct subcommands; nested commands keep their full names.
+
 Commands use these exit statuses:
 
 - `0`: the command completed successfully, including help and empty states.
