@@ -7,7 +7,6 @@ repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
-replace_directories="$repo_root/data/home-replace-directories.txt"
 temporary_root="$(mktemp -d)"
 
 cleanup() {
@@ -106,32 +105,6 @@ test_repeated_overlay_copy() {
   assert_exists "$home/.local/lib/unrelated/keep"
 }
 
-test_managed_library_replacement_scope() {
-  local home="$temporary_root/replacement-home"
-  local library="$home/.local/lib/archon"
-  local sibling="$home/.local/lib/unrelated/keep"
-  mkdir -p "$home"
-  install_home "$home"
-
-  grep -qFx '.local/lib/archon' "$replace_directories" ||
-    fail '.local/lib/archon is not a managed replacement directory' || return
-  if grep -qFx 'projects/workspaces' "$replace_directories"; then
-    fail 'projects/workspaces remains a managed replacement directory'
-    return
-  fi
-
-  mkdir -p "$library" "${sibling%/*}"
-  : > "$library/stale.mjs"
-  : > "$sibling"
-
-  rm -rf -- "$library"
-  install_home "$home"
-
-  assert_absent "$library/stale.mjs" || return
-  assert_exists "$library/cli.mjs" || return
-  assert_exists "$sibling"
-}
-
 tests_run=0
 tests_failed=0
 
@@ -149,7 +122,6 @@ run_test() {
 }
 
 run_test 'repeated home-overlay copy' test_repeated_overlay_copy
-run_test 'managed library replacement scope' test_managed_library_replacement_scope
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
 [[ "$tests_failed" -eq 0 ]]

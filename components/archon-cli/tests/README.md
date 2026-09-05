@@ -69,8 +69,7 @@ repositories and remotes must remain local to temporary fixtures.
 ## Installation fixtures
 
 Layout tests reproduce the CLI copy operations in temporary homes and check
-runtime imports, the shortcut, filtering, and repeated installation. Their
-replacement case simulates removal of the managed library directory; it does
-not execute or verify setup's removal implementation. Keep that limitation
-explicit when interpreting these checks. Production home-installation commands
-remain in `setup.sh`; never run complete workstation setup as a test.
+runtime imports, the shortcut, filtering, and repeated installation. They do
+not verify setup's managed-directory replacement behavior. Production
+home-installation commands remain in `setup.sh`; never run complete workstation
+setup as a test.

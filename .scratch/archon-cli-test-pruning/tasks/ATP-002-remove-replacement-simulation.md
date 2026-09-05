@@ -1,6 +1,6 @@
 # ATP-002: Remove the simulated installation-replacement test
 
-Status: pending
+Status: completed
 
 Source: [Task index](../tasks.md) · [Specification](../spec.md)
 
@@ -12,11 +12,11 @@ Production changes and new tests are prohibited.
 
 ## Acceptance checklist
 
-- [ ] Delete `test_managed_library_replacement_scope` and its runner registration.
-- [ ] Remove the replacement-list variable and any other helpers or variables made unused solely by that deletion.
-- [ ] Keep the existing repeated-installation case, executable and shortcut checks, runtime import coverage, filtering, and unrelated-file preservation assertions.
-- [ ] Update the test README to describe only the remaining layout coverage.
-- [ ] Do not extract installation logic or change setup, installation behavior, or managed-directory configuration.
+- [x] Delete `test_managed_library_replacement_scope` and its runner registration.
+- [x] Remove the replacement-list variable and any other helpers or variables made unused solely by that deletion.
+- [x] Keep the existing repeated-installation case, executable and shortcut checks, runtime import coverage, filtering, and unrelated-file preservation assertions.
+- [x] Update the test README to describe only the remaining layout coverage.
+- [x] Do not extract installation logic or change setup, installation behavior, or managed-directory configuration.
 
 ## Verification
 
@@ -27,3 +27,7 @@ Production changes and new tests are prohibited.
 ## Coverage decision
 
 The test-driven simulation of replacement and its replacement-list membership assertions are intentionally removed; production replacement is not tested by this suite.
+
+Completed: 2026-09-06. Removed the replacement simulation and its unused list
+variable. The retained repeat-install layout case, Bash syntax, and whitespace
+checks passed. No production files changed.
