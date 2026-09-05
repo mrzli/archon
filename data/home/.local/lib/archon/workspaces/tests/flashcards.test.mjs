@@ -3,11 +3,17 @@ import test from 'node:test';
 
 import { manageFlashcards } from '../src/flashcards.mjs';
 
-function createContext({ directories, failFirstNewSession = false } = {}) {
+function createContext({
+  cleanupFails = false,
+  directories,
+  failFirstNewSession = false,
+  failFirstSetupOperation = false,
+} = {}) {
   const calls = [];
   const errors = [];
   const sessions = new Set();
   let newSessionFailed = false;
+  let setupOperationFailed = false;
 
   return {
     calls,
@@ -38,7 +44,20 @@ function createContext({ directories, failFirstNewSession = false } = {}) {
         if (arguments_[0] === 'new-session') {
           sessions.add(arguments_[3]);
         } else if (arguments_[0] === 'kill-session') {
+          if (cleanupFails && arguments_[2] === 'flashcards-fe') {
+            return 1;
+          }
+
           sessions.delete(arguments_[2]);
+        }
+
+        if (
+          failFirstSetupOperation &&
+          !setupOperationFailed &&
+          arguments_[0] === 'send-keys'
+        ) {
+          setupOperationFailed = true;
+          return 1;
         }
 
         return 0;
@@ -174,6 +193,48 @@ test('a session failure is reported and remaining sessions continue', () => {
   assert.deepEqual([...fixture.sessions], ['flashcards-be']);
   assert.deepEqual(fixture.errors, [
     'Failed to start tmux session: flashcards-fe',
+  ]);
+});
+
+test('a partial session is rolled back and a later start retries it', () => {
+  const fixture = createContext({ failFirstSetupOperation: true });
+
+  assert.equal(manageFlashcards('start', fixture.context), 1);
+  assert.deepEqual([...fixture.sessions], ['flashcards-be']);
+  assert.deepEqual(fixture.errors, [
+    'Failed to start tmux session: flashcards-fe',
+  ]);
+  assert.ok(
+    fixture.calls.some(
+      (arguments_) =>
+        arguments_[0] === 'kill-session' && arguments_[2] === 'flashcards-fe',
+    ),
+  );
+
+  fixture.calls.length = 0;
+  fixture.errors.length = 0;
+  assert.equal(manageFlashcards('start', fixture.context), 0);
+  assert.deepEqual(
+    [...fixture.sessions].sort(),
+    ['flashcards-be', 'flashcards-fe'],
+  );
+  assert.deepEqual(fixture.errors, []);
+});
+
+test('cleanup failure is reported and remaining sessions continue', () => {
+  const fixture = createContext({
+    cleanupFails: true,
+    failFirstSetupOperation: true,
+  });
+
+  assert.equal(manageFlashcards('start', fixture.context), 1);
+  assert.deepEqual(
+    [...fixture.sessions].sort(),
+    ['flashcards-be', 'flashcards-fe'],
+  );
+  assert.deepEqual(fixture.errors, [
+    'Failed to start tmux session: flashcards-fe',
+    'Failed to clean up tmux session: flashcards-fe',
   ]);
 });
 

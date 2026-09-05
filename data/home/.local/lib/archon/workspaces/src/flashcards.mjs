@@ -36,8 +36,12 @@ export function manageFlashcards(action, context = {}) {
         continue;
       }
 
-      if (createEditorSession(run, definition) !== 0) {
+      const result = createEditorSession(run, definition);
+      if (result.status !== 0) {
         printError(`Failed to start tmux session: ${definition.session}`);
+        if (result.cleanupStatus !== undefined && result.cleanupStatus !== 0) {
+          printError(`Failed to clean up tmux session: ${definition.session}`);
+        }
         status = 1;
       }
     } else if (stopSession(run, definition.session) !== 0) {

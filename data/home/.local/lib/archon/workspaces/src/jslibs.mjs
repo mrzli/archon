@@ -30,8 +30,12 @@ export function manageJslibs(action, context = {}) {
         continue;
       }
 
-      if (createEditorSession(run, { session, directory }) !== 0) {
+      const result = createEditorSession(run, { session, directory });
+      if (result.status !== 0) {
         printError(`Failed to start tmux session: ${session}`);
+        if (result.cleanupStatus !== undefined && result.cleanupStatus !== 0) {
+          printError(`Failed to clean up tmux session: ${session}`);
+        }
         status = 1;
       }
     }
