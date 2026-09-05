@@ -24,6 +24,7 @@ import {
   orderPackagesForBuild,
   validateBuildScripts,
 } from './build.mjs';
+import { parseRemoteRepositories } from './github-inventory.mjs';
 
 const GITHUB_OWNER = 'mrzli-jslib';
 const REQUIRED_ROOT_NAME = 'mrzli-jslib';
@@ -662,26 +663,7 @@ function getRemoteRepositories() {
     );
   }
 
-  try {
-    const repositories = JSON.parse(result.stdout);
-
-    if (!Array.isArray(repositories)) {
-      throw new Error('expected an array');
-    }
-
-    for (const repository of repositories) {
-      if (
-        typeof repository.name !== 'string' ||
-        typeof repository.nameWithOwner !== 'string'
-      ) {
-        throw new Error('repository name is missing');
-      }
-    }
-
-    return repositories;
-  } catch (error) {
-    throw new Error(`Could not read GitHub CLI output: ${getErrorMessage(error)}`);
-  }
+  return parseRemoteRepositories(result.stdout);
 }
 
 function inspectLocalRepositories(repositories, fetch) {
