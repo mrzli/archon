@@ -1,6 +1,8 @@
 # ACF-003: Define missing-root behavior for libraries
 
-Status: pending
+Status: completed
+
+Completed: 2026-09-05
 
 Area: Libraries
 
@@ -15,29 +17,29 @@ retaining operational failures for invalid or inaccessible existing paths.
 
 ## Acceptance checklist
 
-- [ ] Add isolated tests that reproduce every libraries command's current
+- [x] Add isolated tests that reproduce every libraries command's current
       absent-root behavior before changing it.
-- [ ] `libs status` reports that no local repositories exist and returns `0`
+- [x] `libs status` reports that no local repositories exist and returns `0`
       without creating the root.
-- [ ] `libs delete` reports that no local repositories exist and returns `0`
+- [x] `libs delete` reports that no local repositories exist and returns `0`
       without prompting, removing anything, or creating the root.
-- [ ] `libs prune` reports that no obsolete local repositories exist and
+- [x] `libs prune` reports that no obsolete local repositories exist and
       returns `0` without removing anything or creating the root.
-- [ ] If prune obtains remote inventory before checking local state, preserve
+- [x] If prune obtains remote inventory before checking local state, preserve
       its safety ordering and use only fake GitHub responses in tests.
-- [ ] `libs graph` and `libs build` report that no local repositories exist and
+- [x] `libs graph` and `libs build` report that no local repositories exist and
       return `0` without creating the root or invoking Bun.
-- [ ] `libs sync` recursively creates the root when absent, then continues
+- [x] `libs sync` recursively creates the root when absent, then continues
       remote inventory and cloning normally.
-- [ ] Root creation is repeat-safe and does not duplicate or drift state.
-- [ ] A root path that exists but is not a directory remains an operational
+- [x] Root creation is repeat-safe and does not duplicate or drift state.
+- [x] A root path that exists but is not a directory remains an operational
       error.
-- [ ] An existing root that cannot be read remains an operational error.
-- [ ] Tests assert concise output, exit status, root presence or absence, and
+- [x] An existing root that cannot be read remains an operational error.
+- [x] Tests assert concise output, exit status, root presence or absence, and
       the absence of unintended Git, GitHub, Bun, or removal operations.
-- [ ] Preserve build, graph, discovery, synchronization, prune, deletion,
+- [x] Preserve build, graph, discovery, synchronization, prune, deletion,
       confirmation, and inventory-revalidation behavior for an existing root.
-- [ ] Run the complete canonical CLI suite at this checkpoint.
+- [x] Run the complete canonical CLI suite at this checkpoint.
 
 ## Verification
 
@@ -46,3 +48,10 @@ retaining operational failures for invalid or inaccessible existing paths.
 - Verify a missing-root sync can clone into the newly created libraries root.
 - Run `tests/archon-cli/run.sh`.
 - Run `git diff --check`.
+
+Completed with temporary-home coverage for all six missing-root command
+categories plus non-directory and unreadable roots. Build and graph avoid Bun,
+prune retains remote inventory acquisition, and sync creates the root and runs
+the expected GitHub clone. The canonical suite passed all 81 Node tests and 13
+shell-suite checks, plus Node and Bash syntax checks and `git diff --check`.
+ShellCheck was unavailable and reported as skipped.

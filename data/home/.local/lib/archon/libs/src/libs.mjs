@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -484,6 +485,10 @@ function getStatusHelpText() {
 // =============================================================================
 
 function syncRepositories(arguments_, rootDir) {
+  if (arguments_.length === 0) {
+    mkdirSync(rootDir, { recursive: true });
+  }
+
   return runSyncWorkflow(arguments_, {
     cloneRepository: (repository) =>
       cloneRemoteRepository(repository, rootDir),
@@ -671,8 +676,16 @@ function inspectLocalRepositories(repositories, fetch) {
 }
 
 function findLocalRepositories(rootDir) {
-  return findChildGitRepositories(rootDir)
-    .sort((left, right) => left.name.localeCompare(right.name));
+  try {
+    return findChildGitRepositories(rootDir)
+      .sort((left, right) => left.name.localeCompare(right.name));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 function acceptsNoArguments(command, arguments_, printCommandHelp_) {
