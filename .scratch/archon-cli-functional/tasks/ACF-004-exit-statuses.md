@@ -51,6 +51,6 @@ libraries command, domain-level missing and unknown commands, help requests,
 and existing root/workspace syntax handling. A tmux child terminated by a
 signal now maps to operational status `1`; Archon does not signal itself, so it
 can report the failure and continue independent work. The canonical suite
-passed all 112 Node tests and 13 shell-suite checks, plus Node and Bash syntax
+passed all 112 Node tests and 15 shell-suite checks, plus Node and Bash syntax
 checks and `git diff --check`. ShellCheck was unavailable and reported as
 skipped.

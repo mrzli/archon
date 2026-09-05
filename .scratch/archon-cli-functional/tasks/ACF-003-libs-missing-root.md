@@ -52,6 +52,6 @@ retaining operational failures for invalid or inaccessible existing paths.
 Completed with temporary-home coverage for all six missing-root command
 categories plus non-directory and unreadable roots. Build and graph avoid Bun,
 prune retains remote inventory acquisition, and sync creates the root and runs
-the expected GitHub clone. The canonical suite passed all 81 Node tests and 13
+the expected GitHub clone. The canonical suite passed all 81 Node tests and 15
 shell-suite checks, plus Node and Bash syntax checks and `git diff --check`.
 ShellCheck was unavailable and reported as skipped.

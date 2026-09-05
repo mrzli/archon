@@ -50,6 +50,6 @@ retaining operational failures for invalid or inaccessible existing paths.
 Completed with temporary-home coverage for missing, non-directory, and
 unreadable roots. Status and delete perform no external operations, prune
 retains remote inventory acquisition, and sync creates the root and invokes the
-expected clone. The canonical suite passed all 72 Node tests and 13 shell-suite
+expected clone. The canonical suite passed all 72 Node tests and 15 shell-suite
 checks, plus Node and Bash syntax checks and `git diff --check`. ShellCheck was
 unavailable and reported as skipped.

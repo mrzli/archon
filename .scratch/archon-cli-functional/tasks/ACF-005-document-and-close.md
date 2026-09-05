@@ -1,6 +1,8 @@
 # ACF-005: Document final behavior and close the proposal
 
-Status: pending
+Status: completed
+
+Completed: 2026-09-05
 
 Area: Documentation and verification
 
@@ -15,27 +17,27 @@ complete the final safety audit, and archive the planning records.
 
 ## Acceptance checklist
 
-- [ ] Document exit statuses `0`, `1`, and `2` in the root Archon CLI README.
-- [ ] Document projects missing-root behavior in the projects README.
-- [ ] Document libraries missing-root behavior in the libraries README.
-- [ ] Document workspace rollback only if it provides useful operational
+- [x] Document exit statuses `0`, `1`, and `2` in the root Archon CLI README.
+- [x] Document projects missing-root behavior in the projects README.
+- [x] Document libraries missing-root behavior in the libraries README.
+- [x] Document workspace rollback only if it provides useful operational
       guidance; do not expose unnecessary cleanup internals.
-- [ ] Confirm command help and durable documentation match implemented
+- [x] Confirm command help and durable documentation match implemented
       behavior.
-- [ ] Confirm partial workspace failures can be retried successfully.
-- [ ] Confirm only sync creates absent projects or libraries roots.
-- [ ] Confirm destructive confirmations, cleanliness checks, dry runs, and
+- [x] Confirm partial workspace failures can be retried successfully.
+- [x] Confirm only sync creates absent projects or libraries roots.
+- [x] Confirm destructive confirmations, cleanliness checks, dry runs, and
       remote-inventory revalidation remain intact.
-- [ ] Confirm failures do not prevent processing of remaining independent
+- [x] Confirm failures do not prevent processing of remaining independent
       repositories, sessions, or groups.
-- [ ] Confirm runtime installation excludes tests, READMEs, and contributor
+- [x] Confirm runtime installation excludes tests, READMEs, and contributor
       instructions.
-- [ ] Confirm the dedicated Archon CLI migration and setup operations remain
+- [x] Confirm the dedicated Archon CLI migration and setup operations remain
       repeat-safe.
-- [ ] Move all enduring operational knowledge into tool-local READMEs.
-- [ ] Record final verification evidence in this task and the task index.
-- [ ] Mark the specification and task records completed and archived.
-- [ ] Leave optional workspace-status and synchronization-planning ideas
+- [x] Move all enduring operational knowledge into tool-local READMEs.
+- [x] Record final verification evidence in this task and the task index.
+- [x] Mark the specification and task records completed and archived.
+- [x] Leave optional workspace-status and synchronization-planning ideas
       deferred rather than implementing them as part of closure.
 
 ## Verification
@@ -50,3 +52,11 @@ complete the final safety audit, and archive the planning records.
 - Run `git diff --check`.
 - Do not execute the complete setup script against the real home directory or
   contact the user's real GitHub account or tmux server.
+
+Completed with durable documentation for exit statuses, missing managed roots,
+and recoverable workspace startup. The final audit confirmed destructive
+safeguards, continued processing after individual failures, runtime-only
+installation, and repeat-safe migration/setup behavior. The canonical suite
+passed all 112 Node tests and 15 shell-suite checks, plus Node and Bash syntax
+checks and `git diff --check`. ShellCheck was unavailable and reported as
+skipped.

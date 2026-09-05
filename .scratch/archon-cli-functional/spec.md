@@ -1,6 +1,12 @@
 # Archon CLI functional improvements
 
-Status: provisional
+Status: completed and archived
+
+Completed: 2026-09-05
+
+The required functional behavior, isolated verification, and durable command
+documentation are complete. This specification is retained as the archived
+requirement record; optional follow-up ideas remain deferred.
 
 ## Context
 

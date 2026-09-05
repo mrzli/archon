@@ -48,6 +48,6 @@ failed start cannot prevent a later start from creating the complete session.
 
 Completed with isolated coverage for every session-setup stage, cleanup
 success and failure, retry, existing-session preservation, and continued
-processing. The canonical suite passed all 65 Node tests and 13 shell-suite
+processing. The canonical suite passed all 65 Node tests and 15 shell-suite
 checks, plus Node and Bash syntax checks and `git diff --check`. ShellCheck was
 unavailable and reported as skipped.

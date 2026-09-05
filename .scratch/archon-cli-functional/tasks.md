@@ -1,6 +1,12 @@
 # Archon CLI functional improvement tasks
 
-Status: pending
+Status: completed and archived
+
+Completed: 2026-09-05
+
+This index and its task files are retained as the archived implementation and
+verification record. Durable command behavior is documented in the Archon
+tool-local READMEs.
 
 Source: [Archon CLI functional improvements](./spec.md)
 
@@ -80,3 +86,10 @@ Bash syntax checks, optional ShellCheck, and `git diff --check` pass.
 - Help succeeds, usage errors return `2`, and operational failures return `1`.
 - Existing deletion and prune safeguards remain intact.
 - Runtime installation and provisioning remain repeat-safe.
+
+## Final verification
+
+The completed work passed all 112 Node tests and all 15 shell-suite checks on
+2026-09-05. Installation layout and migration behavior passed within the
+canonical suite. Node and Bash syntax checks and `git diff --check` passed;
+ShellCheck was unavailable and reported as skipped.
