@@ -23,25 +23,17 @@ import {
   createSyncFailure as createRepositorySyncFailure,
   syncRepositories as runSyncWorkflow,
 } from '../../shared/sync-workflow.mjs';
-
-const ORGANIZATION_BLACKLIST = [
-  'mrzli-courses',
-  'mrzli-gh-actions',
-  'mrzli-other',
-  'mrzli-vscode-extensions',
-];
-const REPOSITORY_BLACKLIST = [];
-const REPOSITORY_QUERY = [
-  '.[]',
-  '| [',
-  '    .id,',
-  '    .full_name,',
-  '    .ssh_url,',
-  '    .archived,',
-  '    (.visibility // (if .private then "private" else "public" end))',
-  '  ]',
-  '| @tsv',
-].join('\n');
+import {
+  addRemoteRepositories,
+  compareNames,
+  compareRepositories,
+  getRepositoryBlacklistLookupNames,
+  isRepositoryBlacklisted,
+  parseRemoteRepository,
+  REPOSITORY_QUERY,
+  repositoryKey,
+  validateBlacklists,
+} from './github-inventory.mjs';
 
 // =============================================================================
 // Entry point and command routing
@@ -497,7 +489,11 @@ function getRemoteRepositories(reportProgress) {
   const {
     blacklistedOrganizations,
     blacklistedRepositories,
-  } = validateBlacklists(username, organizations);
+  } = validateBlacklists(
+    username,
+    organizations,
+    getCanonicalBlacklistedRepositories(),
+  );
   const repositoriesByName = new Map();
 
   reportProgress?.(`Listing repositories for ${username}...`);
@@ -554,98 +550,23 @@ function getOwnedGitHubOrganizations() {
     .sort(compareNames);
 }
 
-function validateBlacklists(username, organizations) {
-  const errors = [];
-  const organizationsByName = new Map(
-    organizations.map((organization) => [organization.toLowerCase(), organization]),
-  );
-  const blacklistedOrganizations = new Set();
+function getCanonicalBlacklistedRepositories() {
+  const repositories = new Map();
 
-  for (const organization of ORGANIZATION_BLACKLIST) {
-    const key = organization.toLowerCase();
-
-    if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(organization)) {
-      errors.push(`Invalid organization blacklist entry "${organization}".`);
-      continue;
-    }
-
-    if (blacklistedOrganizations.has(key)) {
-      errors.push(`Duplicate organization blacklist entry "${organization}".`);
-      continue;
-    }
-
-    blacklistedOrganizations.add(key);
-
-    if (!organizationsByName.has(key)) {
-      errors.push(
-        `Blacklisted organization "${organization}" is not an active organization owned by "${username}".`,
-      );
-    }
-  }
-
-  const blacklistedRepositories = new Set();
-
-  for (const nameWithOwner of REPOSITORY_BLACKLIST) {
-    const key = nameWithOwner.toLowerCase();
-
-    if (!/^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9._-]+$/.test(nameWithOwner)) {
-      errors.push(
-        `Invalid repository blacklist entry "${nameWithOwner}"; expected "owner/repository".`,
-      );
-      continue;
-    }
-
-    if (blacklistedRepositories.has(key)) {
-      errors.push(`Duplicate repository blacklist entry "${nameWithOwner}".`);
-      continue;
-    }
-
-    blacklistedRepositories.add(key);
-
-    let canonicalName;
-
+  for (const nameWithOwner of getRepositoryBlacklistLookupNames()) {
     try {
-      canonicalName = getGitHubOutput([
+      const canonicalName = getGitHubOutput([
         `repos/${nameWithOwner}`,
         '--jq',
         '.full_name',
       ]).trim();
+      repositories.set(nameWithOwner.toLowerCase(), canonicalName);
     } catch {
-      errors.push(
-        `Blacklisted repository "${nameWithOwner}" does not exist or is not accessible.`,
-      );
-      continue;
-    }
-
-    if (canonicalName.toLowerCase() !== key) {
-      errors.push(
-        `Blacklisted repository "${nameWithOwner}" is now "${canonicalName}".`,
-      );
-      continue;
-    }
-
-    const owner = canonicalName.slice(0, canonicalName.indexOf('/'));
-    const ownerKey = owner.toLowerCase();
-
-    if (
-      ownerKey !== username.toLowerCase() &&
-      !organizationsByName.has(ownerKey)
-    ) {
-      errors.push(
-        `Blacklisted repository "${nameWithOwner}" is not owned by "${username}" or an organization owned by that user.`,
-      );
+      // Blacklist validation reports inaccessible repositories.
     }
   }
 
-  if (errors.length > 0) {
-    throw new Error(
-      ['Blacklist validation failed:', ...errors.map((error) => `  - ${error}`)].join(
-        '\n',
-      ),
-    );
-  }
-
-  return { blacklistedOrganizations, blacklistedRepositories };
+  return repositories;
 }
 
 function getRemoteRepositoriesAt(endpoint) {
@@ -660,43 +581,6 @@ function getRemoteRepositoriesAt(endpoint) {
     .split('\n')
     .filter((line) => line.length > 0)
     .map(parseRemoteRepository);
-}
-
-function parseRemoteRepository(row) {
-  const fields = row.split('\t');
-  const [id, nameWithOwner, sshUrl, archived, visibility] = fields;
-  const separator = nameWithOwner?.indexOf('/') ?? -1;
-
-  if (
-    fields.length !== 5 ||
-    typeof id !== 'string' ||
-    id.length === 0 ||
-    separator <= 0 ||
-    separator === nameWithOwner.length - 1 ||
-    typeof sshUrl !== 'string' ||
-    sshUrl.length === 0 ||
-    !['true', 'false'].includes(archived) ||
-    typeof visibility !== 'string' ||
-    visibility.length === 0
-  ) {
-    throw new Error(`GitHub returned incomplete repository data: ${row}`);
-  }
-
-  return {
-    id,
-    owner: nameWithOwner.slice(0, separator),
-    name: nameWithOwner.slice(separator + 1),
-    nameWithOwner,
-    sshUrl,
-    isArchived: archived === 'true',
-    visibility,
-  };
-}
-
-function addRemoteRepositories(repositoriesByName, repositories) {
-  for (const repository of repositories) {
-    repositoriesByName.set(repositoryKey(repository), repository);
-  }
 }
 
 function getGitHubOutput(arguments_) {
@@ -757,31 +641,6 @@ function findLocalRepositories(rootDir) {
   }
 
   return repositories.sort(compareRepositories);
-}
-
-function repositoryKey(repository) {
-  return repository.nameWithOwner.toLowerCase();
-}
-
-function isRepositoryBlacklisted(repository) {
-  const owner = repository.owner.toLowerCase();
-
-  return (
-    ORGANIZATION_BLACKLIST.some(
-      (organization) => organization.toLowerCase() === owner,
-    ) ||
-    REPOSITORY_BLACKLIST.some(
-      (nameWithOwner) => nameWithOwner.toLowerCase() === repositoryKey(repository),
-    )
-  );
-}
-
-function compareRepositories(left, right) {
-  return compareNames(left.nameWithOwner, right.nameWithOwner);
-}
-
-function compareNames(left, right) {
-  return left.localeCompare(right, undefined, { sensitivity: 'base' });
 }
 
 function acceptsNoArguments(command, arguments_, printCommandHelp_) {
