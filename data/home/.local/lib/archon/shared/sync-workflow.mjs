@@ -28,7 +28,7 @@ export function syncRepositories(arguments_, options) {
   if (arguments_.length > 0) {
     printError(`Unexpected sync option: ${arguments_[0]}`);
     options.printHelp();
-    return 1;
+    return 2;
   }
 
   let remoteRepositories;

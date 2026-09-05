@@ -73,14 +73,18 @@ async function runCommand(arguments_, paths) {
     }
     case 'help':
     case '--help':
-    case '-h':
-    case undefined: {
+    case '-h': {
       return showHelp(extraArguments);
+    }
+    case undefined: {
+      console.error('Missing projects command.');
+      printGlobalHelp();
+      return 2;
     }
     default: {
       console.error(`Unknown command: ${command}`);
       printGlobalHelp();
-      return 1;
+      return 2;
     }
   }
 }
@@ -185,7 +189,7 @@ function listRemoteRepositories(arguments_) {
   }
 
   if (!acceptsNoArguments('remote', arguments_, printRemoteHelp)) {
-    return 1;
+    return 2;
   }
 
   try {
@@ -260,7 +264,7 @@ function showLocalRepositoryStatuses(arguments_, rootDir) {
   const fetch = parseStatusArguments(arguments_);
 
   if (fetch === undefined) {
-    return 1;
+    return 2;
   }
 
   const repositories = findLocalRepositories(rootDir);
@@ -439,7 +443,7 @@ function showHelp(arguments_) {
   }
 
   printHelpHelp();
-  return 1;
+  return 2;
 }
 
 function printHelpHelp() {

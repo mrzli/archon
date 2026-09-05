@@ -1,6 +1,8 @@
 # ACF-004: Standardize usage-error exit statuses
 
-Status: pending
+Status: completed
+
+Completed: 2026-09-05
 
 Area: Command interface
 
@@ -15,25 +17,25 @@ projects, libraries, and workspaces command collections.
 
 ## Acceptance checklist
 
-- [ ] Add or update integration tests for help, usage errors, and operational
+- [x] Add or update integration tests for help, usage errors, and operational
       failures at every command layer.
-- [ ] Return `0` when a command completes successfully.
-- [ ] Return `0` for root, projects, libraries, workspaces, and
+- [x] Return `0` when a command completes successfully.
+- [x] Return `0` for root, projects, libraries, workspaces, and
       command-specific help requests.
-- [ ] Return `2` for missing required commands or actions, unknown commands,
+- [x] Return `2` for missing required commands or actions, unknown commands,
       unexpected operands, and invalid or unsupported options.
-- [ ] Return `1` for representative Git, GitHub, Bun, tmux, filesystem,
+- [x] Return `1` for representative Git, GitHub, Bun, tmux, filesystem,
       validation, and partial-operation failures.
-- [ ] Change existing projects and libraries usage failures from `1` to `2`.
-- [ ] Ensure lower-level command helpers return ordinary status results and do
+- [x] Change existing projects and libraries usage failures from `1` to `2`.
+- [x] Ensure lower-level command helpers return ordinary status results and do
       not terminate the process themselves.
-- [ ] Preserve existing signal-termination behavior; if implementation work
+- [x] Preserve existing signal-termination behavior; if implementation work
       must change it, document the chosen contract and add focused tests.
-- [ ] Preserve standard-output and standard-error routing except where a
+- [x] Preserve standard-output and standard-error routing except where a
       corrected usage status requires test expectation updates.
-- [ ] Preserve continued processing of independent repositories, sessions, and
+- [x] Preserve continued processing of independent repositories, sessions, and
       groups after individual operational failures.
-- [ ] Run the complete canonical CLI suite at this checkpoint.
+- [x] Run the complete canonical CLI suite at this checkpoint.
 
 ## Verification
 
@@ -43,3 +45,12 @@ projects, libraries, and workspaces command collections.
 - Run `tests/archon-cli/run.sh`.
 - Run Node syntax checks for every changed executable and `.mjs` file.
 - Run `git diff --check`.
+
+Completed with an installed-entry-point matrix covering every projects and
+libraries command, domain-level missing and unknown commands, help requests,
+and existing root/workspace syntax handling. A tmux child terminated by a
+signal now maps to operational status `1`; Archon does not signal itself, so it
+can report the failure and continue independent work. The canonical suite
+passed all 112 Node tests and 13 shell-suite checks, plus Node and Bash syntax
+checks and `git diff --check`. ShellCheck was unavailable and reported as
+skipped.

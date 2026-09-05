@@ -147,7 +147,7 @@ test_projects_dispatch() {
   done
 
   capture_with_home "$home" "$archon" projects unknown
-  assert_equals 1 "$command_status" || return
+  assert_equals 2 "$command_status" || return
   assert_contains "$command_output" 'Unknown command: unknown' || return
 
   capture_with_home "$home" "$archon" projects delete --dry-run
@@ -180,7 +180,7 @@ test_libraries_dispatch() {
   done
 
   capture_with_home "$home" "$archon" libs unknown
-  assert_equals 1 "$command_status" || return
+  assert_equals 2 "$command_status" || return
   assert_contains "$command_output" 'Unknown command: unknown' || return
 
   capture_with_home "$home" "$archon" libs graph

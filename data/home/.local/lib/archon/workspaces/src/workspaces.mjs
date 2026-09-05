@@ -111,7 +111,6 @@ function runCommand(command, arguments_, options = {}) {
   }
 
   if (result.signal) {
-    process.kill(process.pid, result.signal);
     return 1;
   }
 
@@ -126,7 +125,6 @@ function captureCommand(command, arguments_) {
   }
 
   if (result.signal) {
-    process.kill(process.pid, result.signal);
     return { status: 1, output: '' };
   }
 

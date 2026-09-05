@@ -266,7 +266,7 @@ printf '%s\n' "$*" >> "$ARCHON_TEST_GIT_CALLS"
   }
 });
 
-test('projects usage errors retain current streams and status', () => {
+test('projects usage errors use the standard status', () => {
   const fixture = createFixture('projects-usage');
 
   try {
@@ -276,7 +276,7 @@ test('projects usage errors retain current streams and status', () => {
       '--unexpected',
     ]);
 
-    assert.equal(result.status, 1);
+    assert.equal(result.status, 2);
     assert.equal(result.stderr, 'Unexpected remote option: --unexpected\n');
     assert.match(result.stdout, /^Usage: archon projects remote \[options\]/);
   } finally {

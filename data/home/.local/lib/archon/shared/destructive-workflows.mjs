@@ -17,7 +17,7 @@ export async function deleteRepositories(arguments_, options) {
   const dryRun = parseArguments(arguments_, 'delete', options.printHelp);
 
   if (dryRun === undefined) {
-    return 1;
+    return 2;
   }
 
   if (!isDeletionRootSafe(options.rootDir, options.requiredRootDir)) {
@@ -64,7 +64,7 @@ export async function pruneRepositories(arguments_, options) {
   const dryRun = parseArguments(arguments_, 'prune', options.printHelp);
 
   if (dryRun === undefined) {
-    return 1;
+    return 2;
   }
 
   if (!isDeletionRootSafe(options.rootDir, options.requiredRootDir)) {

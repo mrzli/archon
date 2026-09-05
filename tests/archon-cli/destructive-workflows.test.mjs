@@ -69,7 +69,7 @@ test('invalid arguments and unsafe roots are refused before discovery', async ()
       }),
     ),
   );
-  assert.equal(invalid.result, 1);
+  assert.equal(invalid.result, 2);
   assert.deepEqual(invalid.errors, ['Unexpected delete option: --invalid']);
   assert.deepEqual(invalid.output, ['delete help']);
   assert.equal(discovered, false);

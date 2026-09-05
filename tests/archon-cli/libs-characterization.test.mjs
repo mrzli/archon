@@ -404,13 +404,13 @@ esac
   }
 });
 
-test('libraries usage errors retain current streams and status', () => {
+test('libraries usage errors use the standard status', () => {
   const fixture = createFixture('libs-usage');
 
   try {
     const result = runArchon(fixture, ['libs', 'build', '--unexpected']);
 
-    assert.equal(result.status, 1);
+    assert.equal(result.status, 2);
     assert.equal(result.stderr, 'Unexpected build option: --unexpected\n');
     assert.match(result.stdout, /^Usage: archon libs build \[options\]/);
   } finally {
