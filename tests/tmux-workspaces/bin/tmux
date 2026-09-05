@@ -122,6 +122,14 @@ case "$command" in
     done
     ;;
   attach-session | switch-client)
+    if [[ "${1:-}" != -t || -z "${2:-}" ]]; then
+      echo 'fake attachment requires an explicit target' >&2
+      exit 1
+    fi
+    target="$2"
+    session="${target#=}"
+    [[ -d "$sessions_dir/$session" ]] || exit 1
+    printf '%s\n' "$target" >> "$state_dir/attachments"
     ;;
   *)
     echo "unsupported fake tmux command: $command" >&2
