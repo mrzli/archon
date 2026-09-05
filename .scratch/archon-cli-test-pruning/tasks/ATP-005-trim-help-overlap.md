@@ -1,6 +1,6 @@
 # ATP-005: Trim overlapping help and alias checks
 
-Status: pending
+Status: completed
 
 Source: [Task index](../tasks.md) · [Specification](../spec.md)
 
@@ -12,11 +12,11 @@ Production changes and new tests are prohibited.
 
 ## Acceptance checklist
 
-- [ ] Remove redundant help variants where existing help-success and alias-forwarding cases already protect the same behavior.
-- [ ] Retain successful root/domain help coverage and direct-command alias forwarding.
-- [ ] Do not rely solely on equality of alias and full-command exit codes: two failures can be equal. Retain a successful-help expectation for each retained alias mapping, simplifying the existing case if needed.
-- [ ] Keep unsupported nested abbreviations and invalid-option coverage for separately implemented parsers.
-- [ ] Keep operational failure tests; remove only imports or fixture code made unused by the actual pruning.
+- [x] Remove redundant help variants where existing help-success and alias-forwarding cases already protect the same behavior.
+- [x] Retain successful root/domain help coverage and direct-command alias forwarding.
+- [x] Do not rely solely on equality of alias and full-command exit codes: two failures can be equal. Retain a successful-help expectation for each retained alias mapping, simplifying the existing case if needed.
+- [x] Keep unsupported nested abbreviations and invalid-option coverage for separately implemented parsers.
+- [x] Keep operational failure tests; remove only imports or fixture code made unused by the actual pruning.
 
 ## Verification
 
@@ -27,3 +27,9 @@ Production changes and new tests are prohibited.
 ## Coverage decision
 
 Some spelling/entry-point combinations cease to have standalone tests; the retained help and alias cases still establish success and forwarding.
+
+Completed: 2026-09-06. Removed ten overlapping help variants while retaining
+root/domain flag help and all four alias-forwarding mappings. The existing
+alias case now requires successful exit statuses, not merely matching statuses.
+All 38 retained exit-status cases passed; parser-error and operational-failure
+cases remain unchanged.

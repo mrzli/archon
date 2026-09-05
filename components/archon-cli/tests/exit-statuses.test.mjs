@@ -58,20 +58,10 @@ for (const arguments_ of USAGE_CASES) {
 }
 
 for (const arguments_ of [
-  ['h'],
-  ['p', '--help'],
-  ['l', '--help'],
-  ['w', '--help'],
-  ['help'],
   ['-h'],
   ['--help'],
   ['projects', '--help'],
-  ['projects', 'help'],
-  ['projects', 'help', 'status'],
   ['libs', '--help'],
-  ['libs', 'help'],
-  ['libs', 'help', 'status'],
-  ['workspaces', '--help'],
 ]) {
   test(`${arguments_.join(' ')} is successful help`, () => {
     const fixture = createFixture('help-status');
@@ -97,7 +87,8 @@ test('direct command aliases preserve help output and argument forwarding', () =
     ]) {
       const short = runArchon(fixture, [alias, ...arguments_]);
       const full = runArchon(fixture, [command, ...arguments_]);
-      assert.equal(short.status, full.status);
+      assert.equal(short.status, 0);
+      assert.equal(full.status, 0);
       assert.equal(short.stdout, full.stdout);
       assert.equal(short.stderr, full.stderr);
     }
