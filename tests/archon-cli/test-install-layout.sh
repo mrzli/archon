@@ -47,7 +47,7 @@ copy_archon_cli() {
   mkdir -p "$home/.local/bin" "$home/.local/lib/archon"
   rsync -a --exclude='*.md' "$archon_cli_source/lib/archon"/ "$home/.local/lib/archon"/
   install -m 755 "$archon_cli_source/bin/archon" "$home/.local/bin/archon"
-  ln -sfn archon "$home/.local/bin/a"
+  ln -sfn archon "$home/.local/bin/arc"
 }
 
 install_home() {
@@ -75,11 +75,11 @@ test_repeated_overlay_copy() {
 
   assert_exists "$home/.local/bin/archon" || return
   [[ -x "$home/.local/bin/archon" ]] || fail 'installed archon is not executable' || return
-  [[ -L "$home/.local/bin/a" ]] || fail 'installed a is not a symbolic link' || return
-  assert_equals archon "$(readlink "$home/.local/bin/a")" || return
+  [[ -L "$home/.local/bin/arc" ]] || fail 'installed arc is not a symbolic link' || return
+  assert_equals archon "$(readlink "$home/.local/bin/arc")" || return
 
   archon_output="$(HOME="$home" "$home/.local/bin/archon" --help)" || return
-  alias_output="$(HOME="$home" "$home/.local/bin/a" --help)" || return
+  alias_output="$(HOME="$home" "$home/.local/bin/arc" --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
 
   assert_absent "$home/.local/AGENTS.md" || return

@@ -9,18 +9,18 @@ archon libs <command> [options]
 archon workspaces <start|stop> [options]
 ```
 
-`a` is an exact alias for `archon`, so `a projects status` and
+`arc` is an exact alias for `archon`, so `arc projects status` and
 `archon projects status` are equivalent.
 
 Direct subcommands also have one-letter aliases: `h` for `help`, `l` for
 `libs`, `p` for `projects`, and `w` for `workspaces`. These work with both
-`archon` and `a`, for example:
+`archon` and `arc`, for example:
 
 ```bash
-a p status
-a l build
-a w start
-a h
+arc p status
+arc l build
+arc w start
+arc h
 ```
 
 Aliases apply only to direct subcommands; nested commands keep their full names.

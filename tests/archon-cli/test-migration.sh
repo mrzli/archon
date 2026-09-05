@@ -34,7 +34,7 @@ copy_archon_cli() {
   mkdir -p "$home/.local/bin" "$home/.local/lib/archon"
   rsync -a --exclude='*.md' "$archon_cli_source/lib/archon"/ "$home/.local/lib/archon"/
   install -m 755 "$archon_cli_source/bin/archon" "$home/.local/bin/archon"
-  ln -sfn archon "$home/.local/bin/a"
+  ln -sfn archon "$home/.local/bin/arc"
 }
 
 test_requires_installed_replacements() {
