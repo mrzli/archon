@@ -1,7 +1,11 @@
-import { toSingleLine } from './errors.mjs';
-import { runProcess } from './process.mjs';
+import { toSingleLine } from './errors.ts';
+import { runProcess } from './process.ts';
 
-export function getGitOutput(repository, arguments_) {
+export interface Repository {
+  path: string;
+}
+
+export function getGitOutput(repository: Repository, arguments_: readonly string[]): string {
   const result = runGit(repository, arguments_);
 
   if (result.error) {
@@ -19,13 +23,13 @@ export function getGitOutput(repository, arguments_) {
   return result.stdout;
 }
 
-export function runGit(repository, arguments_) {
+export function runGit(repository: Repository, arguments_: readonly string[]) {
   return runProcess('git', ['-C', repository.path, ...arguments_], {
     encoding: 'utf8',
   });
 }
 
-export function throwGitError(result, fallbackMessage) {
+export function throwGitError(result: { stderr: string }, fallbackMessage: string): never {
   const message = result.stderr.trim() || fallbackMessage;
   throw new Error(toSingleLine(message));
 }

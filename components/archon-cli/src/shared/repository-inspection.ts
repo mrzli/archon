@@ -1,15 +1,36 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { getErrorMessage, toSingleLine } from './errors.mjs';
+import type { Repository } from './git.ts';
+import { getErrorMessage, toSingleLine } from './errors.ts';
 import {
   getGitOutput,
   runGit,
   throwGitError,
-} from './git.mjs';
-import { isGitRepository } from './paths.mjs';
+} from './git.ts';
+import { isGitRepository } from './paths.ts';
 
-export function findChildGitRepositories(root) {
+export interface WorkingTreeChanges {
+  staged: number;
+  unstaged: number;
+  untracked: number;
+}
+
+export type RepositoryStatus = {
+  name: string;
+  warnings: string[];
+} & ({
+  error?: undefined;
+  branch: string;
+  changes: WorkingTreeChanges;
+  stashCount: number;
+  ahead: string[];
+} | {
+  error: string;
+});
+
+
+export function findChildGitRepositories(root: string) {
   return readdirSync(root, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .filter((entry) => isGitRepository(join(root, entry.name)))
@@ -19,7 +40,7 @@ export function findChildGitRepositories(root) {
     }));
 }
 
-export function formatChanges(changes) {
+export function formatChanges(changes: WorkingTreeChanges): string {
   const parts = [];
 
   if (changes.staged > 0) {
@@ -37,7 +58,7 @@ export function formatChanges(changes) {
   return parts.length > 0 ? parts.join(', ') : 'clean';
 }
 
-export function getBranchUpstream(repository, branch) {
+export function getBranchUpstream(repository: Repository, branch: string) {
   const output = getGitOutput(repository, [
     'for-each-ref',
     '--format=%(upstream:short)',
@@ -47,7 +68,7 @@ export function getBranchUpstream(repository, branch) {
   return output.length > 0 ? output : undefined;
 }
 
-export function getSymbolicCurrentBranch(repository) {
+export function getSymbolicCurrentBranch(repository: Repository) {
   const result = runGit(repository, [
     'symbolic-ref',
     '--quiet',
@@ -66,7 +87,7 @@ export function getSymbolicCurrentBranch(repository) {
   throwGitError(result, 'could not determine current branch');
 }
 
-export function getWorkingTreeChanges(repository) {
+export function getWorkingTreeChanges(repository: Repository): WorkingTreeChanges {
   const output = getGitOutput(repository, [
     'status',
     '--porcelain=v1',
@@ -110,19 +131,23 @@ export function getWorkingTreeChanges(repository) {
   return changes;
 }
 
-export function hasWorkingTreeChanges(changes) {
+export function hasWorkingTreeChanges(changes: WorkingTreeChanges): boolean {
   return (
     changes.staged > 0 || changes.unstaged > 0 || changes.untracked > 0
   );
 }
 
-export function inspectLocalRepositories(repositories, fetch, getName) {
+export function inspectLocalRepositories<R extends Repository>(
+  repositories: R[],
+  fetch: boolean,
+  getName: (repository: R) => string,
+): RepositoryStatus[] {
   return repositories.map((repository) =>
     inspectLocalRepository(repository, fetch, getName),
   );
 }
 
-export function printLocalRepositoryStatuses(statuses) {
+export function printLocalRepositoryStatuses(statuses: RepositoryStatus[]) {
   const nameWidth = Math.max(...statuses.map((status) => status.name.length));
   const validStatuses = statuses.filter((status) => status.error === undefined);
   const branchWidth = Math.max(
@@ -146,7 +171,8 @@ export function printLocalRepositoryStatuses(statuses) {
     }
 
     const branch = `[${status.branch.padEnd(branchWidth)}]`;
-    const changes = changeTexts.get(status).padEnd(changesWidth);
+    // Every successful status was inserted into changeTexts above.
+    const changes = changeTexts.get(status)!.padEnd(changesWidth);
     const ahead = status.ahead.length > 0 ? status.ahead.join(', ') : 'none';
     const warnings =
       status.warnings.length > 0
@@ -159,7 +185,7 @@ export function printLocalRepositoryStatuses(statuses) {
   }
 }
 
-function getAheadBranches(repository, warnings) {
+function getAheadBranches(repository: Repository, warnings: string[]) {
   const output = getGitOutput(repository, [
     'for-each-ref',
     '--format=%(refname:short)%09%(refname)%09%(upstream:short)%09%(upstream)',
@@ -217,7 +243,7 @@ function getAheadBranches(repository, warnings) {
   return ahead;
 }
 
-function getCurrentBranch(repository) {
+function getCurrentBranch(repository: Repository) {
   const branchResult = runGit(repository, [
     'symbolic-ref',
     '--quiet',
@@ -237,7 +263,7 @@ function getCurrentBranch(repository) {
   return `detached@${commit.trim()}`;
 }
 
-function getStashCount(repository) {
+function getStashCount(repository: Repository) {
   const output = getGitOutput(repository, ['stash', 'list', '--format=%gd']);
 
   if (output.length === 0) {
@@ -247,8 +273,12 @@ function getStashCount(repository) {
   return output.trimEnd().split('\n').length;
 }
 
-function inspectLocalRepository(repository, fetch, getName) {
-  const warnings = [];
+function inspectLocalRepository<R extends Repository>(
+  repository: R,
+  fetch: boolean,
+  getName: (repository: R) => string,
+): RepositoryStatus {
+  const warnings: string[] = [];
 
   if (fetch) {
     try {

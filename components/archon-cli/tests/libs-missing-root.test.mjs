@@ -14,7 +14,7 @@ import {
   removeFixture,
   runArchon,
   writeExecutable,
-} from './test-helpers.mjs';
+} from './test-helpers.ts';
 
 function installFakes(fixture) {
   writeExecutable(

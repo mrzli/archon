@@ -4,44 +4,43 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'bun:test';
 
-import { withGitFixture } from './test-helpers.mjs';
-
+import { withGitFixture } from './test-helpers.ts';
 import {
   createSyncFailure,
   syncRepositories,
   updateLocalRepository,
-} from '../src/shared/sync-workflow.mjs';
+} from '../src/shared/sync-workflow.ts';
 
 function createOutput() {
-  const errors = [];
-  const output = [];
-  const writes = [];
+  const errors: string[] = [];
+  const output: string[] = [];
+  const writes: string[] = [];
   return {
     errors,
     output,
     writes,
-    print: (message) => output.push(message),
-    printError: (message) => errors.push(message),
-    write: (message) => writes.push(message),
+    print: (message: string) => output.push(message),
+    printError: (message: string) => errors.push(message),
+    write: (message: string) => writes.push(message),
   };
 }
 
 test('project and library policies produce sorted clone and update plans', () => {
   for (const kind of ['projects', 'libs']) {
-    const calls = [];
+    const calls: string[][] = [];
     const capture = createOutput();
     const projectPolicy = kind === 'projects';
     const local = projectPolicy
-      ? { name: 'zeta', nameWithOwner: 'owner/zeta' }
-      : { name: 'zeta' };
+      ? { name: 'zeta', nameWithOwner: 'owner/zeta', path: '/unused/zeta' }
+      : { name: 'zeta', path: '/unused/zeta' };
     const existingRemote = projectPolicy
       ? { name: 'zeta', nameWithOwner: 'owner/zeta' }
       : { name: 'zeta' };
     const missingRemote = projectPolicy
       ? { name: 'alpha', nameWithOwner: 'owner/alpha' }
       : { name: 'alpha' };
-    const getName = (repository) =>
-      projectPolicy ? repository.nameWithOwner : repository.name;
+    const getName = (repository: { name: string } | { name: string; nameWithOwner: string }) =>
+      'nameWithOwner' in repository ? repository.nameWithOwner : repository.name;
     const getKey = getName;
 
     const status = syncRepositories([], {
@@ -91,9 +90,9 @@ test('project and library policies produce sorted clone and update plans', () =>
 });
 
 test('operation failures are reported and do not stop later operations', () => {
-  const calls = [];
+  const calls: string[][] = [];
   const capture = createOutput();
-  const getName = (repository) => repository.name;
+  const getName = (repository: { name: string }) => repository.name;
   const status = syncRepositories([], {
     ...capture,
     cloneRepository(repository) {
@@ -101,7 +100,7 @@ test('operation failures are reported and do not stop later operations', () => {
       return createSyncFailure(repository, 'clone failed', getName);
     },
     compareRepositories: (left, right) => left.name.localeCompare(right.name),
-    findLocalRepositories: () => [{ name: 'alpha' }],
+    findLocalRepositories: () => [{ name: 'alpha', path: '/unused/alpha' }],
     getRemoteRepositories: () => [{ name: 'zeta' }],
     getRepositoryKey: getName,
     getRepositoryName: getName,
@@ -128,7 +127,7 @@ test('local Git update reports up-to-date, updated, and dirty states', () => wit
   const remote = join(root, 'remote.git');
   const local = join(root, 'local');
   const contributor = join(root, 'contributor');
-  const runGit = (directory, ...arguments_) =>
+  const runGit = (directory: string, ...arguments_: string[]) =>
     execFileSync('git', ['-C', directory, ...arguments_], { stdio: 'ignore' });
 
   execFileSync(
@@ -145,7 +144,7 @@ test('local Git update reports up-to-date, updated, and dirty states', () => wit
   runGit(local, 'push', '--set-upstream', 'origin', 'main');
 
   const repository = { name: 'example', path: local };
-  const getName = (repository_) => repository_.name;
+  const getName = (repository_: { name: string }) => repository_.name;
   assert.deepEqual(updateLocalRepository(repository, getName), {
     message: '[main -> origin/main]  up to date',
     name: 'example',

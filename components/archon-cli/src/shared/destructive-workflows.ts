@@ -1,15 +1,57 @@
+import type { Interface, ReadLineOptions } from 'node:readline/promises';
 import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
+import type { Repository } from './git.ts';
+import type { RepositoryStatus } from './repository-inspection.ts';
 import { isHelpRequest } from './arguments.ts';
-import { getErrorMessage, toSingleLine } from './errors.mjs';
+import { getErrorMessage, toSingleLine } from './errors.ts';
 import {
   formatChanges,
   hasWorkingTreeChanges,
-} from './repository-inspection.mjs';
+} from './repository-inspection.ts';
 
-export async function deleteRepositories(arguments_, options) {
+interface DestructiveOptions<R extends Repository> {
+  rootDir: string;
+  requiredRootDir: string;
+  printHelp: () => void;
+  inspectRepositories: (repositories: R[], fetch: boolean) => RepositoryStatus[];
+  confirmDeletion?: (statuses: RepositoryStatus[]) => Promise<boolean>;
+  removeRepositories?: (repositories: R[]) => number;
+}
+
+export interface DeleteOptions<R extends Repository> extends DestructiveOptions<R> {
+  findRepositories: () => R[];
+  emptyMessage: string;
+}
+
+export interface PruneOptions<L extends Repository, R> extends DestructiveOptions<L> {
+  getRemoteRepositories: (refresh: boolean) => R[];
+  findPrunableRepositories: (remote: R[]) => L[] | undefined;
+  findRestoredRepositories: (local: L[], remote: R[]) => L[];
+  getRepositoryName: (repository: L) => string;
+}
+
+export interface ConfirmationContext {
+  input?: NodeJS.ReadableStream & { isTTY?: boolean };
+  output?: NodeJS.WritableStream & { isTTY?: boolean };
+  print?: (message: string) => void;
+  printError?: (message: string) => void;
+  createInterface?: (options: ReadLineOptions) => Pick<Interface, 'question' | 'close'>;
+}
+
+export interface RemovalContext {
+  print?: (message: string) => void;
+  printError?: (message: string) => void;
+  remove?: (path: string, options: { recursive: true; force: false }) => void;
+}
+
+
+export async function deleteRepositories<R extends Repository>(
+  arguments_: readonly string[],
+  options: DeleteOptions<R>,
+) {
   if (isHelpRequest(arguments_)) {
     options.printHelp();
     return 0;
@@ -56,7 +98,10 @@ export async function deleteRepositories(arguments_, options) {
   return removeRepositories(repositories);
 }
 
-export async function pruneRepositories(arguments_, options) {
+export async function pruneRepositories<L extends Repository, R>(
+  arguments_: readonly string[],
+  options: PruneOptions<L, R>,
+) {
   if (isHelpRequest(arguments_)) {
     options.printHelp();
     return 0;
@@ -145,7 +190,10 @@ export async function pruneRepositories(arguments_, options) {
   return removeRepositories(repositories);
 }
 
-export async function confirmRepositoryDeletion(statuses, context = {}) {
+export async function confirmRepositoryDeletion(
+  statuses: RepositoryStatus[],
+  context: ConfirmationContext = {},
+) {
   const input = context.input ?? process.stdin;
   const output = context.output ?? process.stdout;
   const print = context.print ?? console.log;
@@ -196,7 +244,7 @@ export async function confirmRepositoryDeletion(statuses, context = {}) {
   }
 }
 
-export function isLocalRepositoryUnclean(status) {
+export function isLocalRepositoryUnclean(status: RepositoryStatus): boolean {
   if (status.error !== undefined || status.warnings.length > 0) {
     return true;
   }
@@ -210,7 +258,10 @@ export function isLocalRepositoryUnclean(status) {
   );
 }
 
-export function removeLocalRepositories(repositories, context = {}) {
+export function removeLocalRepositories(
+  repositories: Repository[],
+  context: RemovalContext = {},
+) {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
   const remove = context.remove ?? rmSync;
@@ -239,7 +290,7 @@ export function removeLocalRepositories(repositories, context = {}) {
   return 0;
 }
 
-function isDeletionRootSafe(rootDir, requiredRootDir) {
+function isDeletionRootSafe(rootDir: string, requiredRootDir: string) {
   if (resolve(rootDir) === requiredRootDir) {
     return true;
   }
@@ -249,7 +300,11 @@ function isDeletionRootSafe(rootDir, requiredRootDir) {
   return false;
 }
 
-function parseArguments(arguments_, command, printHelp) {
+function parseArguments(
+  arguments_: readonly string[],
+  command: string,
+  printHelp: () => void,
+) {
   if (arguments_.length === 0) {
     return false;
   }
@@ -266,13 +321,16 @@ function parseArguments(arguments_, command, printHelp) {
   return undefined;
 }
 
-function printRepositoryPaths(repositories) {
+function printRepositoryPaths(repositories: Repository[]) {
   for (const repository of repositories) {
     console.log(`  ${repository.path}`);
   }
 }
 
-function printUncleanRepositoryReasons(statuses, print) {
+function printUncleanRepositoryReasons(
+  statuses: RepositoryStatus[],
+  print: (message: string) => void,
+) {
   print('Unclean repositories:');
 
   for (const status of statuses) {

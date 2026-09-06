@@ -15,7 +15,7 @@ import {
   runStatusWorkflow,
   syncRepositories as runSyncWorkflow,
   toSingleLine,
-} from '../../shared/index.mjs';
+} from '../../shared/index.ts';
 import {
   createDependencyGraph,
   LOCAL_PACKAGE_SCOPE,

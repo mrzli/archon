@@ -7,13 +7,13 @@ import { test } from 'bun:test';
 import {
   withGitFixture,
   runArchon,
-} from './test-helpers.mjs';
+} from './test-helpers.ts';
 
-function runGit(directory, ...arguments_) {
+function runGit(directory: string, ...arguments_: string[]) {
   execFileSync('git', ['-C', directory, ...arguments_], { stdio: 'ignore' });
 }
 
-function initializeRepository(directory) {
+function initializeRepository(directory: string) {
   mkdirSync(directory, { recursive: true });
   execFileSync('git', ['init', '-q', '-b', 'main', directory]);
   runGit(directory, 'config', 'user.email', 'test@example.com');
@@ -23,7 +23,7 @@ function initializeRepository(directory) {
   runGit(directory, 'commit', '-qm', 'initial');
 }
 
-function addRepositoryChanges(directory) {
+function addRepositoryChanges(directory: string) {
   writeFileSync(join(directory, 'tracked.txt'), 'stashed\n', { flag: 'a' });
   runGit(directory, 'stash', 'push', '-qm', 'test-stash');
   writeFileSync(join(directory, 'tracked.txt'), 'unstaged\n', { flag: 'a' });

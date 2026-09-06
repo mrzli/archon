@@ -1,7 +1,18 @@
+import type { RepositoryStatus } from './repository-inspection.ts';
 import { isHelpRequest } from './arguments.ts';
-import { printLocalRepositoryStatuses } from './repository-inspection.mjs';
+import { printLocalRepositoryStatuses } from './repository-inspection.ts';
 
-export function runStatusWorkflow(arguments_, options) {
+export interface StatusOptions<R> {
+  printHelp: () => void;
+  findRepositories: () => R[];
+  inspectRepositories: (repositories: R[], fetch: boolean) => RepositoryStatus[];
+  emptyMessage: string;
+}
+
+export function runStatusWorkflow<R>(
+  arguments_: readonly string[],
+  options: StatusOptions<R>,
+) {
   if (isHelpRequest(arguments_)) {
     options.printHelp();
     return 0;
@@ -31,7 +42,7 @@ export function runStatusWorkflow(arguments_, options) {
     : 0;
 }
 
-function parseStatusArguments(arguments_, printHelp) {
+function parseStatusArguments(arguments_: readonly string[], printHelp: () => void) {
   if (arguments_.length === 0) {
     return false;
   }

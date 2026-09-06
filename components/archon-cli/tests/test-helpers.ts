@@ -10,10 +10,16 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+export interface Fixture {
+  bin: string;
+  home: string;
+  root: string;
+}
+
 const componentRoot = fileURLToPath(new URL('..', import.meta.url));
 const archon = join(componentRoot, 'dist/bin/archon');
 
-export function createFixture(name) {
+export function createFixture(name: string): Fixture {
   const root = mkdtempSync(join(tmpdir(), `archon-${name}-`));
   const fixture = {
     bin: join(root, 'bin'),
@@ -26,11 +32,14 @@ export function createFixture(name) {
   return fixture;
 }
 
-export function removeFixture(fixture) {
+export function removeFixture(fixture: Fixture) {
   rmSync(fixture.root, { recursive: true, force: true });
 }
 
-export function createGitEnvironment(fixture, overrides = {}) {
+export function createGitEnvironment(
+  fixture: Fixture,
+  overrides: NodeJS.ProcessEnv = {},
+): NodeJS.ProcessEnv {
   const inherited = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
   );
@@ -57,7 +66,7 @@ export function createGitEnvironment(fixture, overrides = {}) {
 }
 
 // Synchronous scope for real Git fixtures and workflows running in this process.
-export function withGitFixture(name, run) {
+export function withGitFixture<T>(name: string, run: (fixture: Fixture) => T): T {
   const fixture = createFixture(name);
   const previousEnvironment = process.env;
   try {
@@ -69,7 +78,11 @@ export function withGitFixture(name, run) {
   }
 }
 
-export function runArchon(fixture, arguments_, environment = {}) {
+export function runArchon(
+  fixture: Fixture,
+  arguments_: readonly string[],
+  environment: NodeJS.ProcessEnv = {},
+) {
   // Keep the CLI runtime separate from fake Bun package commands on PATH.
   return spawnSync(process.execPath, [archon, ...arguments_], {
     encoding: 'utf8',
@@ -77,13 +90,18 @@ export function runArchon(fixture, arguments_, environment = {}) {
   });
 }
 
-export function writeExecutable(path, content) {
+export function writeExecutable(path: string, content: string) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
   chmodSync(path, 0o755);
 }
 
-export function writeLibrary(fixture, directoryName, manifest, options = {}) {
+export function writeLibrary(
+  fixture: Fixture,
+  directoryName: string,
+  manifest: unknown,
+  options: { git?: boolean } = {},
+) {
   const directory = join(
     fixture.home,
     'projects/personal/mrzli-jslib',

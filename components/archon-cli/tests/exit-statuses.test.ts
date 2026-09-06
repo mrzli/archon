@@ -8,7 +8,7 @@ import {
   removeFixture,
   runArchon,
   writeExecutable,
-} from './test-helpers.mjs';
+} from './test-helpers.ts';
 
 const USAGE_CASES = [
   ['h', 'extra'],
@@ -84,7 +84,7 @@ test('direct command aliases preserve help output and argument forwarding', () =
       ['l', 'libs', ['help', 'build']],
       ['p', 'projects', ['help', 'status']],
       ['w', 'workspaces', ['--help']],
-    ]) {
+    ] satisfies [string, string, string[]][]) {
       const short = runArchon(fixture, [alias, ...arguments_]);
       const full = runArchon(fixture, [command, ...arguments_]);
       assert.equal(short.status, 0);

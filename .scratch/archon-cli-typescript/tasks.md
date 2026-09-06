@@ -13,7 +13,7 @@ Task files contain acceptance criteria and a place for actual completion evidenc
 | --- | --- | --- | --- |
 | 1 | [ACTS-001: Switch JavaScript execution to Bun](./tasks/ACTS-001-bun-runtime.md) | none | Completed |
 | 2 | [ACTS-002: Introduce strict compilation and checked builds](./tasks/ACTS-002-typescript-foundation.md) | ACTS-001 | Completed |
-| 3 | [ACTS-003: Convert shared modules and test helpers](./tasks/ACTS-003-shared-types.md) | ACTS-002 | Planned |
+| 3 | [ACTS-003: Convert shared modules and test helpers](./tasks/ACTS-003-shared-types.md) | ACTS-002 | Completed |
 | 4 | [ACTS-004: Convert libraries command and tests](./tasks/ACTS-004-libs-types.md) | ACTS-003 | Planned |
 | 5 | [ACTS-005: Convert projects command and tests](./tasks/ACTS-005-projects-types.md) | ACTS-004 | Planned |
 | 6 | [ACTS-006: Convert workspaces command and tests](./tasks/ACTS-006-workspaces-types.md) | ACTS-005 | Planned |
@@ -46,4 +46,5 @@ workstation tools and removal of legacy installed files are outside this plan.
 ACTS-001 completed on 2026-09-06 with Bun 1.4.1. Both verification modes passed;
 see its task record for evidence. ACTS-002 completed with strict mixed-language
 checking, JavaScript emission, frozen development dependencies, and the requested
-three-day release-age gate. ACTS-003 is next.
+three-day release-age gate. ACTS-003 completed the shared modules and test-helper
+conversion with both verification modes passing. ACTS-004 is next.

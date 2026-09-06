@@ -12,7 +12,7 @@ import {
   createFixture,
   removeFixture,
   writeLibrary,
-} from './test-helpers.mjs';
+} from './test-helpers.ts';
 
 function graphNode(name, dependencies = []) {
   return {

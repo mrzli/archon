@@ -8,7 +8,7 @@ import { runProjects } from '../src/commands/projects/index.mjs';
 import {
   createFixture,
   removeFixture,
-} from './test-helpers.mjs';
+} from './test-helpers.ts';
 
 test('projects and libraries invocations keep distinct root paths', async () => {
   const fixture = createFixture('root-context');
@@ -18,7 +18,7 @@ test('projects and libraries invocations keep distinct root paths', async () => 
     projectsFirst: join(fixture.root, 'projects-first'),
     projectsSecond: join(fixture.root, 'projects-second'),
   };
-  const output = [];
+  const output: string[] = [];
   const originalLog = console.log;
 
   try {

@@ -9,7 +9,7 @@ import {
   runArchon,
   writeExecutable,
   writeLibrary,
-} from './test-helpers.mjs';
+} from './test-helpers.ts';
 
 const buildScript = { scripts: { build: 'build-command' } };
 

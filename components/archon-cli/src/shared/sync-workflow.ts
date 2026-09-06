@@ -1,15 +1,40 @@
+import type { Repository } from './git.ts';
 import { isHelpRequest } from './arguments.ts';
-import { getErrorMessage, toSingleLine } from './errors.mjs';
-import { getGitOutput } from './git.mjs';
+import { getErrorMessage, toSingleLine } from './errors.ts';
+import { getGitOutput } from './git.ts';
 import {
   formatChanges,
   getBranchUpstream,
   getSymbolicCurrentBranch,
   getWorkingTreeChanges,
   hasWorkingTreeChanges,
-} from './repository-inspection.mjs';
+} from './repository-inspection.ts';
 
-export function createSyncFailure(repository, message, getRepositoryName) {
+export interface SyncResult {
+  name: string;
+  succeeded: boolean;
+  message: string;
+}
+
+export interface SyncOptions<L extends Repository, R> {
+  printHelp: () => void;
+  getRemoteRepositories: () => R[];
+  findLocalRepositories: () => L[];
+  getRepositoryKey: (repository: L | R) => string;
+  getRepositoryName: (repository: L | R) => string;
+  compareRepositories: (left: L | R, right: L | R) => number;
+  updateRepository?: (repository: L) => SyncResult;
+  cloneRepository: (repository: R) => SyncResult;
+  print?: (message: string) => void;
+  printError?: (message: string) => void;
+  write?: (message: string) => void;
+}
+
+export function createSyncFailure<R>(
+  repository: R,
+  message: unknown,
+  getRepositoryName: (repository: R) => string,
+): SyncResult {
   return {
     name: getRepositoryName(repository),
     succeeded: false,
@@ -17,7 +42,10 @@ export function createSyncFailure(repository, message, getRepositoryName) {
   };
 }
 
-export function syncRepositories(arguments_, options) {
+export function syncRepositories<L extends Repository, R>(
+  arguments_: readonly string[],
+  options: SyncOptions<L, R>,
+) {
   const print = options.print ?? console.log;
   const printError = options.printError ?? console.error;
 
@@ -50,16 +78,17 @@ export function syncRepositories(arguments_, options) {
   );
   const updateRepository =
     options.updateRepository ??
-    ((repository) =>
+    ((repository: L) =>
       updateLocalRepository(repository, options.getRepositoryName));
+  const cloneRepository = options.cloneRepository;
   const operations = [
     ...localRepositories.map((repository) => ({
       repository,
-      run: updateRepository,
+      run: () => updateRepository(repository),
     })),
     ...missingRepositories.map((repository) => ({
       repository,
-      run: options.cloneRepository,
+      run: () => cloneRepository(repository),
     })),
   ].sort((left, right) =>
     options.compareRepositories(left.repository, right.repository),
@@ -74,7 +103,10 @@ export function syncRepositories(arguments_, options) {
   return results.some((result) => !result.succeeded) ? 1 : 0;
 }
 
-export function updateLocalRepository(repository, getRepositoryName) {
+export function updateLocalRepository<R extends Repository>(
+  repository: R,
+  getRepositoryName: (repository: R) => string,
+): SyncResult {
   try {
     getGitOutput(repository, ['fetch', '--all', '--prune']);
 
@@ -123,7 +155,14 @@ export function updateLocalRepository(repository, getRepositoryName) {
   }
 }
 
-function runSyncOperations(operations, options) {
+function runSyncOperations<R>(
+  operations: { repository: R; run: () => SyncResult }[],
+  options: {
+    print?: (message: string) => void;
+    write?: (message: string) => void;
+    getRepositoryName: (repository: R) => string;
+  },
+) {
   const print = options.print ?? console.log;
   const write = options.write ?? process.stdout.write.bind(process.stdout);
   const indexWidth = String(operations.length).length;
@@ -146,7 +185,7 @@ function runSyncOperations(operations, options) {
     let result;
 
     try {
-      result = run(repository);
+      result = run();
     } catch (error) {
       result = createSyncFailure(
         repository,

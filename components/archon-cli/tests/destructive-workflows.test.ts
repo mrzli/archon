@@ -1,18 +1,21 @@
+import { PassThrough } from 'node:stream';
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
+import type { DeleteOptions, PruneOptions } from '../src/shared/destructive-workflows.ts';
+import type { RepositoryStatus } from '../src/shared/repository-inspection.ts';
 import {
   confirmRepositoryDeletion,
   deleteRepositories,
   pruneRepositories,
   removeLocalRepositories,
-} from '../src/shared/destructive-workflows.mjs';
+} from '../src/shared/destructive-workflows.ts';
 
 const repositories = [{ name: 'obsolete', path: '/safe/obsolete' }];
 
-async function captureConsole(run) {
-  const errors = [];
-  const output = [];
+async function captureConsole<T>(run: () => Promise<T>) {
+  const errors: string[] = [];
+  const output: string[] = [];
   const originalError = console.error;
   const originalLog = console.log;
   console.error = (message) => errors.push(message);
@@ -26,7 +29,9 @@ async function captureConsole(run) {
   }
 }
 
-function createDeleteOptions(overrides = {}) {
+function createDeleteOptions(
+  overrides: Partial<DeleteOptions<(typeof repositories)[number]>> = {},
+): DeleteOptions<(typeof repositories)[number]> {
   return {
     confirmDeletion: async () => true,
     emptyMessage: 'No repositories.',
@@ -40,7 +45,9 @@ function createDeleteOptions(overrides = {}) {
   };
 }
 
-function createPruneOptions(overrides = {}) {
+function createPruneOptions(
+  overrides: Partial<PruneOptions<(typeof repositories)[number], { name: string }>> = {},
+): PruneOptions<(typeof repositories)[number], { name: string }> {
   return {
     confirmDeletion: async () => true,
     findPrunableRepositories: () => repositories,
@@ -116,11 +123,11 @@ test('delete dry-run lists repositories without confirmation or removal', async 
 });
 
 test('confirmation refuses non-interactive input', async () => {
-  const errors = [];
+  const errors: string[] = [];
   assert.equal(
     await confirmRepositoryDeletion([], {
-      input: { isTTY: false },
-      output: { isTTY: true },
+      input: Object.assign(new PassThrough(), { isTTY: false }),
+      output: Object.assign(new PassThrough(), { isTTY: true }),
       printError: (message) => errors.push(message),
     }),
     false,
@@ -131,9 +138,9 @@ test('confirmation refuses non-interactive input', async () => {
 });
 
 test('clean and unclean confirmation use one and two prompts', async () => {
-  async function confirm(statuses, answers) {
-    const messages = [];
-    const prompts = [];
+  async function confirm(statuses: RepositoryStatus[], answers: string[]) {
+    const messages: string[] = [];
+    const prompts: string[] = [];
     let closed = false;
     const result = await confirmRepositoryDeletion(statuses, {
       createInterface: () => ({
@@ -142,11 +149,13 @@ test('clean and unclean confirmation use one and two prompts', async () => {
         },
         question: async (prompt) => {
           prompts.push(prompt);
-          return answers.shift();
+          const answer = answers.shift();
+          assert.ok(answer !== undefined);
+          return answer;
         },
       }),
-      input: { isTTY: true },
-      output: { isTTY: true },
+      input: Object.assign(new PassThrough(), { isTTY: true }),
+      output: Object.assign(new PassThrough(), { isTTY: true }),
       print: (message) => messages.push(message),
     });
     return { closed, messages, prompts, result };
@@ -161,6 +170,7 @@ test('clean and unclean confirmation use one and two prompts', async () => {
     [
       {
         ahead: ['main=1'],
+        branch: 'main',
         changes: { staged: 1, unstaged: 0, untracked: 0 },
         name: 'obsolete',
         stashCount: 1,
@@ -179,7 +189,7 @@ test('clean and unclean confirmation use one and two prompts', async () => {
 });
 
 test('prune revalidates inventory and refuses restored repositories', async () => {
-  const inventoryCalls = [];
+  const inventoryCalls: boolean[] = [];
   let removed = false;
   const capture = await captureConsole(() =>
     pruneRepositories(
@@ -211,9 +221,9 @@ test('prune revalidates inventory and refuses restored repositories', async () =
 });
 
 test('removal continues after a failure and returns nonzero', () => {
-  const errors = [];
-  const output = [];
-  const removed = [];
+  const errors: string[] = [];
+  const output: string[] = [];
+  const removed: string[] = [];
   const status = removeLocalRepositories(
     [
       { path: '/safe/first' },
