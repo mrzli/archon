@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { test } from 'bun:test';
 
 import { runLibraries } from '../src/commands/libs/index.ts';
-import { runProjects } from '../src/commands/projects/index.mjs';
+import { runProjects } from '../src/commands/projects/index.ts';
 import {
   createFixture,
   removeFixture,

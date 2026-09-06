@@ -1,10 +1,28 @@
+export interface RepositoryIdentity {
+  owner: string;
+  name: string;
+  nameWithOwner: string;
+}
+
+export interface RemoteRepository extends RepositoryIdentity {
+  id: string;
+  sshUrl: string;
+  isArchived: boolean;
+  visibility: string;
+}
+
+export interface BlacklistPolicy {
+  organizationBlacklist?: readonly string[];
+  repositoryBlacklist?: readonly string[];
+}
+
 export const ORGANIZATION_BLACKLIST = [
   'mrzli-courses',
   'mrzli-gh-actions',
   'mrzli-other',
   'mrzli-vscode-extensions',
 ];
-export const REPOSITORY_BLACKLIST = [];
+export const REPOSITORY_BLACKLIST: string[] = [];
 export const REPOSITORY_QUERY = [
   '.[]',
   '| [',
@@ -21,25 +39,31 @@ const ORGANIZATION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]*$/;
 const REPOSITORY_PATTERN =
   /^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9._-]+$/;
 
-export function addRemoteRepositories(repositoriesByName, repositories) {
+export function addRemoteRepositories<R extends { nameWithOwner: string }>(
+  repositoriesByName: Map<string, R>,
+  repositories: R[],
+) {
   for (const repository of repositories) {
     repositoriesByName.set(repositoryKey(repository), repository);
   }
 }
 
-export function compareNames(left, right) {
+export function compareNames(left: string, right: string) {
   return left.localeCompare(right, undefined, { sensitivity: 'base' });
 }
 
-export function compareRepositories(left, right) {
+export function compareRepositories(
+  left: { nameWithOwner: string },
+  right: { nameWithOwner: string },
+) {
   return compareNames(left.nameWithOwner, right.nameWithOwner);
 }
 
 export function getRepositoryBlacklistLookupNames(
-  repositoryBlacklist = REPOSITORY_BLACKLIST,
+  repositoryBlacklist: readonly string[] = REPOSITORY_BLACKLIST,
 ) {
   const names = [];
-  const seen = new Set();
+  const seen = new Set<string>();
 
   for (const nameWithOwner of repositoryBlacklist) {
     const key = nameWithOwner.toLowerCase();
@@ -56,9 +80,9 @@ export function getRepositoryBlacklistLookupNames(
 }
 
 export function isRepositoryBlacklisted(
-  repository,
-  organizationBlacklist = ORGANIZATION_BLACKLIST,
-  repositoryBlacklist = REPOSITORY_BLACKLIST,
+  repository: { owner: string; nameWithOwner: string },
+  organizationBlacklist: readonly string[] = ORGANIZATION_BLACKLIST,
+  repositoryBlacklist: readonly string[] = REPOSITORY_BLACKLIST,
 ) {
   const owner = repository.owner.toLowerCase();
 
@@ -73,7 +97,7 @@ export function isRepositoryBlacklisted(
   );
 }
 
-export function parseRemoteRepository(row) {
+export function parseRemoteRepository(row: string): RemoteRepository {
   const fields = row.split('\t');
   const [id, nameWithOwner, sshUrl, archived, visibility] = fields;
   const separator = nameWithOwner?.indexOf('/') ?? -1;
@@ -104,15 +128,15 @@ export function parseRemoteRepository(row) {
   };
 }
 
-export function repositoryKey(repository) {
+export function repositoryKey(repository: { nameWithOwner: string }) {
   return repository.nameWithOwner.toLowerCase();
 }
 
 export function validateBlacklists(
-  username,
-  organizations,
-  canonicalRepositories = new Map(),
-  policy = {},
+  username: string,
+  organizations: readonly string[],
+  canonicalRepositories: ReadonlyMap<string, string> = new Map(),
+  policy: BlacklistPolicy = {},
 ) {
   const organizationBlacklist =
     policy.organizationBlacklist ?? ORGANIZATION_BLACKLIST;
@@ -122,7 +146,7 @@ export function validateBlacklists(
   const organizationsByName = new Map(
     organizations.map((organization) => [organization.toLowerCase(), organization]),
   );
-  const blacklistedOrganizations = new Set();
+  const blacklistedOrganizations = new Set<string>();
 
   for (const organization of organizationBlacklist) {
     const key = organization.toLowerCase();
@@ -146,7 +170,7 @@ export function validateBlacklists(
     }
   }
 
-  const blacklistedRepositories = new Set();
+  const blacklistedRepositories = new Set<string>();
 
   for (const nameWithOwner of repositoryBlacklist) {
     const key = nameWithOwner.toLowerCase();
@@ -172,7 +196,8 @@ export function validateBlacklists(
       continue;
     }
 
-    const canonicalName = canonicalRepositories.get(key);
+    // The missing-key case exits above.
+    const canonicalName = canonicalRepositories.get(key)!;
 
     if (canonicalName.toLowerCase() !== key) {
       errors.push(

@@ -9,6 +9,7 @@ import {
 import { join } from 'node:path';
 import { test } from 'bun:test';
 
+import type { Fixture } from './test-helpers.ts';
 import {
   createFixture,
   removeFixture,
@@ -23,7 +24,7 @@ const BLACKLISTED_ORGANIZATIONS = [
   'mrzli-vscode-extensions',
 ];
 
-function installFakes(fixture) {
+function installFakes(fixture: Fixture) {
   writeExecutable(
     join(fixture.bin, 'gh'),
     `#!/usr/bin/env bash
@@ -57,7 +58,7 @@ printf '%s\n' "$*" >> "$ARCHON_TEST_GIT_CALLS"
   );
 }
 
-function environment(fixture, overrides = {}) {
+function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
   return {
     ARCHON_TEST_GH_CALLS: join(fixture.root, 'gh-calls'),
     ARCHON_TEST_GH_ORGS: [...BLACKLISTED_ORGANIZATIONS, 'AlphaOrg'].join('\n'),
@@ -67,7 +68,7 @@ function environment(fixture, overrides = {}) {
   };
 }
 
-function readCalls(path) {
+function readCalls(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf8') : '';
 }
 
@@ -83,7 +84,7 @@ for (const [command, message, githubExpected] of [
     false,
   ],
   ['prune', /No obsolete local Git repositories found\./, true],
-]) {
+] satisfies [string, RegExp, boolean][]) {
   test(`projects ${command} treats a missing root as empty`, () => {
     const fixture = createFixture(`projects-missing-${command}`);
     const root = join(fixture.home, 'projects/personal');

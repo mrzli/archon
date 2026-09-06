@@ -9,7 +9,7 @@ import {
   parseRemoteRepository,
   repositoryKey,
   validateBlacklists,
-} from '../src/commands/projects/github-inventory.mjs';
+} from '../src/commands/projects/github-inventory.ts';
 
 test('project repository rows are parsed into normalized inventory records', () => {
   assert.deepEqual(
@@ -49,7 +49,7 @@ test('project repository row validation preserves incomplete-data errors', () =>
 test('project inventory keys, ordering, and exclusions are case-insensitive', () => {
   const alpha = { nameWithOwner: 'owner/Alpha', owner: 'owner' };
   const zeta = { nameWithOwner: 'Owner/zeta', owner: 'Owner' };
-  const repositoriesByName = new Map();
+  const repositoriesByName = new Map<string, typeof alpha>();
 
   assert.equal(repositoryKey(zeta), 'owner/zeta');
   assert.ok(compareRepositories(alpha, zeta) < 0);
@@ -59,7 +59,7 @@ test('project inventory keys, ordering, and exclusions are case-insensitive', ()
   ]);
   assert.equal(repositoriesByName.size, 1);
   assert.equal(
-    repositoriesByName.get('owner/zeta').nameWithOwner,
+    repositoriesByName.get('owner/zeta')?.nameWithOwner,
     'owner/ZETA',
   );
   assert.equal(

@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'bun:test';
 
+import type { Fixture } from './test-helpers.ts';
 import {
   createFixture,
   removeFixture,
@@ -17,7 +18,7 @@ const blacklistedOrganizations = [
   'mrzli-vscode-extensions',
 ];
 
-function installFakeGitHub(fixture) {
+function installFakeGitHub(fixture: Fixture) {
   writeExecutable(
     join(fixture.bin, 'gh'),
     `#!/usr/bin/env bash
@@ -45,7 +46,7 @@ esac
   );
 }
 
-function projectEnvironment(fixture, overrides = {}) {
+function projectEnvironment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
   return {
     ARCHON_TEST_GH_CALLS: join(fixture.root, 'gh-calls'),
     ARCHON_TEST_GH_ORGS: [...blacklistedOrganizations, 'AlphaOrg'].join('\n'),

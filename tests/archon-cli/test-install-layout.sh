@@ -145,8 +145,8 @@ test_repeated_overlay_copy() {
   assert_exists "$home/.local/lib/archon/commands/libs/build.js" || return
   assert_exists "$home/.local/lib/archon/commands/libs/github-inventory.js" || return
   assert_exists "$home/.local/lib/archon/commands/libs/libs.js" || return
-  assert_exists "$home/.local/lib/archon/commands/projects/github-inventory.mjs" || return
-  assert_exists "$home/.local/lib/archon/commands/projects/projects.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/projects/github-inventory.js" || return
+  assert_exists "$home/.local/lib/archon/commands/projects/projects.js" || return
   assert_exists "$home/.local/lib/archon/commands/workspaces/workspaces.mjs" || return
   assert_exists "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt" || return
   assert_exists "$home/.local/lib/unrelated/keep"
