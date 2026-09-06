@@ -12,9 +12,9 @@ import {
   getErrorMessage,
   inspectLocalRepositories as inspectRepositories,
   isHelpRequest,
-  printLocalRepositoryStatuses,
   pruneRepositories,
   runProcess,
+  runStatusWorkflow,
   syncRepositories as runSyncWorkflow,
   toSingleLine,
 } from '../../../shared/index.mjs';
@@ -422,47 +422,12 @@ function getRemoteHelpText() {
 // =============================================================================
 
 function showLocalRepositoryStatuses(arguments_, rootDir) {
-  if (isHelpRequest(arguments_)) {
-    printStatusHelp();
-    return 0;
-  }
-
-  const fetch = parseStatusArguments(arguments_);
-
-  if (fetch === undefined) {
-    return 2;
-  }
-
-  const repositories = findLocalRepositories(rootDir);
-
-  if (repositories.length === 0) {
-    console.log(`No local Git repositories found in ${rootDir}.`);
-    return 0;
-  }
-
-  const statuses = inspectLocalRepositories(repositories, fetch);
-
-  printLocalRepositoryStatuses(statuses);
-
-  return statuses.some(
-    (status) => status.error !== undefined || status.warnings.length > 0,
-  )
-    ? 1
-    : 0;
-}
-
-function parseStatusArguments(arguments_) {
-  if (arguments_.length === 0) {
-    return false;
-  }
-
-  if (arguments_.length === 1 && arguments_[0] === '--fetch') {
-    return true;
-  }
-
-  console.error(`Unexpected status option: ${arguments_[0]}`);
-  printStatusHelp();
-  return undefined;
+  return runStatusWorkflow(arguments_, {
+    emptyMessage: `No local Git repositories found in ${rootDir}.`,
+    findRepositories: () => findLocalRepositories(rootDir),
+    inspectRepositories: inspectLocalRepositories,
+    printHelp: printStatusHelp,
+  });
 }
 
 function printStatusHelp() {
