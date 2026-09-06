@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { runWorkspaces } from '../../lib/archon/commands/workspaces/src/index.mjs';
+import { runWorkspaces } from '../../src/commands/workspaces/index.mjs';
 
 function createContext({ failures = {}, tmux = '' } = {}) {
   const calls = [];

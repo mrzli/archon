@@ -3,8 +3,8 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import { runLibraries } from '../lib/archon/commands/libs/src/index.mjs';
-import { runProjects } from '../lib/archon/commands/projects/src/index.mjs';
+import { runLibraries } from '../src/commands/libs/index.mjs';
+import { runProjects } from '../src/commands/projects/index.mjs';
 import {
   createFixture,
   removeFixture,

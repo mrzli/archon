@@ -5,6 +5,7 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
+node "$archon_cli_source/scripts/build.mjs" || exit 1
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 temporary_root="$(mktemp -d)"
@@ -43,10 +44,8 @@ copy_home_overlay() {
 copy_archon_cli() {
   local home="$1"
 
-  mkdir -p "$home/.local/bin" "$home/.local/lib/archon"
-  rsync -a --exclude='*.md' "$archon_cli_source/lib/archon"/ "$home/.local/lib/archon"/
-  install -m 755 "$archon_cli_source/bin/archon" "$home/.local/bin/archon"
-  ln -sfn archon "$home/.local/bin/arc"
+  mkdir -p "$home/.local"
+  rsync -a "$archon_cli_source/dist"/ "$home/.local"/
 }
 
 install_home() {
@@ -54,6 +53,23 @@ install_home() {
 
   copy_home_overlay "$home"
   copy_archon_cli "$home"
+}
+
+test_repeated_build() {
+  local first_manifest second_manifest unexpected_files archon_output alias_output
+  first_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
+  : > "$archon_cli_source/dist/stale-output.mjs"
+  node "$archon_cli_source/scripts/build.mjs" || return
+  assert_absent "$archon_cli_source/dist/stale-output.mjs" || return
+  second_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
+  assert_equals "$first_manifest" "$second_manifest" || return
+  unexpected_files="$(find "$archon_cli_source/dist" -type f ! -name '*.mjs' ! -path '*/bin/archon')"
+  assert_equals '' "$unexpected_files" || return
+  [[ -L "$archon_cli_source/dist/bin/arc" ]] || fail 'built arc is not a symbolic link' || return
+  assert_equals archon "$(readlink "$archon_cli_source/dist/bin/arc")" || return
+  archon_output="$("$archon_cli_source/dist/bin/archon" --help)" || return
+  alias_output="$("$archon_cli_source/dist/bin/arc" --help)" || return
+  assert_equals "$archon_output" "$alias_output"
 }
 
 test_repeated_overlay_copy() {
@@ -95,12 +111,12 @@ test_repeated_overlay_copy() {
   done
 
   assert_exists "$home/.local/lib/archon/cli.mjs" || return
-  assert_exists "$home/.local/lib/archon/commands/libs/src/build.mjs" || return
-  assert_exists "$home/.local/lib/archon/commands/libs/src/github-inventory.mjs" || return
-  assert_exists "$home/.local/lib/archon/commands/libs/src/libs.mjs" || return
-  assert_exists "$home/.local/lib/archon/commands/projects/src/github-inventory.mjs" || return
-  assert_exists "$home/.local/lib/archon/commands/projects/src/projects.mjs" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/src/workspaces.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/libs/build.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/libs/github-inventory.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/libs/libs.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/projects/github-inventory.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/projects/projects.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/workspaces/workspaces.mjs" || return
   assert_exists "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt" || return
   assert_exists "$home/.local/lib/unrelated/keep"
 }
@@ -121,6 +137,7 @@ run_test() {
   fi
 }
 
+run_test 'repeat-safe JavaScript build' test_repeated_build
 run_test 'repeated home-overlay copy' test_repeated_overlay_copy
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"

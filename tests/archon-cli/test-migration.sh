@@ -5,6 +5,7 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
+node "$archon_cli_source/scripts/build.mjs" || exit 1
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 migration="$repo_root/migrations/archon-cli.sh"
@@ -31,10 +32,8 @@ assert_absent() {
 copy_archon_cli() {
   local home="$1"
 
-  mkdir -p "$home/.local/bin" "$home/.local/lib/archon"
-  rsync -a --exclude='*.md' "$archon_cli_source/lib/archon"/ "$home/.local/lib/archon"/
-  install -m 755 "$archon_cli_source/bin/archon" "$home/.local/bin/archon"
-  ln -sfn archon "$home/.local/bin/arc"
+  mkdir -p "$home/.local"
+  rsync -a "$archon_cli_source/dist"/ "$home/.local"/
 }
 
 test_requires_installed_replacements() {

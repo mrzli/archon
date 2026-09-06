@@ -10,7 +10,7 @@ import {
   createSyncFailure,
   syncRepositories,
   updateLocalRepository,
-} from '../lib/archon/shared/sync-workflow.mjs';
+} from '../src/shared/sync-workflow.mjs';
 
 function createOutput() {
   const errors = [];

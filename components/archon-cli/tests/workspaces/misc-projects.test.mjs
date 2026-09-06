@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { manageMiscProjects } from '../../lib/archon/commands/workspaces/src/misc-projects.mjs';
+import { manageMiscProjects } from '../../src/commands/workspaces/misc-projects.mjs';
 
 const DEFINITIONS = [
   ['project-mrzli-docs', '/home/test/projects/personal/mrzli/docs'],

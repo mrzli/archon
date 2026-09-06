@@ -21,7 +21,7 @@ import {
   runStatusWorkflow,
   syncRepositories as runSyncWorkflow,
   toSingleLine,
-} from '../../../shared/index.mjs';
+} from '../../shared/index.mjs';
 import {
   addRemoteRepositories,
   compareNames,

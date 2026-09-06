@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { manageGeneral } from '../../lib/archon/commands/workspaces/src/general.mjs';
+import { manageGeneral } from '../../src/commands/workspaces/general.mjs';
 
 function createContext({ missing = false, fail, present = false } = {}) {
   const calls = [];

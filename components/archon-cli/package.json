@@ -1,0 +1,9 @@
+{
+  "name": "archon-cli",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "bash test.sh"
+  }
+}

@@ -4,7 +4,8 @@ set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
-archon="$repo_root/components/archon-cli/bin/archon"
+node "$repo_root/components/archon-cli/scripts/build.mjs" || exit 1
+archon="$repo_root/components/archon-cli/dist/bin/archon"
 export PATH="$repo_root/tests/tmux-workspaces/bin:$PATH"
 
 run_case() (

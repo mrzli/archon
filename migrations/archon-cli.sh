@@ -4,9 +4,9 @@ set -euo pipefail
 
 replacement_files=(
   .local/bin/archon
-  .local/lib/archon/commands/libs/src/libs.mjs
-  .local/lib/archon/commands/projects/src/projects.mjs
-  .local/lib/archon/commands/workspaces/src/workspaces.mjs
+  .local/lib/archon/commands/libs/libs.mjs
+  .local/lib/archon/commands/projects/projects.mjs
+  .local/lib/archon/commands/workspaces/workspaces.mjs
 )
 
 legacy_files=(

@@ -1,5 +1,15 @@
 # Archon CLI
 
+Requires Node.js. Build and run locally from the repository root:
+
+```bash
+npm run build --prefix components/archon-cli
+components/archon-cli/dist/bin/archon --help
+```
+
+Alternatively, build with `node components/archon-cli/scripts/build.mjs`.
+No dependency installation is required.
+
 Archon provides one command for the workstation tools maintained by this
 repository:
 
@@ -34,6 +44,6 @@ Commands use these exit statuses:
 
 Detailed behavior is documented with each command collection:
 
-- [Projects](./lib/archon/commands/projects/README.md)
-- [Libraries](./lib/archon/commands/libs/README.md)
-- [Workspaces](./lib/archon/commands/workspaces/README.md)
+- [Projects](./src/commands/projects/README.md)
+- [Libraries](./src/commands/libs/README.md)
+- [Workspaces](./src/commands/workspaces/README.md)

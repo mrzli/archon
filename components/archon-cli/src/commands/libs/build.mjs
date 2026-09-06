@@ -4,7 +4,7 @@ import {
 } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { getErrorMessage } from '../../../shared/index.mjs';
+import { getErrorMessage } from '../../shared/index.mjs';
 
 export const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
 

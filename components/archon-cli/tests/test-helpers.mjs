@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const componentRoot = fileURLToPath(new URL('..', import.meta.url));
-const archon = join(componentRoot, 'bin/archon');
+const archon = join(componentRoot, 'dist/bin/archon');
 
 export function createFixture(name) {
   const root = mkdtempSync(join(tmpdir(), `archon-${name}-`));

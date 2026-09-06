@@ -3,8 +3,11 @@
 Run the component suite from the repository root:
 
 ```bash
-components/archon-cli/test.sh
+npm test --prefix components/archon-cli
 ```
+
+This builds the CLI before running tests. Alternatively, run
+`components/archon-cli/test.sh` directly without npm.
 
 Run complete verification with terminal stdin, then without it:
 
