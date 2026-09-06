@@ -4,10 +4,10 @@ set -euo pipefail
 
 component_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-bun "$component_root/scripts/build.mjs"
+bun "$component_root/scripts/build.ts"
 
 mapfile -t bun_tests < <(
-  find "$component_root/tests" -type f \( -name '*.test.mjs' -o -name '*.test.ts' \) -print | sort
+  find "$component_root/tests" -type f -name '*.test.ts' -print | sort
 )
 
 printf '%s\n' 'Archon CLI Bun tests'
@@ -18,11 +18,8 @@ done
 
 mapfile -t bun_check_paths < <(
   find \
-    "$component_root/src" \
-    "$component_root/scripts" \
     "$component_root/dist/lib/archon" \
-    "$component_root/tests" \
-    -type f \( -name '*.mjs' -o -name '*.js' \) -print | sort
+    -type f -name '*.js' -print | sort
 )
 bun_check_paths=(
   "$component_root/bin/archon"

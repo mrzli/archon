@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun scripts/build.mjs",
+    "build": "bun scripts/build.ts",
     "test": "bash test.sh",
     "typecheck": "bun node_modules/typescript/bin/tsc --project tsconfig.json"
   },

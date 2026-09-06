@@ -1,6 +1,6 @@
-import { runLibraries, runProjects, runWorkspaces } from './commands/index.mjs';
+import { runLibraries, runProjects, runWorkspaces } from './commands/index.ts';
 
-export async function main(arguments_) {
+export async function main(arguments_: string[]) {
   const [commandOrAlias, ...extraArguments] = arguments_;
   const aliases = new Map([
     ['h', 'help'],

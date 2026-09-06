@@ -5,8 +5,6 @@
     "moduleResolution": "NodeNext",
     "types": ["bun"],
     "strict": true,
-    "allowJs": true,
-    "checkJs": false,
     "rewriteRelativeImportExtensions": true,
     "noEmit": true
   },

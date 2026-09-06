@@ -1,6 +1,8 @@
 # Archon CLI Bun and TypeScript tasks
 
-Status: in progress
+Status: completed
+
+Completed: 2026-09-06
 
 Created: 2026-09-06
 
@@ -17,7 +19,7 @@ Task files contain acceptance criteria and a place for actual completion evidenc
 | 4 | [ACTS-004: Convert libraries command and tests](./tasks/ACTS-004-libs-types.md) | ACTS-003 | Completed |
 | 5 | [ACTS-005: Convert projects command and tests](./tasks/ACTS-005-projects-types.md) | ACTS-004 | Completed |
 | 6 | [ACTS-006: Convert workspaces command and tests](./tasks/ACTS-006-workspaces-types.md) | ACTS-005 | Completed |
-| 7 | [ACTS-007: Finish TypeScript conversion and verify deployment](./tasks/ACTS-007-finish-verify.md) | ACTS-006 | Planned |
+| 7 | [ACTS-007: Finish TypeScript conversion and verify deployment](./tasks/ACTS-007-finish-verify.md) | ACTS-006 | Completed |
 
 ## Shared checkpoint checks
 
@@ -51,4 +53,7 @@ conversion with both verification modes passing. ACTS-004 completed the librarie
 command and tests, with parser parity and both verification modes passing.
 ACTS-005 completed the projects command and tests with both verification modes
 passing. ACTS-006 completed the workspace modules and focused tests with both
-verification modes passing. ACTS-007 is next.
+verification modes passing. ACTS-007 completed the remaining CLI/build conversion,
+removed transitional allowances, and verified the final JavaScript deployment
+contract in both modes. All checkpoints are complete. Enduring operational
+knowledge is in [docs](../../docs/archon-cli-development.md).

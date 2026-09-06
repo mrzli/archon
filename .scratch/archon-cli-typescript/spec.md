@@ -1,6 +1,8 @@
 # Archon CLI: Bun runtime and TypeScript development
 
-Status: in progress
+Status: completed
+
+Completed: 2026-09-06
 
 Created: 2026-09-06
 
@@ -11,10 +13,11 @@ Implementation tasks: [Ordered task index](./tasks.md)
 Move Archon CLI to Bun, then convert development code to strict TypeScript in
 reviewable batches. Continue deploying a complete, JavaScript-only runtime
 artifact from `dist/`. Every task must leave the CLI buildable and usable.
-ACTS-001 through ACTS-006 are complete: execution uses Bun, checked builds emit
-JavaScript, and shared modules, test helpers, libraries, projects, and workspaces
-code/tests are TypeScript. The final conversion batch remains planned. See the
-task records for verified changes and results.
+All seven checkpoints are complete. Development source, tests, and build tooling
+use strict TypeScript; Bun runs the JavaScript-only deployment artifact. See
+[the current development/deployment documentation](../../docs/archon-cli-development.md)
+and the task completion records for verified changes and limitations. The design
+and initial-state sections below are retained as migration history.
 
 ## Verified starting point (before ACTS-001)
 

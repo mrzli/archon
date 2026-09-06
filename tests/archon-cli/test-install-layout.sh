@@ -5,7 +5,7 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
-bun "$archon_cli_source/scripts/build.mjs" || exit 1
+bun "$archon_cli_source/scripts/build.ts" || exit 1
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 temporary_root="$(mktemp -d)"
@@ -63,10 +63,10 @@ test_type_errors_prevent_installation() {
   rsync -a --exclude=node_modules --exclude=dist "$archon_cli_source"/ "$component"/ || return
   ln -s "$archon_cli_source/node_modules" "$component/node_modules" || return
 
-  for error_file in src/type-error.ts tests/type-error.test.ts; do
+  for error_file in src/type-error.ts tests/type-error.test.ts scripts/type-error.ts; do
     printf '%s\n' 'const value: string = 123;' > "$component/$error_file"
     if bash -e -c '
-      bun "$1/scripts/build.mjs"
+      bun "$1/scripts/build.ts"
       mkdir -p "$2"
       rsync -a "$1/dist"/ "$2"/
     ' bash "$component" "$destination" > "$temporary_root/type-error.log" 2>&1; then
@@ -85,15 +85,19 @@ test_type_errors_prevent_installation() {
 }
 
 test_repeated_build() {
-  local first_manifest second_manifest unexpected_files archon_output alias_output
+  local first_manifest second_manifest unexpected_files unexpected_paths archon_output alias_output
   first_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
   : > "$archon_cli_source/dist/stale-output.mjs"
-  bun "$archon_cli_source/scripts/build.mjs" || return
+  bun "$archon_cli_source/scripts/build.ts" || return
   assert_absent "$archon_cli_source/dist/stale-output.mjs" || return
   second_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
   assert_equals "$first_manifest" "$second_manifest" || return
-  unexpected_files="$(find "$archon_cli_source/dist" -type f ! -name '*.mjs' ! -name '*.js' ! -path '*/bin/archon')"
+  unexpected_files="$(find "$archon_cli_source/dist" -type f ! -path "$archon_cli_source/dist/lib/archon/*.js" ! -path "$archon_cli_source/dist/bin/archon")"
   assert_equals '' "$unexpected_files" || return
+  unexpected_paths="$(find "$archon_cli_source/dist" \
+    \( -type d \( -name tests -o -name scripts -o -name node_modules \) \) -o \
+    \( -type l ! -path "$archon_cli_source/dist/bin/arc" \))"
+  assert_equals '' "$unexpected_paths" || return
   [[ -L "$archon_cli_source/dist/bin/arc" ]] || fail 'built arc is not a symbolic link' || return
   assert_equals archon "$(readlink "$archon_cli_source/dist/bin/arc")" || return
   archon_output="$("$archon_cli_source/dist/bin/archon" --help)" || return
@@ -122,8 +126,8 @@ test_repeated_overlay_copy() {
   [[ -L "$home/.local/bin/arc" ]] || fail 'installed arc is not a symbolic link' || return
   assert_equals archon "$(readlink "$home/.local/bin/arc")" || return
 
-  archon_output="$(HOME="$home" "$home/.local/bin/archon" --help)" || return
-  alias_output="$(HOME="$home" "$home/.local/bin/arc" --help)" || return
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon --help)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
 
   assert_absent "$home/.local/AGENTS.md" || return
@@ -141,7 +145,7 @@ test_repeated_overlay_copy() {
 
   assert_exists "$home/.local/lib/archon/shared/arguments.js" || return
   assert_absent "$home/.local/lib/archon/shared/arguments.ts" || return
-  assert_exists "$home/.local/lib/archon/cli.mjs" || return
+  assert_exists "$home/.local/lib/archon/cli.js" || return
   assert_exists "$home/.local/lib/archon/commands/libs/build.js" || return
   assert_exists "$home/.local/lib/archon/commands/libs/github-inventory.js" || return
   assert_exists "$home/.local/lib/archon/commands/libs/libs.js" || return
@@ -168,7 +172,7 @@ run_test() {
   fi
 }
 
-run_test 'source and test type errors prevent installation' test_type_errors_prevent_installation
+run_test 'source, test, and tooling type errors prevent installation' test_type_errors_prevent_installation
 run_test 'repeat-safe JavaScript build' test_repeated_build
 run_test 'repeated home-overlay copy' test_repeated_overlay_copy
 

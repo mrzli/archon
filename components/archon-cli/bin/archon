@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
 
-import { main } from '../lib/archon/cli.mjs';
+import { main } from '../lib/archon/cli.js';
 
 process.exitCode = await main(process.argv.slice(2));

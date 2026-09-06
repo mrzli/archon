@@ -204,7 +204,7 @@ rsync -a --exclude-from="$home_copy_ignore_file" "$home_source_dir"/ "$HOME"/
 log_step "Installing Archon CLI build dependencies"
 NODE_ENV=development bun install --frozen-lockfile --cwd "$archon_cli_source_dir"
 log_step "Building Archon CLI"
-bun "$archon_cli_source_dir/scripts/build.mjs"
+bun "$archon_cli_source_dir/scripts/build.ts"
 log_step "Installing Archon CLI"
 mkdir -p "$HOME/.local"
 rsync -a "$archon_cli_source_dir/dist"/ "$HOME/.local"/

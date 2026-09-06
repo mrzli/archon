@@ -4,7 +4,7 @@ set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 component_root="$(cd -- "$test_dir/.." && pwd)"
-bun "$component_root/scripts/build.mjs" || exit 1
+bun "$component_root/scripts/build.ts" || exit 1
 archon="$component_root/dist/bin/archon"
 export PATH="$test_dir/bin:$PATH"
 

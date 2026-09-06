@@ -2,7 +2,10 @@
 
 ## Scope
 
-- Use Bun with ECMAScript modules and no third-party runtime packages.
+- Develop source, tests, and build tooling in strict TypeScript. Use Bun with
+  ECMAScript modules and no third-party runtime packages.
+- Deploy emitted JavaScript only. Keep the executable launcher in JavaScript;
+  only the launcher needs a runtime shebang.
 - Development-only tooling dependencies are permitted; keep them out of the
   installed runtime artifact.
 - Preserve the configured minimum package release age; do not add exemptions
