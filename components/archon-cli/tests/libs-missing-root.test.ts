@@ -9,6 +9,7 @@ import {
 import { join } from 'node:path';
 import { test } from 'bun:test';
 
+import type { Fixture } from './test-helpers.ts';
 import {
   createFixture,
   removeFixture,
@@ -16,7 +17,7 @@ import {
   writeExecutable,
 } from './test-helpers.ts';
 
-function installFakes(fixture) {
+function installFakes(fixture: Fixture) {
   writeExecutable(
     join(fixture.bin, 'gh'),
     `#!/usr/bin/env bash
@@ -49,7 +50,7 @@ printf '%s\n' "$*" >> "$ARCHON_TEST_GIT_CALLS"
   );
 }
 
-function environment(fixture, overrides = {}) {
+function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
   return {
     ARCHON_TEST_BUN_CALLS: join(fixture.root, 'bun-calls'),
     ARCHON_TEST_GH_CALLS: join(fixture.root, 'gh-calls'),
@@ -59,7 +60,7 @@ function environment(fixture, overrides = {}) {
   };
 }
 
-function readCalls(path) {
+function readCalls(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf8') : '';
 }
 
@@ -69,7 +70,7 @@ for (const [command, message, githubExpected] of [
   ['graph', /No local Git repositories found in .*\/mrzli-jslib\./, false],
   ['build', /No local Git repositories found in .*\/mrzli-jslib\./, false],
   ['prune', /No obsolete local Git repositories found\./, true],
-]) {
+] satisfies [string, RegExp, boolean][]) {
   test(`libs ${command} treats a missing root as empty`, () => {
     const fixture = createFixture(`libs-missing-${command}`);
     const root = join(fixture.home, 'projects/personal/mrzli-jslib');

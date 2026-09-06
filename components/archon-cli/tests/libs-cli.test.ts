@@ -13,7 +13,7 @@ import {
 
 const buildScript = { scripts: { build: 'build-command' } };
 
-function packageManifest(name, extra = {}) {
+function packageManifest(name: string, extra: Record<string, unknown> = {}) {
   return { name: `@mrzli-jslib/${name}`, ...buildScript, ...extra };
 }
 

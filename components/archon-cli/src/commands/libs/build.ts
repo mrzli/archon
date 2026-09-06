@@ -6,6 +6,16 @@ import { join, resolve } from 'node:path';
 
 import { getErrorMessage } from '../../shared/index.ts';
 
+export interface LocalPackage {
+  manifest: Record<string, unknown>;
+  name: string;
+  path: string;
+}
+
+export interface PackageNode extends LocalPackage {
+  dependencies: string[];
+}
+
 export const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
 
 const LOCAL_PACKAGE_PREFIX = `${LOCAL_PACKAGE_SCOPE}/`;
@@ -16,10 +26,12 @@ const DEPENDENCY_FIELDS = [
   'peerDependencies',
 ];
 
-export function createDependencyGraph(repositories) {
+export function createDependencyGraph(
+  repositories: { name: string; path: string }[],
+): PackageNode[] {
   const packages = repositories.map(readLocalPackage);
-  const packagesByName = new Map();
-  const packagesByPath = new Map();
+  const packagesByName = new Map<string, LocalPackage>();
+  const packagesByPath = new Map<string, LocalPackage>();
 
   for (const package_ of packages) {
     if (packagesByName.has(package_.name)) {
@@ -36,13 +48,13 @@ export function createDependencyGraph(repositories) {
   }));
 }
 
-export function orderPackagesForBuild(graph) {
+export function orderPackagesForBuild(graph: PackageNode[]): PackageNode[] {
   const nodesByName = new Map(graph.map((node) => [node.name, node]));
-  const states = new Map();
-  const path = [];
-  const ordered = [];
+  const states = new Map<string, 'visiting' | 'visited'>();
+  const path: string[] = [];
+  const ordered: PackageNode[] = [];
 
-  function visit(node) {
+  function visit(node: PackageNode) {
     const state = states.get(node.name);
 
     if (state === 'visited') {
@@ -60,7 +72,8 @@ export function orderPackagesForBuild(graph) {
     path.push(node.name);
 
     for (const dependencyName of node.dependencies) {
-      visit(nodesByName.get(dependencyName));
+      // Graph construction guarantees that each dependency names a local node.
+      visit(nodesByName.get(dependencyName)!);
     }
 
     path.pop();
@@ -75,12 +88,13 @@ export function orderPackagesForBuild(graph) {
   return ordered;
 }
 
-export function validateBuildScripts(graph) {
+export function validateBuildScripts(graph: PackageNode[]) {
   for (const node of graph) {
     if (
       node.manifest.scripts === null ||
       typeof node.manifest.scripts !== 'object' ||
       Array.isArray(node.manifest.scripts) ||
+      !('build' in node.manifest.scripts) ||
       typeof node.manifest.scripts.build !== 'string' ||
       node.manifest.scripts.build.length === 0
     ) {
@@ -89,9 +103,9 @@ export function validateBuildScripts(graph) {
   }
 }
 
-function readLocalPackage(repository) {
+function readLocalPackage(repository: { name: string; path: string }): LocalPackage {
   const manifestPath = join(repository.path, 'package.json');
-  let manifest;
+  let manifest: unknown;
 
   try {
     manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
@@ -101,9 +115,12 @@ function readLocalPackage(repository) {
     );
   }
 
+  // Preserve the existing native property-access failure for a null manifest.
   if (
-    typeof manifest.name !== 'string' ||
-    !manifest.name.startsWith(LOCAL_PACKAGE_PREFIX)
+    typeof manifest !== 'object' ||
+    (manifest !== null && !('name' in manifest)) ||
+    typeof manifest!.name !== 'string' ||
+    !manifest!.name.startsWith(LOCAL_PACKAGE_PREFIX)
   ) {
     throw new Error(
       `${repository.name}/package.json must have a name in the ${LOCAL_PACKAGE_SCOPE} scope`,
@@ -111,14 +128,17 @@ function readLocalPackage(repository) {
   }
 
   return {
-    manifest,
-    name: manifest.name,
+    manifest: manifest!,
+    name: manifest!.name,
     path: realpathSync(repository.path),
   };
 }
 
-function findLocalPackageDependencies(package_, packagesByPath) {
-  const localDependencies = new Set();
+function findLocalPackageDependencies(
+  package_: LocalPackage,
+  packagesByPath: Map<string, LocalPackage>,
+) {
+  const localDependencies = new Set<string>();
 
   for (const field of DEPENDENCY_FIELDS) {
     const dependencies = package_.manifest[field];
@@ -164,10 +184,10 @@ function findLocalPackageDependencies(package_, packagesByPath) {
 }
 
 function resolveLocalPackageDependency(
-  package_,
-  dependencyName,
-  specifier,
-  packagesByPath,
+  package_: LocalPackage,
+  dependencyName: string,
+  specifier: string,
+  packagesByPath: Map<string, LocalPackage>,
 ) {
   const dependencyPath = specifier.slice('file:'.length);
 

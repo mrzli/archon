@@ -3,18 +3,20 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'bun:test';
 
+import type { Fixture } from './test-helpers.ts';
+import type { PackageNode } from '../src/commands/libs/build.ts';
 import {
   createDependencyGraph,
   orderPackagesForBuild,
   validateBuildScripts,
-} from '../src/commands/libs/build.mjs';
+} from '../src/commands/libs/build.ts';
 import {
   createFixture,
   removeFixture,
   writeLibrary,
 } from './test-helpers.ts';
 
-function graphNode(name, dependencies = []) {
+function graphNode(name: string, dependencies: string[] = []): PackageNode {
   return {
     dependencies,
     manifest: { scripts: { build: 'build-command' } },
@@ -23,11 +25,11 @@ function graphNode(name, dependencies = []) {
   };
 }
 
-function packageManifest(name, extra = {}) {
+function packageManifest(name: string, extra: Record<string, unknown> = {}) {
   return { name: `@mrzli-jslib/${name}`, ...extra };
 }
 
-function findRepositories(fixture) {
+function findRepositories(fixture: Fixture) {
   const root = join(fixture.home, 'projects/personal/mrzli-jslib');
 
   return readdirSync(root, { withFileTypes: true })
@@ -36,7 +38,11 @@ function findRepositories(fixture) {
     .map((entry) => ({ name: entry.name, path: join(root, entry.name) }));
 }
 
-const INVALID_GRAPH_CASES = [
+const INVALID_GRAPH_CASES: {
+  name: string;
+  arrange: (fixture: Fixture) => void;
+  expected: RegExp;
+}[] = [
   {
     name: 'an unreadable manifest',
     arrange: (fixture) => writeLibrary(fixture, 'app', '{ invalid json'),

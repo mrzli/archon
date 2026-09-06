@@ -2,6 +2,9 @@ import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import type { LocalPackage, PackageNode } from './build.ts';
+import type { RemoteRepository } from './github-inventory.ts';
+import type { SyncResult } from '../../shared/index.ts';
 import {
   acceptsNoArguments,
   createSyncFailure as createRepositorySyncFailure,
@@ -21,8 +24,23 @@ import {
   LOCAL_PACKAGE_SCOPE,
   orderPackagesForBuild,
   validateBuildScripts,
-} from './build.mjs';
-import { parseRemoteRepositories } from './github-inventory.mjs';
+} from './build.ts';
+import { parseRemoteRepositories } from './github-inventory.ts';
+
+interface LocalRepository {
+  name: string;
+  path: string;
+}
+
+interface LibraryPaths {
+  rootDir: string;
+  requiredRootDir: string;
+}
+
+interface LibraryContext {
+  homeDir?: string;
+  rootDir?: string;
+}
 
 const GITHUB_OWNER = 'mrzli-jslib';
 const REQUIRED_ROOT_NAME = 'mrzli-jslib';
@@ -31,7 +49,10 @@ const REQUIRED_ROOT_NAME = 'mrzli-jslib';
 // Entry point and command routing
 // =============================================================================
 
-export async function runLibraries(arguments_, context = {}) {
+export async function runLibraries(
+  arguments_: readonly string[],
+  context: LibraryContext = {},
+) {
   const homeDir = context.homeDir ?? homedir();
   const requiredRootDir = resolve(
     homeDir,
@@ -48,7 +69,7 @@ export async function runLibraries(arguments_, context = {}) {
   }
 }
 
-async function runCommand(arguments_, paths) {
+async function runCommand(arguments_: readonly string[], paths: LibraryPaths) {
   const [command, ...extraArguments] = arguments_;
 
   switch (command) {
@@ -95,7 +116,7 @@ async function runCommand(arguments_, paths) {
 // Command: build
 // =============================================================================
 
-function buildLocalPackages(arguments_, rootDir) {
+function buildLocalPackages(arguments_: readonly string[], rootDir: string) {
   if (isHelpRequest(arguments_)) {
     printBuildHelp();
     return 0;
@@ -144,7 +165,11 @@ function buildLocalPackages(arguments_, rootDir) {
   return 0;
 }
 
-function runBunForPackage(package_, arguments_, action) {
+function runBunForPackage(
+  package_: LocalPackage,
+  arguments_: readonly string[],
+  action: string,
+) {
   const result = runProcess('bun', arguments_, {
     cwd: package_.path,
     stdio: 'inherit',
@@ -197,7 +222,7 @@ function getBuildHelpText() {
 // Command: delete
 // =============================================================================
 
-async function deleteLocalRepositories(arguments_, paths) {
+async function deleteLocalRepositories(arguments_: readonly string[], paths: LibraryPaths) {
   return deleteRepositories(arguments_, {
     emptyMessage: `No local Git repositories found in ${paths.rootDir}.`,
     findRepositories: () => findLocalRepositories(paths.rootDir),
@@ -230,7 +255,7 @@ function getDeleteHelpText() {
 // Command: graph
 // =============================================================================
 
-function showDependencyGraph(arguments_, rootDir) {
+function showDependencyGraph(arguments_: readonly string[], rootDir: string) {
   if (isHelpRequest(arguments_)) {
     printGraphHelp();
     return 0;
@@ -253,7 +278,7 @@ function showDependencyGraph(arguments_, rootDir) {
   }
 }
 
-function printDependencyGraph(graph, rootDir) {
+function printDependencyGraph(graph: PackageNode[], rootDir: string) {
   if (graph.length === 0) {
     console.log(`No local Git repositories found in ${rootDir}.`);
     return;
@@ -291,7 +316,7 @@ function getGraphHelpText() {
 // Command: prune
 // =============================================================================
 
-async function pruneLocalRepositories(arguments_, paths) {
+async function pruneLocalRepositories(arguments_: readonly string[], paths: LibraryPaths) {
   return pruneRepositories(arguments_, {
     findPrunableRepositories: (remoteRepositories) =>
       findPrunableRepositories(remoteRepositories, paths.rootDir),
@@ -305,7 +330,7 @@ async function pruneLocalRepositories(arguments_, paths) {
   });
 }
 
-function findPrunableRepositories(remoteRepositories, rootDir) {
+function findPrunableRepositories(remoteRepositories: RemoteRepository[], rootDir: string) {
   if (remoteRepositories.length >= 1000) {
     console.error(
       'Refusing to prune: the remote repository list may be truncated at 1000 entries.',
@@ -321,7 +346,10 @@ function findPrunableRepositories(remoteRepositories, rootDir) {
   );
 }
 
-function findRestoredRepositories(repositories, remoteRepositories) {
+function findRestoredRepositories(
+  repositories: LocalRepository[],
+  remoteRepositories: RemoteRepository[],
+) {
   const remoteNames = new Set(
     remoteRepositories.map((repository) => repository.name),
   );
@@ -352,7 +380,7 @@ function getPruneHelpText() {
 // Command: remote
 // =============================================================================
 
-function listRemoteRepositories(arguments_) {
+function listRemoteRepositories(arguments_: readonly string[]) {
   if (isHelpRequest(arguments_)) {
     printRemoteHelp();
     return 0;
@@ -380,7 +408,7 @@ function listRemoteRepositories(arguments_) {
   return 0;
 }
 
-function formatRemoteRepository(repository, nameWidth) {
+function formatRemoteRepository(repository: RemoteRepository, nameWidth: number) {
   const labels = [];
 
   if (repository.isPrivate) {
@@ -419,7 +447,7 @@ function getRemoteHelpText() {
 // Command: status
 // =============================================================================
 
-function showLocalRepositoryStatuses(arguments_, rootDir) {
+function showLocalRepositoryStatuses(arguments_: readonly string[], rootDir: string) {
   return runStatusWorkflow(arguments_, {
     emptyMessage: `No local Git repositories found in ${rootDir}.`,
     findRepositories: () => findLocalRepositories(rootDir),
@@ -450,7 +478,7 @@ function getStatusHelpText() {
 // Command: sync
 // =============================================================================
 
-function syncRepositories(arguments_, rootDir) {
+function syncRepositories(arguments_: readonly string[], rootDir: string) {
   if (arguments_.length === 0) {
     mkdirSync(rootDir, { recursive: true });
   }
@@ -467,7 +495,7 @@ function syncRepositories(arguments_, rootDir) {
   });
 }
 
-function cloneRemoteRepository(repository, rootDir) {
+function cloneRemoteRepository(repository: RemoteRepository, rootDir: string): SyncResult {
   const result = runProcess(
     'gh',
     ['repo', 'clone', repository.nameWithOwner, join(rootDir, repository.name)],
@@ -502,7 +530,7 @@ function cloneRemoteRepository(repository, rootDir) {
   };
 }
 
-function createSyncFailure(repository, message) {
+function createSyncFailure(repository: { name: string }, message: unknown): SyncResult {
   return createRepositorySyncFailure(
     repository,
     message,
@@ -531,7 +559,7 @@ function getSyncHelpText() {
 // Command: help
 // =============================================================================
 
-function showHelp(arguments_) {
+function showHelp(arguments_: readonly string[]) {
   if (arguments_.length === 0) {
     printGlobalHelp();
     return 0;
@@ -598,7 +626,7 @@ function getGlobalHelpText() {
 // Shared utilities
 // =============================================================================
 
-function getRemoteRepositories() {
+function getRemoteRepositories(): RemoteRepository[] {
   const result = runProcess(
     'gh',
     [
@@ -614,7 +642,7 @@ function getRemoteRepositories() {
   );
 
   if (result.error) {
-    if (result.error.code === 'ENOENT') {
+    if ('code' in result.error && result.error.code === 'ENOENT') {
       throw new Error(
         'GitHub CLI (`gh`) was not found. Install it and run `gh auth login` first.',
       );
@@ -637,16 +665,21 @@ function getRemoteRepositories() {
   return parseRemoteRepositories(result.stdout);
 }
 
-function inspectLocalRepositories(repositories, fetch) {
+function inspectLocalRepositories(repositories: LocalRepository[], fetch: boolean) {
   return inspectRepositories(repositories, fetch, (repository) => repository.name);
 }
 
-function findLocalRepositories(rootDir) {
+function findLocalRepositories(rootDir: string): LocalRepository[] {
   try {
     return findChildGitRepositories(rootDir)
       .sort((left, right) => left.name.localeCompare(right.name));
   } catch (error) {
-    if (error?.code === 'ENOENT') {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
       return [];
     }
 
@@ -654,7 +687,7 @@ function findLocalRepositories(rootDir) {
   }
 }
 
-function printCommandHelp(command) {
+function printCommandHelp(command: string) {
   switch (command) {
     case 'build': {
       printBuildHelp();
