@@ -1,6 +1,6 @@
 # Archon CLI Bun and TypeScript tasks
 
-Status: planned
+Status: in progress
 
 Created: 2026-09-06
 
@@ -11,7 +11,7 @@ Task files contain acceptance criteria and a place for actual completion evidenc
 
 | Order | Task | Depends on | Status |
 | --- | --- | --- | --- |
-| 1 | [ACTS-001: Switch JavaScript execution to Bun](./tasks/ACTS-001-bun-runtime.md) | none | Planned |
+| 1 | [ACTS-001: Switch JavaScript execution to Bun](./tasks/ACTS-001-bun-runtime.md) | none | Completed |
 | 2 | [ACTS-002: Introduce strict compilation and checked builds](./tasks/ACTS-002-typescript-foundation.md) | ACTS-001 | Planned |
 | 3 | [ACTS-003: Convert shared modules and test helpers](./tasks/ACTS-003-shared-types.md) | ACTS-002 | Planned |
 | 4 | [ACTS-004: Convert libraries command and tests](./tasks/ACTS-004-libs-types.md) | ACTS-003 | Planned |
@@ -40,3 +40,9 @@ Task files contain acceptance criteria and a place for actual completion evidenc
 The final checkpoint moves enduring operational knowledge into current docs and
 usage READMEs, then closes this planning record. Node provisioning for unrelated
 workstation tools and removal of legacy installed files are outside this plan.
+
+## Progress
+
+ACTS-001 completed on 2026-09-06 with Bun 1.4.1. Both verification modes passed;
+see its task record for evidence. ACTS-002 is next; TypeScript is not introduced
+yet.

@@ -70,7 +70,8 @@ export function withGitFixture(name, run) {
 }
 
 export function runArchon(fixture, arguments_, environment = {}) {
-  return spawnSync(archon, arguments_, {
+  // Keep the CLI runtime separate from fake Bun package commands on PATH.
+  return spawnSync(process.execPath, [archon, ...arguments_], {
     encoding: 'utf8',
     env: createGitEnvironment(fixture, environment),
   });

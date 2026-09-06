@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';

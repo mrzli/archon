@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import test from 'node:test';
+import { test } from 'bun:test';
 
 import { runLibraries } from '../src/commands/libs/index.mjs';
 import { runProjects } from '../src/commands/projects/index.mjs';

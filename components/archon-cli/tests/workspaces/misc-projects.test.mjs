@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'bun:test';
 
 import { manageMiscProjects } from '../../src/commands/workspaces/misc-projects.mjs';
 

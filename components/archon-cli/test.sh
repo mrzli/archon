@@ -4,16 +4,19 @@ set -euo pipefail
 
 component_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-node "$component_root/scripts/build.mjs"
+bun "$component_root/scripts/build.mjs"
 
-mapfile -t node_tests < <(
+mapfile -t bun_tests < <(
   find "$component_root/tests" -type f -name '*.test.mjs' -print | sort
 )
 
-printf '%s\n' 'Archon CLI Node tests'
-node --test --test-concurrency=1 "${node_tests[@]}"
+printf '%s\n' 'Archon CLI Bun tests'
+# Run files separately and sequentially to preserve process-global isolation.
+for path in "${bun_tests[@]}"; do
+  bun test "$path"
+done
 
-mapfile -t node_check_paths < <(
+mapfile -t bun_check_paths < <(
   find \
     "$component_root/src" \
     "$component_root/scripts" \
@@ -21,15 +24,15 @@ mapfile -t node_check_paths < <(
     "$component_root/tests" \
     -type f -name '*.mjs' -print | sort
 )
-node_check_paths=(
+bun_check_paths=(
   "$component_root/bin/archon"
   "$component_root/dist/bin/archon"
-  "${node_check_paths[@]}"
+  "${bun_check_paths[@]}"
 )
 
-printf '\n%s\n' 'Archon CLI Node syntax checks'
-for path in "${node_check_paths[@]}"; do
-  node --check "$path"
+printf '\n%s\n' 'Archon CLI Bun syntax checks'
+for path in "${bun_check_paths[@]}"; do
+  bun build --no-bundle --target=bun "$path" > /dev/null
 done
 
 printf '\n%s\n' 'Archon CLI workspace adapter tests'

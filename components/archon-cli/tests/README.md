@@ -3,11 +3,11 @@
 Run the component suite from the repository root:
 
 ```bash
-npm test --prefix components/archon-cli
+bun run --cwd components/archon-cli test
 ```
 
-This builds the CLI before running component and workspace integration tests. Alternatively, run
-`components/archon-cli/test.sh` directly without npm.
+This builds the CLI before running component and workspace integration tests.
+Alternatively, run `components/archon-cli/test.sh` directly.
 
 Run complete verification with terminal stdin, then without it:
 
@@ -20,5 +20,5 @@ Both invocations must pass. Complete verification also checks installation,
 syntax, and whitespace. ShellCheck runs when installed and is
 reported as unavailable otherwise.
 
-The suite requires Bash, Node.js, Git, rsync, standard Arch command-line tools,
+The suite requires Bash, Bun, Git, rsync, standard Arch command-line tools,
 the util-linux `script` utility, and coreutils `timeout`.

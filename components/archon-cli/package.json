@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "bun scripts/build.mjs",
     "test": "bash test.sh"
   }
 }

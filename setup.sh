@@ -202,7 +202,7 @@ rsync -a --exclude-from="$home_copy_ignore_file" "$home_source_dir"/ "$HOME"/
 
 # Install the Archon CLI from its repository component.
 log_step "Building Archon CLI"
-node "$archon_cli_source_dir/scripts/build.mjs"
+bun "$archon_cli_source_dir/scripts/build.mjs"
 log_step "Installing Archon CLI"
 mkdir -p "$HOME/.local"
 rsync -a "$archon_cli_source_dir/dist"/ "$HOME/.local"/

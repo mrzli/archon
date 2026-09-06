@@ -5,7 +5,7 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
-node "$archon_cli_source/scripts/build.mjs" || exit 1
+bun "$archon_cli_source/scripts/build.mjs" || exit 1
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 temporary_root="$(mktemp -d)"
@@ -59,7 +59,7 @@ test_repeated_build() {
   local first_manifest second_manifest unexpected_files archon_output alias_output
   first_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
   : > "$archon_cli_source/dist/stale-output.mjs"
-  node "$archon_cli_source/scripts/build.mjs" || return
+  bun "$archon_cli_source/scripts/build.mjs" || return
   assert_absent "$archon_cli_source/dist/stale-output.mjs" || return
   second_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
   assert_equals "$first_manifest" "$second_manifest" || return

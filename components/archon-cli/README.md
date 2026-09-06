@@ -1,13 +1,13 @@
 # Archon CLI
 
-Requires Node.js. Build and run locally from the repository root:
+Requires Bun. Build and run locally from the repository root:
 
 ```bash
-npm run build --prefix components/archon-cli
+bun run --cwd components/archon-cli build
 components/archon-cli/dist/bin/archon --help
 ```
 
-Alternatively, build with `node components/archon-cli/scripts/build.mjs`.
+Alternatively, build with `bun components/archon-cli/scripts/build.mjs`.
 No dependency installation is required.
 
 Archon provides one command for the workstation tools maintained by this

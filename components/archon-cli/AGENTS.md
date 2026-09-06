@@ -2,7 +2,9 @@
 
 ## Scope
 
-- Use dependency-free Node.js ECMAScript modules, not Bun or npm packages.
+- Use Bun with ECMAScript modules and no third-party runtime packages.
+- Development-only tooling dependencies are permitted; keep them out of the
+  installed runtime artifact.
 - Keep fixed workstation paths derived from the current user's home directory.
 
 ## Code conventions
@@ -44,7 +46,8 @@
 - Run the component suite and complete installation integration checks for
   runtime changes.
 - Update the relevant README whenever command usage or behavior changes.
-- Run `node --check` on every changed executable and `.mjs` module.
+- Parse changed JavaScript executables and modules with Bun without executing
+  them; run behavioral checks against the built artifact.
 - Use temporary roots and fake external commands for destructive or
   workstation-mutating behavior.
 - Run `git diff --check`.
