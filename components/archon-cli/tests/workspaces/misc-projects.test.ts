@@ -13,14 +13,14 @@ interface FixtureOptions {
 }
 
 const DEFINITIONS: readonly (readonly string[])[] = [
-  ['project-mrzli-docs', '/home/test/projects/personal/mrzli/docs'],
-  ['project-mrzli-repos', '/home/test/projects/personal/mrzli/repos'],
-  ['project-mrzli-learning', '/home/test/projects/personal/mrzli/learning'],
   ['project-mrzli-archon', '/home/test/projects/personal/mrzli/archon'],
+  ['project-mrzli-docs', '/home/test/projects/personal/mrzli/docs'],
   [
     'project-mrzli-js-templates',
     '/home/test/projects/personal/mrzli/js-templates',
   ],
+  ['project-mrzli-learning', '/home/test/projects/personal/mrzli/learning'],
+  ['project-mrzli-repos', '/home/test/projects/personal/mrzli/repos'],
 ];
 
 function createContext({ directories, failNewSession, failStop, sessions }: FixtureOptions = {}): {
@@ -105,7 +105,8 @@ test('a start failure is reported and remaining projects continue', (): void => 
   assert.equal(manageMiscProjects('start', fixture.context), 1);
   assert.deepEqual(
     [...fixture.sessions],
-    DEFINITIONS.slice(1).map(([session]): string => session),
+    DEFINITIONS.filter(([session]): boolean => session !== 'project-mrzli-docs')
+      .map(([session]): string => session),
   );
   assert.deepEqual(fixture.errors, [
     'Failed to start tmux session: project-mrzli-docs',

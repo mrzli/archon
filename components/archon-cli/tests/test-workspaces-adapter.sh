@@ -60,11 +60,11 @@ create_fixtures() {
     "$fixture_home/projects/personal/mrzli-jslib/example/.git" \
     "$fixture_home/projects/personal/mrzli/flashcards-fe" \
     "$fixture_home/projects/personal/mrzli/flashcards-be" \
-    "$fixture_home/projects/personal/mrzli/docs" \
-    "$fixture_home/projects/personal/mrzli/repos" \
-    "$fixture_home/projects/personal/mrzli/learning" \
     "$fixture_home/projects/personal/mrzli/archon" \
-    "$fixture_home/projects/personal/mrzli/js-templates"
+    "$fixture_home/projects/personal/mrzli/docs" \
+    "$fixture_home/projects/personal/mrzli/js-templates" \
+    "$fixture_home/projects/personal/mrzli/learning" \
+    "$fixture_home/projects/personal/mrzli/repos"
 }
 
 test_named_group() {
@@ -83,7 +83,7 @@ test_aggregate_groups() {
 
   run_archon workspaces start || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
-    project-mrzli-docs project-mrzli-repos project-mrzli-learning project-mrzli-archon project-mrzli-js-templates || return
+    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-repos || return
   run_archon workspaces stop || return
   assert_sessions || return
   assert_no_attachment
@@ -94,7 +94,7 @@ test_terminal_aggregate() {
   run_terminal_archon workspaces start || return
   assert_attachment main || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
-    project-mrzli-docs project-mrzli-repos project-mrzli-learning project-mrzli-archon project-mrzli-js-templates
+    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-repos
 }
 
 test_terminal_named_group() {

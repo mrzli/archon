@@ -6,11 +6,11 @@ import type { EditorSessionDefinition, Tmux } from './tmux.ts';
 import { manageEditorSessions } from './editor-sessions.ts';
 
 const PROJECTS: readonly string[] = [
-  'mrzli/docs',
-  'mrzli/repos',
-  'mrzli/learning',
   'mrzli/archon',
+  'mrzli/docs',
   'mrzli/js-templates',
+  'mrzli/learning',
+  'mrzli/repos',
 ];
 
 export function manageMiscProjects(
