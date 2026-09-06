@@ -163,6 +163,22 @@ test('aggregate stop uses reverse order', (): void => {
   ]);
 });
 
+test('stops inside tmux delegate the validated arguments and return worker failures', (): void => {
+  for (const arguments_ of [['stop'], ['stop', '-g', 'misc-projects']]) {
+    const fixture = createContext({ tmux: 'client' });
+    fixture.context.stopDetached = (actual): number => {
+      assert.deepEqual(actual, arguments_);
+      return 1;
+    };
+    assert.equal(runWorkspaces(arguments_, fixture.context), 1);
+    assert.deepEqual(fixture.calls, []);
+  }
+
+  const fixture = createContext({ tmux: 'client' });
+  fixture.context.stopDetached = (): never => { throw new Error('unexpected shutdown'); };
+  assert.equal(runWorkspaces(['stop', '-g', 'unknown'], fixture.context), 2);
+});
+
 test('aggregate stop continues after failure', (): void => {
   const fixture = createContext({ failures: { jslibs: 1 } });
   assert.equal(runWorkspaces(['stop'], fixture.context), 1);

@@ -23,4 +23,6 @@ syntax, and whitespace. ShellCheck runs when installed and is
 reported as unavailable otherwise.
 
 The suite requires Bash, Bun, Git, rsync, standard Arch command-line tools,
-the util-linux `script` utility, and coreutils `timeout`.
+the util-linux `script` and `setsid` utilities, tmux, and coreutils `timeout`.
+Shutdown regression tests use a separate temporary tmux socket and require
+permission to create Unix sockets.

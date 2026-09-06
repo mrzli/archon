@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 
 import { manageFlashcards, manageGeneral, manageJslibs, manageMiscProjects } from './groups/index.ts';
 import type { CaptureCommand, CaptureResult, GroupContext, RunCommand, Tmux, WorkspaceAction } from './shared/index.ts';
-import { createTmux } from './shared/index.ts';
+import { createTmux, runDetachedStop } from './shared/index.ts';
 
 export type WorkspaceGroup = typeof GROUPS[number];
 type GroupHandlers = Record<WorkspaceGroup, (action: WorkspaceAction, context: GroupContext) => number>;
@@ -13,6 +13,7 @@ export interface WorkspaceContext extends Partial<GroupContext> {
   readonly print?: (message: string) => void;
   readonly run?: RunCommand;
   readonly capture?: CaptureCommand;
+  readonly stopDetached?: (arguments_: readonly string[]) => number;
 }
 
 type ActiveContext = WorkspaceContext & { readonly tmux: Tmux; readonly groupHandlers: GroupHandlers };
@@ -36,6 +37,12 @@ export function runWorkspaces(arguments_: readonly string[], context: WorkspaceC
 
   if ('status' in parsed) {
     return parsed.status;
+  }
+
+  if (parsed.action === 'stop' && (context.environment ?? process.env).TMUX) {
+    return context.stopDetached
+      ? context.stopDetached(arguments_)
+      : runDetachedStop(arguments_, import.meta.url);
   }
 
   const groupContext = {

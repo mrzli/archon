@@ -87,7 +87,12 @@ export function runArchon(
   // Keep the CLI runtime separate from fake Bun package commands on PATH.
   return spawnSync(process.execPath, [archon, ...arguments_], {
     encoding: 'utf8',
-    env: createGitEnvironment(fixture, environment),
+    env: createGitEnvironment(fixture, {
+      TMUX: '',
+      TMUX_PANE: '',
+      XDG_STATE_HOME: join(fixture.home, '.local/state'),
+      ...environment,
+    }),
   });
 }
 
