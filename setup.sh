@@ -209,6 +209,18 @@ log_step "Installing Archon CLI"
 mkdir -p "$HOME/.local"
 rsync -a "$archon_cli_source_dir/dist"/ "$HOME/.local"/
 
+# Install personal skills for use across repositories.
+log_step "Installing user skills from mrzli/skills"
+skills_repo_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon-skills"
+github_git=(git -c credential.helper= -c 'credential.helper=!gh auth git-credential')
+mkdir -p "$(dirname "$skills_repo_dir")" "$HOME/.agents/skills"
+if [[ -d "$skills_repo_dir/.git" ]]; then
+  "${github_git[@]}" -C "$skills_repo_dir" pull --ff-only
+else
+  "${github_git[@]}" clone --depth 1 https://github.com/mrzli/skills.git "$skills_repo_dir"
+fi
+rsync -a "$skills_repo_dir/.agents/skills/" "$HOME/.agents/skills/"
+
 # Enable the LazyVim REST extra.
 lazyvim_config_file="$HOME/.config/nvim/lazyvim.json"
 lazyvim_rest_extra="lazyvim.plugins.extras.util.rest"
