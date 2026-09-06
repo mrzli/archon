@@ -2,9 +2,8 @@ import { readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
-import type { GroupContext, WorkspaceAction } from './group-context.ts';
-import type { Tmux } from './tmux.ts';
-import { startEditorSession } from './editor-sessions.ts';
+import type { GroupContext, Tmux, WorkspaceAction } from '../shared/index.ts';
+import { startEditorSession } from '../shared/index.ts';
 
 export function manageJslibs(
   action: WorkspaceAction,

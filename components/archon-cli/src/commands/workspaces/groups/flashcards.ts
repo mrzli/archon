@@ -1,9 +1,8 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import type { GroupContext, WorkspaceAction } from './group-context.ts';
-import type { EditorSessionDefinition, Tmux } from './tmux.ts';
-import { manageEditorSessions } from './editor-sessions.ts';
+import type { EditorSessionDefinition, GroupContext, Tmux, WorkspaceAction } from '../shared/index.ts';
+import { manageEditorSessions } from '../shared/index.ts';
 
 export function manageFlashcards(
   action: WorkspaceAction,

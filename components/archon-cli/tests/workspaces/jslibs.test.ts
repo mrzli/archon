@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'bun:test';
 
-import type { EditorSessionDefinition, CaptureResult } from '../../src/commands/workspaces/tmux.ts';
-import { manageJslibs } from '../../src/commands/workspaces/jslibs.ts';
+import type { EditorSessionDefinition, CaptureResult } from '../../src/commands/workspaces/shared/tmux.ts';
+import { manageJslibs } from '../../src/commands/workspaces/groups/jslibs.ts';
 
 type Call = ['hasSession' | 'killSession', string] | ['createEditorSession', EditorSessionDefinition];
 interface FixtureOptions {

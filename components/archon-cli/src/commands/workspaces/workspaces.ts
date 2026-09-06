@@ -1,12 +1,8 @@
 import { spawnSync } from 'node:child_process';
 
-import type { GroupContext, WorkspaceAction } from './group-context.ts';
-import type { CaptureCommand, CaptureResult, RunCommand, Tmux } from './tmux.ts';
-import { manageFlashcards } from './flashcards.ts';
-import { manageGeneral } from './general.ts';
-import { manageJslibs } from './jslibs.ts';
-import { manageMiscProjects } from './misc-projects.ts';
-import { createTmux } from './tmux.ts';
+import { manageFlashcards, manageGeneral, manageJslibs, manageMiscProjects } from './groups/index.ts';
+import type { CaptureCommand, CaptureResult, GroupContext, RunCommand, Tmux, WorkspaceAction } from './shared/index.ts';
+import { createTmux } from './shared/index.ts';
 
 export type WorkspaceGroup = typeof GROUPS[number];
 type GroupHandlers = Record<WorkspaceGroup, (action: WorkspaceAction, context: GroupContext) => number>;

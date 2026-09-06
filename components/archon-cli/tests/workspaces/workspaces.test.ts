@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
 import type { WorkspaceContext, WorkspaceGroup } from '../../src/commands/workspaces/workspaces.ts';
-import type { WorkspaceAction } from '../../src/commands/workspaces/group-context.ts';
-import type { CaptureResult, SessionDefinition, Tmux } from '../../src/commands/workspaces/tmux.ts';
+import type { WorkspaceAction } from '../../src/commands/workspaces/shared/group-context.ts';
+import type { CaptureResult, SessionDefinition, Tmux } from '../../src/commands/workspaces/shared/tmux.ts';
 import { runWorkspaces } from '../../src/commands/workspaces/index.ts';
 
 interface FixtureOptions {

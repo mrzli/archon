@@ -2,8 +2,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import type { GroupContext, WorkspaceAction } from './group-context.ts';
-import type { Tmux } from './tmux.ts';
+import type { GroupContext, Tmux, WorkspaceAction } from '../shared/index.ts';
 
 export function manageGeneral(
   action: WorkspaceAction,

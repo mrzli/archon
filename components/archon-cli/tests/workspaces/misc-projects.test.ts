@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import type { EditorSessionDefinition } from '../../src/commands/workspaces/tmux.ts';
-import { manageMiscProjects } from '../../src/commands/workspaces/misc-projects.ts';
+import type { EditorSessionDefinition } from '../../src/commands/workspaces/shared/tmux.ts';
+import { manageMiscProjects } from '../../src/commands/workspaces/groups/misc-projects.ts';
 
 type Call = ['hasSession' | 'stopSession', string] | ['createEditorSession', EditorSessionDefinition];
 interface FixtureOptions {

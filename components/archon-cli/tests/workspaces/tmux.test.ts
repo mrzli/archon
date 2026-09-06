@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import type { CaptureCommand, RunCommand } from '../../src/commands/workspaces/tmux.ts';
-import { createTmux } from '../../src/commands/workspaces/tmux.ts';
+import type { CaptureCommand, RunCommand } from '../../src/commands/workspaces/shared/tmux.ts';
+import { createTmux } from '../../src/commands/workspaces/shared/tmux.ts';
 
 const DEFINITION = {
   session: 'example',

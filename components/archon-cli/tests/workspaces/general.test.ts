@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import type { SessionDefinition } from '../../src/commands/workspaces/tmux.ts';
-import { manageGeneral } from '../../src/commands/workspaces/general.ts';
+import type { SessionDefinition } from '../../src/commands/workspaces/shared/tmux.ts';
+import { manageGeneral } from '../../src/commands/workspaces/groups/general.ts';
 
 type Call = ['hasSession' | 'stopSession', string] | ['createShellSession', SessionDefinition];
 interface FixtureOptions {
