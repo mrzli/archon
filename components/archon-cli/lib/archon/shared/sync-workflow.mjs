@@ -1,3 +1,4 @@
+import { isHelpRequest } from './arguments.mjs';
 import { getErrorMessage, toSingleLine } from './errors.mjs';
 import { getGitOutput } from './git.mjs';
 import {
@@ -120,13 +121,6 @@ export function updateLocalRepository(repository, getRepositoryName) {
       getRepositoryName,
     );
   }
-}
-
-function isHelpRequest(arguments_) {
-  return (
-    arguments_.length === 1 &&
-    (arguments_[0] === '--help' || arguments_[0] === '-h')
-  );
 }
 
 function runSyncOperations(operations, options) {

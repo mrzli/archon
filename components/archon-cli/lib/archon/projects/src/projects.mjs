@@ -8,6 +8,10 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import {
+  acceptsNoArguments,
+  isHelpRequest,
+} from '../../shared/arguments.mjs';
+import {
   deleteRepositories,
   pruneRepositories,
 } from '../../shared/destructive-workflows.mjs';
@@ -661,23 +665,6 @@ function findLocalRepositories(rootDir) {
   }
 
   return repositories.sort(compareRepositories);
-}
-
-function acceptsNoArguments(command, arguments_, printCommandHelp_) {
-  if (arguments_.length === 0) {
-    return true;
-  }
-
-  console.error(`Unexpected ${command} option: ${arguments_[0]}`);
-  printCommandHelp_();
-  return false;
-}
-
-function isHelpRequest(arguments_) {
-  return (
-    arguments_.length === 1 &&
-    (arguments_[0] === '--help' || arguments_[0] === '-h')
-  );
 }
 
 function printCommandHelp(command) {

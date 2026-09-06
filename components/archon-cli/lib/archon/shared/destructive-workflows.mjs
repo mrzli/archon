@@ -2,6 +2,7 @@ import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
+import { isHelpRequest } from './arguments.mjs';
 import { getErrorMessage, toSingleLine } from './errors.mjs';
 import {
   formatChanges,
@@ -246,13 +247,6 @@ function isDeletionRootSafe(rootDir, requiredRootDir) {
   console.error(`Refusing to delete: unexpected operation root: ${rootDir}`);
   console.error(`Expected operation root: ${requiredRootDir}`);
   return false;
-}
-
-function isHelpRequest(arguments_) {
-  return (
-    arguments_.length === 1 &&
-    (arguments_[0] === '--help' || arguments_[0] === '-h')
-  );
 }
 
 function parseArguments(arguments_, command, printHelp) {
