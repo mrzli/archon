@@ -1,6 +1,6 @@
 # Archon CLI simplification tasks
 
-Status: partially implemented; ACS-001 completed, remaining tasks pending
+Status: partially implemented; ACS-001 and ACS-002 completed, remaining tasks pending
 
 Source: [Simplification spec](./spec.md)
 
@@ -11,8 +11,8 @@ classes, a general service container, or a mocking framework.
 
 | Order | Task | Scope | Status |
 | --- | --- | --- | --- |
-| 1 | [ACS-001: Share argument helpers](./tasks/ACS-001-argument-helpers.md) | Identical small helpers | Completed (uncommitted) |
-| 2 | [ACS-002: Share status orchestration](./tasks/ACS-002-status-workflow.md) | Projects and libraries status | Pending |
+| 1 | [ACS-001: Share argument helpers](./tasks/ACS-001-argument-helpers.md) | Identical small helpers | Completed |
+| 2 | [ACS-002: Share status orchestration](./tasks/ACS-002-status-workflow.md) | Projects and libraries status | Completed (uncommitted) |
 | 3 | [ACS-003: Share editor-session lifecycle](./tasks/ACS-003-workspace-lifecycle.md) | Repeated workspace management | Pending |
 | 4 | [ACS-004: Introduce tmux operations object](./tasks/ACS-004-tmux-object.md) | Focused dependency boundary and simpler fakes | Pending |
 | 5 | [ACS-005: Verify and document](./tasks/ACS-005-verify-close.md) | Final behavior and simplification audit | Pending |

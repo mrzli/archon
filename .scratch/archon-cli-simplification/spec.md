@@ -1,6 +1,6 @@
 # Archon CLI simplification
 
-Status: partially implemented; ACS-001 and command layout complete, remaining scope provisional
+Status: partially implemented; ACS-001, ACS-002, and command layout complete, remaining scope provisional
 
 Created: 2026-09-06
 
@@ -11,14 +11,18 @@ Implementation tasks: [Tasks, ordered from simplest](./tasks.md)
 Simplify Archon CLI by removing duplicated workflows and introducing small
 plain objects only where they make dependencies and tests easier to understand.
 Avoid classes. ACS-001 was implemented and committed as `91be803`. The command
-layout follow-up below is implemented but uncommitted. The remaining
+layout follow-up was committed as `f68d886`; ACS-002 is implemented but
+uncommitted. The remaining
 recommendations are provisional, not current behavior.
 
 ## Implementation progress
 
 ACS-001 extracted identical argument helpers into `shared/arguments.mjs` for
 projects, libraries, sync, and destructive workflows. See its task record for
-verification results. No later task has been implemented.
+verification results. ACS-002 now shares status orchestration through
+`shared/status-workflow.mjs`, preserving domain discovery, inspection, help,
+and empty-result messages. Its task record contains verification results.
+ACS-003 and later tasks remain pending.
 
 ### Command layout follow-up (2026-09-06)
 
@@ -32,7 +36,8 @@ available to focused tests via direct module imports.
 Updated runtime/test imports, documentation, installation-layout assertions,
 and migration prerequisite paths. No migration deletion target or provisioning
 operation changed. Durable layout/import conventions are in the component
-README and AGENTS.md.
+AGENTS.md. READMEs are usage-only; contributor and test implementation guidance
+belongs in the relevant AGENTS.md files.
 
 The complete verification runner passed: 126 Node tests, five workspace adapter
 cases, one installation-layout case, two migration cases, and Node/Bash syntax

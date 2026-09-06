@@ -20,8 +20,9 @@ boundaries before marking the proposal complete.
 - [ ] Confirm no classes, general container, mocking framework, or deferred
       remote-formatting/build-loading work entered the implementation.
 - [ ] Keep useful nested traversal functions and invocation-scoped closures.
-- [ ] Update relevant contributor/test documentation to reflect final ownership
-      and coverage; avoid claiming unimplemented designs as current behavior.
+- [ ] Update relevant AGENTS.md files to reflect final ownership and test
+      guidance. Keep all READMEs usage-only; avoid claiming unimplemented
+      designs as current behavior.
 - [ ] Run complete verification and record results and tool limitations.
 - [ ] Mark tasks and spec completed only after their acceptance criteria pass;
       retain the planning records as an archive or mark them archived.
