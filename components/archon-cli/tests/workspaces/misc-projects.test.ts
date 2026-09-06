@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import { manageMiscProjects } from '../../src/commands/workspaces/misc-projects.mjs';
+import type { EditorSessionDefinition } from '../../src/commands/workspaces/tmux.ts';
+import { manageMiscProjects } from '../../src/commands/workspaces/misc-projects.ts';
+
+type Call = ['hasSession' | 'stopSession', string] | ['createEditorSession', EditorSessionDefinition];
+interface FixtureOptions {
+  directories?: string[];
+  failNewSession?: string;
+  failStop?: string;
+  sessions?: string[];
+}
 
 const DEFINITIONS = [
   ['project-mrzli-docs', '/home/test/projects/personal/mrzli/docs'],
@@ -13,9 +22,9 @@ const DEFINITIONS = [
   ],
 ];
 
-function createContext({ directories, failNewSession, failStop, sessions } = {}) {
-  const calls = [];
-  const errors = [];
+function createContext({ directories, failNewSession, failStop, sessions }: FixtureOptions = {}) {
+  const calls: Call[] = [];
+  const errors: string[] = [];
   const presentSessions = new Set(sessions);
 
   return {
@@ -45,7 +54,7 @@ function createContext({ directories, failNewSession, failStop, sessions } = {})
           return 0;
         },
       },
-    },
+    } satisfies Parameters<typeof manageMiscProjects>[1],
   };
 }
 
@@ -54,7 +63,7 @@ test('start creates the fixed project sessions once', () => {
   assert.equal(manageMiscProjects('start', fixture.context), 0);
   assert.deepEqual([...fixture.sessions], DEFINITIONS.map(([session]) => session));
   assert.deepEqual(
-    fixture.calls.filter(([operation]) => operation === 'createEditorSession')
+    fixture.calls.filter((call) => call[0] === 'createEditorSession')
       .map(([, definition]) => [definition.session, definition.directory]),
     DEFINITIONS,
   );

@@ -1,11 +1,19 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import { manageGeneral } from '../../src/commands/workspaces/general.mjs';
+import type { SessionDefinition } from '../../src/commands/workspaces/tmux.ts';
+import { manageGeneral } from '../../src/commands/workspaces/general.ts';
 
-function createContext({ missing = false, fail, present = false } = {}) {
-  const calls = [];
-  const errors = [];
+type Call = ['hasSession' | 'stopSession', string] | ['createShellSession', SessionDefinition];
+interface FixtureOptions {
+  missing?: boolean;
+  fail?: 'createShellSession' | 'stopSession';
+  present?: boolean;
+}
+
+function createContext({ missing = false, fail, present = false }: FixtureOptions = {}) {
+  const calls: Call[] = [];
+  const errors: string[] = [];
   return {
     calls,
     errors,
@@ -34,7 +42,7 @@ function createContext({ missing = false, fail, present = false } = {}) {
           return 0;
         },
       },
-    },
+    } satisfies Parameters<typeof manageGeneral>[1],
   };
 }
 
@@ -70,7 +78,7 @@ test('general stop tolerates an absent session and missing directory', () => {
 });
 
 test('general reports start and stop failures', () => {
-  for (const action of ['start', 'stop']) {
+  for (const action of ['start', 'stop'] as const) {
     const fixture = createContext({
       fail: action === 'start' ? 'createShellSession' : 'stopSession',
       present: action === 'stop',

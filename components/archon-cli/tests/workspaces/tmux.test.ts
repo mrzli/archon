@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import { createTmux } from '../../src/commands/workspaces/tmux.mjs';
+import { createTmux } from '../../src/commands/workspaces/tmux.ts';
 
 const DEFINITION = {
   session: 'example',
@@ -10,9 +10,10 @@ const DEFINITION = {
 };
 
 test('shell session commands and repeat-safe stopping preserve tmux behavior', () => {
-  const calls = [];
+  const calls: string[][] = [];
   let present = false;
   const tmux = createTmux({
+    capture: () => { throw new Error('unexpected process capture'); },
     run(command, arguments_, options) {
       assert.equal(command, 'tmux');
       calls.push(arguments_);
@@ -41,14 +42,14 @@ test('shell session commands and repeat-safe stopping preserve tmux behavior', (
 });
 
 test('listing, exact attachment, and direct killing preserve command results', () => {
-  const calls = [];
+  const calls: string[][] = [];
   const result = { status: 1, output: 'no sessions' };
   const tmux = createTmux({
     capture(command, arguments_) {
       calls.push([command, ...arguments_]);
       return result;
     },
-    run(command, arguments_) {
+    run(command: string, arguments_: string[]) {
       calls.push([command, ...arguments_]);
       return 7;
     },
@@ -108,14 +109,15 @@ const SETUP_OPERATIONS = [
   ['select-window', '-t', 'example:nvim'],
 ];
 
-function createFixture({ cleanupFails = false, failureIndex } = {}) {
-  const calls = [];
-  const sessions = new Set();
+function createFixture({ cleanupFails = false, failureIndex }: { cleanupFails?: boolean; failureIndex?: number } = {}) {
+  const calls: string[][] = [];
+  const sessions = new Set<string>();
 
   return {
     calls,
     sessions,
-    run(command, arguments_) {
+    capture: () => { throw new Error('unexpected process capture'); },
+    run(command: string, arguments_: string[]) {
       assert.equal(command, 'tmux');
       calls.push(arguments_);
 

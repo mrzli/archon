@@ -1,12 +1,29 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import { runWorkspaces } from '../../src/commands/workspaces/index.mjs';
+import type { WorkspaceContext, WorkspaceGroup } from '../../src/commands/workspaces/workspaces.ts';
+import type { WorkspaceAction } from '../../src/commands/workspaces/group-context.ts';
+import type { CaptureResult, SessionDefinition, Tmux } from '../../src/commands/workspaces/tmux.ts';
+import { runWorkspaces } from '../../src/commands/workspaces/index.ts';
 
-function createContext({ failures = {}, tmux = '' } = {}) {
-  const calls = [];
-  const errors = [];
-  const output = [];
+interface FixtureOptions {
+  failures?: Partial<Record<WorkspaceGroup, number>>;
+  tmux?: string;
+}
+
+function unexpectedTmuxOperation(): never {
+  throw new Error('unexpected tmux operation');
+}
+
+function createContext({ failures = {}, tmux = '' }: FixtureOptions = {}): {
+  calls: [WorkspaceGroup, WorkspaceAction][];
+  errors: string[];
+  output: string[];
+  context: WorkspaceContext & { tmux: Tmux };
+} {
+  const calls: [WorkspaceGroup, WorkspaceAction][] = [];
+  const errors: string[] = [];
+  const output: string[] = [];
 
   return {
     calls,
@@ -16,6 +33,11 @@ function createContext({ failures = {}, tmux = '' } = {}) {
       environment: { TMUX: tmux },
       isTTY: false,
       tmux: {
+        hasSession: unexpectedTmuxOperation,
+        createEditorSession: unexpectedTmuxOperation,
+        createShellSession: unexpectedTmuxOperation,
+        stopSession: unexpectedTmuxOperation,
+        killSession: unexpectedTmuxOperation,
         listSessions: () => { throw new Error('unexpected session lookup'); },
         attachSession: () => { throw new Error('unexpected attachment'); },
       },
@@ -74,13 +96,14 @@ test('group options run only their selected group', () => {
 
 test('an injected tmux object reaches real group handlers and attachment', () => {
   const fixture = createContext();
-  const calls = [];
+  const calls: (SessionDefinition | string)[] = [];
   delete fixture.context.groupHandlers;
   fixture.context.homeDir = '/home/test';
   fixture.context.directoryExists = () => true;
   fixture.context.isTTY = true;
   fixture.context.capture = () => { throw new Error('unexpected process capture'); };
   fixture.context.tmux = {
+    ...fixture.context.tmux,
     hasSession: () => false,
     createShellSession(definition) {
       calls.push(definition);
@@ -161,7 +184,7 @@ test('interactive starts attach to an existing session in the requested group', 
     fixture.context.tmux.listSessions = () => {
       return { status: 0, output: '0\nflashcards-be\njslib-example\nmain\nproject-mrzli-archon' };
     };
-    const attachments = [];
+    const attachments: string[] = [];
     fixture.context.tmux.attachSession = (session) => {
       attachments.push(session);
       return 0;
@@ -177,7 +200,7 @@ test('interactive calls inside tmux, stop, help, and failed starts do not attach
     [['stop'], {}, 0],
     [['--help'], {}, 0],
     [['start'], { failures: { general: 1 } }, 1],
-  ]) {
+  ] satisfies [string[], FixtureOptions, number][]) {
     const fixture = createContext(options);
     fixture.context.isTTY = true;
     fixture.context.tmux.listSessions = () => { throw new Error('unexpected session lookup'); };
@@ -191,7 +214,7 @@ test('attachment skips absent group sessions and propagates failures', () => {
     [{ status: 1, output: 'no server running on socket' }, 0, 0],
     [{ status: 1, output: 'permission denied' }, 0, 1],
     [{ status: 0, output: 'main' }, 1, 1],
-  ]) {
+  ] satisfies [CaptureResult, number, number][]) {
     const fixture = createContext();
     fixture.context.isTTY = true;
     fixture.context.tmux.listSessions = () => result;

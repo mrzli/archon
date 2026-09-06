@@ -1,12 +1,31 @@
 import { spawnSync } from 'node:child_process';
 
-import { manageFlashcards } from './flashcards.mjs';
-import { manageGeneral } from './general.mjs';
-import { manageJslibs } from './jslibs.mjs';
-import { manageMiscProjects } from './misc-projects.mjs';
-import { createTmux } from './tmux.mjs';
+import type { GroupContext, WorkspaceAction } from './group-context.ts';
+import type { CaptureCommand, RunCommand, Tmux } from './tmux.ts';
+import { manageFlashcards } from './flashcards.ts';
+import { manageGeneral } from './general.ts';
+import { manageJslibs } from './jslibs.ts';
+import { manageMiscProjects } from './misc-projects.ts';
+import { createTmux } from './tmux.ts';
 
-const GROUPS = ['general', 'flashcards', 'jslibs', 'misc-projects'];
+export type WorkspaceGroup = typeof GROUPS[number];
+type GroupHandlers = Record<WorkspaceGroup, (action: WorkspaceAction, context: GroupContext) => number>;
+export interface WorkspaceContext extends Partial<GroupContext> {
+  environment?: NodeJS.ProcessEnv;
+  isTTY?: boolean;
+  groupHandlers?: GroupHandlers;
+  print?: (message: string) => void;
+  run?: RunCommand;
+  capture?: CaptureCommand;
+}
+
+type ActiveContext = WorkspaceContext & { tmux: Tmux; groupHandlers: GroupHandlers };
+interface ParsedAction {
+  action: WorkspaceAction;
+  group?: WorkspaceGroup;
+}
+
+const GROUPS = ['general', 'flashcards', 'jslibs', 'misc-projects'] as const;
 const GROUP_HANDLERS = {
   flashcards: manageFlashcards,
   general: manageGeneral,
@@ -14,12 +33,12 @@ const GROUP_HANDLERS = {
   'misc-projects': manageMiscProjects,
 };
 
-export function runWorkspaces(arguments_, context = {}) {
+export function runWorkspaces(arguments_: string[], context: WorkspaceContext = {}) {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
   const parsed = parseArguments(arguments_, print, printError);
 
-  if (parsed.status !== undefined) {
+  if ('status' in parsed) {
     return parsed.status;
   }
 
@@ -52,7 +71,7 @@ export function runWorkspaces(arguments_, context = {}) {
   return attachAfterStart(status, parsed, groupContext);
 }
 
-function attachAfterStart(status, parsed, context) {
+function attachAfterStart(status: number, parsed: ParsedAction, context: ActiveContext) {
   const environment = context.environment ?? process.env;
   const isTTY = context.isTTY ?? process.stdin.isTTY;
   if (status !== 0 || parsed.action !== 'start' || environment.TMUX || !isTTY) {
@@ -84,7 +103,15 @@ function attachAfterStart(status, parsed, context) {
   return session ? context.tmux.attachSession(session) : 0;
 }
 
-function parseArguments(arguments_, print, printError) {
+function isGroup(value: string): value is WorkspaceGroup {
+  return GROUPS.some((group) => group === value);
+}
+
+function parseArguments(
+  arguments_: string[],
+  print: (message: string) => void,
+  printError: (message: string) => void,
+): ParsedAction | { status: number } {
   if (
     arguments_.length === 1 &&
     ['help', '-h', '--help'].includes(arguments_[0])
@@ -95,7 +122,7 @@ function parseArguments(arguments_, print, printError) {
 
   const [action, ...options] = arguments_;
 
-  if (!['start', 'stop'].includes(action)) {
+  if (action !== 'start' && action !== 'stop') {
     if (action === undefined) {
       printError('Missing workspace action.');
     } else {
@@ -114,7 +141,7 @@ function parseArguments(arguments_, print, printError) {
   if (
     options.length === 2 &&
     ['--group', '-g'].includes(options[0]) &&
-    GROUPS.includes(options[1])
+    isGroup(options[1])
   ) {
     return { action, group: options[1] };
   }
@@ -125,11 +152,13 @@ function parseArguments(arguments_, print, printError) {
   return { status: 2 };
 }
 
-function runGroup(group, action, context) {
+function runGroup(group: WorkspaceGroup, action: WorkspaceAction, context: ActiveContext) {
   return context.groupHandlers[group](action, context);
 }
 
-function runCommand(command, arguments_, options = {}) {
+function runCommand(
+  command: string, arguments_: string[], options: Parameters<RunCommand>[2] = {},
+) {
   const result = spawnSync(command, arguments_, {
     stdio: options.stdio ?? 'inherit',
   });
@@ -146,7 +175,7 @@ function runCommand(command, arguments_, options = {}) {
   return result.status ?? 1;
 }
 
-function captureCommand(command, arguments_) {
+function captureCommand(command: string, arguments_: string[]) {
   const result = spawnSync(command, arguments_, { encoding: 'utf8' });
 
   if (result.error) {

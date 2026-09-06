@@ -1,17 +1,26 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import { manageFlashcards } from '../../src/commands/workspaces/flashcards.mjs';
+import type { EditorSessionDefinition } from '../../src/commands/workspaces/tmux.ts';
+import { manageFlashcards } from '../../src/commands/workspaces/flashcards.ts';
+
+type Call = ['hasSession', string] | ['createEditorSession', EditorSessionDefinition];
+interface FixtureOptions {
+  cleanupFails?: boolean;
+  directories?: string[];
+  failFirstNewSession?: boolean;
+  failFirstSetupOperation?: boolean;
+}
 
 function createContext({
   cleanupFails = false,
   directories,
   failFirstNewSession = false,
   failFirstSetupOperation = false,
-} = {}) {
-  const calls = [];
-  const errors = [];
-  const sessions = new Set();
+}: FixtureOptions = {}) {
+  const calls: Call[] = [];
+  const errors: string[] = [];
+  const sessions = new Set<string>();
   let newSessionFailed = false;
   let setupOperationFailed = false;
 
@@ -48,7 +57,7 @@ function createContext({
           return 0;
         },
       },
-    },
+    } satisfies Parameters<typeof manageFlashcards>[1],
   };
 }
 
@@ -57,7 +66,7 @@ test('start creates exact flashcards sessions once', () => {
   assert.equal(manageFlashcards('start', fixture.context), 0);
   assert.deepEqual([...fixture.sessions], ['flashcards-fe', 'flashcards-be']);
   assert.deepEqual(
-    fixture.calls.filter(([operation]) => operation === 'createEditorSession'),
+    fixture.calls.filter((call) => call[0] === 'createEditorSession'),
     [
       ['createEditorSession', {
         session: 'flashcards-fe',

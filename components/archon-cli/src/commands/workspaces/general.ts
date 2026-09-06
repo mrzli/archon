@@ -2,7 +2,13 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-export function manageGeneral(action, context = {}) {
+import type { GroupContext, WorkspaceAction } from './group-context.ts';
+import type { Tmux } from './tmux.ts';
+
+export function manageGeneral(
+  action: WorkspaceAction,
+  context: GroupContext<Pick<Tmux, 'hasSession' | 'createShellSession' | 'stopSession'>>,
+) {
   const directoryExists = context.directoryExists ?? existsSync;
   const homeDir = context.homeDir ?? homedir();
   const printError = context.printError ?? console.error;

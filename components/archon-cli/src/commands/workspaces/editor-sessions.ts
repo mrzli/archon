@@ -1,6 +1,13 @@
 import { existsSync } from 'node:fs';
 
-export function manageEditorSessions(action, definitions, context = {}) {
+import type { GroupContext, WorkspaceAction } from './group-context.ts';
+import type { EditorSessionDefinition, Tmux } from './tmux.ts';
+
+export function manageEditorSessions(
+  action: WorkspaceAction,
+  definitions: EditorSessionDefinition[],
+  context: GroupContext<Pick<Tmux, 'hasSession' | 'createEditorSession' | 'stopSession'>>,
+) {
   const directoryExists = context.directoryExists ?? existsSync;
   const printError = context.printError ?? console.error;
   let status = 0;
@@ -26,7 +33,10 @@ export function manageEditorSessions(action, definitions, context = {}) {
   return status;
 }
 
-export function startEditorSession(definition, context = {}) {
+export function startEditorSession(
+  definition: EditorSessionDefinition,
+  context: GroupContext<Pick<Tmux, 'hasSession' | 'createEditorSession'>>,
+) {
   const printError = context.printError ?? console.error;
 
   if (context.tmux.hasSession(definition.session)) {

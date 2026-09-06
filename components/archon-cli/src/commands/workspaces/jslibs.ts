@@ -2,9 +2,14 @@ import { readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
-import { startEditorSession } from './editor-sessions.mjs';
+import type { GroupContext, WorkspaceAction } from './group-context.ts';
+import type { Tmux } from './tmux.ts';
+import { startEditorSession } from './editor-sessions.ts';
 
-export function manageJslibs(action, context = {}) {
+export function manageJslibs(
+  action: WorkspaceAction,
+  context: GroupContext<Pick<Tmux, 'hasSession' | 'createEditorSession' | 'killSession' | 'listSessions'>>,
+) {
   const directoryExists = context.directoryExists ?? isDirectory;
   const homeDir = context.homeDir ?? homedir();
   const listRepositories = context.listRepositories ?? findRepositories;
@@ -60,7 +65,7 @@ export function manageJslibs(action, context = {}) {
   return status;
 }
 
-function findRepositories(root) {
+function findRepositories(root: string) {
   return readdirSync(root)
     .filter((name) => !name.startsWith('.'))
     .map((name) => `${join(root, name)}/`)
@@ -68,11 +73,11 @@ function findRepositories(root) {
     .sort((left, right) => left.localeCompare(right));
 }
 
-function isDirectory(path) {
+function isDirectory(path: string) {
   try {
     return statSync(path).isDirectory();
   } catch (error) {
-    if (error?.code === 'ENOENT') {
+    if (error !== null && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       return false;
     }
 

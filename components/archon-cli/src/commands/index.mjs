@@ -1,3 +1,3 @@
 export * from './libs/index.ts';
 export * from './projects/index.ts';
-export * from './workspaces/index.mjs';
+export * from './workspaces/index.ts';

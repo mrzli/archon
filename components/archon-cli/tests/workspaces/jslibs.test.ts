@@ -4,11 +4,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'bun:test';
 
-import { manageJslibs } from '../../src/commands/workspaces/jslibs.mjs';
+import type { EditorSessionDefinition, CaptureResult } from '../../src/commands/workspaces/tmux.ts';
+import { manageJslibs } from '../../src/commands/workspaces/jslibs.ts';
 
-function createContext({ captureResult, homeDir, sessions: initialSessions } = {}) {
-  const calls = [];
-  const errors = [];
+type Call = ['hasSession' | 'killSession', string] | ['createEditorSession', EditorSessionDefinition];
+interface FixtureOptions {
+  captureResult?: CaptureResult;
+  homeDir?: string;
+  sessions?: string[];
+}
+
+function createContext({ captureResult, homeDir, sessions: initialSessions }: FixtureOptions = {}) {
+  const calls: Call[] = [];
+  const errors: string[] = [];
   const sessions = new Set(initialSessions);
 
   return {
@@ -37,7 +45,7 @@ function createContext({ captureResult, homeDir, sessions: initialSessions } = {
           return captureResult ?? { status: 0, output: [...sessions].join('\n') };
         },
       },
-    },
+    } satisfies Parameters<typeof manageJslibs>[1],
   };
 }
 
@@ -56,7 +64,7 @@ test('start discovers immediate non-hidden Git repositories', () => {
     assert.equal(manageJslibs('start', fixture.context), 0);
     assert.deepEqual([...fixture.sessions], ['jslib-alpha', 'jslib-beta']);
     assert.deepEqual(
-      fixture.calls.filter(([operation]) => operation === 'createEditorSession')
+      fixture.calls.filter((call) => call[0] === 'createEditorSession')
         .map(([, definition]) => [definition.session, definition.directory]),
       [
         ['jslib-alpha', `${join(root, 'alpha')}/`],

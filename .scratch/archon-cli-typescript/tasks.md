@@ -16,7 +16,7 @@ Task files contain acceptance criteria and a place for actual completion evidenc
 | 3 | [ACTS-003: Convert shared modules and test helpers](./tasks/ACTS-003-shared-types.md) | ACTS-002 | Completed |
 | 4 | [ACTS-004: Convert libraries command and tests](./tasks/ACTS-004-libs-types.md) | ACTS-003 | Completed |
 | 5 | [ACTS-005: Convert projects command and tests](./tasks/ACTS-005-projects-types.md) | ACTS-004 | Completed |
-| 6 | [ACTS-006: Convert workspaces command and tests](./tasks/ACTS-006-workspaces-types.md) | ACTS-005 | Planned |
+| 6 | [ACTS-006: Convert workspaces command and tests](./tasks/ACTS-006-workspaces-types.md) | ACTS-005 | Completed |
 | 7 | [ACTS-007: Finish TypeScript conversion and verify deployment](./tasks/ACTS-007-finish-verify.md) | ACTS-006 | Planned |
 
 ## Shared checkpoint checks
@@ -50,4 +50,5 @@ three-day release-age gate. ACTS-003 completed the shared modules and test-helpe
 conversion with both verification modes passing. ACTS-004 completed the libraries
 command and tests, with parser parity and both verification modes passing.
 ACTS-005 completed the projects command and tests with both verification modes
-passing. ACTS-006 is next.
+passing. ACTS-006 completed the workspace modules and focused tests with both
+verification modes passing. ACTS-007 is next.
