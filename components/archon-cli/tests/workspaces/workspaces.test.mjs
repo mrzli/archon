@@ -15,6 +15,10 @@ function createContext({ failures = {}, tmux = '' } = {}) {
     context: {
       environment: { TMUX: tmux },
       isTTY: false,
+      tmux: {
+        listSessions: () => { throw new Error('unexpected session lookup'); },
+        attachSession: () => { throw new Error('unexpected attachment'); },
+      },
       groupHandlers: {
         general(action) {
           calls.push(['general', action]);
@@ -66,6 +70,34 @@ test('group options run only their selected group', () => {
       assert.deepEqual(fixture.calls, [[group, 'start']]);
     }
   }
+});
+
+test('an injected tmux object reaches real group handlers and attachment', () => {
+  const fixture = createContext();
+  const calls = [];
+  delete fixture.context.groupHandlers;
+  fixture.context.homeDir = '/home/test';
+  fixture.context.directoryExists = () => true;
+  fixture.context.isTTY = true;
+  fixture.context.capture = () => { throw new Error('unexpected process capture'); };
+  fixture.context.tmux = {
+    hasSession: () => false,
+    createShellSession(definition) {
+      calls.push(definition);
+      return 0;
+    },
+    listSessions: () => ({ status: 0, output: 'main' }),
+    attachSession(session) {
+      calls.push(session);
+      return 0;
+    },
+  };
+
+  assert.equal(runWorkspaces(['start', '-g', 'general'], fixture.context), 0);
+  assert.deepEqual(calls, [
+    { session: 'main', directory: '/home/test/projects' },
+    'main',
+  ]);
 });
 
 test('aggregate start runs every group without attaching or switching', () => {
@@ -126,18 +158,16 @@ test('interactive starts attach to an existing session in the requested group', 
   ]) {
     const fixture = createContext();
     fixture.context.isTTY = true;
-    fixture.context.capture = (command, arguments_) => {
-      assert.equal(command, 'tmux');
-      assert.deepEqual(arguments_, ['list-sessions', '-F', '#S']);
+    fixture.context.tmux.listSessions = () => {
       return { status: 0, output: '0\nflashcards-be\njslib-example\nmain\nproject-mrzli-archon' };
     };
     const attachments = [];
-    fixture.context.run = (command, arguments_) => {
-      attachments.push([command, ...arguments_]);
+    fixture.context.tmux.attachSession = (session) => {
+      attachments.push(session);
       return 0;
     };
     assert.equal(runWorkspaces(group ? ['start', '-g', group] : ['start'], fixture.context), 0);
-    assert.deepEqual(attachments, [['tmux', 'attach-session', '-t', `=${target}`]]);
+    assert.deepEqual(attachments, [target]);
   }
 });
 
@@ -150,7 +180,7 @@ test('interactive calls inside tmux, stop, help, and failed starts do not attach
   ]) {
     const fixture = createContext(options);
     fixture.context.isTTY = true;
-    fixture.context.capture = () => { throw new Error('unexpected session lookup'); };
+    fixture.context.tmux.listSessions = () => { throw new Error('unexpected session lookup'); };
     assert.equal(runWorkspaces(arguments_, fixture.context), status);
   }
 });
@@ -164,8 +194,8 @@ test('attachment skips absent group sessions and propagates failures', () => {
   ]) {
     const fixture = createContext();
     fixture.context.isTTY = true;
-    fixture.context.capture = () => result;
-    fixture.context.run = () => {
+    fixture.context.tmux.listSessions = () => result;
+    fixture.context.tmux.attachSession = () => {
       assert.equal(result.output, 'main');
       return attachStatus;
     };

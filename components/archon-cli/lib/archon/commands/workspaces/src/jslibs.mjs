@@ -5,12 +5,11 @@ import { basename, join } from 'node:path';
 import { startEditorSession } from './editor-sessions.mjs';
 
 export function manageJslibs(action, context = {}) {
-  const capture = context.capture;
   const directoryExists = context.directoryExists ?? isDirectory;
   const homeDir = context.homeDir ?? homedir();
   const listRepositories = context.listRepositories ?? findRepositories;
   const printError = context.printError ?? console.error;
-  const run = context.run;
+  const tmux = context.tmux;
   const root = join(homeDir, 'projects/personal/mrzli-jslib');
 
   if (action === 'start') {
@@ -34,7 +33,7 @@ export function manageJslibs(action, context = {}) {
     return status;
   }
 
-  const result = capture('tmux', ['list-sessions', '-F', '#S']);
+  const result = tmux.listSessions();
 
   if (result.status !== 0) {
     if (result.output.includes('no server running')) {
@@ -52,7 +51,7 @@ export function manageJslibs(action, context = {}) {
       continue;
     }
 
-    if (run('tmux', ['kill-session', '-t', session]) !== 0) {
+    if (tmux.killSession(session) !== 0) {
       printError(`Failed to stop tmux session: ${session}`);
       status = 1;
     }

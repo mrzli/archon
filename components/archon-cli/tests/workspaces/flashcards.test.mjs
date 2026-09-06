@@ -24,43 +24,29 @@ function createContext({
         directories === undefined || directories.includes(directory),
       homeDir: '/home/test',
       printError: (message) => errors.push(message),
-      run(command, arguments_) {
-        assert.equal(command, 'tmux');
-        calls.push(arguments_);
-
-        if (arguments_[0] === 'has-session') {
-          return sessions.has(arguments_[2]) ? 0 : 1;
-        }
-
-        if (
-          failFirstNewSession &&
-          !newSessionFailed &&
-          arguments_[0] === 'new-session'
-        ) {
-          newSessionFailed = true;
-          return 1;
-        }
-
-        if (arguments_[0] === 'new-session') {
-          sessions.add(arguments_[3]);
-        } else if (arguments_[0] === 'kill-session') {
-          if (cleanupFails && arguments_[2] === 'flashcards-fe') {
-            return 1;
+      tmux: {
+        hasSession(session) {
+          calls.push(['hasSession', session]);
+          return sessions.has(session);
+        },
+        createEditorSession(definition) {
+          calls.push(['createEditorSession', definition]);
+          if (failFirstNewSession && !newSessionFailed) {
+            newSessionFailed = true;
+            return { status: 1 };
           }
-
-          sessions.delete(arguments_[2]);
-        }
-
-        if (
-          failFirstSetupOperation &&
-          !setupOperationFailed &&
-          arguments_[0] === 'send-keys'
-        ) {
-          setupOperationFailed = true;
-          return 1;
-        }
-
-        return 0;
+          if (failFirstSetupOperation && !setupOperationFailed) {
+            setupOperationFailed = true;
+            if (cleanupFails) sessions.add(definition.session);
+            return { status: 1, cleanupStatus: cleanupFails ? 1 : 0 };
+          }
+          sessions.add(definition.session);
+          return { status: 0 };
+        },
+        stopSession(session) {
+          sessions.delete(session);
+          return 0;
+        },
       },
     },
   };
@@ -71,24 +57,26 @@ test('start creates exact flashcards sessions once', () => {
   assert.equal(manageFlashcards('start', fixture.context), 0);
   assert.deepEqual([...fixture.sessions], ['flashcards-fe', 'flashcards-be']);
   assert.deepEqual(
-    fixture.calls.filter((call) =>
-      call[0] === 'new-session' || (call[0] === 'send-keys' && call[2].endsWith(':dev')),
-    ),
+    fixture.calls.filter(([operation]) => operation === 'createEditorSession'),
     [
-      ['new-session', '-d', '-s', 'flashcards-fe', '-c',
-        '/home/test/projects/personal/mrzli/flashcards-fe', '-n', 'nvim'],
-      ['send-keys', '-t', 'flashcards-fe:dev', 'bun run dev', 'Enter'],
-      ['new-session', '-d', '-s', 'flashcards-be', '-c',
-        '/home/test/projects/personal/mrzli/flashcards-be', '-n', 'nvim'],
-      ['send-keys', '-t', 'flashcards-be:dev', 'pnpm run dev', 'Enter'],
+      ['createEditorSession', {
+        session: 'flashcards-fe',
+        directory: '/home/test/projects/personal/mrzli/flashcards-fe',
+        devCommand: 'bun run dev',
+      }],
+      ['createEditorSession', {
+        session: 'flashcards-be',
+        directory: '/home/test/projects/personal/mrzli/flashcards-be',
+        devCommand: 'pnpm run dev',
+      }],
     ],
   );
 
   fixture.calls.length = 0;
   assert.equal(manageFlashcards('start', fixture.context), 0);
   assert.deepEqual(fixture.calls, [
-    ['has-session', '-t', 'flashcards-fe'],
-    ['has-session', '-t', 'flashcards-be'],
+    ['hasSession', 'flashcards-fe'],
+    ['hasSession', 'flashcards-be'],
   ]);
 });
 
@@ -111,7 +99,7 @@ test('a session failure is reported and remaining sessions continue', () => {
   ]);
 });
 
-test('a partial session is rolled back and a later start retries it', () => {
+test('a rolled-back session is retried on a later start', () => {
   const fixture = createContext({ failFirstSetupOperation: true });
 
   assert.equal(manageFlashcards('start', fixture.context), 1);
@@ -119,12 +107,6 @@ test('a partial session is rolled back and a later start retries it', () => {
   assert.deepEqual(fixture.errors, [
     'Failed to start tmux session: flashcards-fe',
   ]);
-  assert.ok(
-    fixture.calls.some(
-      (arguments_) =>
-        arguments_[0] === 'kill-session' && arguments_[2] === 'flashcards-fe',
-    ),
-  );
 
   fixture.calls.length = 0;
   fixture.errors.length = 0;

@@ -1,7 +1,5 @@
 import { existsSync } from 'node:fs';
 
-import { createEditorSession, hasSession, stopSession } from './tmux.mjs';
-
 export function manageEditorSessions(action, definitions, context = {}) {
   const directoryExists = context.directoryExists ?? existsSync;
   const printError = context.printError ?? console.error;
@@ -19,7 +17,7 @@ export function manageEditorSessions(action, definitions, context = {}) {
       if (startEditorSession(definition, context) !== 0) {
         status = 1;
       }
-    } else if (stopSession(context.run, definition.session) !== 0) {
+    } else if (context.tmux.stopSession(definition.session) !== 0) {
       printError(`Failed to stop tmux session: ${definition.session}`);
       status = 1;
     }
@@ -31,11 +29,11 @@ export function manageEditorSessions(action, definitions, context = {}) {
 export function startEditorSession(definition, context = {}) {
   const printError = context.printError ?? console.error;
 
-  if (hasSession(context.run, definition.session)) {
+  if (context.tmux.hasSession(definition.session)) {
     return 0;
   }
 
-  const result = createEditorSession(context.run, definition);
+  const result = context.tmux.createEditorSession(definition);
 
   if (result.status !== 0) {
     printError(`Failed to start tmux session: ${definition.session}`);

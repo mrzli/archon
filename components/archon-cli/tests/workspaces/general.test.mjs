@@ -16,14 +16,23 @@ function createContext({ missing = false, fail, present = false } = {}) {
         return !missing;
       },
       printError: (message) => errors.push(message),
-      run(command, arguments_) {
-        assert.equal(command, 'tmux');
-        calls.push(arguments_);
-        const operation = arguments_[0];
-        if (operation === 'has-session') return present ? 0 : 1;
-        if (operation === fail) return 1;
-        present = operation === 'new-session';
-        return 0;
+      tmux: {
+        hasSession(session) {
+          calls.push(['hasSession', session]);
+          return present;
+        },
+        createShellSession(definition) {
+          calls.push(['createShellSession', definition]);
+          if (fail === 'createShellSession') return 1;
+          present = true;
+          return 0;
+        },
+        stopSession(session) {
+          calls.push(['stopSession', session]);
+          if (fail === 'stopSession') return 1;
+          present = false;
+          return 0;
+        },
       },
     },
   };
@@ -33,12 +42,12 @@ test('general creates one shell window at projects and preserves it on restart',
   const fixture = createContext();
   assert.equal(manageGeneral('start', fixture.context), 0);
   assert.deepEqual(fixture.calls, [
-    ['has-session', '-t', 'main'],
-    ['new-session', '-d', '-s', 'main', '-c', '/home/test/projects', '-n', 'shell'],
+    ['hasSession', 'main'],
+    ['createShellSession', { session: 'main', directory: '/home/test/projects' }],
   ]);
   fixture.calls.length = 0;
   assert.equal(manageGeneral('start', fixture.context), 0);
-  assert.deepEqual(fixture.calls, [['has-session', '-t', 'main']]);
+  assert.deepEqual(fixture.calls, [['hasSession', 'main']]);
 });
 
 test('general skips a missing projects directory', () => {
@@ -55,16 +64,15 @@ test('general stop tolerates an absent session and missing directory', () => {
   assert.equal(manageGeneral('stop', fixture.context), 0);
   assert.equal(manageGeneral('stop', fixture.context), 0);
   assert.deepEqual(fixture.calls, [
-    ['has-session', '-t', 'main'],
-    ['kill-session', '-t', 'main'],
-    ['has-session', '-t', 'main'],
+    ['stopSession', 'main'],
+    ['stopSession', 'main'],
   ]);
 });
 
 test('general reports start and stop failures', () => {
   for (const action of ['start', 'stop']) {
     const fixture = createContext({
-      fail: action === 'start' ? 'new-session' : 'kill-session',
+      fail: action === 'start' ? 'createShellSession' : 'stopSession',
       present: action === 'stop',
     });
     assert.equal(manageGeneral(action, fixture.context), 1);

@@ -27,29 +27,23 @@ function createContext({ directories, failNewSession, failStop, sessions } = {})
         directories === undefined || directories.includes(directory),
       homeDir: '/home/test',
       printError: (message) => errors.push(message),
-      run(command, arguments_) {
-        assert.equal(command, 'tmux');
-        calls.push(arguments_);
-
-        if (arguments_[0] === 'has-session') {
-          return presentSessions.has(arguments_[2]) ? 0 : 1;
-        }
-
-        if (arguments_[0] === 'new-session') {
-          if (arguments_[3] === failNewSession) {
-            return 1;
-          }
-
-          presentSessions.add(arguments_[3]);
-        } else if (arguments_[0] === 'kill-session') {
-          if (arguments_[2] === failStop) {
-            return 1;
-          }
-
-          presentSessions.delete(arguments_[2]);
-        }
-
-        return 0;
+      tmux: {
+        hasSession(session) {
+          calls.push(['hasSession', session]);
+          return presentSessions.has(session);
+        },
+        createEditorSession(definition) {
+          calls.push(['createEditorSession', definition]);
+          if (definition.session === failNewSession) return { status: 1 };
+          presentSessions.add(definition.session);
+          return { status: 0 };
+        },
+        stopSession(session) {
+          calls.push(['stopSession', session]);
+          if (session === failStop) return 1;
+          presentSessions.delete(session);
+          return 0;
+        },
       },
     },
   };
@@ -60,8 +54,8 @@ test('start creates the fixed project sessions once', () => {
   assert.equal(manageMiscProjects('start', fixture.context), 0);
   assert.deepEqual([...fixture.sessions], DEFINITIONS.map(([session]) => session));
   assert.deepEqual(
-    fixture.calls.filter((call) => call[0] === 'new-session')
-      .map((call) => [call[3], call[5]]),
+    fixture.calls.filter(([operation]) => operation === 'createEditorSession')
+      .map(([, definition]) => [definition.session, definition.directory]),
     DEFINITIONS,
   );
 
@@ -69,7 +63,7 @@ test('start creates the fixed project sessions once', () => {
   assert.equal(manageMiscProjects('start', fixture.context), 0);
   assert.deepEqual(
     fixture.calls,
-    DEFINITIONS.map(([session]) => ['has-session', '-t', session]),
+    DEFINITIONS.map(([session]) => ['hasSession', session]),
   );
 });
 
@@ -114,7 +108,7 @@ test('stop removes present sessions and tolerates repeated calls', () => {
   assert.equal(manageMiscProjects('stop', fixture.context), 0);
   assert.deepEqual(
     fixture.calls,
-    DEFINITIONS.map(([session]) => ['has-session', '-t', session]),
+    DEFINITIONS.map(([session]) => ['stopSession', session]),
   );
 });
 

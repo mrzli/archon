@@ -16,28 +16,26 @@ function createContext({ captureResult, homeDir, sessions: initialSessions } = {
     errors,
     sessions,
     context: {
-      capture(command, arguments_) {
-        assert.equal(command, 'tmux');
-        assert.deepEqual(arguments_, ['list-sessions', '-F', '#S']);
-        return captureResult ?? { status: 0, output: [...sessions].join('\n') };
-      },
       homeDir: homeDir ?? '/home/test',
       printError: (message) => errors.push(message),
-      run(command, arguments_) {
-        assert.equal(command, 'tmux');
-        calls.push(arguments_);
-
-        if (arguments_[0] === 'has-session') {
-          return sessions.has(arguments_[2]) ? 0 : 1;
-        }
-
-        if (arguments_[0] === 'new-session') {
-          sessions.add(arguments_[3]);
-        } else if (arguments_[0] === 'kill-session') {
-          sessions.delete(arguments_[2]);
-        }
-
-        return 0;
+      tmux: {
+        hasSession(session) {
+          calls.push(['hasSession', session]);
+          return sessions.has(session);
+        },
+        createEditorSession(definition) {
+          calls.push(['createEditorSession', definition]);
+          sessions.add(definition.session);
+          return { status: 0 };
+        },
+        killSession(session) {
+          calls.push(['killSession', session]);
+          sessions.delete(session);
+          return 0;
+        },
+        listSessions() {
+          return captureResult ?? { status: 0, output: [...sessions].join('\n') };
+        },
       },
     },
   };
@@ -58,8 +56,8 @@ test('start discovers immediate non-hidden Git repositories', () => {
     assert.equal(manageJslibs('start', fixture.context), 0);
     assert.deepEqual([...fixture.sessions], ['jslib-alpha', 'jslib-beta']);
     assert.deepEqual(
-      fixture.calls.filter((call) => call[0] === 'new-session')
-        .map((call) => [call[3], call[5]]),
+      fixture.calls.filter(([operation]) => operation === 'createEditorSession')
+        .map(([, definition]) => [definition.session, definition.directory]),
       [
         ['jslib-alpha', `${join(root, 'alpha')}/`],
         ['jslib-beta', `${join(root, 'beta')}/`],
@@ -69,8 +67,8 @@ test('start discovers immediate non-hidden Git repositories', () => {
     fixture.calls.length = 0;
     assert.equal(manageJslibs('start', fixture.context), 0);
     assert.deepEqual(fixture.calls, [
-      ['has-session', '-t', 'jslib-alpha'],
-      ['has-session', '-t', 'jslib-beta'],
+      ['hasSession', 'jslib-alpha'],
+      ['hasSession', 'jslib-beta'],
     ]);
   } finally {
     rmSync(homeDir, { recursive: true, force: true });
@@ -93,8 +91,8 @@ test('stop filters sessions and tolerates repeated calls', () => {
 
   assert.equal(manageJslibs('stop', fixture.context), 0);
   assert.deepEqual(fixture.calls, [
-    ['kill-session', '-t', 'jslib-alpha'],
-    ['kill-session', '-t', 'jslib-beta'],
+    ['killSession', 'jslib-alpha'],
+    ['killSession', 'jslib-beta'],
   ]);
   assert.deepEqual([...fixture.sessions], ['unrelated']);
 

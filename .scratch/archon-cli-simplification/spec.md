@@ -1,6 +1,6 @@
 # Archon CLI simplification
 
-Status: partially implemented; ACS-001 through ACS-003 and command layout complete, remaining scope provisional
+Status: partially implemented; ACS-001 through ACS-004 and command layout complete, remaining scope provisional
 
 Created: 2026-09-06
 
@@ -12,7 +12,7 @@ Simplify Archon CLI by removing duplicated workflows and introducing small
 plain objects only where they make dependencies and tests easier to understand.
 Avoid classes. ACS-001 was implemented and committed as `91be803`. The command
 layout follow-up was committed as `f68d886`; ACS-002 is also committed.
-ACS-003 is implemented but uncommitted. The remaining recommendations are
+ACS-003 was committed as `d91f2b6`; ACS-004 is implemented but uncommitted. The remaining recommendations are
 provisional, not current behavior.
 
 ## Implementation progress
@@ -25,7 +25,10 @@ and empty-result messages. Its task record contains verification results.
 ACS-003 shares configured editor-session management and startup error reporting
 in `commands/workspaces/src/editor-sessions.mjs`. Jslibs retains its distinct
 discovery and stopping logic; low-level tmux behavior is unchanged. See the
-task record for verification. ACS-004 and ACS-005 remain pending.
+task record for verification. ACS-004 introduces `createTmux` at the workspace
+boundary and named tmux methods in group/lifecycle and attachment code, with
+simpler group fakes and command checks at the tmux layer. Its task record
+contains verification results. ACS-005 remains pending.
 
 ### Command layout follow-up (2026-09-06)
 

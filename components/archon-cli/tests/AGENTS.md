@@ -10,6 +10,9 @@
   temporary real Git repositories. Never use the real home directory, GitHub
   account, or tmux server.
 - Keep detailed editor-session command sequences in `workspaces/tmux.test.mjs`.
+  Exercise the real `createTmux` factory there. Group tests supply small tmux
+  objects with named methods rather than parsing command arrays; test supplied
+  dependency wiring through `runWorkspaces` without process fallbacks.
   Group tests cover definitions, discovery, repeat behavior, and failures
   without duplicating the window-creation transcript. Adapter cases use exact
   session-set assertions. Helpers and fakes need no dedicated self-test suites.

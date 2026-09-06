@@ -4,6 +4,7 @@ import { manageFlashcards } from './flashcards.mjs';
 import { manageGeneral } from './general.mjs';
 import { manageJslibs } from './jslibs.mjs';
 import { manageMiscProjects } from './misc-projects.mjs';
+import { createTmux } from './tmux.mjs';
 
 const GROUPS = ['general', 'flashcards', 'jslibs', 'misc-projects'];
 const GROUP_HANDLERS = {
@@ -16,24 +17,25 @@ const GROUP_HANDLERS = {
 export function runWorkspaces(arguments_, context = {}) {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
-  const run = context.run ?? runCommand;
-  const capture = context.capture ?? captureCommand;
-  const groupHandlers = context.groupHandlers ?? GROUP_HANDLERS;
   const parsed = parseArguments(arguments_, print, printError);
 
   if (parsed.status !== undefined) {
     return parsed.status;
   }
 
+  const groupContext = {
+    ...context,
+    groupHandlers: context.groupHandlers ?? GROUP_HANDLERS,
+    printError,
+    tmux: context.tmux ?? createTmux({
+      run: context.run ?? runCommand,
+      capture: context.capture ?? captureCommand,
+    }),
+  };
+
   if (parsed.group !== undefined) {
-    const status = runGroup(parsed.group, parsed.action, {
-      ...context,
-      capture,
-      groupHandlers,
-      printError,
-      run,
-    });
-    return attachAfterStart(status, parsed, { ...context, capture, run });
+    const status = runGroup(parsed.group, parsed.action, groupContext);
+    return attachAfterStart(status, parsed, groupContext);
   }
 
   const groups =
@@ -41,21 +43,13 @@ export function runWorkspaces(arguments_, context = {}) {
   let status = 0;
 
   for (const group of groups) {
-    if (
-      runGroup(group, parsed.action, {
-        ...context,
-        capture,
-        groupHandlers,
-        printError,
-        run,
-      }) !== 0
-    ) {
+    if (runGroup(group, parsed.action, groupContext) !== 0) {
       printError(`Failed to ${parsed.action} tmux group: ${group}`);
       status = 1;
     }
   }
 
-  return attachAfterStart(status, parsed, { ...context, capture, run });
+  return attachAfterStart(status, parsed, groupContext);
 }
 
 function attachAfterStart(status, parsed, context) {
@@ -65,7 +59,7 @@ function attachAfterStart(status, parsed, context) {
     return status;
   }
 
-  const result = context.capture('tmux', ['list-sessions', '-F', '#S']);
+  const result = context.tmux.listSessions();
   if (result.status !== 0) {
     if (/no server running|no sessions|error connecting/.test(result.output)) {
       return 0;
@@ -87,7 +81,7 @@ function attachAfterStart(status, parsed, context) {
     }
   });
   const session = sessions.includes('main') ? 'main' : sessions[0];
-  return session ? context.run('tmux', ['attach-session', '-t', `=${session}`]) : 0;
+  return session ? context.tmux.attachSession(session) : 0;
 }
 
 function parseArguments(arguments_, print, printError) {
