@@ -10,6 +10,7 @@ const PROJECTS: readonly string[] = [
   'mrzli/js-templates',
   'mrzli/learning',
   'mrzli/repos',
+  'mrzli/skills',
 ];
 
 export function manageMiscProjects(

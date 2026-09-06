@@ -64,7 +64,8 @@ create_fixtures() {
     "$fixture_home/projects/personal/mrzli/docs" \
     "$fixture_home/projects/personal/mrzli/js-templates" \
     "$fixture_home/projects/personal/mrzli/learning" \
-    "$fixture_home/projects/personal/mrzli/repos"
+    "$fixture_home/projects/personal/mrzli/repos" \
+    "$fixture_home/projects/personal/mrzli/skills"
 }
 
 test_named_group() {
@@ -83,7 +84,7 @@ test_aggregate_groups() {
 
   run_archon workspaces start || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
-    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-repos || return
+    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-repos project-mrzli-skills || return
   run_archon workspaces stop || return
   assert_sessions || return
   assert_no_attachment
@@ -94,7 +95,7 @@ test_terminal_aggregate() {
   run_terminal_archon workspaces start || return
   assert_attachment main || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
-    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-repos
+    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-repos project-mrzli-skills
 }
 
 test_terminal_named_group() {

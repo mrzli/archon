@@ -21,6 +21,7 @@ const DEFINITIONS: readonly (readonly string[])[] = [
   ],
   ['project-mrzli-learning', '/home/test/projects/personal/mrzli/learning'],
   ['project-mrzli-repos', '/home/test/projects/personal/mrzli/repos'],
+  ['project-mrzli-skills', '/home/test/projects/personal/mrzli/skills'],
 ];
 
 function createContext({ directories, failNewSession, failStop, sessions }: FixtureOptions = {}): {
