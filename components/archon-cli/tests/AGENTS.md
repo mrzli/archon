@@ -1,30 +1,24 @@
-# Archon CLI test instructions
+# Archon CLI Test Instructions
 
-- Keep README.md limited to test-running commands and prerequisites. Put test
-  design and fixture instructions here.
-- Test behavior at the lowest layer that fully protects the contract. CLI
-  tests cover wiring, output, and external command construction; focused module
-  tests cover validation, ordering, and workflow policy. Do not repeat focused
-  cases through the CLI unless the command boundary adds behavior.
-- Preserve missing-root regression coverage and repository-status checks using
-  temporary real Git repositories. Never use the real home directory, GitHub
-  account, or tmux server.
-- Keep detailed editor-session command sequences in `workspaces/tmux.test.mjs`.
-  Exercise the real `createTmux` factory there. Group tests supply small tmux
-  objects with named methods rather than parsing command arrays; test supplied
-  dependency wiring through `runWorkspaces` without process fallbacks.
-  Group tests cover definitions, discovery, repeat behavior, and failures
-  without duplicating the window-creation transcript. Adapter cases use exact
-  session-set assertions. Helpers and fakes need no dedicated self-test suites.
-- Keep module tests for workspace failure/routing policy and terminal
-  integration tests for actual environment, stdin, and attachment wiring.
-- Use `createGitEnvironment` for child processes and synchronous `withGitFixture`
-  scopes for in-process real-Git workflows. `runArchon` applies the same Git
-  isolation automatically. Pass intentional environment overrides explicitly.
-- Keep `withGitFixture` callbacks synchronous. Do not run concurrent tests that
-  change process environment within the same test process. Keep repositories
-  and remotes local to temporary fixtures.
-- Installation-layout tests reproduce copy operations and check imports,
-  aliases, filtering, and repeated installation; they do not verify setup's
-  managed-directory replacement behavior. Never run complete workstation
-  setup as a test.
+- Keep READMEs limited to test-running commands and prerequisites. Keep only
+  general test-design rules here, not helper names or fixture implementation.
+- Test behavior at the lowest layer that fully protects the contract. Repeat
+  focused cases through the CLI only when the command boundary adds behavior.
+- Check command construction and rollback at the external-operation boundary.
+  Higher-level tests should use small fake objects with named operations,
+  checking policy and definitions without duplicating low-level transcripts.
+- Verify that injected dependencies reach real callers without falling back
+  to production operations.
+- Keep helpers and fakes simple; do not add dedicated self-test suites for
+  test machinery.
+- Use temporary roots and local fixtures. Never use real accounts, sessions,
+  repositories, or the user's home directory.
+- Isolate subprocess configuration from the host. Restore changed process
+  environment on scope exit and serialize tests that mutate process-global
+  state. Keep temporary repositories and remotes local to fixtures.
+- Use terminal integration tests for behavior that depends on actual terminal
+  or environment wiring.
+- Preserve meaningful empty-state, repeat-safety, failure, and data-preservation
+  coverage. State verification limits honestly when fixtures reproduce only
+  part of a production operation.
+- Never execute full workstation provisioning as a test.
