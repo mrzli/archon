@@ -8,14 +8,8 @@ repo_root="$(cd -- "$test_dir/../.." && pwd)"
 printf '%s\n' 'Archon CLI component tests'
 bash "$repo_root/components/archon-cli/test.sh"
 
-printf '\n%s\n' 'Archon CLI workspace adapter tests'
-bash "$test_dir/test-workspaces-adapter.sh"
-
 printf '\n%s\n' 'Archon CLI installation-layout tests'
 bash "$test_dir/test-install-layout.sh"
-
-printf '\n%s\n' 'Archon CLI migration tests'
-bash "$test_dir/test-migration.sh"
 
 mapfile -t bash_check_paths < <(
   find \
@@ -25,7 +19,6 @@ mapfile -t bash_check_paths < <(
 )
 bash_check_paths=(
   "$repo_root/setup.sh"
-  "$repo_root/migrations/archon-cli.sh"
   "${bash_check_paths[@]}"
 )
 

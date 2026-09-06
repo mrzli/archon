@@ -31,3 +31,6 @@ printf '\n%s\n' 'Archon CLI Node syntax checks'
 for path in "${node_check_paths[@]}"; do
   node --check "$path"
 done
+
+printf '\n%s\n' 'Archon CLI workspace adapter tests'
+bash "$component_root/tests/test-workspaces-adapter.sh"

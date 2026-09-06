@@ -3,10 +3,10 @@
 set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd -- "$test_dir/../.." && pwd)"
-node "$repo_root/components/archon-cli/scripts/build.mjs" || exit 1
-archon="$repo_root/components/archon-cli/dist/bin/archon"
-export PATH="$repo_root/tests/tmux-workspaces/bin:$PATH"
+component_root="$(cd -- "$test_dir/.." && pwd)"
+node "$component_root/scripts/build.mjs" || exit 1
+archon="$component_root/dist/bin/archon"
+export PATH="$test_dir/bin:$PATH"
 
 run_case() (
   temporary_root="$(mktemp -d)" || exit
