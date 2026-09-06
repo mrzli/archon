@@ -61,8 +61,8 @@ test_repeated_overlay_copy() {
   local archon_output alias_output tree_after_first tree_after_second
   mkdir -p "$home"
 
-  mkdir -p "$home/.local/lib/archon/workspaces/tests" "$home/.local/lib/unrelated"
-  : > "$home/.local/lib/archon/workspaces/tests/user-note.txt"
+  mkdir -p "$home/.local/lib/archon/commands/workspaces/tests" "$home/.local/lib/unrelated"
+  : > "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt"
   : > "$home/.local/lib/unrelated/keep"
 
   install_home "$home"
@@ -82,26 +82,26 @@ test_repeated_overlay_copy() {
   assert_equals "$archon_output" "$alias_output" || return
 
   assert_absent "$home/.local/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/libs/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/libs/README.md" || return
-  assert_absent "$home/.local/lib/archon/projects/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/projects/README.md" || return
-  assert_absent "$home/.local/lib/archon/workspaces/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/workspaces/README.md" || return
+  assert_absent "$home/.local/lib/archon/commands/libs/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/commands/libs/README.md" || return
+  assert_absent "$home/.local/lib/archon/commands/projects/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/commands/projects/README.md" || return
+  assert_absent "$home/.local/lib/archon/commands/workspaces/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/commands/workspaces/README.md" || return
 
   local source_test
   for source_test in "$archon_cli_source/tests/workspaces"/*; do
-    assert_absent "$home/.local/lib/archon/workspaces/tests/${source_test##*/}" || return
+    assert_absent "$home/.local/lib/archon/commands/workspaces/tests/${source_test##*/}" || return
   done
 
   assert_exists "$home/.local/lib/archon/cli.mjs" || return
-  assert_exists "$home/.local/lib/archon/libs/src/build.mjs" || return
-  assert_exists "$home/.local/lib/archon/libs/src/github-inventory.mjs" || return
-  assert_exists "$home/.local/lib/archon/libs/src/libs.mjs" || return
-  assert_exists "$home/.local/lib/archon/projects/src/github-inventory.mjs" || return
-  assert_exists "$home/.local/lib/archon/projects/src/projects.mjs" || return
-  assert_exists "$home/.local/lib/archon/workspaces/src/workspaces.mjs" || return
-  assert_exists "$home/.local/lib/archon/workspaces/tests/user-note.txt" || return
+  assert_exists "$home/.local/lib/archon/commands/libs/src/build.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/libs/src/github-inventory.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/libs/src/libs.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/projects/src/github-inventory.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/projects/src/projects.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/workspaces/src/workspaces.mjs" || return
+  assert_exists "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt" || return
   assert_exists "$home/.local/lib/unrelated/keep"
 }
 

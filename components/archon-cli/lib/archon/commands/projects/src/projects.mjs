@@ -9,24 +9,19 @@ import { join, resolve } from 'node:path';
 
 import {
   acceptsNoArguments,
-  isHelpRequest,
-} from '../../shared/arguments.mjs';
-import {
-  deleteRepositories,
-  pruneRepositories,
-} from '../../shared/destructive-workflows.mjs';
-import { getErrorMessage, toSingleLine } from '../../shared/errors.mjs';
-import { pathExists } from '../../shared/paths.mjs';
-import { runProcess } from '../../shared/process.mjs';
-import {
-  findChildGitRepositories,
-  inspectLocalRepositories as inspectRepositories,
-  printLocalRepositoryStatuses,
-} from '../../shared/repository-inspection.mjs';
-import {
   createSyncFailure as createRepositorySyncFailure,
+  deleteRepositories,
+  findChildGitRepositories,
+  getErrorMessage,
+  inspectLocalRepositories as inspectRepositories,
+  isHelpRequest,
+  pathExists,
+  printLocalRepositoryStatuses,
+  pruneRepositories,
+  runProcess,
   syncRepositories as runSyncWorkflow,
-} from '../../shared/sync-workflow.mjs';
+  toSingleLine,
+} from '../../../shared/index.mjs';
 import {
   addRemoteRepositories,
   compareNames,
@@ -43,7 +38,7 @@ import {
 // Entry point and command routing
 // =============================================================================
 
-export async function main(arguments_, context = {}) {
+export async function runProjects(arguments_, context = {}) {
   const homeDir = context.homeDir ?? homedir();
   const requiredRootDir = resolve(homeDir, 'projects/personal');
   const rootDir = resolve(context.rootDir ?? requiredRootDir);

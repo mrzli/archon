@@ -1,4 +1,4 @@
-import { getErrorMessage } from '../../shared/errors.mjs';
+import { getErrorMessage } from '../../../shared/index.mjs';
 
 export function parseRemoteRepositories(output) {
   try {

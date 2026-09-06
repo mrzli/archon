@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { createEditorSession } from '../../lib/archon/workspaces/src/tmux.mjs';
+import { createEditorSession } from '../../lib/archon/commands/workspaces/src/tmux.mjs';
 
 const DEFINITION = {
   session: 'example',

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { parseRemoteRepositories } from '../lib/archon/libs/src/github-inventory.mjs';
+import { parseRemoteRepositories } from '../lib/archon/commands/libs/src/github-inventory.mjs';
 
 test('library GitHub output is parsed into normalized inventory records', () => {
   const repositories = parseRemoteRepositories(JSON.stringify([

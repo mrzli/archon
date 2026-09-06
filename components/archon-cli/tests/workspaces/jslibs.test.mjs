@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import { manageJslibs } from '../../lib/archon/workspaces/src/jslibs.mjs';
+import { manageJslibs } from '../../lib/archon/commands/workspaces/src/jslibs.mjs';
 
 function createContext({ captureResult, homeDir, sessions: initialSessions } = {}) {
   const calls = [];

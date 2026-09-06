@@ -9,8 +9,15 @@
 
 ## Code conventions
 
-- Give domain command modules an explicit `main(arguments, context)` boundary;
-  keep the root dispatcher at `main(arguments)`.
+- Give domain command modules distinct `runLibraries(arguments, context)`,
+  `runProjects(arguments, context)`, and `runWorkspaces(arguments, context)`
+  entry functions; keep the root dispatcher at `main(arguments)`.
+- Keep domain modules under `lib/archon/commands/`. Each command's
+  `src/index.mjs` exports only its entry function. Other barrels re-export
+  their modules with `export *`.
+- Use barrels across runtime module boundaries. Imports within the same
+  directory must reference sibling modules directly, never their barrel.
+  Focused tests may import internal modules directly.
 - Keep top-level executable behavior in `bin/archon`; imported modules must not
   execute commands as an import side effect.
 - Wrap every `switch` case body, including `default`, in braces.

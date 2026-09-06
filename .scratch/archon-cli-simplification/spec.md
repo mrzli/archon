@@ -1,6 +1,6 @@
 # Archon CLI simplification
 
-Status: partially implemented; ACS-001 complete, remaining scope provisional
+Status: partially implemented; ACS-001 and command layout complete, remaining scope provisional
 
 Created: 2026-09-06
 
@@ -10,14 +10,37 @@ Implementation tasks: [Tasks, ordered from simplest](./tasks.md)
 
 Simplify Archon CLI by removing duplicated workflows and introducing small
 plain objects only where they make dependencies and tests easier to understand.
-Avoid classes. ACS-001 has been implemented at the user's request without a
-commit. The remaining recommendations are provisional, not current behavior.
+Avoid classes. ACS-001 was implemented and committed as `91be803`. The command
+layout follow-up below is implemented but uncommitted. The remaining
+recommendations are provisional, not current behavior.
 
 ## Implementation progress
 
 ACS-001 extracted identical argument helpers into `shared/arguments.mjs` for
 projects, libraries, sync, and destructive workflows. See its task record for
 verification results. No later task has been implemented.
+
+### Command layout follow-up (2026-09-06)
+
+At the user's request, moved `libs/`, `projects/`, and `workspaces/` under
+`lib/archon/commands/`. Each command's `src/index.mjs` exports only its entry
+function, defined directly as `runLibraries`, `runProjects`, or `runWorkspaces`.
+`commands/index.mjs` and `shared/index.mjs` use `export *` to re-export their
+modules. Same-directory imports remain direct; command internals are still
+available to focused tests via direct module imports.
+
+Updated runtime/test imports, documentation, installation-layout assertions,
+and migration prerequisite paths. No migration deletion target or provisioning
+operation changed. Durable layout/import conventions are in the component
+README and AGENTS.md.
+
+The complete verification runner passed: 126 Node tests, five workspace adapter
+cases, one installation-layout case, two migration cases, and Node/Bash syntax
+and whitespace checks. ShellCheck was unavailable. Checks also confirmed that
+relative runtime imports resolve, no module imports its same-directory barrel,
+the commands barrel exposes exactly three entry functions, and the shared
+barrel preserves all existing exports without collisions. Moved module bodies
+are unchanged apart from entry-function names and imports.
 
 ## Current findings
 

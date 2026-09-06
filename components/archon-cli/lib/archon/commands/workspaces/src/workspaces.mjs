@@ -13,7 +13,7 @@ const GROUP_HANDLERS = {
   'misc-projects': manageMiscProjects,
 };
 
-export function main(arguments_, context = {}) {
+export function runWorkspaces(arguments_, context = {}) {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
   const run = context.run ?? runCommand;

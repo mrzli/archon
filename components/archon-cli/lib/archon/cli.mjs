@@ -1,6 +1,4 @@
-import { main as runLibraries } from './libs/src/libs.mjs';
-import { main as runProjects } from './projects/src/projects.mjs';
-import { main as runWorkspaces } from './workspaces/src/workspaces.mjs';
+import { runLibraries, runProjects, runWorkspaces } from './commands/index.mjs';
 
 export async function main(arguments_) {
   const [commandOrAlias, ...extraArguments] = arguments_;
