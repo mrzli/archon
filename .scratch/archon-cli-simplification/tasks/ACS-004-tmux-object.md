@@ -2,7 +2,7 @@
 
 Status: completed
 
-Completed: 2026-09-06 (uncommitted)
+Completed: 2026-09-06
 
 Depends on: ACS-003
 
@@ -58,4 +58,5 @@ workspace adapter cases, one installation-layout case, two migration cases,
 and Node/Bash syntax and whitespace checks. ShellCheck was unavailable. The
 complete runner used isolated fixtures outside the sandbox. Contributor
 instructions were updated in AGENTS.md files; READMEs remain usage-only.
-ACS-004 is uncommitted; ACS-003 was committed as `d91f2b6` before this work.
+ACS-004 was subsequently committed as `df2f017`; ACS-003 was committed as
+`d91f2b6` before this work.

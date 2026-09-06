@@ -2,7 +2,7 @@
 
 Status: completed
 
-Completed: 2026-09-06 (uncommitted)
+Completed: 2026-09-06
 
 Depends on: ACS-001
 

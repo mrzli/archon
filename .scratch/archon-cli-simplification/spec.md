@@ -1,6 +1,8 @@
 # Archon CLI simplification
 
-Status: partially implemented; ACS-001 through ACS-004 and command layout complete, remaining scope provisional
+Status: completed and archived
+
+Completed: 2026-09-06
 
 Created: 2026-09-06
 
@@ -10,10 +12,10 @@ Implementation tasks: [Tasks, ordered from simplest](./tasks.md)
 
 Simplify Archon CLI by removing duplicated workflows and introducing small
 plain objects only where they make dependencies and tests easier to understand.
-Avoid classes. ACS-001 was implemented and committed as `91be803`. The command
-layout follow-up was committed as `f68d886`; ACS-002 is also committed.
-ACS-003 was committed as `d91f2b6`; ACS-004 is implemented but uncommitted. The remaining recommendations are
-provisional, not current behavior.
+All five implementation tasks are complete, including the user-approved command
+layout and documentation follow-ups. This record retains the original review
+and design recommendations alongside the final implementation and audit.
+Remote formatting and build-loading separation remain deferred.
 
 ## Implementation progress
 
@@ -28,7 +30,8 @@ discovery and stopping logic; low-level tmux behavior is unchanged. See the
 task record for verification. ACS-004 introduces `createTmux` at the workspace
 boundary and named tmux methods in group/lifecycle and attachment code, with
 simpler group fakes and command checks at the tmux layer. Its task record
-contains verification results. ACS-005 remains pending.
+contains verification results. ACS-005 completed the source audit and both
+terminal/non-terminal verification runs; its record contains the final findings.
 
 ### Command layout follow-up (2026-09-06)
 
@@ -41,9 +44,10 @@ available to focused tests via direct module imports.
 
 Updated runtime/test imports, documentation, installation-layout assertions,
 and migration prerequisite paths. No migration deletion target or provisioning
-operation changed. Durable layout/import conventions are in the component
-AGENTS.md. READMEs are usage-only; contributor and test implementation guidance
-belongs in the relevant AGENTS.md files.
+operation changed. This approved nested layout is an exception to the original
+internal-layout preservation requirement. READMEs are usage-only and AGENTS.md
+files contain general patterns; implementation-specific findings remain in
+these planning records.
 
 The complete verification runner passed: 126 Node tests, five workspace adapter
 cases, one installation-layout case, two migration cases, and Node/Bash syntax
@@ -76,7 +80,7 @@ These findings record the review before implementation began.
 
 Paths above are relative to `components/archon-cli/lib/archon/`.
 
-## Recommended first pass
+## Original recommendations
 
 ### 1. Share workspace lifecycle orchestration
 
@@ -108,8 +112,9 @@ function createTmux({ run, capture }) {
 }
 ```
 
-The exact API is provisional. Include only operations required by actual
-callers; use closures without classes or `this` binding.
+This was an illustrative API; ACS-004 records the final operations. Include only
+operations required by actual callers; use closures without classes or `this`
+binding.
 
 Group tests can supply a plain object with fake methods instead of interpreting
 tmux command arrays. Keep detailed command construction and rollback coverage
@@ -127,8 +132,8 @@ their respective domains.
 
 ## Secondary candidates
 
-- Consolidate repeated `isHelpRequest` and `acceptsNoArguments` helpers if this
-  reduces duplication without creating a general argument-parsing framework.
+- Repeated `isHelpRequest` and `acceptsNoArguments` helpers were consolidated
+  in ACS-001 without creating a general argument-parsing framework.
 - Consider shared remote-output formatting only if its boundary remains small.
   Projects use visibility values while libraries use `isPrivate`; preserve
   those distinctions and their existing empty-output behavior.
@@ -198,5 +203,19 @@ Success means less duplicated orchestration and simpler group fakes, with no
 observable behavior changes. Review the resulting code for net simplification;
 do not retain an abstraction merely because this proposal suggested it.
 
-When implementation is complete, update relevant durable documentation with
-the final boundaries and mark this proposal completed or archive it.
+## Completion record
+
+All five tasks are complete. The final audit at `4defdf1`, relative to `687ee62`,
+found 69 fewer runtime module lines and preserved command behavior, domain
+policy, destructive safeguards, and original tmux operations. The approved
+command-layout change and documentation rules are recorded above.
+
+Both complete verification runs passed with terminal and non-terminal stdin:
+129 Node tests, five workspace adapter cases, one installation-layout case,
+two migration cases, and Node/Bash syntax and whitespace checks. ShellCheck
+was unavailable. Verification used isolated fixtures; full workstation setup
+was not executed. See [ACS-005](./tasks/ACS-005-verify-close.md) for audit
+findings and verification limits.
+
+The spec and tasks are archived as the implementation record. No specific
+architecture instructions were added to AGENTS.md or READMEs during closure.
