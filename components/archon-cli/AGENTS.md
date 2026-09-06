@@ -26,6 +26,18 @@
   string is intentionally being sent to tmux.
 - Keep terminal output concise and send usage errors to standard error.
 
+## Documentation
+
+- Keep every README in this tree usage-only: commands, options, examples,
+  prerequisites, and user-visible behavior. The test README documents how to
+  run tests and their prerequisites.
+- Do not document internal functioning, architecture, source layout, module
+  ownership, import conventions, or test implementation in READMEs. Keep
+  contributor instructions in the relevant AGENTS.md instead.
+- `shared/status-workflow.mjs` owns status argument parsing, output
+  orchestration, and exit-status calculation. Projects and libraries supply
+  discovery, inspection, help, and empty-result messages.
+
 ## Verification
 
 - Run `components/archon-cli/test.sh` for the component suite and

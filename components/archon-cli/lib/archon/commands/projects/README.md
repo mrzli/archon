@@ -33,5 +33,4 @@ archon projects help sync
 ```
 
 Remote operations require GitHub CLI authentication. Organization and
-canonical `owner/repository` exclusions are defined in the projects module and
-matched case-insensitively.
+`owner/repository` exclusions are matched case-insensitively.

@@ -16,6 +16,3 @@ attaches to an existing session from the requested group. Aggregate start
 prefers `main`. It never creates an extra session for attachment. Inside tmux,
 the current session stays selected. Stop, help, and non-interactive calls do
 not attach.
-
-Flashcards, jslibs, and miscellaneous-project sessions are managed directly in
-JavaScript.
