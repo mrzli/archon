@@ -78,12 +78,6 @@ Run the setup script to apply the managed system configuration:
 ~/.local/share/archon/setup.sh
 ```
 
-The setup script overlays `data/home/` onto the user's home directory. Files
-already present at managed paths are updated; unrelated home files are left
-untouched. Repository-only files listed in `data/home-copy-ignore.txt` are not
-installed. It separately builds and installs the runtime-only Archon CLI from
-`components/archon-cli` into `~/.local/bin` and `~/.local/lib/archon`.
-
 ## Manual Steps
 
 ### Wi-Fi
