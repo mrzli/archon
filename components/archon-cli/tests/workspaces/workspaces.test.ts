@@ -88,6 +88,29 @@ test('help and invalid invocations do not run commands', (): void => {
   assert.deepEqual(hubs.calls, []);
 });
 
+test('kill invokes only tmux kill-server and preserves its exit status', (): void => {
+  for (const status of [0, 1]) {
+    const fixture = createContext({ tmux: 'client' });
+    const calls: (readonly string[])[] = [];
+    fixture.context.run = (command, arguments_): number => {
+      calls.push([command, ...arguments_]);
+      return status;
+    };
+    fixture.context.stopDetached = (): never => { throw new Error('unexpected detached stop'); };
+    assert.equal(runWorkspaces(['kill'], fixture.context), status);
+    assert.deepEqual(calls, [['tmux', 'kill-server']]);
+    assert.deepEqual(fixture.calls, []);
+  }
+});
+
+test('kill rejects all extra arguments without running commands', (): void => {
+  for (const extra of [['extra'], ['-g', 'general'], ['--group', 'jslibs'], ['--help']]) {
+    const fixture = createContext();
+    assert.equal(runWorkspaces(['kill', ...extra], fixture.context), 2);
+    assert.deepEqual(fixture.calls, []);
+  }
+});
+
 test('group options run only their selected group', (): void => {
   for (const option of ['--group', '-g']) {
     for (const group of ['flashcards', 'general', 'jslibs', 'misc-projects']) {

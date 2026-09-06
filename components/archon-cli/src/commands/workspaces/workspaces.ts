@@ -39,6 +39,10 @@ export function runWorkspaces(arguments_: readonly string[], context: WorkspaceC
     return parsed.status;
   }
 
+  if (parsed.action === 'kill') {
+    return (context.run ?? runCommand)('tmux', ['kill-server']);
+  }
+
   if (parsed.action === 'stop' && (context.environment ?? process.env).TMUX) {
     return context.stopDetached
       ? context.stopDetached(arguments_)
@@ -114,7 +118,7 @@ function parseArguments(
   arguments_: readonly string[],
   print: (message: string) => void,
   printError: (message: string) => void,
-): ParsedAction | { readonly status: number } {
+): ParsedAction | { readonly action: 'kill' } | { readonly status: number } {
   if (
     arguments_.length === 1 &&
     ['help', '-h', '--help'].includes(arguments_[0])
@@ -125,7 +129,7 @@ function parseArguments(
 
   const [action, ...options] = arguments_;
 
-  if (action !== 'start' && action !== 'stop') {
+  if (action !== 'kill' && action !== 'start' && action !== 'stop') {
     if (action === undefined) {
       printError('Missing workspace action.');
     } else {
@@ -142,6 +146,7 @@ function parseArguments(
   }
 
   if (
+    action !== 'kill' &&
     options.length === 2 &&
     ['--group', '-g'].includes(options[0]) &&
     isGroup(options[1])
@@ -198,6 +203,7 @@ function captureCommand(command: string, arguments_: readonly string[]): Capture
 function getHelpText(): string {
   return [
     'Usage: archon workspaces <start|stop> [options]',
+    '       archon workspaces kill',
     '',
     'Options:',
     '  -g, --group <group>  Run only flashcards, general, jslibs, or misc-projects',

@@ -7,7 +7,12 @@ archon workspaces start
 archon workspaces stop
 archon workspaces start --group general
 archon workspaces stop -g jslibs
+archon workspaces kill
 ```
+
+`kill` takes no arguments or options and runs `tmux kill-server`, terminating
+all sessions on the server, including sessions outside Archon's workspace groups.
+It returns tmux's exit status.
 
 Without `--group` or `-g`, the command runs every group in the listed order for
 start and reverse order for stop. Every group is attempted after a failure.

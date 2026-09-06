@@ -35,6 +35,7 @@ repository:
 archon projects <command> [options]
 archon libs <command> [options]
 archon workspaces <start|stop> [options]
+archon workspaces kill
 ```
 
 `arc` is an exact alias for `archon`, so `arc projects status` and
