@@ -8,6 +8,7 @@ import { manageEditorSessions } from './editor-sessions.ts';
 const PROJECTS: readonly string[] = [
   'mrzli/docs',
   'mrzli/repos',
+  'mrzli/learning',
   'mrzli/archon',
   'mrzli/js-templates',
 ];

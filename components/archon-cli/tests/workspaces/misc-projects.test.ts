@@ -15,6 +15,7 @@ interface FixtureOptions {
 const DEFINITIONS: readonly (readonly string[])[] = [
   ['project-mrzli-docs', '/home/test/projects/personal/mrzli/docs'],
   ['project-mrzli-repos', '/home/test/projects/personal/mrzli/repos'],
+  ['project-mrzli-learning', '/home/test/projects/personal/mrzli/learning'],
   ['project-mrzli-archon', '/home/test/projects/personal/mrzli/archon'],
   [
     'project-mrzli-js-templates',
