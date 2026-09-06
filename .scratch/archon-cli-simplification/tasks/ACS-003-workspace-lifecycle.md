@@ -1,6 +1,8 @@
 # ACS-003: Share editor-session lifecycle
 
-Status: pending
+Status: completed
+
+Completed: 2026-09-06 (uncommitted)
 
 Depends on: ACS-002 (execution order; no technical dependency)
 
@@ -13,19 +15,19 @@ with one shared helper managing their repeated lifecycle.
 
 ## Acceptance checklist
 
-- [ ] Extract repeated directory/existing-session checks, start/stop handling,
+- [x] Extract repeated directory/existing-session checks, start/stop handling,
       error reporting, and failure accumulation into a small shared helper.
-- [ ] Keep configured session names, directories, windows, and development
+- [x] Keep configured session names, directories, windows, and development
       commands unchanged.
-- [ ] Preserve missing-directory skips and repeat-safe starts/stops.
-- [ ] Keep rollback ownership in the existing tmux editor-session operation;
+- [x] Preserve missing-directory skips and repeat-safe starts/stops.
+- [x] Keep rollback ownership in the existing tmux editor-session operation;
       report both setup and cleanup failures as before.
-- [ ] Continue attempting remaining sessions after a failure.
-- [ ] Reuse editor-start behavior for jslibs only where it avoids duplication
+- [x] Continue attempting remaining sessions after a failure.
+- [x] Reuse editor-start behavior for jslibs only where it avoids duplication
       without extra mode flags or a configurable lifecycle framework.
-- [ ] Preserve jslibs discovery and prefix-based stopping; do not introduce new
+- [x] Preserve jslibs discovery and prefix-based stopping; do not introduce new
       per-directory checks or change general's shell-only session behavior.
-- [ ] Keep current process injection for this checkpoint; the operations object
+- [x] Keep current process injection for this checkpoint; the operations object
       is a separate follow-up task.
 
 ## Verification
@@ -33,3 +35,19 @@ with one shared helper managing their repeated lifecycle.
 Run existing workspace group and tmux tests and fake-tmux adapter checks.
 Verify rollback, cleanup failure, repeat-safe behavior, missing directories,
 group ordering, and continued processing. Run the checks in the task index.
+
+## Completion record
+
+Added `workspaces/src/editor-sessions.mjs` with `manageEditorSessions` for
+configured session lists and `startEditorSession` for shared existing-session
+checks and setup/cleanup error reporting. Flashcards and miscellaneous projects
+now supply session definitions. Jslibs reuses the startup helper while retaining
+its discovery, root check, and prefix-based stopping. General and low-level tmux
+operations are unchanged; no operations object or new tests were introduced.
+Workspace AGENTS.md records ownership; READMEs remain usage-only.
+
+Existing workspace tests passed, followed by `bash tests/archon-cli/run.sh`:
+126 Node tests, five workspace adapter cases, one installation-layout case,
+two migration cases, and Node/Bash syntax and whitespace checks all passed.
+ShellCheck was unavailable. The complete suite ran outside the sandbox to
+support its isolated Git subprocess fixtures. No commit was made.

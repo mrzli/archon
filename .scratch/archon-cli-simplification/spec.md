@@ -1,6 +1,6 @@
 # Archon CLI simplification
 
-Status: partially implemented; ACS-001, ACS-002, and command layout complete, remaining scope provisional
+Status: partially implemented; ACS-001 through ACS-003 and command layout complete, remaining scope provisional
 
 Created: 2026-09-06
 
@@ -11,9 +11,9 @@ Implementation tasks: [Tasks, ordered from simplest](./tasks.md)
 Simplify Archon CLI by removing duplicated workflows and introducing small
 plain objects only where they make dependencies and tests easier to understand.
 Avoid classes. ACS-001 was implemented and committed as `91be803`. The command
-layout follow-up was committed as `f68d886`; ACS-002 is implemented but
-uncommitted. The remaining
-recommendations are provisional, not current behavior.
+layout follow-up was committed as `f68d886`; ACS-002 is also committed.
+ACS-003 is implemented but uncommitted. The remaining recommendations are
+provisional, not current behavior.
 
 ## Implementation progress
 
@@ -22,7 +22,10 @@ projects, libraries, sync, and destructive workflows. See its task record for
 verification results. ACS-002 now shares status orchestration through
 `shared/status-workflow.mjs`, preserving domain discovery, inspection, help,
 and empty-result messages. Its task record contains verification results.
-ACS-003 and later tasks remain pending.
+ACS-003 shares configured editor-session management and startup error reporting
+in `commands/workspaces/src/editor-sessions.mjs`. Jslibs retains its distinct
+discovery and stopping logic; low-level tmux behavior is unchanged. See the
+task record for verification. ACS-004 and ACS-005 remain pending.
 
 ### Command layout follow-up (2026-09-06)
 

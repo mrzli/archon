@@ -2,7 +2,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
-import { createEditorSession, hasSession } from './tmux.mjs';
+import { startEditorSession } from './editor-sessions.mjs';
 
 export function manageJslibs(action, context = {}) {
   const capture = context.capture;
@@ -26,16 +26,7 @@ export function manageJslibs(action, context = {}) {
     for (const directory of listRepositories(root)) {
       const session = `jslib-${basename(directory)}`;
 
-      if (hasSession(run, session)) {
-        continue;
-      }
-
-      const result = createEditorSession(run, { session, directory });
-      if (result.status !== 0) {
-        printError(`Failed to start tmux session: ${session}`);
-        if (result.cleanupStatus !== undefined && result.cleanupStatus !== 0) {
-          printError(`Failed to clean up tmux session: ${session}`);
-        }
+      if (startEditorSession({ session, directory }, context) !== 0) {
         status = 1;
       }
     }
