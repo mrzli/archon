@@ -15,6 +15,7 @@ mapfile -t bash_check_paths < <(
   find \
     "$repo_root/components/archon-cli" \
     "$repo_root/tests/archon-cli" \
+    -type d -name node_modules -prune -o \
     -type f -name '*.sh' -print | sort
 )
 bash_check_paths=(

@@ -11,9 +11,9 @@ Implementation tasks: [Ordered task index](./tasks.md)
 Move Archon CLI to Bun, then convert development code to strict TypeScript in
 reviewable batches. Continue deploying a complete, JavaScript-only runtime
 artifact from `dist/`. Every task must leave the CLI buildable and usable.
-ACTS-001 is complete: JavaScript execution and tests now use Bun. TypeScript
-compilation and the remaining conversion batches are still planned. See the
-[task record](./tasks/ACTS-001-bun-runtime.md) for verified changes and results.
+ACTS-001 and ACTS-002 are complete: execution uses Bun and checked builds emit
+JavaScript from a mixed JavaScript/TypeScript source tree. The remaining conversion
+batches are planned. See the task records for verified changes and results.
 
 ## Verified starting point (before ACTS-001)
 
@@ -145,7 +145,10 @@ without accidentally falling back to production operations.
 ## Dependencies and setup
 
 Add TypeScript and Bun type definitions as development dependencies and commit
-the Bun lockfile. Record the verified Bun/compiler versions in task evidence;
+the Bun lockfile. Before the first dependency installation, configure a three-day
+minimum release age (259200 seconds) with no package exemptions in the component
+bunfig.toml. Preserve this rule for all later resolutions; existing locked
+versions are reused. Record the verified Bun/compiler versions in task evidence;
 verify current official tool behavior when choosing exact configuration.
 
 Setup must ensure Bun is available, install dependencies with the frozen lockfile

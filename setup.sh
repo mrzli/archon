@@ -201,6 +201,8 @@ home_copy_ignore_file="$repo_root_dir/data/home-copy-ignore.txt"
 rsync -a --exclude-from="$home_copy_ignore_file" "$home_source_dir"/ "$HOME"/
 
 # Install the Archon CLI from its repository component.
+log_step "Installing Archon CLI build dependencies"
+NODE_ENV=development bun install --frozen-lockfile --cwd "$archon_cli_source_dir"
 log_step "Building Archon CLI"
 bun "$archon_cli_source_dir/scripts/build.mjs"
 log_step "Installing Archon CLI"

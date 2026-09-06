@@ -5,6 +5,8 @@
 - Use Bun with ECMAScript modules and no third-party runtime packages.
 - Development-only tooling dependencies are permitted; keep them out of the
   installed runtime artifact.
+- Preserve the configured minimum package release age; do not add exemptions
+  or bypass it when resolving dependencies.
 - Keep fixed workstation paths derived from the current user's home directory.
 
 ## Code conventions
@@ -45,6 +47,7 @@
 
 - Run the component suite and complete installation integration checks for
   runtime changes.
+- Run strict type checking for TypeScript changes, including converted tests.
 - Update the relevant README whenever command usage or behavior changes.
 - Parse changed JavaScript executables and modules with Bun without executing
   them; run behavioral checks against the built artifact.

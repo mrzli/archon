@@ -55,6 +55,35 @@ install_home() {
   copy_archon_cli "$home"
 }
 
+test_type_errors_prevent_installation() {
+  local component="$temporary_root/invalid-component"
+  local destination="$temporary_root/failed-install"
+  local error_file
+  mkdir -p "$component"
+  rsync -a --exclude=node_modules --exclude=dist "$archon_cli_source"/ "$component"/ || return
+  ln -s "$archon_cli_source/node_modules" "$component/node_modules" || return
+
+  for error_file in src/type-error.ts tests/type-error.test.ts; do
+    printf '%s\n' 'const value: string = 123;' > "$component/$error_file"
+    if bash -e -c '
+      bun "$1/scripts/build.mjs"
+      mkdir -p "$2"
+      rsync -a "$1/dist"/ "$2"/
+    ' bash "$component" "$destination" > "$temporary_root/type-error.log" 2>&1; then
+      fail "type error in $error_file did not stop installation"
+      return 1
+    fi
+    if ! grep -q 'TS2322' "$temporary_root/type-error.log"; then
+      cat "$temporary_root/type-error.log" >&2
+      fail 'build failed without the expected type error'
+      return 1
+    fi
+    assert_absent "$destination" || return
+    assert_absent "$component/dist" || return
+    rm -f -- "$component/$error_file"
+  done
+}
+
 test_repeated_build() {
   local first_manifest second_manifest unexpected_files archon_output alias_output
   first_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
@@ -63,7 +92,7 @@ test_repeated_build() {
   assert_absent "$archon_cli_source/dist/stale-output.mjs" || return
   second_manifest="$(cd "$archon_cli_source/dist" && find . -type f -exec sha256sum {} + | sort)"
   assert_equals "$first_manifest" "$second_manifest" || return
-  unexpected_files="$(find "$archon_cli_source/dist" -type f ! -name '*.mjs' ! -path '*/bin/archon')"
+  unexpected_files="$(find "$archon_cli_source/dist" -type f ! -name '*.mjs' ! -name '*.js' ! -path '*/bin/archon')"
   assert_equals '' "$unexpected_files" || return
   [[ -L "$archon_cli_source/dist/bin/arc" ]] || fail 'built arc is not a symbolic link' || return
   assert_equals archon "$(readlink "$archon_cli_source/dist/bin/arc")" || return
@@ -110,6 +139,8 @@ test_repeated_overlay_copy() {
     assert_absent "$home/.local/lib/archon/commands/workspaces/tests/${source_test##*/}" || return
   done
 
+  assert_exists "$home/.local/lib/archon/shared/arguments.js" || return
+  assert_absent "$home/.local/lib/archon/shared/arguments.ts" || return
   assert_exists "$home/.local/lib/archon/cli.mjs" || return
   assert_exists "$home/.local/lib/archon/commands/libs/build.mjs" || return
   assert_exists "$home/.local/lib/archon/commands/libs/github-inventory.mjs" || return
@@ -137,6 +168,7 @@ run_test() {
   fi
 }
 
+run_test 'source and test type errors prevent installation' test_type_errors_prevent_installation
 run_test 'repeat-safe JavaScript build' test_repeated_build
 run_test 'repeated home-overlay copy' test_repeated_overlay_copy
 

@@ -3,10 +3,12 @@
 Run the component suite from the repository root:
 
 ```bash
+NODE_ENV=development bun install --frozen-lockfile --cwd components/archon-cli
 bun run --cwd components/archon-cli test
 ```
 
-This builds the CLI before running component and workspace integration tests.
+This typechecks and builds the CLI before running component and workspace
+integration tests.
 Alternatively, run `components/archon-cli/test.sh` directly.
 
 Run complete verification with terminal stdin, then without it:

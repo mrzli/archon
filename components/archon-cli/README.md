@@ -3,12 +3,17 @@
 Requires Bun. Build and run locally from the repository root:
 
 ```bash
+NODE_ENV=development bun install --frozen-lockfile --cwd components/archon-cli
 bun run --cwd components/archon-cli build
 components/archon-cli/dist/bin/archon --help
 ```
 
 Alternatively, build with `bun components/archon-cli/scripts/build.mjs`.
-No dependency installation is required.
+Builds check TypeScript before emitting JavaScript. To check types alone, run
+`bun run --cwd components/archon-cli typecheck`.
+
+New dependency resolutions require releases at least three days old, with no
+package exemptions. Locked versions are reused during setup and installation.
 
 Archon provides one command for the workstation tools maintained by this
 repository:

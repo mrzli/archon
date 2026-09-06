@@ -1,4 +1,4 @@
-import { isHelpRequest } from './arguments.mjs';
+import { isHelpRequest } from './arguments.ts';
 import { getErrorMessage, toSingleLine } from './errors.mjs';
 import { getGitOutput } from './git.mjs';
 import {

@@ -2,7 +2,7 @@ import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
-import { isHelpRequest } from './arguments.mjs';
+import { isHelpRequest } from './arguments.ts';
 import { getErrorMessage, toSingleLine } from './errors.mjs';
 import {
   formatChanges,

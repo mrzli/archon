@@ -4,6 +4,11 @@
   "type": "module",
   "scripts": {
     "build": "bun scripts/build.mjs",
-    "test": "bash test.sh"
+    "test": "bash test.sh",
+    "typecheck": "bun node_modules/typescript/bin/tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "typescript": "7.0.2"
   }
 }

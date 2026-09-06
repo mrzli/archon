@@ -7,7 +7,7 @@ component_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 bun "$component_root/scripts/build.mjs"
 
 mapfile -t bun_tests < <(
-  find "$component_root/tests" -type f -name '*.test.mjs' -print | sort
+  find "$component_root/tests" -type f \( -name '*.test.mjs' -o -name '*.test.ts' \) -print | sort
 )
 
 printf '%s\n' 'Archon CLI Bun tests'
@@ -22,7 +22,7 @@ mapfile -t bun_check_paths < <(
     "$component_root/scripts" \
     "$component_root/dist/lib/archon" \
     "$component_root/tests" \
-    -type f -name '*.mjs' -print | sort
+    -type f \( -name '*.mjs' -o -name '*.js' \) -print | sort
 )
 bun_check_paths=(
   "$component_root/bin/archon"

@@ -1,4 +1,4 @@
-export * from './arguments.mjs';
+export * from './arguments.ts';
 export * from './destructive-workflows.mjs';
 export * from './errors.mjs';
 export * from './git.mjs';

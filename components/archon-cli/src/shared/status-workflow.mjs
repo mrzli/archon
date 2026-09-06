@@ -1,4 +1,4 @@
-import { isHelpRequest } from './arguments.mjs';
+import { isHelpRequest } from './arguments.ts';
 import { printLocalRepositoryStatuses } from './repository-inspection.mjs';
 
 export function runStatusWorkflow(arguments_, options) {
