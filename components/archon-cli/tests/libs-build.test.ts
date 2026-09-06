@@ -16,7 +16,7 @@ import {
   writeLibrary,
 } from './test-helpers.ts';
 
-function graphNode(name: string, dependencies: string[] = []): PackageNode {
+function graphNode(name: string, dependencies: readonly string[] = []): PackageNode {
   return {
     dependencies,
     manifest: { scripts: { build: 'build-command' } },
@@ -25,37 +25,37 @@ function graphNode(name: string, dependencies: string[] = []): PackageNode {
   };
 }
 
-function packageManifest(name: string, extra: Record<string, unknown> = {}) {
+function packageManifest(name: string, extra: Record<string, unknown> = {}): { readonly name: string; } {
   return { name: `@mrzli-jslib/${name}`, ...extra };
 }
 
-function findRepositories(fixture: Fixture) {
+function findRepositories(fixture: Fixture): readonly { readonly name: string; readonly path: string; }[] {
   const root = join(fixture.home, 'projects/personal/mrzli-jslib');
 
   return readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .filter((entry) => existsSync(join(root, entry.name, '.git')))
-    .map((entry) => ({ name: entry.name, path: join(root, entry.name) }));
+    .filter((entry): boolean => entry.isDirectory())
+    .filter((entry): boolean => existsSync(join(root, entry.name, '.git')))
+    .map((entry): { readonly name: string; readonly path: string; } => ({ name: entry.name, path: join(root, entry.name) }));
 }
 
-const INVALID_GRAPH_CASES: {
-  name: string;
-  arrange: (fixture: Fixture) => void;
-  expected: RegExp;
+const INVALID_GRAPH_CASES: readonly {
+  readonly name: string;
+  readonly arrange: (fixture: Fixture) => void;
+  readonly expected: RegExp;
 }[] = [
   {
     name: 'an unreadable manifest',
-    arrange: (fixture) => writeLibrary(fixture, 'app', '{ invalid json'),
+    arrange: (fixture): string => writeLibrary(fixture, 'app', '{ invalid json'),
     expected: /app\/package\.json could not be read/,
   },
   {
     name: 'an unscoped package name',
-    arrange: (fixture) => writeLibrary(fixture, 'app', { name: 'unscoped' }),
+    arrange: (fixture): string => writeLibrary(fixture, 'app', { name: 'unscoped' }),
     expected: /must have a name in the @mrzli-jslib scope/,
   },
   {
     name: 'an invalid dependency field',
-    arrange: (fixture) =>
+    arrange: (fixture): string =>
       writeLibrary(fixture, 'app', packageManifest('app', {
         dependencies: [],
       })),
@@ -63,7 +63,7 @@ const INVALID_GRAPH_CASES: {
   },
   {
     name: 'a non-file local dependency',
-    arrange: (fixture) =>
+    arrange: (fixture): string =>
       writeLibrary(fixture, 'app', packageManifest('app', {
         dependencies: { '@mrzli-jslib/dep': 'workspace:*' },
       })),
@@ -71,7 +71,7 @@ const INVALID_GRAPH_CASES: {
   },
   {
     name: 'an empty local dependency path',
-    arrange: (fixture) =>
+    arrange: (fixture): string =>
       writeLibrary(fixture, 'app', packageManifest('app', {
         dependencies: { '@mrzli-jslib/dep': 'file:' },
       })),
@@ -79,7 +79,7 @@ const INVALID_GRAPH_CASES: {
   },
   {
     name: 'an unresolved local dependency path',
-    arrange: (fixture) =>
+    arrange: (fixture): string =>
       writeLibrary(fixture, 'app', packageManifest('app', {
         dependencies: { '@mrzli-jslib/dep': 'file:../missing' },
       })),
@@ -87,7 +87,7 @@ const INVALID_GRAPH_CASES: {
   },
   {
     name: 'a local dependency that is not a repository',
-    arrange(fixture) {
+    arrange(fixture): void {
       writeLibrary(fixture, 'dep', packageManifest('dep'), { git: false });
       writeLibrary(fixture, 'app', packageManifest('app', {
         dependencies: { '@mrzli-jslib/dep': 'file:../dep' },
@@ -97,7 +97,7 @@ const INVALID_GRAPH_CASES: {
   },
   {
     name: 'a mismatched local dependency name',
-    arrange(fixture) {
+    arrange(fixture): void {
       writeLibrary(fixture, 'dep', packageManifest('other'));
       writeLibrary(fixture, 'app', packageManifest('app', {
         dependencies: { '@mrzli-jslib/dep': 'file:../dep' },
@@ -107,7 +107,7 @@ const INVALID_GRAPH_CASES: {
   },
   {
     name: 'a duplicate package name',
-    arrange(fixture) {
+    arrange(fixture): void {
       writeLibrary(fixture, 'first', packageManifest('duplicate'));
       writeLibrary(fixture, 'second', packageManifest('duplicate'));
     },
@@ -115,7 +115,7 @@ const INVALID_GRAPH_CASES: {
   },
 ];
 
-test('dependency graph resolves local packages by canonical path', () => {
+test('dependency graph resolves local packages by canonical path', (): void => {
   const fixture = createFixture('libs-build-graph');
 
   try {
@@ -134,7 +134,7 @@ test('dependency graph resolves local packages by canonical path', () => {
     ]);
 
     assert.deepEqual(
-      graph.map(({ dependencies, name }) => ({ dependencies, name })),
+      graph.map(({ dependencies, name }): { readonly dependencies: readonly string[]; readonly name: string; } => ({ dependencies, name })),
       [
         {
           dependencies: ['@mrzli-jslib/dependency'],
@@ -152,13 +152,13 @@ test('dependency graph resolves local packages by canonical path', () => {
 });
 
 for (const case_ of INVALID_GRAPH_CASES) {
-  test(`dependency graph rejects ${case_.name}`, () => {
+  test(`dependency graph rejects ${case_.name}`, (): void => {
     const fixture = createFixture('libs-invalid-graph');
 
     try {
       case_.arrange(fixture);
       assert.throws(
-        () => createDependencyGraph(findRepositories(fixture)),
+        (): readonly PackageNode[] => createDependencyGraph(findRepositories(fixture)),
         case_.expected,
       );
     } finally {
@@ -167,37 +167,37 @@ for (const case_ of INVALID_GRAPH_CASES) {
   });
 }
 
-test('build ordering visits dependencies before dependants', () => {
+test('build ordering visits dependencies before dependants', (): void => {
   const application = graphNode('application', ['@mrzli-jslib/dependency']);
   const dependency = graphNode('dependency');
 
   assert.deepEqual(
-    orderPackagesForBuild([application, dependency]).map(({ name }) => name),
+    orderPackagesForBuild([application, dependency]).map(({ name }): string => name),
     ['@mrzli-jslib/dependency', '@mrzli-jslib/application'],
   );
 });
 
-test('build ordering reports the exact dependency cycle', () => {
+test('build ordering reports the exact dependency cycle', (): void => {
   const alpha = graphNode('alpha', ['@mrzli-jslib/beta']);
   const beta = graphNode('beta', ['@mrzli-jslib/alpha']);
 
   assert.throws(
-    () => orderPackagesForBuild([alpha, beta]),
+    (): readonly PackageNode[] => orderPackagesForBuild([alpha, beta]),
     new Error(
       'dependency cycle detected: @mrzli-jslib/alpha -> @mrzli-jslib/beta -> @mrzli-jslib/alpha',
     ),
   );
 });
 
-test('build-script validation accepts only a non-empty string', () => {
-  assert.doesNotThrow(() => validateBuildScripts([graphNode('valid')]));
+test('build-script validation accepts only a non-empty string', (): void => {
+  assert.doesNotThrow((): void => validateBuildScripts([graphNode('valid')]));
 
   for (const scripts of [undefined, null, [], {}, { build: '' }]) {
     const invalid = graphNode('invalid');
     invalid.manifest.scripts = scripts;
 
     assert.throws(
-      () => validateBuildScripts([invalid]),
+      (): void => validateBuildScripts([invalid]),
       new Error(
         '@mrzli-jslib/invalid must define a non-empty build script',
       ),

@@ -19,6 +19,6 @@ export function runProcess(
   command: string,
   arguments_: readonly string[],
   options: SpawnSyncOptions = {},
-) {
+): SpawnSyncReturns<string | Buffer> {
   return spawnSync(command, arguments_, options);
 }

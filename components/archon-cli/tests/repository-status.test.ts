@@ -9,11 +9,11 @@ import {
   runArchon,
 } from './test-helpers.ts';
 
-function runGit(directory: string, ...arguments_: string[]) {
+function runGit(directory: string, ...arguments_: readonly string[]): void {
   execFileSync('git', ['-C', directory, ...arguments_], { stdio: 'ignore' });
 }
 
-function initializeRepository(directory: string) {
+function initializeRepository(directory: string): void {
   mkdirSync(directory, { recursive: true });
   execFileSync('git', ['init', '-q', '-b', 'main', directory]);
   runGit(directory, 'config', 'user.email', 'test@example.com');
@@ -23,7 +23,7 @@ function initializeRepository(directory: string) {
   runGit(directory, 'commit', '-qm', 'initial');
 }
 
-function addRepositoryChanges(directory: string) {
+function addRepositoryChanges(directory: string): void {
   writeFileSync(join(directory, 'tracked.txt'), 'stashed\n', { flag: 'a' });
   runGit(directory, 'stash', 'push', '-qm', 'test-stash');
   writeFileSync(join(directory, 'tracked.txt'), 'unstaged\n', { flag: 'a' });
@@ -32,7 +32,7 @@ function addRepositoryChanges(directory: string) {
   runGit(directory, 'add', 'staged.txt');
 }
 
-test('status reports repository changes, errors, and fetch warnings', () => withGitFixture('repository-status', (fixture) => {
+test('status reports repository changes, errors, and fetch warnings', (): void => withGitFixture('repository-status', (fixture): void => {
   const projectsRoot = join(fixture.home, 'projects/personal');
   const librariesRoot = join(projectsRoot, 'mrzli-jslib');
   const projectClean = join(projectsRoot, 'example/clean');

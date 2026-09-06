@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
+import type { CaptureCommand, RunCommand } from '../../src/commands/workspaces/tmux.ts';
 import { createTmux } from '../../src/commands/workspaces/tmux.ts';
 
 const DEFINITION = {
@@ -9,12 +10,12 @@ const DEFINITION = {
   devCommand: 'bun run dev',
 };
 
-test('shell session commands and repeat-safe stopping preserve tmux behavior', () => {
-  const calls: string[][] = [];
+test('shell session commands and repeat-safe stopping preserve tmux behavior', (): void => {
+  const calls: (readonly string[])[] = [];
   let present = false;
   const tmux = createTmux({
-    capture: () => { throw new Error('unexpected process capture'); },
-    run(command, arguments_, options) {
+    capture: (): never => { throw new Error('unexpected process capture'); },
+    run(command, arguments_, options): number {
       assert.equal(command, 'tmux');
       calls.push(arguments_);
       if (arguments_[0] === 'has-session') {
@@ -41,15 +42,15 @@ test('shell session commands and repeat-safe stopping preserve tmux behavior', (
   ]);
 });
 
-test('listing, exact attachment, and direct killing preserve command results', () => {
-  const calls: string[][] = [];
+test('listing, exact attachment, and direct killing preserve command results', (): void => {
+  const calls: (readonly string[])[] = [];
   const result = { status: 1, output: 'no sessions' };
   const tmux = createTmux({
-    capture(command, arguments_) {
+    capture(command, arguments_): { readonly status: number; readonly output: string; } {
       calls.push([command, ...arguments_]);
       return result;
     },
-    run(command: string, arguments_: string[]) {
+    run(command: string, arguments_: readonly string[]): number {
       calls.push([command, ...arguments_]);
       return 7;
     },
@@ -65,7 +66,7 @@ test('listing, exact attachment, and direct killing preserve command results', (
   ]);
 });
 
-const SETUP_OPERATIONS = [
+const SETUP_OPERATIONS: readonly (readonly string[])[] = [
   [
     'new-session',
     '-d',
@@ -109,15 +110,25 @@ const SETUP_OPERATIONS = [
   ['select-window', '-t', 'example:nvim'],
 ];
 
-function createFixture({ cleanupFails = false, failureIndex }: { cleanupFails?: boolean; failureIndex?: number } = {}) {
-  const calls: string[][] = [];
+function createFixture(
+  { cleanupFails = false, failureIndex }: {
+    readonly cleanupFails?: boolean;
+    readonly failureIndex?: number;
+  } = {},
+): {
+  readonly calls: (readonly string[])[];
+  readonly sessions: Set<string>;
+  readonly capture: CaptureCommand;
+  readonly run: RunCommand;
+} {
+  const calls: (readonly string[])[] = [];
   const sessions = new Set<string>();
 
   return {
     calls,
     sessions,
-    capture: () => { throw new Error('unexpected process capture'); },
-    run(command: string, arguments_: string[]) {
+    capture: (): never => { throw new Error('unexpected process capture'); },
+    run(command: string, arguments_: readonly string[]): number {
       assert.equal(command, 'tmux');
       calls.push(arguments_);
 
@@ -144,7 +155,7 @@ function createFixture({ cleanupFails = false, failureIndex }: { cleanupFails?: 
   };
 }
 
-test('new-session failure does not attempt cleanup', () => {
+test('new-session failure does not attempt cleanup', (): void => {
   const fixture = createFixture({ failureIndex: 0 });
 
   assert.deepEqual(createTmux(fixture).createEditorSession(DEFINITION), {
@@ -155,7 +166,7 @@ test('new-session failure does not attempt cleanup', () => {
   assert.deepEqual([...fixture.sessions], []);
 });
 
-test('each failure after session creation rolls the new session back', () => {
+test('each failure after session creation rolls the new session back', (): void => {
   for (let failureIndex = 1; failureIndex < SETUP_OPERATIONS.length; failureIndex += 1) {
     const fixture = createFixture({ failureIndex });
 
@@ -171,7 +182,7 @@ test('each failure after session creation rolls the new session back', () => {
   }
 });
 
-test('cleanup failure is returned with the original setup failure', () => {
+test('cleanup failure is returned with the original setup failure', (): void => {
   const fixture = createFixture({ cleanupFails: true, failureIndex: 1 });
 
   assert.deepEqual(createTmux(fixture).createEditorSession(DEFINITION), {
@@ -181,7 +192,7 @@ test('cleanup failure is returned with the original setup failure', () => {
   assert.deepEqual([...fixture.sessions], ['example']);
 });
 
-test('a successful retry completes a session after rollback', () => {
+test('a successful retry completes a session after rollback', (): void => {
   const firstAttempt = createFixture({ failureIndex: 3 });
   assert.equal(createTmux(firstAttempt).createEditorSession(DEFINITION).status, 1);
   assert.deepEqual([...firstAttempt.sessions], []);

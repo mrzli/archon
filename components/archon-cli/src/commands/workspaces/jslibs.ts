@@ -9,7 +9,7 @@ import { startEditorSession } from './editor-sessions.ts';
 export function manageJslibs(
   action: WorkspaceAction,
   context: GroupContext<Pick<Tmux, 'hasSession' | 'createEditorSession' | 'killSession' | 'listSessions'>>,
-) {
+): number {
   const directoryExists = context.directoryExists ?? isDirectory;
   const homeDir = context.homeDir ?? homedir();
   const listRepositories = context.listRepositories ?? findRepositories;
@@ -65,15 +65,15 @@ export function manageJslibs(
   return status;
 }
 
-function findRepositories(root: string) {
+function findRepositories(root: string): readonly string[] {
   return readdirSync(root)
-    .filter((name) => !name.startsWith('.'))
-    .map((name) => `${join(root, name)}/`)
-    .filter((directory) => isDirectory(join(directory, '.git')))
-    .sort((left, right) => left.localeCompare(right));
+    .filter((name): boolean => !name.startsWith('.'))
+    .map((name): string => `${join(root, name)}/`)
+    .filter((directory): boolean => isDirectory(join(directory, '.git')))
+    .sort((left, right): number => left.localeCompare(right));
 }
 
-function isDirectory(path: string) {
+function isDirectory(path: string): boolean {
   try {
     return statSync(path).isDirectory();
   } catch (error) {

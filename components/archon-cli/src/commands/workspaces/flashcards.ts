@@ -2,15 +2,15 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import type { GroupContext, WorkspaceAction } from './group-context.ts';
-import type { Tmux } from './tmux.ts';
+import type { EditorSessionDefinition, Tmux } from './tmux.ts';
 import { manageEditorSessions } from './editor-sessions.ts';
 
 export function manageFlashcards(
   action: WorkspaceAction,
   context: GroupContext<Pick<Tmux, 'hasSession' | 'createEditorSession' | 'stopSession'>>,
-) {
+): number {
   const homeDir = context.homeDir ?? homedir();
-  const sessions = [
+  const sessions: readonly EditorSessionDefinition[] = [
     {
       session: 'flashcards-fe',
       directory: join(homeDir, 'projects/personal/mrzli/flashcards-fe'),

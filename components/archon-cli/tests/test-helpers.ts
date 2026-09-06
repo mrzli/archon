@@ -1,3 +1,4 @@
+import type { SpawnSyncReturns } from 'node:child_process';
 import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
@@ -11,9 +12,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export interface Fixture {
-  bin: string;
-  home: string;
-  root: string;
+  readonly bin: string;
+  readonly home: string;
+  readonly root: string;
 }
 
 const componentRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -32,7 +33,7 @@ export function createFixture(name: string): Fixture {
   return fixture;
 }
 
-export function removeFixture(fixture: Fixture) {
+export function removeFixture(fixture: Fixture): void {
   rmSync(fixture.root, { recursive: true, force: true });
 }
 
@@ -41,7 +42,7 @@ export function createGitEnvironment(
   overrides: NodeJS.ProcessEnv = {},
 ): NodeJS.ProcessEnv {
   const inherited = Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
+    Object.entries(process.env).filter(([key]): boolean => !key.startsWith('GIT_')),
   );
   return {
     ...inherited,
@@ -82,7 +83,7 @@ export function runArchon(
   fixture: Fixture,
   arguments_: readonly string[],
   environment: NodeJS.ProcessEnv = {},
-) {
+): SpawnSyncReturns<string> {
   // Keep the CLI runtime separate from fake Bun package commands on PATH.
   return spawnSync(process.execPath, [archon, ...arguments_], {
     encoding: 'utf8',
@@ -90,7 +91,7 @@ export function runArchon(
   });
 }
 
-export function writeExecutable(path: string, content: string) {
+export function writeExecutable(path: string, content: string): void {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
   chmodSync(path, 0o755);
@@ -100,8 +101,8 @@ export function writeLibrary(
   fixture: Fixture,
   directoryName: string,
   manifest: unknown,
-  options: { git?: boolean } = {},
-) {
+  options: { readonly git?: boolean } = {},
+): string {
   const directory = join(
     fixture.home,
     'projects/personal/mrzli-jslib',

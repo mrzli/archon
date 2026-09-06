@@ -1,6 +1,6 @@
 import { runLibraries, runProjects, runWorkspaces } from './commands/index.ts';
 
-export async function main(arguments_: string[]) {
+export async function main(arguments_: readonly string[]): Promise<number> {
   const [commandOrAlias, ...extraArguments] = arguments_;
   const aliases = new Map([
     ['h', 'help'],
@@ -46,11 +46,11 @@ export async function main(arguments_: string[]) {
   return 2;
 }
 
-function printGlobalHelp(print = console.log) {
+function printGlobalHelp(print = console.log): void {
   print(getGlobalHelpText());
 }
 
-function getGlobalHelpText() {
+function getGlobalHelpText(): string {
   return [
     'Usage: archon <command> [options]',
     '',

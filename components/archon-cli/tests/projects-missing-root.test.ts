@@ -17,14 +17,14 @@ import {
   writeExecutable,
 } from './test-helpers.ts';
 
-const BLACKLISTED_ORGANIZATIONS = [
+const BLACKLISTED_ORGANIZATIONS: readonly string[] = [
   'mrzli-courses',
   'mrzli-gh-actions',
   'mrzli-other',
   'mrzli-vscode-extensions',
 ];
 
-function installFakes(fixture: Fixture) {
+function installFakes(fixture: Fixture): void {
   writeExecutable(
     join(fixture.bin, 'gh'),
     `#!/usr/bin/env bash
@@ -58,7 +58,7 @@ printf '%s\n' "$*" >> "$ARCHON_TEST_GIT_CALLS"
   );
 }
 
-function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
+function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}): Readonly<NodeJS.ProcessEnv> {
   return {
     ARCHON_TEST_GH_CALLS: join(fixture.root, 'gh-calls'),
     ARCHON_TEST_GH_ORGS: [...BLACKLISTED_ORGANIZATIONS, 'AlphaOrg'].join('\n'),
@@ -68,7 +68,7 @@ function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
   };
 }
 
-function readCalls(path: string) {
+function readCalls(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf8') : '';
 }
 
@@ -84,8 +84,8 @@ for (const [command, message, githubExpected] of [
     false,
   ],
   ['prune', /No obsolete local Git repositories found\./, true],
-] satisfies [string, RegExp, boolean][]) {
-  test(`projects ${command} treats a missing root as empty`, () => {
+] satisfies readonly [string, RegExp, boolean][]) {
+  test(`projects ${command} treats a missing root as empty`, (): void => {
     const fixture = createFixture(`projects-missing-${command}`);
     const root = join(fixture.home, 'projects/personal');
     const ghCalls = join(fixture.root, 'gh-calls');
@@ -111,7 +111,7 @@ for (const [command, message, githubExpected] of [
   });
 }
 
-test('projects sync creates a missing root and clones normally', () => {
+test('projects sync creates a missing root and clones normally', (): void => {
   const fixture = createFixture('projects-missing-sync');
   const root = join(fixture.home, 'projects/personal');
   const gitCalls = join(fixture.root, 'git-calls');
@@ -142,7 +142,7 @@ test('projects sync creates a missing root and clones normally', () => {
   }
 });
 
-test('projects sync help does not create a missing root', () => {
+test('projects sync help does not create a missing root', (): void => {
   const fixture = createFixture('projects-missing-sync-help');
   const root = join(fixture.home, 'projects/personal');
 
@@ -156,7 +156,7 @@ test('projects sync help does not create a missing root', () => {
   }
 });
 
-test('projects rejects a root that is not a directory', () => {
+test('projects rejects a root that is not a directory', (): void => {
   const fixture = createFixture('projects-file-root');
   const root = join(fixture.home, 'projects/personal');
 
@@ -172,7 +172,7 @@ test('projects rejects a root that is not a directory', () => {
   }
 });
 
-test('projects rejects an unreadable existing root', () => {
+test('projects rejects an unreadable existing root', (): void => {
   const fixture = createFixture('projects-unreadable-root');
   const root = join(fixture.home, 'projects/personal');
 

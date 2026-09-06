@@ -9,12 +9,17 @@ import { manageJslibs } from '../../src/commands/workspaces/jslibs.ts';
 
 type Call = ['hasSession' | 'killSession', string] | ['createEditorSession', EditorSessionDefinition];
 interface FixtureOptions {
-  captureResult?: CaptureResult;
-  homeDir?: string;
-  sessions?: string[];
+  readonly captureResult?: CaptureResult;
+  readonly homeDir?: string;
+  readonly sessions?: readonly string[];
 }
 
-function createContext({ captureResult, homeDir, sessions: initialSessions }: FixtureOptions = {}) {
+function createContext({ captureResult, homeDir, sessions: initialSessions }: FixtureOptions = {}): {
+  readonly calls: Call[];
+  readonly errors: string[];
+  readonly sessions: Set<string>;
+  readonly context: Parameters<typeof manageJslibs>[1];
+} {
   const calls: Call[] = [];
   const errors: string[] = [];
   const sessions = new Set(initialSessions);
@@ -25,23 +30,23 @@ function createContext({ captureResult, homeDir, sessions: initialSessions }: Fi
     sessions,
     context: {
       homeDir: homeDir ?? '/home/test',
-      printError: (message) => errors.push(message),
+      printError: (message): number => errors.push(message),
       tmux: {
-        hasSession(session) {
+        hasSession(session): boolean {
           calls.push(['hasSession', session]);
           return sessions.has(session);
         },
-        createEditorSession(definition) {
+        createEditorSession(definition): { readonly status: number; } {
           calls.push(['createEditorSession', definition]);
           sessions.add(definition.session);
           return { status: 0 };
         },
-        killSession(session) {
+        killSession(session): number {
           calls.push(['killSession', session]);
           sessions.delete(session);
           return 0;
         },
-        listSessions() {
+        listSessions(): CaptureResult {
           return captureResult ?? { status: 0, output: [...sessions].join('\n') };
         },
       },
@@ -49,7 +54,7 @@ function createContext({ captureResult, homeDir, sessions: initialSessions }: Fi
   };
 }
 
-test('start discovers immediate non-hidden Git repositories', () => {
+test('start discovers immediate non-hidden Git repositories', (): void => {
   const homeDir = mkdtempSync(join(tmpdir(), 'archon-jslibs-'));
   const root = join(homeDir, 'projects/personal/mrzli-jslib');
 
@@ -64,8 +69,8 @@ test('start discovers immediate non-hidden Git repositories', () => {
     assert.equal(manageJslibs('start', fixture.context), 0);
     assert.deepEqual([...fixture.sessions], ['jslib-alpha', 'jslib-beta']);
     assert.deepEqual(
-      fixture.calls.filter((call) => call[0] === 'createEditorSession')
-        .map(([, definition]) => [definition.session, definition.directory]),
+      fixture.calls.filter((call): call is ["createEditorSession", EditorSessionDefinition] => call[0] === 'createEditorSession')
+        .map(([, definition]): readonly string[] => [definition.session, definition.directory]),
       [
         ['jslib-alpha', `${join(root, 'alpha')}/`],
         ['jslib-beta', `${join(root, 'beta')}/`],
@@ -83,7 +88,7 @@ test('start discovers immediate non-hidden Git repositories', () => {
   }
 });
 
-test('missing root is reported and skipped', () => {
+test('missing root is reported and skipped', (): void => {
   const fixture = createContext();
   assert.equal(manageJslibs('start', fixture.context), 0);
   assert.deepEqual(fixture.calls, []);
@@ -92,7 +97,7 @@ test('missing root is reported and skipped', () => {
   ]);
 });
 
-test('stop filters sessions and tolerates repeated calls', () => {
+test('stop filters sessions and tolerates repeated calls', (): void => {
   const fixture = createContext({
     sessions: ['jslib-alpha', 'unrelated', 'jslib-beta'],
   });
@@ -109,7 +114,7 @@ test('stop filters sessions and tolerates repeated calls', () => {
   assert.deepEqual(fixture.calls, []);
 });
 
-test('stop tolerates an absent tmux server', () => {
+test('stop tolerates an absent tmux server', (): void => {
   const fixture = createContext({
     captureResult: { status: 1, output: 'no server running on /tmp/tmux' },
   });
@@ -117,7 +122,7 @@ test('stop tolerates an absent tmux server', () => {
   assert.deepEqual(fixture.errors, []);
 });
 
-test('stop reports other tmux list failures', () => {
+test('stop reports other tmux list failures', (): void => {
   const fixture = createContext({
     captureResult: { status: 1, output: 'permission denied' },
   });

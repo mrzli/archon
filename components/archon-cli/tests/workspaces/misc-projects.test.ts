@@ -6,13 +6,13 @@ import { manageMiscProjects } from '../../src/commands/workspaces/misc-projects.
 
 type Call = ['hasSession' | 'stopSession', string] | ['createEditorSession', EditorSessionDefinition];
 interface FixtureOptions {
-  directories?: string[];
-  failNewSession?: string;
-  failStop?: string;
-  sessions?: string[];
+  readonly directories?: readonly string[];
+  readonly failNewSession?: string;
+  readonly failStop?: string;
+  readonly sessions?: readonly string[];
 }
 
-const DEFINITIONS = [
+const DEFINITIONS: readonly (readonly string[])[] = [
   ['project-mrzli-docs', '/home/test/projects/personal/mrzli/docs'],
   ['project-mrzli-repos', '/home/test/projects/personal/mrzli/repos'],
   ['project-mrzli-archon', '/home/test/projects/personal/mrzli/archon'],
@@ -22,7 +22,12 @@ const DEFINITIONS = [
   ],
 ];
 
-function createContext({ directories, failNewSession, failStop, sessions }: FixtureOptions = {}) {
+function createContext({ directories, failNewSession, failStop, sessions }: FixtureOptions = {}): {
+  readonly calls: Call[];
+  readonly errors: string[];
+  readonly sessions: Set<string>;
+  readonly context: Parameters<typeof manageMiscProjects>[1];
+} {
   const calls: Call[] = [];
   const errors: string[] = [];
   const presentSessions = new Set(sessions);
@@ -32,22 +37,22 @@ function createContext({ directories, failNewSession, failStop, sessions }: Fixt
     errors,
     sessions: presentSessions,
     context: {
-      directoryExists: (directory) =>
+      directoryExists: (directory): boolean =>
         directories === undefined || directories.includes(directory),
       homeDir: '/home/test',
-      printError: (message) => errors.push(message),
+      printError: (message): number => errors.push(message),
       tmux: {
-        hasSession(session) {
+        hasSession(session): boolean {
           calls.push(['hasSession', session]);
           return presentSessions.has(session);
         },
-        createEditorSession(definition) {
+        createEditorSession(definition): { readonly status: number; } {
           calls.push(['createEditorSession', definition]);
           if (definition.session === failNewSession) return { status: 1 };
           presentSessions.add(definition.session);
           return { status: 0 };
         },
-        stopSession(session) {
+        stopSession(session): number {
           calls.push(['stopSession', session]);
           if (session === failStop) return 1;
           presentSessions.delete(session);
@@ -58,13 +63,13 @@ function createContext({ directories, failNewSession, failStop, sessions }: Fixt
   };
 }
 
-test('start creates the fixed project sessions once', () => {
+test('start creates the fixed project sessions once', (): void => {
   const fixture = createContext();
   assert.equal(manageMiscProjects('start', fixture.context), 0);
-  assert.deepEqual([...fixture.sessions], DEFINITIONS.map(([session]) => session));
+  assert.deepEqual([...fixture.sessions], DEFINITIONS.map(([session]): string => session));
   assert.deepEqual(
-    fixture.calls.filter((call) => call[0] === 'createEditorSession')
-      .map(([, definition]) => [definition.session, definition.directory]),
+    fixture.calls.filter((call): call is ["createEditorSession", EditorSessionDefinition] => call[0] === 'createEditorSession')
+      .map(([, definition]): readonly string[] => [definition.session, definition.directory]),
     DEFINITIONS,
   );
 
@@ -72,42 +77,42 @@ test('start creates the fixed project sessions once', () => {
   assert.equal(manageMiscProjects('start', fixture.context), 0);
   assert.deepEqual(
     fixture.calls,
-    DEFINITIONS.map(([session]) => ['hasSession', session]),
+    DEFINITIONS.map(([session]): readonly string[] => ['hasSession', session]),
   );
 });
 
-test('missing projects are reported and skipped', () => {
-  const directories = DEFINITIONS.filter(
-    ([session]) => session !== 'project-mrzli-repos',
-  ).map(([, directory]) => directory);
+test('missing projects are reported and skipped', (): void => {
+  const directories: readonly string[] = DEFINITIONS.filter(
+    ([session]): boolean => session !== 'project-mrzli-repos',
+  ).map(([, directory]): string => directory);
   const fixture = createContext({ directories });
 
   assert.equal(manageMiscProjects('start', fixture.context), 0);
   assert.deepEqual(
     [...fixture.sessions],
     DEFINITIONS.filter(
-      ([session]) => session !== 'project-mrzli-repos',
-    ).map(([session]) => session),
+      ([session]): boolean => session !== 'project-mrzli-repos',
+    ).map(([session]): string => session),
   );
   assert.deepEqual(fixture.errors, [
     'Skipping project-mrzli-repos: directory does not exist: /home/test/projects/personal/mrzli/repos',
   ]);
 });
 
-test('a start failure is reported and remaining projects continue', () => {
+test('a start failure is reported and remaining projects continue', (): void => {
   const fixture = createContext({ failNewSession: 'project-mrzli-docs' });
   assert.equal(manageMiscProjects('start', fixture.context), 1);
   assert.deepEqual(
     [...fixture.sessions],
-    DEFINITIONS.slice(1).map(([session]) => session),
+    DEFINITIONS.slice(1).map(([session]): string => session),
   );
   assert.deepEqual(fixture.errors, [
     'Failed to start tmux session: project-mrzli-docs',
   ]);
 });
 
-test('stop removes present sessions and tolerates repeated calls', () => {
-  const sessions = DEFINITIONS.map(([session]) => session);
+test('stop removes present sessions and tolerates repeated calls', (): void => {
+  const sessions: readonly string[] = DEFINITIONS.map(([session]): string => session);
   const fixture = createContext({ sessions });
 
   assert.equal(manageMiscProjects('stop', fixture.context), 0);
@@ -117,12 +122,12 @@ test('stop removes present sessions and tolerates repeated calls', () => {
   assert.equal(manageMiscProjects('stop', fixture.context), 0);
   assert.deepEqual(
     fixture.calls,
-    DEFINITIONS.map(([session]) => ['stopSession', session]),
+    DEFINITIONS.map(([session]): readonly string[] => ['stopSession', session]),
   );
 });
 
-test('a stop failure is reported and remaining projects continue', () => {
-  const sessions = DEFINITIONS.map(([session]) => session);
+test('a stop failure is reported and remaining projects continue', (): void => {
+  const sessions: readonly string[] = DEFINITIONS.map(([session]): string => session);
   const fixture = createContext({
     failStop: 'project-mrzli-repos',
     sessions,

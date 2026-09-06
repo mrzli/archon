@@ -10,7 +10,7 @@ import {
   writeExecutable,
 } from './test-helpers.ts';
 
-const USAGE_CASES = [
+const USAGE_CASES: readonly (readonly string[])[] = [
   ['h', 'extra'],
   ['p', 's'],
   ['l', 'b'],
@@ -44,7 +44,7 @@ const USAGE_CASES = [
 ];
 
 for (const arguments_ of USAGE_CASES) {
-  test(`${arguments_.join(' ') || 'archon'} is a usage error`, () => {
+  test(`${arguments_.join(' ') || 'archon'} is a usage error`, (): void => {
     const fixture = createFixture('usage-status');
 
     try {
@@ -63,7 +63,7 @@ for (const arguments_ of [
   ['projects', '--help'],
   ['libs', '--help'],
 ]) {
-  test(`${arguments_.join(' ')} is successful help`, () => {
+  test(`${arguments_.join(' ')} is successful help`, (): void => {
     const fixture = createFixture('help-status');
 
     try {
@@ -76,7 +76,7 @@ for (const arguments_ of [
   });
 }
 
-test('direct command aliases preserve help output and argument forwarding', () => {
+test('direct command aliases preserve help output and argument forwarding', (): void => {
   const fixture = createFixture('command-aliases');
   try {
     for (const [alias, command, arguments_] of [
@@ -84,7 +84,7 @@ test('direct command aliases preserve help output and argument forwarding', () =
       ['l', 'libs', ['help', 'build']],
       ['p', 'projects', ['help', 'status']],
       ['w', 'workspaces', ['--help']],
-    ] satisfies [string, string, string[]][]) {
+    ] satisfies readonly [string, string, readonly string[]][]) {
       const short = runArchon(fixture, [alias, ...arguments_]);
       const full = runArchon(fixture, [command, ...arguments_]);
       assert.equal(short.status, 0);
@@ -97,7 +97,7 @@ test('direct command aliases preserve help output and argument forwarding', () =
   }
 });
 
-test('a signaled tmux operation is an operational failure', () => {
+test('a signaled tmux operation is an operational failure', (): void => {
   const fixture = createFixture('tmux-signal');
 
   try {
@@ -132,7 +132,7 @@ kill -TERM "$$"
   }
 });
 
-test('a signaled tmux capture is an operational failure', () => {
+test('a signaled tmux capture is an operational failure', (): void => {
   const fixture = createFixture('tmux-capture-signal');
 
   try {

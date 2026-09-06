@@ -11,14 +11,14 @@ import {
   writeExecutable,
 } from './test-helpers.ts';
 
-const blacklistedOrganizations = [
+const blacklistedOrganizations: readonly string[] = [
   'mrzli-courses',
   'mrzli-gh-actions',
   'mrzli-other',
   'mrzli-vscode-extensions',
 ];
 
-function installFakeGitHub(fixture: Fixture) {
+function installFakeGitHub(fixture: Fixture): void {
   writeExecutable(
     join(fixture.bin, 'gh'),
     `#!/usr/bin/env bash
@@ -46,7 +46,7 @@ esac
   );
 }
 
-function projectEnvironment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
+function projectEnvironment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}): Readonly<NodeJS.ProcessEnv> {
   return {
     ARCHON_TEST_GH_CALLS: join(fixture.root, 'gh-calls'),
     ARCHON_TEST_GH_ORGS: [...blacklistedOrganizations, 'AlphaOrg'].join('\n'),
@@ -54,7 +54,7 @@ function projectEnvironment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {})
   };
 }
 
-test('projects list filtered, deduplicated remotes from paginated GitHub calls', () => {
+test('projects list filtered, deduplicated remotes from paginated GitHub calls', (): void => {
   const fixture = createFixture('projects-remote');
   const callsPath = join(fixture.root, 'gh-calls');
 
@@ -106,7 +106,7 @@ test('projects list filtered, deduplicated remotes from paginated GitHub calls',
   }
 });
 
-test('projects local discovery preserves owner/repository depth and ordering', () => {
+test('projects local discovery preserves owner/repository depth and ordering', (): void => {
   const fixture = createFixture('projects-discovery');
   const root = join(fixture.home, 'projects/personal');
 
@@ -128,7 +128,7 @@ test('projects local discovery preserves owner/repository depth and ordering', (
         .trimEnd()
         .split('\n')
         .slice(1)
-        .map((line) => line.trim()),
+        .map((line): string => line.trim()),
       [
         join(root, 'alpha/first'),
         join(root, 'alpha/second'),
@@ -141,7 +141,7 @@ test('projects local discovery preserves owner/repository depth and ordering', (
   }
 });
 
-test('projects sync refuses an occupied non-repository clone destination', () => {
+test('projects sync refuses an occupied non-repository clone destination', (): void => {
   const fixture = createFixture('projects-clone-conflict');
   const destination = join(
     fixture.home,

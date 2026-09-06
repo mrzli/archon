@@ -1,3 +1,4 @@
+import type { RemoteRepository } from '../src/commands/projects/github-inventory.ts';
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
@@ -11,7 +12,7 @@ import {
   validateBlacklists,
 } from '../src/commands/projects/github-inventory.ts';
 
-test('project repository rows are parsed into normalized inventory records', () => {
+test('project repository rows are parsed into normalized inventory records', (): void => {
   assert.deepEqual(
     parseRemoteRepository(
       '123\tExample/Repository\tgit@example:Repository.git\ttrue\tprivate',
@@ -28,7 +29,7 @@ test('project repository rows are parsed into normalized inventory records', () 
   );
 });
 
-test('project repository row validation preserves incomplete-data errors', () => {
+test('project repository row validation preserves incomplete-data errors', (): void => {
   for (const row of [
     '',
     '123\towner/repository\tssh\tfalse',
@@ -40,13 +41,13 @@ test('project repository row validation preserves incomplete-data errors', () =>
     '123\towner/repository\tssh\tfalse\t',
   ]) {
     assert.throws(
-      () => parseRemoteRepository(row),
+      (): RemoteRepository => parseRemoteRepository(row),
       new Error(`GitHub returned incomplete repository data: ${row}`),
     );
   }
 });
 
-test('project inventory keys, ordering, and exclusions are case-insensitive', () => {
+test('project inventory keys, ordering, and exclusions are case-insensitive', (): void => {
   const alpha = { nameWithOwner: 'owner/Alpha', owner: 'owner' };
   const zeta = { nameWithOwner: 'Owner/zeta', owner: 'Owner' };
   const repositoriesByName = new Map<string, typeof alpha>();
@@ -73,7 +74,7 @@ test('project inventory keys, ordering, and exclusions are case-insensitive', ()
   assert.equal(isRepositoryBlacklisted(alpha, [], []), false);
 });
 
-test('repository blacklist lookup names include only valid unique entries', () => {
+test('repository blacklist lookup names include only valid unique entries', (): void => {
   assert.deepEqual(
     getRepositoryBlacklistLookupNames([
       'Owner/one',
@@ -86,7 +87,7 @@ test('repository blacklist lookup names include only valid unique entries', () =
   );
 });
 
-test('blacklist validation accepts canonical repositories owned by the user or organizations', () => {
+test('blacklist validation accepts canonical repositories owned by the user or organizations', (): void => {
   const result = validateBlacklists(
     'Test-User',
     ['Owned-Org'],
@@ -110,7 +111,7 @@ test('blacklist validation accepts canonical repositories owned by the user or o
   ]);
 });
 
-test('blacklist validation aggregates exact organization and repository errors', () => {
+test('blacklist validation aggregates exact organization and repository errors', (): void => {
   const canonicalRepositories = new Map([
     ['test-user/valid', 'Test-User/Valid'],
     ['test-user/renamed', 'Test-User/New-Name'],
@@ -118,7 +119,7 @@ test('blacklist validation aggregates exact organization and repository errors',
   ]);
 
   assert.throws(
-    () =>
+    (): { readonly blacklistedOrganizations: Set<string>; readonly blacklistedRepositories: Set<string>; } =>
       validateBlacklists(
         'Test-User',
         ['Owned-Org'],

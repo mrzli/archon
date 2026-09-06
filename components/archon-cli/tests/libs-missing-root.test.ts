@@ -17,7 +17,7 @@ import {
   writeExecutable,
 } from './test-helpers.ts';
 
-function installFakes(fixture: Fixture) {
+function installFakes(fixture: Fixture): void {
   writeExecutable(
     join(fixture.bin, 'gh'),
     `#!/usr/bin/env bash
@@ -50,7 +50,7 @@ printf '%s\n' "$*" >> "$ARCHON_TEST_GIT_CALLS"
   );
 }
 
-function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
+function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}): Readonly<NodeJS.ProcessEnv> {
   return {
     ARCHON_TEST_BUN_CALLS: join(fixture.root, 'bun-calls'),
     ARCHON_TEST_GH_CALLS: join(fixture.root, 'gh-calls'),
@@ -60,7 +60,7 @@ function environment(fixture: Fixture, overrides: NodeJS.ProcessEnv = {}) {
   };
 }
 
-function readCalls(path: string) {
+function readCalls(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf8') : '';
 }
 
@@ -70,8 +70,8 @@ for (const [command, message, githubExpected] of [
   ['graph', /No local Git repositories found in .*\/mrzli-jslib\./, false],
   ['build', /No local Git repositories found in .*\/mrzli-jslib\./, false],
   ['prune', /No obsolete local Git repositories found\./, true],
-] satisfies [string, RegExp, boolean][]) {
-  test(`libs ${command} treats a missing root as empty`, () => {
+] satisfies readonly [string, RegExp, boolean][]) {
+  test(`libs ${command} treats a missing root as empty`, (): void => {
     const fixture = createFixture(`libs-missing-${command}`);
     const root = join(fixture.home, 'projects/personal/mrzli-jslib');
     const bunCalls = join(fixture.root, 'bun-calls');
@@ -99,7 +99,7 @@ for (const [command, message, githubExpected] of [
   });
 }
 
-test('libs sync creates a missing root and clones normally', () => {
+test('libs sync creates a missing root and clones normally', (): void => {
   const fixture = createFixture('libs-missing-sync');
   const root = join(fixture.home, 'projects/personal/mrzli-jslib');
   const ghCalls = join(fixture.root, 'gh-calls');
@@ -136,7 +136,7 @@ test('libs sync creates a missing root and clones normally', () => {
   }
 });
 
-test('libs sync help does not create a missing root', () => {
+test('libs sync help does not create a missing root', (): void => {
   const fixture = createFixture('libs-missing-sync-help');
   const root = join(fixture.home, 'projects/personal/mrzli-jslib');
 
@@ -150,7 +150,7 @@ test('libs sync help does not create a missing root', () => {
   }
 });
 
-test('libs rejects a root that is not a directory', () => {
+test('libs rejects a root that is not a directory', (): void => {
   const fixture = createFixture('libs-file-root');
   const root = join(fixture.home, 'projects/personal/mrzli-jslib');
 
@@ -166,7 +166,7 @@ test('libs rejects a root that is not a directory', () => {
   }
 });
 
-test('libs rejects an unreadable existing root', () => {
+test('libs rejects an unreadable existing root', (): void => {
   const fixture = createFixture('libs-unreadable-root');
   const root = join(fixture.home, 'projects/personal/mrzli-jslib');
 

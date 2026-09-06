@@ -11,15 +11,15 @@ import {
   removeLocalRepositories,
 } from '../src/shared/destructive-workflows.ts';
 
-const repositories = [{ name: 'obsolete', path: '/safe/obsolete' }];
+const repositories: readonly { name: string; path: string; }[] = [{ name: 'obsolete', path: '/safe/obsolete' }];
 
-async function captureConsole<T>(run: () => Promise<T>) {
+async function captureConsole<T>(run: () => Promise<T>): Promise<{ readonly errors: string[]; readonly output: string[]; readonly result: Awaited<T>; }> {
   const errors: string[] = [];
   const output: string[] = [];
   const originalError = console.error;
   const originalLog = console.log;
-  console.error = (message) => errors.push(message);
-  console.log = (message) => output.push(message);
+  console.error = (message): number => errors.push(message);
+  console.log = (message): number => output.push(message);
 
   try {
     return { errors, output, result: await run() };
@@ -33,12 +33,12 @@ function createDeleteOptions(
   overrides: Partial<DeleteOptions<(typeof repositories)[number]>> = {},
 ): DeleteOptions<(typeof repositories)[number]> {
   return {
-    confirmDeletion: async () => true,
+    confirmDeletion: async (): Promise<true> => true,
     emptyMessage: 'No repositories.',
-    findRepositories: () => repositories,
-    inspectRepositories: () => [],
-    printHelp: () => console.log('delete help'),
-    removeRepositories: () => 0,
+    findRepositories: (): readonly { readonly name: string; readonly path: string; }[] => repositories,
+    inspectRepositories: (): readonly never[] => [],
+    printHelp: (): void => console.log('delete help'),
+    removeRepositories: (): number => 0,
     requiredRootDir: '/safe',
     rootDir: '/safe',
     ...overrides,
@@ -46,30 +46,30 @@ function createDeleteOptions(
 }
 
 function createPruneOptions(
-  overrides: Partial<PruneOptions<(typeof repositories)[number], { name: string }>> = {},
-): PruneOptions<(typeof repositories)[number], { name: string }> {
+  overrides: Partial<PruneOptions<(typeof repositories)[number], { readonly name: string }>> = {},
+): PruneOptions<(typeof repositories)[number], { readonly name: string }> {
   return {
-    confirmDeletion: async () => true,
-    findPrunableRepositories: () => repositories,
-    findRestoredRepositories: () => [],
-    getRemoteRepositories: () => [],
-    getRepositoryName: (repository) => repository.name,
-    inspectRepositories: () => [],
-    printHelp: () => console.log('prune help'),
-    removeRepositories: () => 0,
+    confirmDeletion: async (): Promise<true> => true,
+    findPrunableRepositories: (): readonly { readonly name: string; readonly path: string; }[] => repositories,
+    findRestoredRepositories: (): readonly never[] => [],
+    getRemoteRepositories: (): readonly never[] => [],
+    getRepositoryName: (repository): string => repository.name,
+    inspectRepositories: (): readonly never[] => [],
+    printHelp: (): void => console.log('prune help'),
+    removeRepositories: (): number => 0,
     requiredRootDir: '/safe',
     rootDir: '/safe',
     ...overrides,
   };
 }
 
-test('invalid arguments and unsafe roots are refused before discovery', async () => {
+test('invalid arguments and unsafe roots are refused before discovery', async (): Promise<void> => {
   let discovered = false;
-  const invalid = await captureConsole(() =>
+  const invalid = await captureConsole((): Promise<number> =>
     deleteRepositories(
       ['--invalid'],
       createDeleteOptions({
-        findRepositories() {
+        findRepositories(): readonly { readonly name: string; readonly path: string; }[] {
           discovered = true;
           return repositories;
         },
@@ -81,7 +81,7 @@ test('invalid arguments and unsafe roots are refused before discovery', async ()
   assert.deepEqual(invalid.output, ['delete help']);
   assert.equal(discovered, false);
 
-  const unsafe = await captureConsole(() =>
+  const unsafe = await captureConsole((): Promise<number> =>
     deleteRepositories(
       ['--dry-run'],
       createDeleteOptions({ rootDir: '/unexpected' }),
@@ -94,18 +94,18 @@ test('invalid arguments and unsafe roots are refused before discovery', async ()
   ]);
 });
 
-test('delete dry-run lists repositories without confirmation or removal', async () => {
+test('delete dry-run lists repositories without confirmation or removal', async (): Promise<void> => {
   let confirmed = false;
   let removed = false;
-  const capture = await captureConsole(() =>
+  const capture = await captureConsole((): Promise<number> =>
     deleteRepositories(
       ['-n'],
       createDeleteOptions({
-        confirmDeletion: async () => {
+        confirmDeletion: async (): Promise<true> => {
           confirmed = true;
           return true;
         },
-        removeRepositories: () => {
+        removeRepositories: (): number => {
           removed = true;
           return 0;
         },
@@ -122,13 +122,13 @@ test('delete dry-run lists repositories without confirmation or removal', async 
   ]);
 });
 
-test('confirmation refuses non-interactive input', async () => {
+test('confirmation refuses non-interactive input', async (): Promise<void> => {
   const errors: string[] = [];
   assert.equal(
     await confirmRepositoryDeletion([], {
       input: Object.assign(new PassThrough(), { isTTY: false }),
       output: Object.assign(new PassThrough(), { isTTY: true }),
-      printError: (message) => errors.push(message),
+      printError: (message): number => errors.push(message),
     }),
     false,
   );
@@ -137,17 +137,17 @@ test('confirmation refuses non-interactive input', async () => {
   ]);
 });
 
-test('clean and unclean confirmation use one and two prompts', async () => {
-  async function confirm(statuses: RepositoryStatus[], answers: string[]) {
+test('clean and unclean confirmation use one and two prompts', async (): Promise<void> => {
+  async function confirm(statuses: readonly RepositoryStatus[], answers: string[]): Promise<{ readonly closed: boolean; readonly messages: readonly string[]; readonly prompts: readonly string[]; readonly result: boolean; }> {
     const messages: string[] = [];
     const prompts: string[] = [];
     let closed = false;
     const result = await confirmRepositoryDeletion(statuses, {
-      createInterface: () => ({
-        close() {
+      createInterface: (): { close(): void; readonly question: (prompt: string) => Promise<string>; } => ({
+        close(): void {
           closed = true;
         },
-        question: async (prompt) => {
+        question: async (prompt): Promise<string> => {
           prompts.push(prompt);
           const answer = answers.shift();
           assert.ok(answer !== undefined);
@@ -156,7 +156,7 @@ test('clean and unclean confirmation use one and two prompts', async () => {
       }),
       input: Object.assign(new PassThrough(), { isTTY: true }),
       output: Object.assign(new PassThrough(), { isTTY: true }),
-      print: (message) => messages.push(message),
+      print: (message): number => messages.push(message),
     });
     return { closed, messages, prompts, result };
   }
@@ -188,22 +188,22 @@ test('clean and unclean confirmation use one and two prompts', async () => {
   assert.ok(unclean.messages.includes('    - unpushed commits: main=1'));
 });
 
-test('prune revalidates inventory and refuses restored repositories', async () => {
+test('prune revalidates inventory and refuses restored repositories', async (): Promise<void> => {
   const inventoryCalls: boolean[] = [];
   let removed = false;
-  const capture = await captureConsole(() =>
+  const capture = await captureConsole((): Promise<number> =>
     pruneRepositories(
       [],
       createPruneOptions({
-        findRestoredRepositories: (local, remote) =>
-          remote.some((repository) => repository.name === local[0].name)
+        findRestoredRepositories: (local, remote): readonly { readonly name: string; readonly path: string; }[] =>
+          remote.some((repository): boolean => repository.name === local[0].name)
             ? local
             : [],
-        getRemoteRepositories(refresh) {
+        getRemoteRepositories(refresh): readonly { readonly name: string; }[] {
           inventoryCalls.push(refresh);
           return refresh ? [{ name: 'obsolete' }] : [];
         },
-        removeRepositories: () => {
+        removeRepositories: (): number => {
           removed = true;
           return 0;
         },
@@ -220,7 +220,7 @@ test('prune revalidates inventory and refuses restored repositories', async () =
   ]);
 });
 
-test('removal continues after a failure and returns nonzero', () => {
+test('removal continues after a failure and returns nonzero', (): void => {
   const errors: string[] = [];
   const output: string[] = [];
   const removed: string[] = [];
@@ -230,9 +230,9 @@ test('removal continues after a failure and returns nonzero', () => {
       { path: '/safe/second' },
     ],
     {
-      print: (message) => output.push(message),
-      printError: (message) => errors.push(message),
-      remove(path) {
+      print: (message): number => output.push(message),
+      printError: (message): number => errors.push(message),
+      remove(path): void {
         removed.push(path);
         if (path.endsWith('/first')) {
           throw new Error('injected failure');

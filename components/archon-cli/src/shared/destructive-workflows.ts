@@ -13,45 +13,45 @@ import {
 } from './repository-inspection.ts';
 
 interface DestructiveOptions<R extends Repository> {
-  rootDir: string;
-  requiredRootDir: string;
-  printHelp: () => void;
-  inspectRepositories: (repositories: R[], fetch: boolean) => RepositoryStatus[];
-  confirmDeletion?: (statuses: RepositoryStatus[]) => Promise<boolean>;
-  removeRepositories?: (repositories: R[]) => number;
+  readonly rootDir: string;
+  readonly requiredRootDir: string;
+  readonly printHelp: () => void;
+  readonly inspectRepositories: (repositories: readonly R[], fetch: boolean) => readonly RepositoryStatus[];
+  readonly confirmDeletion?: (statuses: readonly RepositoryStatus[]) => Promise<boolean>;
+  readonly removeRepositories?: (repositories: readonly R[]) => number;
 }
 
 export interface DeleteOptions<R extends Repository> extends DestructiveOptions<R> {
-  findRepositories: () => R[];
-  emptyMessage: string;
+  readonly findRepositories: () => readonly R[];
+  readonly emptyMessage: string;
 }
 
 export interface PruneOptions<L extends Repository, R> extends DestructiveOptions<L> {
-  getRemoteRepositories: (refresh: boolean) => R[];
-  findPrunableRepositories: (remote: R[]) => L[] | undefined;
-  findRestoredRepositories: (local: L[], remote: R[]) => L[];
-  getRepositoryName: (repository: L) => string;
+  readonly getRemoteRepositories: (refresh: boolean) => readonly R[];
+  readonly findPrunableRepositories: (remote: readonly R[]) => readonly L[] | undefined;
+  readonly findRestoredRepositories: (local: readonly L[], remote: readonly R[]) => readonly L[];
+  readonly getRepositoryName: (repository: L) => string;
 }
 
 export interface ConfirmationContext {
-  input?: NodeJS.ReadableStream & { isTTY?: boolean };
-  output?: NodeJS.WritableStream & { isTTY?: boolean };
-  print?: (message: string) => void;
-  printError?: (message: string) => void;
-  createInterface?: (options: ReadLineOptions) => Pick<Interface, 'question' | 'close'>;
+  readonly input?: NodeJS.ReadableStream & { readonly isTTY?: boolean };
+  readonly output?: NodeJS.WritableStream & { readonly isTTY?: boolean };
+  readonly print?: (message: string) => void;
+  readonly printError?: (message: string) => void;
+  readonly createInterface?: (options: ReadLineOptions) => Pick<Interface, 'question' | 'close'>;
 }
 
 export interface RemovalContext {
-  print?: (message: string) => void;
-  printError?: (message: string) => void;
-  remove?: (path: string, options: { recursive: true; force: false }) => void;
+  readonly print?: (message: string) => void;
+  readonly printError?: (message: string) => void;
+  readonly remove?: (path: string, options: { readonly recursive: true; readonly force: false }) => void;
 }
 
 
 export async function deleteRepositories<R extends Repository>(
   arguments_: readonly string[],
   options: DeleteOptions<R>,
-) {
+): Promise<number> {
   if (isHelpRequest(arguments_)) {
     options.printHelp();
     return 0;
@@ -81,7 +81,7 @@ export async function deleteRepositories<R extends Repository>(
   }
 
   const statuses = options.inspectRepositories(repositories, false);
-  const uncleanStatuses = statuses.filter(isLocalRepositoryUnclean);
+  const uncleanStatuses: readonly RepositoryStatus[] = statuses.filter(isLocalRepositoryUnclean);
 
   console.log('The following directories will be permanently deleted:');
   printRepositoryPaths(repositories);
@@ -101,7 +101,7 @@ export async function deleteRepositories<R extends Repository>(
 export async function pruneRepositories<L extends Repository, R>(
   arguments_: readonly string[],
   options: PruneOptions<L, R>,
-) {
+): Promise<number> {
   if (isHelpRequest(arguments_)) {
     options.printHelp();
     return 0;
@@ -144,7 +144,7 @@ export async function pruneRepositories<L extends Repository, R>(
   }
 
   const statuses = options.inspectRepositories(repositories, false);
-  const uncleanStatuses = statuses.filter(isLocalRepositoryUnclean);
+  const uncleanStatuses: readonly RepositoryStatus[] = statuses.filter(isLocalRepositoryUnclean);
 
   console.log(
     'The following local repositories no longer exist remotely and will be permanently deleted:',
@@ -191,9 +191,9 @@ export async function pruneRepositories<L extends Repository, R>(
 }
 
 export async function confirmRepositoryDeletion(
-  statuses: RepositoryStatus[],
+  statuses: readonly RepositoryStatus[],
   context: ConfirmationContext = {},
-) {
+): Promise<boolean> {
   const input = context.input ?? process.stdin;
   const output = context.output ?? process.stdout;
   const print = context.print ?? console.log;
@@ -259,9 +259,9 @@ export function isLocalRepositoryUnclean(status: RepositoryStatus): boolean {
 }
 
 export function removeLocalRepositories(
-  repositories: Repository[],
+  repositories: readonly Repository[],
   context: RemovalContext = {},
-) {
+): number {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
   const remove = context.remove ?? rmSync;
@@ -290,7 +290,7 @@ export function removeLocalRepositories(
   return 0;
 }
 
-function isDeletionRootSafe(rootDir: string, requiredRootDir: string) {
+function isDeletionRootSafe(rootDir: string, requiredRootDir: string): boolean {
   if (resolve(rootDir) === requiredRootDir) {
     return true;
   }
@@ -304,7 +304,7 @@ function parseArguments(
   arguments_: readonly string[],
   command: string,
   printHelp: () => void,
-) {
+): boolean | undefined {
   if (arguments_.length === 0) {
     return false;
   }
@@ -321,16 +321,16 @@ function parseArguments(
   return undefined;
 }
 
-function printRepositoryPaths(repositories: Repository[]) {
+function printRepositoryPaths(repositories: readonly Repository[]): void {
   for (const repository of repositories) {
     console.log(`  ${repository.path}`);
   }
 }
 
 function printUncleanRepositoryReasons(
-  statuses: RepositoryStatus[],
+  statuses: readonly RepositoryStatus[],
   print: (message: string) => void,
-) {
+): void {
   print('Unclean repositories:');
 
   for (const status of statuses) {
@@ -351,7 +351,7 @@ function printUncleanRepositoryReasons(
       }
     }
 
-    reasons.push(...status.warnings.map((warning) => `warning: ${warning}`));
+    reasons.push(...status.warnings.map((warning): string => `warning: ${warning}`));
 
     if (status.error !== undefined) {
       reasons.push(`inspection error: ${toSingleLine(status.error)}`);

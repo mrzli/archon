@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { chmod, cp, mkdir, rm, symlink } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-async function build() {
+async function build(): Promise<void> {
   const componentRoot = new URL('../', import.meta.url);
   const dist = new URL('dist/', componentRoot);
   const compiler = fileURLToPath(

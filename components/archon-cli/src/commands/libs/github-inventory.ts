@@ -1,13 +1,13 @@
 import { getErrorMessage } from '../../shared/index.ts';
 
 export interface RemoteRepository {
-  name: string;
-  nameWithOwner: string;
-  isPrivate: unknown;
-  isArchived: unknown;
+  readonly name: string;
+  readonly nameWithOwner: string;
+  readonly isPrivate: unknown;
+  readonly isArchived: unknown;
 }
 
-export function parseRemoteRepositories(output: string): RemoteRepository[] {
+export function parseRemoteRepositories(output: string): readonly RemoteRepository[] {
   try {
     const repositories: unknown = JSON.parse(output);
 
@@ -16,7 +16,7 @@ export function parseRemoteRepositories(output: string): RemoteRepository[] {
     }
 
     // Null entries retain their existing native property-access failure.
-    return repositories.map((repository: unknown) => {
+    return repositories.map((repository: unknown): RemoteRepository => {
       if (
         typeof repository !== 'object' ||
         (repository !== null &&

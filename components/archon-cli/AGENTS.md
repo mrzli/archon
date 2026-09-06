@@ -14,6 +14,13 @@
 
 ## Code conventions
 
+- Declare explicit return types on every TypeScript function, including arrow
+  functions, callbacks, and methods. Use `void` or `Promise<void>` for functions
+  that only perform side effects.
+- Prefer `readonly` object fields and `readonly` arrays/tuples wherever mutation
+  is not required. Keep mutable types only for values intentionally updated by
+  the implementation, such as accumulators and configurable test fixtures.
+
 - Give command entry functions distinct, descriptive names and explicit
   arguments/context parameters. Avoid renaming generic exports at import sites.
 - Each command barrel exports only its entry function. Other barrels re-export

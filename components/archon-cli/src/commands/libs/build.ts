@@ -7,19 +7,19 @@ import { join, resolve } from 'node:path';
 import { getErrorMessage } from '../../shared/index.ts';
 
 export interface LocalPackage {
-  manifest: Record<string, unknown>;
-  name: string;
-  path: string;
+  readonly manifest: Record<string, unknown>;
+  readonly name: string;
+  readonly path: string;
 }
 
 export interface PackageNode extends LocalPackage {
-  dependencies: string[];
+  readonly dependencies: readonly string[];
 }
 
 export const LOCAL_PACKAGE_SCOPE = '@mrzli-jslib';
 
 const LOCAL_PACKAGE_PREFIX = `${LOCAL_PACKAGE_SCOPE}/`;
-const DEPENDENCY_FIELDS = [
+const DEPENDENCY_FIELDS: readonly string[] = [
   'dependencies',
   'devDependencies',
   'optionalDependencies',
@@ -27,9 +27,9 @@ const DEPENDENCY_FIELDS = [
 ];
 
 export function createDependencyGraph(
-  repositories: { name: string; path: string }[],
-): PackageNode[] {
-  const packages = repositories.map(readLocalPackage);
+  repositories: readonly { readonly name: string; readonly path: string }[],
+): readonly PackageNode[] {
+  const packages: readonly LocalPackage[] = repositories.map(readLocalPackage);
   const packagesByName = new Map<string, LocalPackage>();
   const packagesByPath = new Map<string, LocalPackage>();
 
@@ -42,19 +42,19 @@ export function createDependencyGraph(
     packagesByPath.set(package_.path, package_);
   }
 
-  return packages.map((package_) => ({
+  return packages.map((package_): PackageNode => ({
     ...package_,
     dependencies: findLocalPackageDependencies(package_, packagesByPath),
   }));
 }
 
-export function orderPackagesForBuild(graph: PackageNode[]): PackageNode[] {
-  const nodesByName = new Map(graph.map((node) => [node.name, node]));
+export function orderPackagesForBuild(graph: readonly PackageNode[]): readonly PackageNode[] {
+  const nodesByName = new Map(graph.map((node): [string, PackageNode] => [node.name, node]));
   const states = new Map<string, 'visiting' | 'visited'>();
   const path: string[] = [];
   const ordered: PackageNode[] = [];
 
-  function visit(node: PackageNode) {
+  function visit(node: PackageNode): void {
     const state = states.get(node.name);
 
     if (state === 'visited') {
@@ -63,7 +63,7 @@ export function orderPackagesForBuild(graph: PackageNode[]): PackageNode[] {
 
     if (state === 'visiting') {
       const cycleStart = path.indexOf(node.name);
-      const cycle = [...path.slice(cycleStart), node.name];
+      const cycle: readonly string[] = [...path.slice(cycleStart), node.name];
 
       throw new Error(`dependency cycle detected: ${cycle.join(' -> ')}`);
     }
@@ -88,7 +88,7 @@ export function orderPackagesForBuild(graph: PackageNode[]): PackageNode[] {
   return ordered;
 }
 
-export function validateBuildScripts(graph: PackageNode[]) {
+export function validateBuildScripts(graph: readonly PackageNode[]): void {
   for (const node of graph) {
     if (
       node.manifest.scripts === null ||
@@ -103,7 +103,7 @@ export function validateBuildScripts(graph: PackageNode[]) {
   }
 }
 
-function readLocalPackage(repository: { name: string; path: string }): LocalPackage {
+function readLocalPackage(repository: { readonly name: string; readonly path: string }): LocalPackage {
   const manifestPath = join(repository.path, 'package.json');
   let manifest: unknown;
 
@@ -137,7 +137,7 @@ function readLocalPackage(repository: { name: string; path: string }): LocalPack
 function findLocalPackageDependencies(
   package_: LocalPackage,
   packagesByPath: Map<string, LocalPackage>,
-) {
+): readonly string[] {
   const localDependencies = new Set<string>();
 
   for (const field of DEPENDENCY_FIELDS) {
@@ -178,7 +178,7 @@ function findLocalPackageDependencies(
     }
   }
 
-  return [...localDependencies].sort((left, right) =>
+  return [...localDependencies].sort((left, right): number =>
     left.localeCompare(right),
   );
 }
@@ -188,7 +188,7 @@ function resolveLocalPackageDependency(
   dependencyName: string,
   specifier: string,
   packagesByPath: Map<string, LocalPackage>,
-) {
+): LocalPackage {
   const dependencyPath = specifier.slice('file:'.length);
 
   if (dependencyPath.length === 0) {

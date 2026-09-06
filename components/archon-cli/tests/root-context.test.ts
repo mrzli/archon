@@ -10,7 +10,7 @@ import {
   removeFixture,
 } from './test-helpers.ts';
 
-test('projects and libraries invocations keep distinct root paths', async () => {
+test('projects and libraries invocations keep distinct root paths', async (): Promise<void> => {
   const fixture = createFixture('root-context');
   const roots = {
     librariesFirst: join(fixture.root, 'libraries-first'),
@@ -26,7 +26,7 @@ test('projects and libraries invocations keep distinct root paths', async () => 
       mkdirSync(root);
     }
 
-    console.log = (message) => output.push(message);
+    console.log = (message): number => output.push(message);
 
     assert.equal(
       await runProjects(['status'], { rootDir: roots.projectsFirst }),

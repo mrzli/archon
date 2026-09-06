@@ -13,11 +13,11 @@ import {
 
 const buildScript = { scripts: { build: 'build-command' } };
 
-function packageManifest(name: string, extra: Record<string, unknown> = {}) {
+function packageManifest(name: string, extra: Record<string, unknown> = {}): { readonly scripts: { readonly build: string; }; readonly name: string; } {
   return { name: `@mrzli-jslib/${name}`, ...buildScript, ...extra };
 }
 
-test('library graph discovers immediate repositories and every dependency field', () => {
+test('library graph discovers immediate repositories and every dependency field', (): void => {
   const fixture = createFixture('libs-graph');
 
   try {
@@ -62,7 +62,7 @@ test('library graph discovers immediate repositories and every dependency field'
   }
 });
 
-test('library build is dependency-first and invokes exact Bun commands', () => {
+test('library build is dependency-first and invokes exact Bun commands', (): void => {
   const fixture = createFixture('libs-build-order');
   const calls = join(fixture.root, 'bun-calls');
 
@@ -104,7 +104,7 @@ fi
   }
 });
 
-test('library build stops after a Bun failure and reports the current contract', () => {
+test('library build stops after a Bun failure and reports the current contract', (): void => {
   const fixture = createFixture('libs-bun-failure');
   const calls = join(fixture.root, 'bun-calls');
 
@@ -140,7 +140,7 @@ fi
   }
 });
 
-test('libraries list remotes with the exact GitHub command and formatting', () => {
+test('libraries list remotes with the exact GitHub command and formatting', (): void => {
   const fixture = createFixture('libs-github');
 
   try {

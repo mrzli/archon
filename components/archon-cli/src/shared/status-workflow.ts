@@ -3,16 +3,16 @@ import { isHelpRequest } from './arguments.ts';
 import { printLocalRepositoryStatuses } from './repository-inspection.ts';
 
 export interface StatusOptions<R> {
-  printHelp: () => void;
-  findRepositories: () => R[];
-  inspectRepositories: (repositories: R[], fetch: boolean) => RepositoryStatus[];
-  emptyMessage: string;
+  readonly printHelp: () => void;
+  readonly findRepositories: () => readonly R[];
+  readonly inspectRepositories: (repositories: readonly R[], fetch: boolean) => readonly RepositoryStatus[];
+  readonly emptyMessage: string;
 }
 
 export function runStatusWorkflow<R>(
   arguments_: readonly string[],
   options: StatusOptions<R>,
-) {
+): number {
   if (isHelpRequest(arguments_)) {
     options.printHelp();
     return 0;
@@ -36,13 +36,13 @@ export function runStatusWorkflow<R>(
   printLocalRepositoryStatuses(statuses);
 
   return statuses.some(
-    (status) => status.error !== undefined || status.warnings.length > 0,
+    (status): boolean => status.error !== undefined || status.warnings.length > 0,
   )
     ? 1
     : 0;
 }
 
-function parseStatusArguments(arguments_: readonly string[], printHelp: () => void) {
+function parseStatusArguments(arguments_: readonly string[], printHelp: () => void): boolean | undefined {
   if (arguments_.length === 0) {
     return false;
   }

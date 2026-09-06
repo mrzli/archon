@@ -1,8 +1,9 @@
+import type { SpawnSyncReturns } from 'node:child_process';
 import { toSingleLine } from './errors.ts';
 import { runProcess } from './process.ts';
 
 export interface Repository {
-  path: string;
+  readonly path: string;
 }
 
 export function getGitOutput(repository: Repository, arguments_: readonly string[]): string {
@@ -23,13 +24,13 @@ export function getGitOutput(repository: Repository, arguments_: readonly string
   return result.stdout;
 }
 
-export function runGit(repository: Repository, arguments_: readonly string[]) {
+export function runGit(repository: Repository, arguments_: readonly string[]): SpawnSyncReturns<string> {
   return runProcess('git', ['-C', repository.path, ...arguments_], {
     encoding: 'utf8',
   });
 }
 
-export function throwGitError(result: { stderr: string }, fallbackMessage: string): never {
+export function throwGitError(result: { readonly stderr: string }, fallbackMessage: string): never {
   const message = result.stderr.trim() || fallbackMessage;
   throw new Error(toSingleLine(message));
 }

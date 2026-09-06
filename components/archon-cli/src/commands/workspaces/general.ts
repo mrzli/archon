@@ -8,7 +8,7 @@ import type { Tmux } from './tmux.ts';
 export function manageGeneral(
   action: WorkspaceAction,
   context: GroupContext<Pick<Tmux, 'hasSession' | 'createShellSession' | 'stopSession'>>,
-) {
+): number {
   const directoryExists = context.directoryExists ?? existsSync;
   const homeDir = context.homeDir ?? homedir();
   const printError = context.printError ?? console.error;

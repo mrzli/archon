@@ -6,12 +6,16 @@ import { manageGeneral } from '../../src/commands/workspaces/general.ts';
 
 type Call = ['hasSession' | 'stopSession', string] | ['createShellSession', SessionDefinition];
 interface FixtureOptions {
-  missing?: boolean;
-  fail?: 'createShellSession' | 'stopSession';
-  present?: boolean;
+  readonly missing?: boolean;
+  readonly fail?: 'createShellSession' | 'stopSession';
+  readonly present?: boolean;
 }
 
-function createContext({ missing = false, fail, present = false }: FixtureOptions = {}) {
+function createContext({ missing = false, fail, present = false }: FixtureOptions = {}): {
+  readonly calls: Call[];
+  readonly errors: string[];
+  readonly context: Parameters<typeof manageGeneral>[1];
+} {
   const calls: Call[] = [];
   const errors: string[] = [];
   return {
@@ -19,23 +23,23 @@ function createContext({ missing = false, fail, present = false }: FixtureOption
     errors,
     context: {
       homeDir: '/home/test',
-      directoryExists: (directory) => {
+      directoryExists: (directory): boolean => {
         assert.equal(directory, '/home/test/projects');
         return !missing;
       },
-      printError: (message) => errors.push(message),
+      printError: (message): number => errors.push(message),
       tmux: {
-        hasSession(session) {
+        hasSession(session): boolean {
           calls.push(['hasSession', session]);
           return present;
         },
-        createShellSession(definition) {
+        createShellSession(definition): number {
           calls.push(['createShellSession', definition]);
           if (fail === 'createShellSession') return 1;
           present = true;
           return 0;
         },
-        stopSession(session) {
+        stopSession(session): number {
           calls.push(['stopSession', session]);
           if (fail === 'stopSession') return 1;
           present = false;
@@ -46,7 +50,7 @@ function createContext({ missing = false, fail, present = false }: FixtureOption
   };
 }
 
-test('general creates one shell window at projects and preserves it on restart', () => {
+test('general creates one shell window at projects and preserves it on restart', (): void => {
   const fixture = createContext();
   assert.equal(manageGeneral('start', fixture.context), 0);
   assert.deepEqual(fixture.calls, [
@@ -58,7 +62,7 @@ test('general creates one shell window at projects and preserves it on restart',
   assert.deepEqual(fixture.calls, [['hasSession', 'main']]);
 });
 
-test('general skips a missing projects directory', () => {
+test('general skips a missing projects directory', (): void => {
   const fixture = createContext({ missing: true });
   assert.equal(manageGeneral('start', fixture.context), 0);
   assert.deepEqual(fixture.calls, []);
@@ -67,7 +71,7 @@ test('general skips a missing projects directory', () => {
   ]);
 });
 
-test('general stop tolerates an absent session and missing directory', () => {
+test('general stop tolerates an absent session and missing directory', (): void => {
   const fixture = createContext({ present: true, missing: true });
   assert.equal(manageGeneral('stop', fixture.context), 0);
   assert.equal(manageGeneral('stop', fixture.context), 0);
@@ -77,7 +81,7 @@ test('general stop tolerates an absent session and missing directory', () => {
   ]);
 });
 
-test('general reports start and stop failures', () => {
+test('general reports start and stop failures', (): void => {
   for (const action of ['start', 'stop'] as const) {
     const fixture = createContext({
       fail: action === 'start' ? 'createShellSession' : 'stopSession',

@@ -11,23 +11,23 @@ import {
 } from './repository-inspection.ts';
 
 export interface SyncResult {
-  name: string;
-  succeeded: boolean;
-  message: string;
+  readonly name: string;
+  readonly succeeded: boolean;
+  readonly message: string;
 }
 
 export interface SyncOptions<L extends Repository, R> {
-  printHelp: () => void;
-  getRemoteRepositories: () => R[];
-  findLocalRepositories: () => L[];
-  getRepositoryKey: (repository: L | R) => string;
-  getRepositoryName: (repository: L | R) => string;
-  compareRepositories: (left: L | R, right: L | R) => number;
-  updateRepository?: (repository: L) => SyncResult;
-  cloneRepository: (repository: R) => SyncResult;
-  print?: (message: string) => void;
-  printError?: (message: string) => void;
-  write?: (message: string) => void;
+  readonly printHelp: () => void;
+  readonly getRemoteRepositories: () => readonly R[];
+  readonly findLocalRepositories: () => readonly L[];
+  readonly getRepositoryKey: (repository: L | R) => string;
+  readonly getRepositoryName: (repository: L | R) => string;
+  readonly compareRepositories: (left: L | R, right: L | R) => number;
+  readonly updateRepository?: (repository: L) => SyncResult;
+  readonly cloneRepository: (repository: R) => SyncResult;
+  readonly print?: (message: string) => void;
+  readonly printError?: (message: string) => void;
+  readonly write?: (message: string) => void;
 }
 
 export function createSyncFailure<R>(
@@ -45,7 +45,7 @@ export function createSyncFailure<R>(
 export function syncRepositories<L extends Repository, R>(
   arguments_: readonly string[],
   options: SyncOptions<L, R>,
-) {
+): number {
   const print = options.print ?? console.log;
   const printError = options.printError ?? console.error;
 
@@ -73,24 +73,24 @@ export function syncRepositories<L extends Repository, R>(
   const localNames = new Set(
     localRepositories.map(options.getRepositoryKey),
   );
-  const missingRepositories = remoteRepositories.filter(
-    (repository) => !localNames.has(options.getRepositoryKey(repository)),
+  const missingRepositories: readonly R[] = remoteRepositories.filter(
+    (repository): boolean => !localNames.has(options.getRepositoryKey(repository)),
   );
   const updateRepository =
     options.updateRepository ??
-    ((repository: L) =>
+    ((repository: L): SyncResult =>
       updateLocalRepository(repository, options.getRepositoryName));
   const cloneRepository = options.cloneRepository;
-  const operations = [
-    ...localRepositories.map((repository) => ({
+  const operations: readonly ({ readonly repository: L; readonly run: () => SyncResult; } | { readonly repository: R; readonly run: () => SyncResult; })[] = [
+    ...localRepositories.map((repository): { readonly repository: L; readonly run: () => SyncResult; } => ({
       repository,
-      run: () => updateRepository(repository),
+      run: (): SyncResult => updateRepository(repository),
     })),
-    ...missingRepositories.map((repository) => ({
+    ...missingRepositories.map((repository): { readonly repository: R; readonly run: () => SyncResult; } => ({
       repository,
-      run: () => cloneRepository(repository),
+      run: (): SyncResult => cloneRepository(repository),
     })),
-  ].sort((left, right) =>
+  ].sort((left, right): number =>
     options.compareRepositories(left.repository, right.repository),
   );
 
@@ -100,7 +100,7 @@ export function syncRepositories<L extends Repository, R>(
   }
 
   const results = runSyncOperations(operations, options);
-  return results.some((result) => !result.succeeded) ? 1 : 0;
+  return results.some((result): boolean => !result.succeeded) ? 1 : 0;
 }
 
 export function updateLocalRepository<R extends Repository>(
@@ -156,18 +156,18 @@ export function updateLocalRepository<R extends Repository>(
 }
 
 function runSyncOperations<R>(
-  operations: { repository: R; run: () => SyncResult }[],
+  operations: readonly { readonly repository: R; readonly run: () => SyncResult }[],
   options: {
-    print?: (message: string) => void;
-    write?: (message: string) => void;
-    getRepositoryName: (repository: R) => string;
+    readonly print?: (message: string) => void;
+    readonly write?: (message: string) => void;
+    readonly getRepositoryName: (repository: R) => string;
   },
-) {
+): readonly SyncResult[] {
   const print = options.print ?? console.log;
   const write = options.write ?? process.stdout.write.bind(process.stdout);
   const indexWidth = String(operations.length).length;
   const nameWidth = Math.max(
-    ...operations.map(({ repository }) =>
+    ...operations.map(({ repository }): number =>
       options.getRepositoryName(repository).length,
     ),
   );

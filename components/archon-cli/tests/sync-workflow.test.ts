@@ -1,3 +1,4 @@
+import type { SyncResult } from '../src/shared/index.ts';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -11,7 +12,7 @@ import {
   updateLocalRepository,
 } from '../src/shared/sync-workflow.ts';
 
-function createOutput() {
+function createOutput(): { readonly errors: string[]; readonly output: string[]; readonly writes: readonly string[]; readonly print: (message: string) => number; readonly printError: (message: string) => number; readonly write: (message: string) => number; } {
   const errors: string[] = [];
   const output: string[] = [];
   const writes: string[] = [];
@@ -19,15 +20,15 @@ function createOutput() {
     errors,
     output,
     writes,
-    print: (message: string) => output.push(message),
-    printError: (message: string) => errors.push(message),
-    write: (message: string) => writes.push(message),
+    print: (message: string): number => output.push(message),
+    printError: (message: string): number => errors.push(message),
+    write: (message: string): number => writes.push(message),
   };
 }
 
-test('project and library policies produce sorted clone and update plans', () => {
+test('project and library policies produce sorted clone and update plans', (): void => {
   for (const kind of ['projects', 'libs']) {
-    const calls: string[][] = [];
+    const calls: (readonly string[])[] = [];
     const capture = createOutput();
     const projectPolicy = kind === 'projects';
     const local = projectPolicy
@@ -39,13 +40,13 @@ test('project and library policies produce sorted clone and update plans', () =>
     const missingRemote = projectPolicy
       ? { name: 'alpha', nameWithOwner: 'owner/alpha' }
       : { name: 'alpha' };
-    const getName = (repository: { name: string } | { name: string; nameWithOwner: string }) =>
+    const getName = (repository: { readonly name: string } | { readonly name: string; readonly nameWithOwner: string }): string =>
       'nameWithOwner' in repository ? repository.nameWithOwner : repository.name;
     const getKey = getName;
 
     const status = syncRepositories([], {
       ...capture,
-      cloneRepository(repository) {
+      cloneRepository(repository): { readonly message: string; readonly name: string; readonly succeeded: true; } {
         calls.push(['clone', getName(repository)]);
         return {
           message: 'cloned',
@@ -53,14 +54,14 @@ test('project and library policies produce sorted clone and update plans', () =>
           succeeded: true,
         };
       },
-      compareRepositories: (left, right) =>
+      compareRepositories: (left, right): number =>
         getName(left).localeCompare(getName(right)),
-      findLocalRepositories: () => [local],
-      getRemoteRepositories: () => [existingRemote, missingRemote],
+      findLocalRepositories: (): readonly ({ readonly name: string; readonly nameWithOwner: string; readonly path: string; } | { readonly nameWithOwner?: undefined; readonly name: string; readonly path: string; })[] => [local],
+      getRemoteRepositories: (): readonly ({ readonly name: string; readonly nameWithOwner: string; } | { readonly nameWithOwner?: undefined; readonly name: string; })[] => [existingRemote, missingRemote],
       getRepositoryKey: getKey,
       getRepositoryName: getName,
-      printHelp: () => {},
-      updateRepository(repository) {
+      printHelp: (): void => {},
+      updateRepository(repository): { readonly message: string; readonly name: string; readonly succeeded: true; } {
         calls.push(['update', getName(repository)]);
         return {
           message: 'up to date',
@@ -89,23 +90,23 @@ test('project and library policies produce sorted clone and update plans', () =>
   }
 });
 
-test('operation failures are reported and do not stop later operations', () => {
-  const calls: string[][] = [];
+test('operation failures are reported and do not stop later operations', (): void => {
+  const calls: (readonly string[])[] = [];
   const capture = createOutput();
-  const getName = (repository: { name: string }) => repository.name;
+  const getName = (repository: { readonly name: string }): string => repository.name;
   const status = syncRepositories([], {
     ...capture,
-    cloneRepository(repository) {
+    cloneRepository(repository): SyncResult {
       calls.push(['clone', repository.name]);
       return createSyncFailure(repository, 'clone failed', getName);
     },
-    compareRepositories: (left, right) => left.name.localeCompare(right.name),
-    findLocalRepositories: () => [{ name: 'alpha', path: '/unused/alpha' }],
-    getRemoteRepositories: () => [{ name: 'zeta' }],
+    compareRepositories: (left, right): number => left.name.localeCompare(right.name),
+    findLocalRepositories: (): readonly { readonly name: string; readonly path: string; }[] => [{ name: 'alpha', path: '/unused/alpha' }],
+    getRemoteRepositories: (): readonly { readonly name: string; }[] => [{ name: 'zeta' }],
     getRepositoryKey: getName,
     getRepositoryName: getName,
-    printHelp: () => {},
-    updateRepository(repository) {
+    printHelp: (): void => {},
+    updateRepository(repository): never {
       calls.push(['update', repository.name]);
       throw new Error('update failed');
     },
@@ -123,11 +124,11 @@ test('operation failures are reported and do not stop later operations', () => {
   ]);
 });
 
-test('local Git update reports up-to-date, updated, and dirty states', () => withGitFixture('sync', ({ root }) => {
+test('local Git update reports up-to-date, updated, and dirty states', (): void => withGitFixture('sync', ({ root }): void => {
   const remote = join(root, 'remote.git');
   const local = join(root, 'local');
   const contributor = join(root, 'contributor');
-  const runGit = (directory: string, ...arguments_: string[]) =>
+  const runGit = (directory: string, ...arguments_: readonly string[]): Buffer =>
     execFileSync('git', ['-C', directory, ...arguments_], { stdio: 'ignore' });
 
   execFileSync(
@@ -144,7 +145,7 @@ test('local Git update reports up-to-date, updated, and dirty states', () => wit
   runGit(local, 'push', '--set-upstream', 'origin', 'main');
 
   const repository = { name: 'example', path: local };
-  const getName = (repository_: { name: string }) => repository_.name;
+  const getName = (repository_: { readonly name: string }): string => repository_.name;
   assert.deepEqual(updateLocalRepository(repository, getName), {
     message: '[main -> origin/main]  up to date',
     name: 'example',

@@ -5,9 +5,9 @@ import type { EditorSessionDefinition, Tmux } from './tmux.ts';
 
 export function manageEditorSessions(
   action: WorkspaceAction,
-  definitions: EditorSessionDefinition[],
+  definitions: readonly EditorSessionDefinition[],
   context: GroupContext<Pick<Tmux, 'hasSession' | 'createEditorSession' | 'stopSession'>>,
-) {
+): number {
   const directoryExists = context.directoryExists ?? existsSync;
   const printError = context.printError ?? console.error;
   let status = 0;
@@ -36,7 +36,7 @@ export function manageEditorSessions(
 export function startEditorSession(
   definition: EditorSessionDefinition,
   context: GroupContext<Pick<Tmux, 'hasSession' | 'createEditorSession'>>,
-) {
+): number {
   const printError = context.printError ?? console.error;
 
   if (context.tmux.hasSession(definition.session)) {

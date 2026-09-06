@@ -1,22 +1,22 @@
 export interface RepositoryIdentity {
-  owner: string;
-  name: string;
-  nameWithOwner: string;
+  readonly owner: string;
+  readonly name: string;
+  readonly nameWithOwner: string;
 }
 
 export interface RemoteRepository extends RepositoryIdentity {
-  id: string;
-  sshUrl: string;
-  isArchived: boolean;
-  visibility: string;
+  readonly id: string;
+  readonly sshUrl: string;
+  readonly isArchived: boolean;
+  readonly visibility: string;
 }
 
 export interface BlacklistPolicy {
-  organizationBlacklist?: readonly string[];
-  repositoryBlacklist?: readonly string[];
+  readonly organizationBlacklist?: readonly string[];
+  readonly repositoryBlacklist?: readonly string[];
 }
 
-export const ORGANIZATION_BLACKLIST = [
+export const ORGANIZATION_BLACKLIST: readonly string[] = [
   'mrzli-courses',
   'mrzli-gh-actions',
   'mrzli-other',
@@ -39,29 +39,29 @@ const ORGANIZATION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]*$/;
 const REPOSITORY_PATTERN =
   /^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9._-]+$/;
 
-export function addRemoteRepositories<R extends { nameWithOwner: string }>(
+export function addRemoteRepositories<R extends { readonly nameWithOwner: string }>(
   repositoriesByName: Map<string, R>,
-  repositories: R[],
-) {
+  repositories: readonly R[],
+): void {
   for (const repository of repositories) {
     repositoriesByName.set(repositoryKey(repository), repository);
   }
 }
 
-export function compareNames(left: string, right: string) {
+export function compareNames(left: string, right: string): number {
   return left.localeCompare(right, undefined, { sensitivity: 'base' });
 }
 
 export function compareRepositories(
-  left: { nameWithOwner: string },
-  right: { nameWithOwner: string },
-) {
+  left: { readonly nameWithOwner: string },
+  right: { readonly nameWithOwner: string },
+): number {
   return compareNames(left.nameWithOwner, right.nameWithOwner);
 }
 
 export function getRepositoryBlacklistLookupNames(
   repositoryBlacklist: readonly string[] = REPOSITORY_BLACKLIST,
-) {
+): readonly string[] {
   const names = [];
   const seen = new Set<string>();
 
@@ -80,25 +80,25 @@ export function getRepositoryBlacklistLookupNames(
 }
 
 export function isRepositoryBlacklisted(
-  repository: { owner: string; nameWithOwner: string },
+  repository: { readonly owner: string; readonly nameWithOwner: string },
   organizationBlacklist: readonly string[] = ORGANIZATION_BLACKLIST,
   repositoryBlacklist: readonly string[] = REPOSITORY_BLACKLIST,
-) {
+): boolean {
   const owner = repository.owner.toLowerCase();
 
   return (
     organizationBlacklist.some(
-      (organization) => organization.toLowerCase() === owner,
+      (organization): boolean => organization.toLowerCase() === owner,
     ) ||
     repositoryBlacklist.some(
-      (nameWithOwner) =>
+      (nameWithOwner): boolean =>
         nameWithOwner.toLowerCase() === repositoryKey(repository),
     )
   );
 }
 
 export function parseRemoteRepository(row: string): RemoteRepository {
-  const fields = row.split('\t');
+  const fields: readonly string[] = row.split('\t');
   const [id, nameWithOwner, sshUrl, archived, visibility] = fields;
   const separator = nameWithOwner?.indexOf('/') ?? -1;
 
@@ -128,7 +128,7 @@ export function parseRemoteRepository(row: string): RemoteRepository {
   };
 }
 
-export function repositoryKey(repository: { nameWithOwner: string }) {
+export function repositoryKey(repository: { readonly nameWithOwner: string }): string {
   return repository.nameWithOwner.toLowerCase();
 }
 
@@ -137,14 +137,14 @@ export function validateBlacklists(
   organizations: readonly string[],
   canonicalRepositories: ReadonlyMap<string, string> = new Map(),
   policy: BlacklistPolicy = {},
-) {
+): { readonly blacklistedOrganizations: Set<string>; readonly blacklistedRepositories: Set<string>; } {
   const organizationBlacklist =
     policy.organizationBlacklist ?? ORGANIZATION_BLACKLIST;
   const repositoryBlacklist =
     policy.repositoryBlacklist ?? REPOSITORY_BLACKLIST;
   const errors = [];
   const organizationsByName = new Map(
-    organizations.map((organization) => [organization.toLowerCase(), organization]),
+    organizations.map((organization): [string, string] => [organization.toLowerCase(), organization]),
   );
   const blacklistedOrganizations = new Set<string>();
 
@@ -221,7 +221,7 @@ export function validateBlacklists(
 
   if (errors.length > 0) {
     throw new Error(
-      ['Blacklist validation failed:', ...errors.map((error) => `  - ${error}`)].join(
+      ['Blacklist validation failed:', ...errors.map((error): string => `  - ${error}`)].join(
         '\n',
       ),
     );

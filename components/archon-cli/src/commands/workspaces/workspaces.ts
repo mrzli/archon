@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 
 import type { GroupContext, WorkspaceAction } from './group-context.ts';
-import type { CaptureCommand, RunCommand, Tmux } from './tmux.ts';
+import type { CaptureCommand, CaptureResult, RunCommand, Tmux } from './tmux.ts';
 import { manageFlashcards } from './flashcards.ts';
 import { manageGeneral } from './general.ts';
 import { manageJslibs } from './jslibs.ts';
@@ -11,18 +11,18 @@ import { createTmux } from './tmux.ts';
 export type WorkspaceGroup = typeof GROUPS[number];
 type GroupHandlers = Record<WorkspaceGroup, (action: WorkspaceAction, context: GroupContext) => number>;
 export interface WorkspaceContext extends Partial<GroupContext> {
-  environment?: NodeJS.ProcessEnv;
-  isTTY?: boolean;
-  groupHandlers?: GroupHandlers;
-  print?: (message: string) => void;
-  run?: RunCommand;
-  capture?: CaptureCommand;
+  readonly environment?: NodeJS.ProcessEnv;
+  readonly isTTY?: boolean;
+  readonly groupHandlers?: GroupHandlers;
+  readonly print?: (message: string) => void;
+  readonly run?: RunCommand;
+  readonly capture?: CaptureCommand;
 }
 
-type ActiveContext = WorkspaceContext & { tmux: Tmux; groupHandlers: GroupHandlers };
+type ActiveContext = WorkspaceContext & { readonly tmux: Tmux; readonly groupHandlers: GroupHandlers };
 interface ParsedAction {
-  action: WorkspaceAction;
-  group?: WorkspaceGroup;
+  readonly action: WorkspaceAction;
+  readonly group?: WorkspaceGroup;
 }
 
 const GROUPS = ['general', 'flashcards', 'jslibs', 'misc-projects'] as const;
@@ -33,7 +33,7 @@ const GROUP_HANDLERS = {
   'misc-projects': manageMiscProjects,
 };
 
-export function runWorkspaces(arguments_: string[], context: WorkspaceContext = {}) {
+export function runWorkspaces(arguments_: readonly string[], context: WorkspaceContext = {}): number {
   const print = context.print ?? console.log;
   const printError = context.printError ?? console.error;
   const parsed = parseArguments(arguments_, print, printError);
@@ -71,7 +71,7 @@ export function runWorkspaces(arguments_: string[], context: WorkspaceContext = 
   return attachAfterStart(status, parsed, groupContext);
 }
 
-function attachAfterStart(status: number, parsed: ParsedAction, context: ActiveContext) {
+function attachAfterStart(status: number, parsed: ParsedAction, context: ActiveContext): number {
   const environment = context.environment ?? process.env;
   const isTTY = context.isTTY ?? process.stdin.isTTY;
   if (status !== 0 || parsed.action !== 'start' || environment.TMUX || !isTTY) {
@@ -87,7 +87,7 @@ function attachAfterStart(status: number, parsed: ParsedAction, context: ActiveC
     return 1;
   }
 
-  const sessions = result.output.split('\n').filter((session) => {
+  const sessions: readonly string[] = result.output.split('\n').filter((session): boolean => {
     switch (parsed.group) {
       case 'general': { return session === 'main'; }
       case 'flashcards': { return ['flashcards-fe', 'flashcards-be'].includes(session); }
@@ -104,14 +104,14 @@ function attachAfterStart(status: number, parsed: ParsedAction, context: ActiveC
 }
 
 function isGroup(value: string): value is WorkspaceGroup {
-  return GROUPS.some((group) => group === value);
+  return GROUPS.some((group): boolean => group === value);
 }
 
 function parseArguments(
-  arguments_: string[],
+  arguments_: readonly string[],
   print: (message: string) => void,
   printError: (message: string) => void,
-): ParsedAction | { status: number } {
+): ParsedAction | { readonly status: number } {
   if (
     arguments_.length === 1 &&
     ['help', '-h', '--help'].includes(arguments_[0])
@@ -152,13 +152,13 @@ function parseArguments(
   return { status: 2 };
 }
 
-function runGroup(group: WorkspaceGroup, action: WorkspaceAction, context: ActiveContext) {
+function runGroup(group: WorkspaceGroup, action: WorkspaceAction, context: ActiveContext): number {
   return context.groupHandlers[group](action, context);
 }
 
 function runCommand(
-  command: string, arguments_: string[], options: Parameters<RunCommand>[2] = {},
-) {
+  command: string, arguments_: readonly string[], options: Parameters<RunCommand>[2] = {},
+): number {
   const result = spawnSync(command, arguments_, {
     stdio: options.stdio ?? 'inherit',
   });
@@ -175,7 +175,7 @@ function runCommand(
   return result.status ?? 1;
 }
 
-function captureCommand(command: string, arguments_: string[]) {
+function captureCommand(command: string, arguments_: readonly string[]): CaptureResult {
   const result = spawnSync(command, arguments_, { encoding: 'utf8' });
 
   if (result.error) {
@@ -192,7 +192,7 @@ function captureCommand(command: string, arguments_: string[]) {
   };
 }
 
-function getHelpText() {
+function getHelpText(): string {
   return [
     'Usage: archon workspaces <start|stop> [options]',
     '',

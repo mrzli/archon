@@ -11,30 +11,32 @@ import {
 import { isGitRepository } from './paths.ts';
 
 export interface WorkingTreeChanges {
-  staged: number;
-  unstaged: number;
-  untracked: number;
+  readonly staged: number;
+  readonly unstaged: number;
+  readonly untracked: number;
 }
 
 export type RepositoryStatus = {
-  name: string;
-  warnings: string[];
+  readonly name: string;
+  readonly warnings: readonly string[];
 } & ({
-  error?: undefined;
-  branch: string;
-  changes: WorkingTreeChanges;
-  stashCount: number;
-  ahead: string[];
+  readonly error?: undefined;
+  readonly branch: string;
+  readonly changes: WorkingTreeChanges;
+  readonly stashCount: number;
+  readonly ahead: readonly string[];
 } | {
-  error: string;
+  readonly error: string;
 });
 
 
-export function findChildGitRepositories(root: string) {
+type ValidRepositoryStatus = Extract<RepositoryStatus, { readonly error?: undefined }>;
+
+export function findChildGitRepositories(root: string): { readonly name: string; readonly path: string; }[] {
   return readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .filter((entry) => isGitRepository(join(root, entry.name)))
-    .map((entry) => ({
+    .filter((entry): boolean => entry.isDirectory())
+    .filter((entry): boolean => isGitRepository(join(root, entry.name)))
+    .map((entry): { readonly name: string; readonly path: string; } => ({
       name: entry.name,
       path: join(root, entry.name),
     }));
@@ -58,7 +60,7 @@ export function formatChanges(changes: WorkingTreeChanges): string {
   return parts.length > 0 ? parts.join(', ') : 'clean';
 }
 
-export function getBranchUpstream(repository: Repository, branch: string) {
+export function getBranchUpstream(repository: Repository, branch: string): string | undefined {
   const output = getGitOutput(repository, [
     'for-each-ref',
     '--format=%(upstream:short)',
@@ -68,7 +70,7 @@ export function getBranchUpstream(repository: Repository, branch: string) {
   return output.length > 0 ? output : undefined;
 }
 
-export function getSymbolicCurrentBranch(repository: Repository) {
+export function getSymbolicCurrentBranch(repository: Repository): string | undefined {
   const result = runGit(repository, [
     'symbolic-ref',
     '--quiet',
@@ -94,7 +96,7 @@ export function getWorkingTreeChanges(repository: Repository): WorkingTreeChange
     '-z',
     '--untracked-files=normal',
   ]);
-  const entries = output.split('\0');
+  const entries: readonly string[] = output.split('\0');
   const changes = {
     staged: 0,
     unstaged: 0,
@@ -138,28 +140,28 @@ export function hasWorkingTreeChanges(changes: WorkingTreeChanges): boolean {
 }
 
 export function inspectLocalRepositories<R extends Repository>(
-  repositories: R[],
+  repositories: readonly R[],
   fetch: boolean,
   getName: (repository: R) => string,
-): RepositoryStatus[] {
-  return repositories.map((repository) =>
+): readonly RepositoryStatus[] {
+  return repositories.map((repository): RepositoryStatus =>
     inspectLocalRepository(repository, fetch, getName),
   );
 }
 
-export function printLocalRepositoryStatuses(statuses: RepositoryStatus[]) {
-  const nameWidth = Math.max(...statuses.map((status) => status.name.length));
-  const validStatuses = statuses.filter((status) => status.error === undefined);
+export function printLocalRepositoryStatuses(statuses: readonly RepositoryStatus[]): void {
+  const nameWidth = Math.max(...statuses.map((status): number => status.name.length));
+  const validStatuses: readonly ValidRepositoryStatus[] = statuses.filter((status): status is ValidRepositoryStatus => status.error === undefined);
   const branchWidth = Math.max(
     0,
-    ...validStatuses.map((status) => status.branch.length),
+    ...validStatuses.map((status): number => status.branch.length),
   );
   const changeTexts = new Map(
-    validStatuses.map((status) => [status, formatChanges(status.changes)]),
+    validStatuses.map((status): [ValidRepositoryStatus, string] => [status, formatChanges(status.changes)]),
   );
   const changesWidth = Math.max(
     0,
-    ...[...changeTexts.values()].map((text) => text.length),
+    ...[...changeTexts.values()].map((text): number => text.length),
   );
 
   for (const status of statuses) {
@@ -185,17 +187,17 @@ export function printLocalRepositoryStatuses(statuses: RepositoryStatus[]) {
   }
 }
 
-function getAheadBranches(repository: Repository, warnings: string[]) {
+function getAheadBranches(repository: Repository, warnings: string[]): readonly string[] {
   const output = getGitOutput(repository, [
     'for-each-ref',
     '--format=%(refname:short)%09%(refname)%09%(upstream:short)%09%(upstream)',
     'refs/heads',
   ]);
-  const branches = output
+  const branches: readonly { readonly name: string; readonly ref: string; readonly upstream: string; readonly upstreamRef: string; }[] = output
     .trimEnd()
     .split('\n')
-    .filter((line) => line.length > 0)
-    .map((line) => {
+    .filter((line): boolean => line.length > 0)
+    .map((line): { readonly name: string; readonly ref: string; readonly upstream: string; readonly upstreamRef: string; } => {
       const [name, ref, upstream = '', upstreamRef = ''] = line.split('\t');
       return { name, ref, upstream, upstreamRef };
     });
@@ -243,7 +245,7 @@ function getAheadBranches(repository: Repository, warnings: string[]) {
   return ahead;
 }
 
-function getCurrentBranch(repository: Repository) {
+function getCurrentBranch(repository: Repository): string {
   const branchResult = runGit(repository, [
     'symbolic-ref',
     '--quiet',
@@ -263,7 +265,7 @@ function getCurrentBranch(repository: Repository) {
   return `detached@${commit.trim()}`;
 }
 
-function getStashCount(repository: Repository) {
+function getStashCount(repository: Repository): number {
   const output = getGitOutput(repository, ['stash', 'list', '--format=%gd']);
 
   if (output.length === 0) {

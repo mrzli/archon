@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 
-import type { EditorSessionDefinition } from '../../src/commands/workspaces/tmux.ts';
+import type { EditorSessionDefinition, Tmux } from '../../src/commands/workspaces/tmux.ts';
 import { manageFlashcards } from '../../src/commands/workspaces/flashcards.ts';
 
 type Call = ['hasSession', string] | ['createEditorSession', EditorSessionDefinition];
 interface FixtureOptions {
-  cleanupFails?: boolean;
-  directories?: string[];
-  failFirstNewSession?: boolean;
-  failFirstSetupOperation?: boolean;
+  readonly cleanupFails?: boolean;
+  readonly directories?: readonly string[];
+  readonly failFirstNewSession?: boolean;
+  readonly failFirstSetupOperation?: boolean;
 }
 
 function createContext({
@@ -17,7 +17,12 @@ function createContext({
   directories,
   failFirstNewSession = false,
   failFirstSetupOperation = false,
-}: FixtureOptions = {}) {
+}: FixtureOptions = {}): {
+  readonly calls: Call[];
+  readonly errors: string[];
+  readonly sessions: Set<string>;
+  readonly context: Parameters<typeof manageFlashcards>[1];
+} {
   const calls: Call[] = [];
   const errors: string[] = [];
   const sessions = new Set<string>();
@@ -29,16 +34,16 @@ function createContext({
     errors,
     sessions,
     context: {
-      directoryExists: (directory) =>
+      directoryExists: (directory): boolean =>
         directories === undefined || directories.includes(directory),
       homeDir: '/home/test',
-      printError: (message) => errors.push(message),
+      printError: (message): number => errors.push(message),
       tmux: {
-        hasSession(session) {
+        hasSession(session): boolean {
           calls.push(['hasSession', session]);
           return sessions.has(session);
         },
-        createEditorSession(definition) {
+        createEditorSession(definition): ReturnType<Tmux['createEditorSession']> {
           calls.push(['createEditorSession', definition]);
           if (failFirstNewSession && !newSessionFailed) {
             newSessionFailed = true;
@@ -52,7 +57,7 @@ function createContext({
           sessions.add(definition.session);
           return { status: 0 };
         },
-        stopSession(session) {
+        stopSession(session): number {
           sessions.delete(session);
           return 0;
         },
@@ -61,12 +66,12 @@ function createContext({
   };
 }
 
-test('start creates exact flashcards sessions once', () => {
+test('start creates exact flashcards sessions once', (): void => {
   const fixture = createContext();
   assert.equal(manageFlashcards('start', fixture.context), 0);
   assert.deepEqual([...fixture.sessions], ['flashcards-fe', 'flashcards-be']);
   assert.deepEqual(
-    fixture.calls.filter((call) => call[0] === 'createEditorSession'),
+    fixture.calls.filter((call): call is ["createEditorSession", EditorSessionDefinition] => call[0] === 'createEditorSession'),
     [
       ['createEditorSession', {
         session: 'flashcards-fe',
@@ -89,7 +94,7 @@ test('start creates exact flashcards sessions once', () => {
   ]);
 });
 
-test('missing directories are reported and skipped', () => {
+test('missing directories are reported and skipped', (): void => {
   const backend = '/home/test/projects/personal/mrzli/flashcards-be';
   const fixture = createContext({ directories: [backend] });
   assert.equal(manageFlashcards('start', fixture.context), 0);
@@ -99,7 +104,7 @@ test('missing directories are reported and skipped', () => {
   ]);
 });
 
-test('a session failure is reported and remaining sessions continue', () => {
+test('a session failure is reported and remaining sessions continue', (): void => {
   const fixture = createContext({ failFirstNewSession: true });
   assert.equal(manageFlashcards('start', fixture.context), 1);
   assert.deepEqual([...fixture.sessions], ['flashcards-be']);
@@ -108,7 +113,7 @@ test('a session failure is reported and remaining sessions continue', () => {
   ]);
 });
 
-test('a rolled-back session is retried on a later start', () => {
+test('a rolled-back session is retried on a later start', (): void => {
   const fixture = createContext({ failFirstSetupOperation: true });
 
   assert.equal(manageFlashcards('start', fixture.context), 1);
@@ -127,7 +132,7 @@ test('a rolled-back session is retried on a later start', () => {
   assert.deepEqual(fixture.errors, []);
 });
 
-test('cleanup failure is reported and remaining sessions continue', () => {
+test('cleanup failure is reported and remaining sessions continue', (): void => {
   const fixture = createContext({
     cleanupFails: true,
     failFirstSetupOperation: true,
@@ -144,7 +149,7 @@ test('cleanup failure is reported and remaining sessions continue', () => {
   ]);
 });
 
-test('stop removes present sessions and tolerates repeated calls', () => {
+test('stop removes present sessions and tolerates repeated calls', (): void => {
   const fixture = createContext();
   fixture.sessions.add('flashcards-fe');
   fixture.sessions.add('flashcards-be');

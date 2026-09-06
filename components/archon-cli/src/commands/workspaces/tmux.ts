@@ -1,27 +1,27 @@
 import type { StdioOptions } from 'node:child_process';
 
 export interface SessionDefinition {
-  session: string;
-  directory: string;
+  readonly session: string;
+  readonly directory: string;
 }
 
 export interface EditorSessionDefinition extends SessionDefinition {
-  devCommand?: string;
+  readonly devCommand?: string;
 }
 
 export interface CaptureResult {
-  status: number;
-  output: string;
+  readonly status: number;
+  readonly output: string;
 }
 
 export type RunCommand = (
-  command: string, arguments_: string[], options?: { stdio?: StdioOptions },
+  command: string, arguments_: readonly string[], options?: { readonly stdio?: StdioOptions },
 ) => number;
-export type CaptureCommand = (command: string, arguments_: string[]) => CaptureResult;
+export type CaptureCommand = (command: string, arguments_: readonly string[]) => CaptureResult;
 
 export interface Tmux {
   hasSession(session: string): boolean;
-  createEditorSession(definition: EditorSessionDefinition): { status: number; cleanupStatus?: number };
+  createEditorSession(definition: EditorSessionDefinition): { readonly status: number; readonly cleanupStatus?: number };
   createShellSession(definition: SessionDefinition): number;
   stopSession(session: string): number;
   killSession(session: string): number;
@@ -29,29 +29,29 @@ export interface Tmux {
   attachSession(session: string): number;
 }
 
-export function createTmux({ run, capture }: { run: RunCommand; capture: CaptureCommand }): Tmux {
+export function createTmux({ run, capture }: { readonly run: RunCommand; readonly capture: CaptureCommand }): Tmux {
   return {
-    hasSession: (session) => hasSession(run, session),
-    createEditorSession: (definition) => createEditorSession(run, definition),
-    createShellSession: ({ session, directory }) => run('tmux', [
+    hasSession: (session): boolean => hasSession(run, session),
+    createEditorSession: (definition): ReturnType<Tmux['createEditorSession']> => createEditorSession(run, definition),
+    createShellSession: ({ session, directory }): number => run('tmux', [
       'new-session', '-d', '-s', session, '-c', directory, '-n', 'shell',
     ]),
-    stopSession: (session) => stopSession(run, session),
-    killSession: (session) => run('tmux', ['kill-session', '-t', session]),
-    listSessions: () => capture('tmux', ['list-sessions', '-F', '#S']),
-    attachSession: (session) => run('tmux', ['attach-session', '-t', `=${session}`]),
+    stopSession: (session): number => stopSession(run, session),
+    killSession: (session): number => run('tmux', ['kill-session', '-t', session]),
+    listSessions: (): CaptureResult => capture('tmux', ['list-sessions', '-F', '#S']),
+    attachSession: (session): number => run('tmux', ['attach-session', '-t', `=${session}`]),
   };
 }
 
-function hasSession(run: RunCommand, session: string) {
+function hasSession(run: RunCommand, session: string): boolean {
   return run('tmux', ['has-session', '-t', session], { stdio: 'ignore' }) === 0;
 }
 
 function createEditorSession(
   run: RunCommand,
   { session, directory, devCommand }: EditorSessionDefinition,
-) {
-  const newSessionArguments = [
+): ReturnType<Tmux['createEditorSession']> {
+  const newSessionArguments: readonly string[] = [
     'new-session',
     '-d',
     '-s',
@@ -61,7 +61,7 @@ function createEditorSession(
     '-n',
     'nvim',
   ];
-  const setupOperations = [
+  const setupOperations: (readonly string[])[] = [
     ['send-keys', '-t', `${session}:nvim`, 'nvim .', 'Enter'],
     ['new-window', '-t', session, '-c', directory, '-n', 'codex'],
     ['send-keys', '-t', `${session}:codex`, 'codex resume --last', 'Enter'],
@@ -95,7 +95,7 @@ function createEditorSession(
   return { cleanupStatus: undefined, status: 0 };
 }
 
-function stopSession(run: RunCommand, session: string) {
+function stopSession(run: RunCommand, session: string): number {
   if (!hasSession(run, session)) {
     return 0;
   }
