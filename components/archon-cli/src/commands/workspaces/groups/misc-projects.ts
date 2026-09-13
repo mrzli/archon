@@ -9,6 +9,7 @@ const PROJECTS: readonly string[] = [
   'mrzli/docs',
   'mrzli/js-templates',
   'mrzli/learning',
+  'mrzli/mrzli.github.io',
   'mrzli/repos',
   'mrzli/skills',
 ];
@@ -20,7 +21,7 @@ export function manageMiscProjects(
   const homeDir = context.homeDir ?? homedir();
   const root = join(homeDir, 'projects/personal');
   const sessions: readonly EditorSessionDefinition[] = PROJECTS.map((project): EditorSessionDefinition => ({
-    session: `project-${project.replaceAll('/', '-')}`,
+    session: `project-${project.replaceAll('/', '-').replaceAll('.', '-')}`,
     directory: join(root, project),
   }));
 

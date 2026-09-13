@@ -9,7 +9,7 @@ import { test } from 'bun:test';
 import { createFixture, removeFixture, runArchon, writeExecutable } from '../test-helpers.ts';
 
 const archon = fileURLToPath(new URL('../../dist/bin/arc', import.meta.url));
-const projects = ['archon', 'docs', 'js-templates', 'learning', 'repos', 'skills']
+const projects = ['archon', 'docs', 'js-templates', 'learning', 'mrzli-github-io', 'repos', 'skills']
   .map((name): string => `project-mrzli-${name}`);
 const otherGroups = ['jslib-example', 'flashcards-fe', 'flashcards-be', 'main'];
 

@@ -20,6 +20,7 @@ const DEFINITIONS: readonly (readonly string[])[] = [
     '/home/test/projects/personal/mrzli/js-templates',
   ],
   ['project-mrzli-learning', '/home/test/projects/personal/mrzli/learning'],
+  ['project-mrzli-mrzli-github-io', '/home/test/projects/personal/mrzli/mrzli.github.io'],
   ['project-mrzli-repos', '/home/test/projects/personal/mrzli/repos'],
   ['project-mrzli-skills', '/home/test/projects/personal/mrzli/skills'],
 ];
