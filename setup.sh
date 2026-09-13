@@ -154,6 +154,10 @@ for mise_tool in "${mise_tools[@]}"; do
   fi
 done
 
+# Enable Docker access without sudo.
+log_step "Enabling sudoless Docker"
+OMARCHY_DEFER_REBOOT=1 omarchy setup security sudoless-docker
+
 # Install configured VS Code extensions.
 vscode_extensions_file="$repo_root_dir/data/vscode-extensions.txt"
 
