@@ -15,7 +15,6 @@ def setup
   install_packages
   install_development_environments
   install_mise_tools
-  configure_docker
   install_vscode_extensions(repo_root)
   install_home_files(repo_root, home, delete_directories: options[:delete_managed_home_dirs])
   install_archon_cli(repo_root, home)
@@ -93,11 +92,6 @@ def install_mise_tools
       run 'mise', 'use', '--global', tool
     end
   end
-end
-
-def configure_docker
-  log_step 'Enabling sudoless Docker'
-  run 'omarchy', 'setup', 'security', 'sudoless-docker', env: { 'OMARCHY_DEFER_REBOOT' => '1' }
 end
 
 def install_vscode_extensions(repo_root)
