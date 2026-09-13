@@ -15,7 +15,7 @@ def fixture
     home = "#{root}/home"
     bin = "#{root}/bin"
     FileUtils.mkdir_p(["#{repo}/setup", "#{repo}/data/home", home, bin])
-    %w[setup.sh setup/main.rb setup/setup.rb].each do |file|
+    %w[setup.sh setup/main.rb setup/setup.rb setup/helpers.rb].each do |file|
       FileUtils.cp(File.expand_path("../../#{file}", __dir__), "#{repo}/#{file}")
     end
     File.write("#{repo}/data/vscode-extensions.txt", "# extensions\nexisting.extension\nnew.extension\n")

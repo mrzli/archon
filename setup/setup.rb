@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'json'
+require_relative 'helpers'
 
 def setup
   delete_managed_home_dirs = false
@@ -175,36 +176,6 @@ def setup
   end
 
   puts "\nSetup complete. Open a new terminal or run: source ~/.bashrc"
-end
-
-def log_step(message)
-  puts "\n==> #{message}"
-end
-
-def log_info(message)
-  puts "    #{message}"
-end
-
-def run(*command, env: {})
-  system(env, *command, exception: true)
-end
-
-def capture(*command)
-  output = IO.popen(command, &:read)
-  raise "#{command.join(' ')} failed (#{$?.exitstatus})" unless $?.success?
-
-  output
-end
-
-def command_available?(command)
-  ENV.fetch('PATH').split(File::PATH_SEPARATOR).any? do |directory|
-    path = File.join(directory, command)
-    File.file?(path) && File.executable?(path)
-  end
-end
-
-def path_exists?(path)
-  File.exist?(path) || File.symlink?(path)
 end
 
 def usage
