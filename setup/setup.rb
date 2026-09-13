@@ -3,31 +3,42 @@ require 'json'
 require_relative 'helpers'
 
 def setup
-  delete_managed_home_dirs = false
-  ARGV.each do |argument|
-    case argument
-    when '-d', '--delete-managed-home-dirs'
-      delete_managed_home_dirs = true
-    when '-h', '--help'
-      puts usage
-      return
-    else
-      warn "Unknown option: #{argument}\n\n#{usage}"
-      exit 2
-    end
-  end
+  options = parse_options
+  return unless options
 
   repo_root = File.expand_path('..', __dir__)
   home = ENV.fetch('HOME')
-  home_source = File.join(repo_root, 'data/home')
-  archon_cli_source = File.join(repo_root, 'components/archon-cli')
 
+  remove_unwanted_packages
+  remove_unwanted_webapps
+  install_applications
+  install_packages
+  install_development_environments
+  install_mise_tools
+  configure_docker
+  install_vscode_extensions(repo_root)
+  install_home_files(repo_root, home, delete_directories: options[:delete_managed_home_dirs])
+  install_archon_cli(repo_root, home)
+  install_user_skills(home)
+  configure_lazyvim(home)
+  configure_bash(home)
+  reload_hyprland
+  remove_default_projects_directory(home)
+
+  puts "\nSetup complete. Open a new terminal or run: source ~/.bashrc"
+end
+
+def remove_unwanted_packages
   log_step 'Removing unwanted packages'
   run 'omarchy', 'pkg', 'drop', 'aether', 'obsidian'
+end
 
+def remove_unwanted_webapps
   log_step 'Removing unwanted web apps'
   %w[Basecamp Fizzy HEY].each { |webapp| run 'omarchy', 'webapp', 'remove', webapp }
+end
 
+def install_applications
   log_step 'Installing optional applications'
   [
     ['steam', 'Steam', 'gaming', 'steam'],
@@ -40,7 +51,9 @@ def setup
       run 'omarchy', 'install', group, application
     end
   end
+end
 
+def install_packages
   aur_packages = [
     # 'package-name'
   ]
@@ -56,7 +69,9 @@ def setup
   ]
   log_step 'Installing repository packages'
   run 'omarchy', 'pkg', 'add', *repository_packages
+end
 
+def install_development_environments
   log_step 'Installing development environments'
   { ruby: 'rails', python: 'uv', node: 'node', bun: 'bun', zig: 'zls' }.each do |environment, command|
     if command_available?(command)
@@ -66,7 +81,9 @@ def setup
       run 'omarchy', 'install', 'dev-env', environment.to_s
     end
   end
+end
 
+def install_mise_tools
   log_step 'Installing mise tools'
   %w[pnpm go].each do |tool|
     if command_available?(tool)
@@ -76,10 +93,14 @@ def setup
       run 'mise', 'use', '--global', tool
     end
   end
+end
 
+def configure_docker
   log_step 'Enabling sudoless Docker'
   run 'omarchy', 'setup', 'security', 'sudoless-docker', env: { 'OMARCHY_DEFER_REBOOT' => '1' }
+end
 
+def install_vscode_extensions(repo_root)
   log_step 'Installing VS Code extensions'
   extensions = File.readlines(File.join(repo_root, 'data/vscode-extensions.txt'), chomp: true)
                    .reject { |line| line.match?(/^\s*(#|$)/) }
@@ -93,8 +114,12 @@ def setup
       installed_extensions << extension.downcase
     end
   end
+end
 
-  if delete_managed_home_dirs
+def install_home_files(repo_root, home, delete_directories:)
+  home_source = File.join(repo_root, 'data/home')
+
+  if delete_directories
     log_step 'Removing managed home directories'
     canonical_home = capture('realpath', '-m', '--', home).chomp
     File.foreach(File.join(repo_root, 'data/home-replace-directories.txt'), chomp: true) do |relative_dir|
@@ -117,6 +142,10 @@ def setup
 
   log_step 'Installing home files'
   run 'rsync', '-a', "--exclude-from=#{repo_root}/data/home-copy-ignore.txt", "#{home_source}/", "#{home}/"
+end
+
+def install_archon_cli(repo_root, home)
+  archon_cli_source = File.join(repo_root, 'components/archon-cli')
 
   # mise makes a newly installed Bun available without restarting the shell.
   bun = command_available?('bun') ? ['bun'] : %w[mise exec bun -- bun]
@@ -127,7 +156,9 @@ def setup
   log_step 'Installing Archon CLI'
   FileUtils.mkdir_p("#{home}/.local")
   run 'rsync', '-a', "#{archon_cli_source}/dist/", "#{home}/.local/"
+end
 
+def install_user_skills(home)
   log_step 'Installing user skills from mrzli/skills'
   data_home = ENV['XDG_DATA_HOME'].to_s.empty? ? "#{home}/.local/share" : ENV['XDG_DATA_HOME']
   skills_repo = File.join(data_home, 'archon-skills')
@@ -139,7 +170,9 @@ def setup
     run(*github_git, 'clone', '--depth', '1', 'https://github.com/mrzli/skills.git', skills_repo)
   end
   run 'rsync', '-a', "#{skills_repo}/.agents/skills/", "#{home}/.agents/skills/"
+end
 
+def configure_lazyvim(home)
   log_step 'Enabling LazyVim REST extra'
   lazyvim_file = "#{home}/.config/nvim/lazyvim.json"
   rest_extra = 'lazyvim.plugins.extras.util.rest'
@@ -152,7 +185,9 @@ def setup
     File.write(lazyvim_file, "#{JSON.pretty_generate(lazyvim)}\n")
     log_info 'Enabled LazyVim REST extra'
   end
+end
 
+def configure_bash(home)
   bashrc_file = "#{home}/.bashrc"
   source_line = 'source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/bashrc"'
   bashrc = File.exist?(bashrc_file) ? File.read(bashrc_file) : ''
@@ -162,11 +197,15 @@ def setup
     log_info 'Adding managed Bash configuration to ~/.bashrc'
     File.open(bashrc_file, 'a') { |file| file.write("\n#{source_line}\n") }
   end
+end
 
+def reload_hyprland
   log_step 'Reloading Hyprland configuration'
   run 'hyprctl', 'reload'
   run 'hyprctl', 'configerrors'
+end
 
+def remove_default_projects_directory(home)
   log_step 'Removing the default ~/Projects directory'
   if path_exists?("#{home}/Projects")
     FileUtils.rm_r("#{home}/Projects")
@@ -174,8 +213,23 @@ def setup
   else
     log_info '~/Projects does not exist; skipping'
   end
+end
 
-  puts "\nSetup complete. Open a new terminal or run: source ~/.bashrc"
+def parse_options
+  options = { delete_managed_home_dirs: false }
+  ARGV.each do |argument|
+    case argument
+    when '-d', '--delete-managed-home-dirs'
+      options[:delete_managed_home_dirs] = true
+    when '-h', '--help'
+      puts usage
+      return
+    else
+      warn "Unknown option: #{argument}\n\n#{usage}"
+      exit 2
+    end
+  end
+  options
 end
 
 def usage
