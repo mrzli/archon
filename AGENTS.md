@@ -88,14 +88,16 @@ relevant context when those directories exist. Include hidden paths when
 searching so `.scratch/` is not skipped.
 
 - `docs/` contains durable documentation for the system's current behavior.
-  Keep it consistent with implemented changes.
+  Update existing documentation only when requested or when a change makes it
+  inaccurate. Do not add documentation merely because implementation changed.
 - `.scratch/` contains active proposals, specifications, investigations, and
   implementation tickets. Its contents may describe work that has not been
   implemented and must not be treated as current behavior without checking the
   code.
-- When planned work is completed, move any enduring operational knowledge into
-  `docs/` or the relevant README. Then mark the scratch document completed,
-  archive it, or remove it as appropriate for the task.
+- When planned work is completed, move enduring operational knowledge into
+  `docs/` or the relevant README only when documentation is part of the requested
+  scope. Then mark the scratch document completed, archive it, or remove it as
+  appropriate for the task.
 
 ## Setup Invariants
 
@@ -149,6 +151,8 @@ Treat `data/home/` as an overlay, not a complete home-directory replacement.
 - Match the existing `setup.sh` logging and naming conventions.
 - Keep changes small and directly related to the requested workstation state.
 - Do not refactor unrelated provisioning steps.
+- Keep README files focused on user instructions, not implementation details.
+  A request to change `setup.sh` does not imply a README update.
 
 ## Verification
 
