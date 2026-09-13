@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'json'
 require_relative 'helpers'
+require_relative 'docker'
 
 def setup
   options = parse_options
@@ -17,6 +18,7 @@ def setup
   install_mise_tools
   install_vscode_extensions(repo_root)
   install_home_files(repo_root, home, delete_directories: options[:delete_managed_home_dirs])
+  configure_rootless_docker(home)
   install_archon_cli(repo_root, home)
   install_user_skills(home)
   configure_lazyvim(home)
@@ -64,6 +66,7 @@ def install_packages
   repository_packages = %w[
     tokei foliate qbittorrent dbeaver
     img2pdf
+    rootlesskit slirp4netns
     sane sane-airscan simple-scan
   ]
   log_step 'Installing repository packages'

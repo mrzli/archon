@@ -1,3 +1,6 @@
+# Use the same Docker socket in terminals and desktop applications.
+source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/docker-env"
+
 # Custom aliases and functions
 
 # Directory navigation
