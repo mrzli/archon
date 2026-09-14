@@ -103,6 +103,11 @@ test_repeated_overlay_copy() {
   assert_exists "$home/.local/lib/archon/commands/projects/github_inventory.rb" || return
   assert_exists "$home/.local/lib/archon/commands/projects/projects.rb" || return
   assert_exists "$home/.local/lib/archon/commands/workspaces/workspaces.rb" || return
+  assert_exists "$home/.local/lib/archon/commands/workspaces_herdr/workspaces_herdr.rb" || return
+  assert_absent "$home/.local/lib/archon/commands/workspaces_herdr/README.md" || return
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces-herdr --help)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc wh --help)" || return
+  assert_equals "$archon_output" "$alias_output" || return
   assert_exists "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt" || return
   assert_exists "$home/.local/lib/unrelated/keep"
 }

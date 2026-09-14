@@ -14,6 +14,7 @@ while IFS= read -r -d '' path; do
   ruby -c "$path" > /dev/null
 done < <(find "$component_root/lib" "$component_root/tests" -type f -name '*.rb' -print0)
 ruby -c "$component_root/bin/archon" > /dev/null
+ruby -c "$component_root/tests/bin/herdr" > /dev/null
 
 printf '\n%s\n' 'Archon CLI workspace adapter tests'
 bash "$component_root/tests/test-workspaces-adapter.sh"

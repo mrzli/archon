@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+require 'json'
+
+# All operations are simulated. A fixture path is mandatory, including for launch.
+File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
+  file.flock(File::LOCK_EX)
+  state = JSON.parse(file.read)
+  arguments = ARGV.dup
+  unless arguments.shift(2) == ['--session', 'archon']
+    warn 'test Herdr requires an explicit archon session'
+    exit 99
+  end
+  state['calls'] << arguments
+  failure = state['failure']
+  failed = failure && failure['remaining'] > 0 && (failure['prefix'].empty? ? arguments.empty? : arguments.first(failure['prefix'].length) == failure['prefix'])
+  response = nil
+  if failed
+    failure['remaining'] -= 1
+    warn JSON.generate(error: { code: 'injected_failure', message: 'injected Herdr failure' })
+  else
+    new_tab = lambda do |workspace, label|
+      state['next_id'] += 1
+      id = state['next_id'] * 7
+      tab = { 'tab_id' => "#{workspace['workspace_id']}:t#{id}", 'label' => label,
+              'pane_id' => "#{workspace['workspace_id']}:p#{id}", 'commands' => [] }
+      workspace['tabs'] << tab
+      tab
+    end
+    option = ->(name) { arguments[arguments.index(name) + 1] }
+    workspaces = state['workspaces']
+    case arguments.first(2)
+    when ['session', 'list']
+      response = { sessions: [{ name: 'default', running: true }, { name: 'archon', running: state['running'] }] }
+    when ['session', 'stop']
+      raise 'wrong session stop target' unless arguments == %w[session stop archon --json]
+      state['running'] = false
+      response = { session: { name: 'archon', running: false } }
+    when ['workspace', 'list']
+      raise 'session not running' unless state['running']
+      response = { result: { workspaces: workspaces } }
+    when ['workspace', 'create']
+      raise 'session not running' unless state['running']
+      state['next_id'] += 1
+      workspace = { 'workspace_id' => "w#{state['next_id'] * 7}", 'label' => option.call('--label'),
+                    'cwd' => option.call('--cwd'), 'tabs' => [] }
+      workspaces << workspace
+      tab = new_tab.call(workspace, 'initial shell')
+      response = { result: { workspace: workspace, tab: tab, root_pane: { pane_id: tab['pane_id'] } } }
+    when ['workspace', 'close']
+      workspace = workspaces.find { |item| item['workspace_id'] == arguments[2] }
+      raise 'unknown workspace' unless workspace
+      workspaces.delete(workspace)
+      response = { result: { workspace_id: workspace['workspace_id'] } }
+    when ['workspace', 'focus']
+      raise 'unknown workspace' unless workspaces.any? { |item| item['workspace_id'] == arguments[2] }
+      state['focused'] = arguments[2]
+      response = { result: {} }
+    when ['tab', 'create']
+      workspace = workspaces.find { |item| item['workspace_id'] == option.call('--workspace') }
+      tab = new_tab.call(workspace, option.call('--label'))
+      response = { result: { tab: tab, root_pane: { pane_id: tab['pane_id'] } } }
+    when ['tab', 'rename']
+      tab = workspaces.flat_map { |item| item['tabs'] }.find { |item| item['tab_id'] == arguments[2] }
+      tab['label'] = arguments[3]
+      response = { result: { tab: tab } }
+    when ['pane', 'run']
+      tab = workspaces.flat_map { |item| item['tabs'] }.find { |item| item['pane_id'] == arguments[2] }
+      tab['commands'] << arguments[3]
+    when ['server']
+      state['running'] = true
+    when []
+      state['attachments'] += 1
+    else
+      raise "unexpected test Herdr arguments: #{arguments.inspect}"
+    end
+  end
+  file.rewind
+  file.write(JSON.generate(state))
+  file.truncate(file.pos)
+  puts JSON.generate(response) if response
+  exit(failed ? 1 : 0)
+end

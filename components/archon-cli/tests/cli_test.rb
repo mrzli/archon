@@ -21,8 +21,8 @@ end
 
 test('help, aliases, and nested command help work without external commands') do
   fixture do |fixture|
-    %w[git gh bun tmux].each { |name| write_executable(File.join(fixture[:bin], name), "#!/bin/sh\nexit 99\n") }
-    [['h', 'help', []], ['l', 'libs', %w[help build]], ['p', 'projects', %w[help status]], ['w', 'workspaces', ['--help']]].each do |short, full, options|
+    %w[git gh bun tmux herdr].each { |name| write_executable(File.join(fixture[:bin], name), "#!/bin/sh\nexit 99\n") }
+    [['h', 'help', []], ['l', 'libs', %w[help build]], ['p', 'projects', %w[help status]], ['w', 'workspaces', ['--help']], ['wh', 'workspaces-herdr', ['--help']]].each do |short, full, options|
       result = run_archon([short, *options])
       equal 0, result[:status]
       equal result, run_archon([full, *options])

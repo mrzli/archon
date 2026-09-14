@@ -21,3 +21,6 @@ The suite requires Ruby, Bash, Git, rsync, standard Arch command-line tools,
 the util-linux `script` and `setsid` utilities, tmux, and coreutils `timeout`.
 Shutdown regression tests use a separate temporary tmux socket and require
 permission to create Unix sockets.
+
+Herdr checks use a fake executable and temporary state. They do not require
+Herdr or start real editors, agents, or development servers.

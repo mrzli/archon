@@ -52,5 +52,8 @@ Bash syntax and available ShellCheck checks follow.
 Tests use isolated homes, local Git fixtures, and fake external commands.
 Terminal attachment checks use pseudo terminals. Shutdown tests use a separate
 temporary tmux socket to verify that stopping workspaces survives closing the
-calling pane. The tests do not run full workstation setup or touch live tmux
-sessions or home configuration.
+calling pane. Herdr checks simulate the installed CLI response shapes with a
+fake executable and temporary state, including server startup and detached
+shutdown. The tests
+do not run full workstation setup or touch live tmux or Herdr sessions or home
+configuration.

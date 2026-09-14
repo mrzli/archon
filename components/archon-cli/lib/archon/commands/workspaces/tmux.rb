@@ -1,4 +1,5 @@
 require_relative '../../shared/process'
+require_relative 'layout'
 
 module Archon
   module Workspaces
@@ -36,25 +37,16 @@ module Archon
     end
 
     def create_editor_session(run, definition)
-      session, directory, dev_command = definition.values_at(:session, :directory, :dev_command)
+      session, directory = definition.values_at(:session, :directory)
       if run.call('tmux', ['new-session', '-d', '-s', session, '-c', directory, '-n', 'nvim']) != 0
         return { status: 1 }
       end
-      operations = [
-        ['send-keys', '-t', "#{session}:nvim", 'nvim .', 'Enter'],
-        ['new-window', '-t', session, '-c', directory, '-n', 'codex'],
-        ['send-keys', '-t', "#{session}:codex", 'codex resume --last', 'Enter']
-      ]
-      if dev_command
-        operations.concat([
-          ['new-window', '-t', session, '-c', directory, '-n', 'dev'],
-          ['send-keys', '-t', "#{session}:dev", dev_command, 'Enter']
-        ])
+      operations = []
+      editor_tabs(definition).each_with_index do |tab, index|
+        operations << ['new-window', '-t', session, '-c', directory, '-n', tab[:name]] unless index.zero?
+        operations << ['send-keys', '-t', "#{session}:#{tab[:name]}", tab[:command], 'Enter'] if tab[:command]
       end
-      operations.concat([
-        ['new-window', '-t', session, '-c', directory, '-n', 'shell'],
-        ['select-window', '-t', "#{session}:nvim"]
-      ])
+      operations << ['select-window', '-t', "#{session}:nvim"]
       operations.each do |arguments|
         if run.call('tmux', arguments) != 0
           return { status: 1, cleanup_status: run.call('tmux', ['kill-session', '-t', session]) }

@@ -53,7 +53,7 @@ def fixture
     home, bin = File.join(root, 'home with spaces'), File.join(root, 'bin')
     FileUtils.mkdir_p([home, bin])
     previous = ENV.to_h
-    env = previous.reject { |key, _| key.start_with?('GIT_') }.merge(
+    env = previous.reject { |key, _| key.start_with?('GIT_', 'HERDR_') }.merge(
       'HOME' => home, 'PATH' => "#{bin}:#{TEST_BIN}:#{previous.fetch('PATH')}",
       'XDG_CONFIG_HOME' => "#{home}/.config", 'XDG_STATE_HOME' => "#{home}/.local/state",
       'TMUX' => '', 'TMUX_PANE' => '', 'GIT_CONFIG_NOSYSTEM' => '1',
