@@ -4,8 +4,7 @@ require_relative 'helpers'
 require_relative 'docker'
 
 def setup
-  options = parse_options
-  return unless options
+  return unless parse_options
 
   repo_root = File.expand_path('..', __dir__)
   home = ENV.fetch('HOME')
@@ -18,7 +17,7 @@ def setup
   install_development_environments
   install_mise_tools
   install_vscode_extensions(repo_root)
-  install_home_files(repo_root, home, delete_directories: options[:delete_managed_home_dirs])
+  install_home_files(repo_root, home)
   configure_rootless_docker(home)
   install_archon_cli(repo_root, home)
   install_user_skills(home)
@@ -76,7 +75,6 @@ def install_packages
   repository_packages = %w[
     tokei foliate qbittorrent dbeaver
     img2pdf
-    rootlesskit slirp4netns
     sane sane-airscan simple-scan
   ]
   log_step 'Installing repository packages'
@@ -123,27 +121,25 @@ def install_vscode_extensions(repo_root)
   end
 end
 
-def install_home_files(repo_root, home, delete_directories:)
+def install_home_files(repo_root, home)
   home_source = File.join(repo_root, 'data/home')
 
-  if delete_directories
-    log_step 'Removing managed home directories'
-    canonical_home = capture('realpath', '-m', '--', home).chomp
-    File.foreach(File.join(repo_root, 'data/home-replace-directories.txt'), chomp: true) do |relative_dir|
-      next if relative_dir.empty? || relative_dir.start_with?('#')
+  log_step 'Removing managed home directories'
+  canonical_home = capture('realpath', '-m', '--', home).chomp
+  File.foreach(File.join(repo_root, 'data/home-replace-directories.txt'), chomp: true) do |relative_dir|
+    next if relative_dir.empty? || relative_dir.start_with?('#')
 
-      destination = File.join(home, relative_dir)
-      canonical_destination = capture('realpath', '-m', '--', destination).chomp
-      unless canonical_destination.start_with?("#{canonical_home}/")
-        raise "Invalid managed home directory: #{relative_dir}"
-      end
+    destination = File.join(home, relative_dir)
+    canonical_destination = capture('realpath', '-m', '--', destination).chomp
+    unless canonical_destination.start_with?("#{canonical_home}/")
+      raise "Invalid managed home directory: #{relative_dir}"
+    end
 
-      if path_exists?(destination)
-        FileUtils.rm_r(destination)
-        log_info "Removed ~/#{relative_dir}"
-      else
-        log_info "~/#{relative_dir} does not exist; skipping"
-      end
+    if path_exists?(destination)
+      FileUtils.rm_r(destination)
+      log_info "Removed ~/#{relative_dir}"
+    else
+      log_info "~/#{relative_dir} does not exist; skipping"
     end
   end
 
@@ -218,11 +214,8 @@ def remove_default_projects_directory(home)
 end
 
 def parse_options
-  options = { delete_managed_home_dirs: false }
   ARGV.each do |argument|
     case argument
-    when '-d', '--delete-managed-home-dirs'
-      options[:delete_managed_home_dirs] = true
     when '-h', '--help'
       puts usage
       return
@@ -231,7 +224,7 @@ def parse_options
       exit 2
     end
   end
-  options
+  true
 end
 
 def usage
@@ -239,9 +232,9 @@ def usage
     Usage: setup.sh [OPTIONS]
 
     Options:
-      -d, --delete-managed-home-dirs  Delete and recreate directories listed in data/home-replace-directories.txt
-      -h, --help                      Show this help and exit
+      -h, --help  Show this help and exit
 
-    By default, existing home directories are preserved and data/home is copied as an overlay.
+    Directories listed in data/home-replace-directories.txt are always deleted and recreated.
+    Other home files are preserved and data/home is copied as an overlay.
   TEXT
 end

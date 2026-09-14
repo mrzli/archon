@@ -5,11 +5,17 @@ require_relative 'helpers'
 
 def configure_rootless_docker(home)
   log_step 'Configuring rootless Docker'
+  missing_packages = %w[rootlesskit slirp4netns].reject do |package|
+    system('pacman', '-Q', package, out: File::NULL, err: File::NULL)
+  end
+  run 'omarchy', 'pkg', 'add', *missing_packages unless missing_packages.empty?
   install_rootless_docker_launcher(home)
   user = capture('id', '-un').strip
   configure_docker_subids(user)
 
-  run 'sudo', 'loginctl', 'enable-linger', user
+  unless capture('loginctl', 'show-user', user, '--property=Linger', '--value').strip == 'yes'
+    run 'sudo', 'loginctl', 'enable-linger', user
+  end
   run 'systemctl', '--user', 'daemon-reload'
   run 'systemctl', '--user', 'enable', 'docker.service'
   run 'systemctl', '--user', 'restart', 'docker.service'
@@ -18,7 +24,11 @@ def configure_rootless_docker(home)
   security_options = JSON.parse(capture('docker', '--host', ENV['DOCKER_HOST'], 'info', '--format', '{{json .SecurityOptions}}'))
   raise 'Docker did not start in rootless mode' unless security_options.include?('name=rootless')
 
-  run 'sudo', 'systemctl', 'disable', '--now', 'docker.service', 'docker.socket'
+  rootful_enabled = system('systemctl', 'is-enabled', '--quiet', 'docker.service', 'docker.socket')
+  rootful_active = system('systemctl', 'is-active', '--quiet', 'docker.service', 'docker.socket')
+  if rootful_enabled || rootful_active
+    run 'sudo', 'systemctl', 'disable', '--now', 'docker.service', 'docker.socket'
+  end
   if capture('id', '-nG', user).split.include?('docker')
     run 'sudo', 'gpasswd', '-d', user, 'docker'
   end
@@ -54,11 +64,12 @@ def configure_docker_subids(user)
   uid = capture('id', '-u').strip
   %w[uid gid].each do |kind|
     path = "/etc/sub#{kind}"
-    run 'sudo', 'touch', path
-    entries = capture('cat', path).lines.map { |line| line.strip.split(':') }
+    exists = system('test', '-e', path)
+    entries = exists ? capture('cat', path).lines.map { |line| line.strip.split(':') } : []
     next if entries.any? { |owner, _, count| [user, uid].include?(owner) && count.to_i >= 65_536 }
 
     start = [100_000, *entries.map { |_, first, count| first.to_i + count.to_i }].max
+    run 'sudo', 'touch', path unless exists
     run 'sudo', 'usermod', "--add-sub#{kind}s", "#{start}-#{start + 65_535}", user
   end
 end

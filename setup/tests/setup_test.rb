@@ -22,8 +22,14 @@ def fixture
     FileUtils.mkdir_p("#{repo}/components/archon-cli")
     %w[bin lib].each { |directory| FileUtils.cp_r("#{cli_source}/#{directory}", "#{repo}/components/archon-cli/") }
     %w[subuid subgid].each { |file| File.write("#{root}/#{file}", "other:100000:65536\n") }
+    { 'linger' => 'no', 'is-enabled' => 'yes', 'is-active' => 'yes', 'groups' => 'developer wheel docker' }.each do |property, value|
+      File.write("#{root}/#{property}", value)
+    end
     File.write("#{repo}/data/vscode-extensions.txt", "# extensions\nexisting.extension\nnew.extension\n")
-    File.write("#{repo}/data/home-copy-ignore.txt", '')
+    FileUtils.cp(File.expand_path('../../data/home-copy-ignore.txt', __dir__), "#{repo}/data/home-copy-ignore.txt")
+    FileUtils.mkdir_p("#{repo}/data/home/.config/systemd/user")
+    FileUtils.cp(File.expand_path('../../data/home/.config/systemd/user/docker.service', __dir__),
+                 "#{repo}/data/home/.config/systemd/user/docker.service")
     File.write("#{repo}/data/home-replace-directories.txt", ".config/managed\n")
     File.write("#{repo}/data/home/managed-file", "managed\n")
     File.write("#{home}/personal-file", "preserve\n")
@@ -34,13 +40,38 @@ def fixture
       name = File.basename($0)
       File.open(ENV.fetch('COMMAND_LOG'), 'a') { |file| file.puts(JSON.generate([name, *ARGV])) }
       exit 1 if ENV['FAIL_COMMAND'] == name
+      state = ENV.fetch('SYSTEM_FIXTURE')
       case name
       when 'id'
-        puts(ARGV.first == '-un' ? 'developer' : ARGV.first == '-u' ? '1000' : 'developer wheel')
+        puts(ARGV.first == '-un' ? 'developer' : ARGV.first == '-u' ? '1000' : File.read("\#{state}/groups"))
       when 'cat'
         puts File.read(File.join(ENV.fetch('SYSTEM_FIXTURE'), File.basename(ARGV.first)))
+      when 'test'
+        exit(File.exist?(File.join(state, File.basename(ARGV.last))) ? 0 : 1)
+      when 'pacman'
+        if %w[rootlesskit slirp4netns].include?(ARGV.last)
+          exit(File.exist?("\#{state}/\#{ARGV.last}") ? 0 : 1)
+        end
+      when 'omarchy'
+        if ARGV[0, 2] == %w[pkg add]
+          (ARGV & %w[rootlesskit slirp4netns]).each { |package| FileUtils.touch("\#{state}/\#{package}") }
+        end
+      when 'loginctl'
+        puts File.read("\#{state}/linger")
+      when 'systemctl'
+        if %w[is-enabled is-active].include?(ARGV.first)
+          exit(File.read("\#{state}/\#{ARGV.first}").strip == 'yes' ? 0 : 1)
+        end
       when 'sudo'
-        if ARGV.first == 'usermod'
+        if ARGV.first == 'touch'
+          FileUtils.touch(File.join(state, File.basename(ARGV.last)))
+        elsif ARGV.first == 'loginctl'
+          File.write("\#{state}/linger", 'yes')
+        elsif ARGV.first == 'systemctl'
+          %w[is-enabled is-active].each { |property| File.write("\#{state}/\#{property}", 'no') }
+        elsif ARGV.first == 'gpasswd'
+          File.write("\#{state}/groups", 'developer wheel')
+        elsif ARGV.first == 'usermod'
           kind = ARGV[1].delete_prefix('--add-sub').delete_suffix('s')
           first = ARGV[2].split('-').first
           File.open("\#{ENV.fetch('SYSTEM_FIXTURE')}/sub\#{kind}", 'a') do |file|
@@ -68,7 +99,7 @@ def fixture
         end
       end
     SCRIPT
-    %w[omarchy pacman code git rsync hyprctl mise rails uv node bun zls pnpm go id cat sudo curl docker systemctl].each do |command|
+    %w[omarchy pacman code git rsync hyprctl mise rails uv node bun zls pnpm go id cat sudo curl docker systemctl loginctl test].each do |command|
       File.write("#{bin}/#{command}", stub)
       File.chmod(0o755, "#{bin}/#{command}")
     end
@@ -91,6 +122,9 @@ checks = {
   'help and invalid arguments do not provision' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env, '--help').last.success?
     assert run_setup(repo, env, '--unknown').last.exitstatus == 2
+    %w[-d --rootless-docker --delete-managed-home-dirs].each do |option|
+      assert run_setup(repo, env, option).last.exitstatus == 2
+    end
     assert commands(env).empty?
   end,
   'bootstrap supports existing Ruby and installation through mise' => lambda do |repo, _home, bin, env|
@@ -124,6 +158,17 @@ checks = {
     assert commands(env).count { |args| args.include?('clone') } == 1
     assert commands(env).count { |args| args.include?('pull') } == 1
   end,
+  'default setup replaces managed directories' => lambda do |repo, home, _bin, env|
+    FileUtils.mkdir_p(["#{repo}/data/home/.config/managed", "#{home}/.config/managed"])
+    File.write("#{repo}/data/home/.config/managed/current", 'current')
+    2.times do
+      File.write("#{home}/.config/managed/obsolete", 'obsolete')
+      _, error, status = run_setup(repo, env)
+      assert status.success?, error
+      assert Dir.children("#{home}/.config/managed") == ['current']
+      assert File.read("#{home}/personal-file") == "preserve\n"
+    end
+  end,
   'voice AI uses the Omarchy installer and skips an existing installation' => lambda do |repo, _home, bin, env|
     _, error, status = run_setup(repo, env)
     assert status.success?, error
@@ -150,16 +195,21 @@ checks = {
     FileUtils.mkdir_p([outside, "#{home}/.config"])
     File.write("#{outside}/keep", 'safe')
     File.symlink(outside, "#{home}/.config/managed")
-    _, error, status = run_setup(repo, env, '-d')
+    _, error, status = run_setup(repo, env)
     assert status.exitstatus == 1
     assert error.include?('Invalid managed home directory')
     assert File.read("#{outside}/keep") == 'safe'
   end,
-  'rootless setup is repeat-safe and checks the daemon before disabling rootful Docker' => lambda do |repo, home, _bin, env|
-    2.times do
-      _, error, status = run_setup(repo, env)
-      assert status.success?, error
-    end
+  'rootless setup needs no sudo or dependency installation on a second run' => lambda do |repo, home, _bin, env|
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    first_run_count = commands(env).length
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    second_run = commands(env).drop(first_run_count)
+    assert second_run.none? { |args| args.first == 'sudo' }
+    assert second_run.none? { |args| args[0, 3] == %w[omarchy pkg add] && (args & %w[rootlesskit slirp4netns]).any? }
+    assert second_run.any? { |args| args.first == 'docker' && args.include?('info') }
     %w[subuid subgid].each do |file|
       assert File.read("#{env['SYSTEM_FIXTURE']}/#{file}") == "other:100000:65536\ndeveloper:165536:65536\n"
     end
@@ -168,6 +218,43 @@ checks = {
     assert calls.index { |args| args.first == 'docker' && args.include?('info') } < calls.index(%w[sudo systemctl disable --now docker.service docker.socket])
     assert calls.none? { |args| args.include?('aur') || args.include?('sudoless-docker') }
     assert File.executable?("#{home}/.local/lib/archon-docker/dockerd-rootless.sh")
+    assert File.read("#{home}/.config/systemd/user/docker.service") == File.read("#{repo}/data/home/.config/systemd/user/docker.service")
+  end,
+  'rootless setup handles missing subid files and enabled but inactive rootful Docker' => lambda do |repo, _home, _bin, env|
+    state = env.fetch('SYSTEM_FIXTURE')
+    %w[subuid subgid].each { |file| File.unlink("#{state}/#{file}") }
+    File.write("#{state}/is-active", 'no')
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    %w[subuid subgid].each do |file|
+      assert File.read("#{state}/#{file}") == "developer:100000:65536\n"
+      assert commands(env).include?(['sudo', 'touch', "/etc/#{file}"])
+    end
+    assert commands(env).include?(%w[sudo systemctl disable --now docker.service docker.socket])
+  end,
+  'rootless setup repairs changed state on later runs' => lambda do |repo, home, _bin, env|
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    first_run_count = commands(env).length
+    state = env.fetch('SYSTEM_FIXTURE')
+    File.unlink("#{state}/slirp4netns")
+    File.write("#{state}/subuid", "other:100000:65536\ndeveloper:165536:1000\n")
+    File.write("#{state}/linger", 'no')
+    File.write("#{state}/is-active", 'yes')
+    File.write("#{state}/groups", 'developer wheel docker')
+    service = '.config/systemd/user/docker.service'
+    File.write("#{repo}/data/home/#{service}", "[Service]\nExecStart=/updated-launcher\n")
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    later_calls = commands(env).drop(first_run_count)
+    assert later_calls.include?(%w[omarchy pkg add slirp4netns])
+    assert later_calls.select { |args| args.first == 'sudo' } == [
+      %w[sudo usermod --add-subuids 166536-232071 developer],
+      %w[sudo loginctl enable-linger developer],
+      %w[sudo systemctl disable --now docker.service docker.socket],
+      %w[sudo gpasswd -d developer docker]
+    ]
+    assert File.read("#{home}/#{service}") == File.read("#{repo}/data/home/#{service}")
   end,
   'launcher follows Docker upgrades without script edits' => lambda do |repo, home, _bin, env|
     _, error, status = run_setup(repo, env)
