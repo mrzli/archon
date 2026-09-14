@@ -72,11 +72,16 @@ def install_packages
     run 'omarchy', 'pkg', 'aur', 'add', *aur_packages
   end
 
-  repository_packages = %w[
-    tokei foliate qbittorrent dbeaver
-    img2pdf
-    texlive-latexrecommended texlive-fontsrecommended texlive-binextra
-    sane sane-airscan simple-scan
+  repository_packages = [
+    'tokei',       # Source code statistics
+    'foliate',     # E-book reader
+    'qbittorrent', # BitTorrent client
+    'dbeaver',     # Database client
+    'img2pdf',     # Convert images to PDF
+    # LaTeX-to-PDF compilation, recommended fonts, and latexmk build automation
+    'texlive-latexrecommended', 'texlive-fontsrecommended', 'texlive-binextra',
+    # Scanner support, network scanner discovery, and graphical scanning application
+    'sane', 'sane-airscan', 'simple-scan'
   ]
   log_step 'Installing repository packages'
   run 'omarchy', 'pkg', 'add', *repository_packages
