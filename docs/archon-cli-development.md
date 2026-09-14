@@ -1,78 +1,56 @@
 # Archon CLI development and deployment
 
-The private package lives at `components/archon-cli` under the Archon root.
-Source, tests, and build tooling use strict TypeScript. Bun executes development
-tooling and the deployed JavaScript CLI. There are no third-party runtime packages.
+Archon CLI lives at `components/archon-cli`. Source and tests use Ruby's
+standard library, with no gem dependencies or build step.
 
-## Build contract
+## Runtime and installation
 
-Install the locked tooling and build from the repository root:
-
-```bash
-NODE_ENV=development bun install --frozen-lockfile --cwd components/archon-cli
-bun run --cwd components/archon-cli build
-```
-
-The component's `bunfig.toml` requires newly resolved packages, including
-transitive dependencies, to be at least three days old (259200 seconds), with
-no exemptions. Frozen installs reuse the committed lockfile. TypeScript and Bun
-type definitions are development dependencies; they are not deployed.
-
-`scripts/build.ts` defines and explicitly invokes the named async `build`
-function. It checks source, tests, and tooling with `tsconfig.json`, recreates
-`dist`, emits only runtime source with `tsconfig.build.json`, and copies the
-launcher with executable permissions and its relative alias. Errors stop the
-build with a nonzero exit status. Run
-`bun run --cwd components/archon-cli typecheck` to check without emitting.
-
-Compilation uses strict checking, ES2022 output, NodeNext module resolution,
-and explicit `.ts` relative source imports rewritten to `.js` during emission.
-Bun runs the emitted ESM without a runtime package manifest. Modules remain
-separate; there is no bundling, native compilation, or source-map output.
-
-## Artifact and installation
-
-The complete deployable tree is:
+The directly runnable source tree is:
 
 ```text
-dist/
+components/archon-cli/
 ├── bin/
-│   ├── archon          # JavaScript launcher, #!/usr/bin/env bun
+│   ├── archon          # Ruby launcher, #!/usr/bin/env ruby
 │   └── arc -> archon   # relative symlink
-└── lib/archon/         # emitted .js modules
+└── lib/archon/         # Ruby modules
 ```
 
-Only the launcher has a runtime shebang. It imports `../lib/archon/cli.js`;
-modules under it have no shebang. `dist` excludes TypeScript, declarations,
-tests, documentation, build tooling, compiler configuration, lockfiles, and
-`node_modules`. Copy the entire tree with symlinks and permissions preserved,
-not just the launcher.
+Only the launcher has a runtime shebang. It loads `../lib/archon/cli.rb`.
+Modules do not execute commands when required. The same relative paths work
+in the repository and after installation.
 
-`setup.sh` installs the component's frozen development dependencies, invokes the
-checked build, then copies `dist/` into `~/.local/` with `rsync -a`. Dependency
-or compilation failure stops CLI installation. `~/.local/bin` must be on `PATH`,
-and Bun must be available there or elsewhere on `PATH`. The installed commands
-need Bun and their external tools; they do not need the repository, compiler,
-or development dependencies.
+`setup.sh` delegates to the Ruby setup code. CLI installation copies `bin/`
+into `~/.local/bin/` and `lib/` into `~/.local/lib/` using `rsync -a`, excluding
+Markdown from the library copy. Tests and contributor documentation are not
+installed. The installed commands need Ruby on `PATH` and the external tools
+used by their operations. They do not depend on the source checkout.
 
-Installation updates managed CLI paths and preserves unrelated destination
-files. It does not delete obsolete files from previous installations. Repeated
-builds recreate a clean artifact; setup contains no one-time migration cleanup.
+Bun remains an external tool for `archon libs build` and the configured
+frontend workspace command. CLI installation and tests do not require Bun.
+
+Installation updates managed CLI files and preserves unrelated destination
+files. Repeated installation converges without generating artifacts. Setup
+contains no one-time cleanup of files from previous installations. Old
+JavaScript modules in an existing home directory are not loaded by Ruby and
+are not deleted by the overlay.
 
 ## Verification
 
 ```bash
 bash tests/archon-cli/run.sh
 bash tests/archon-cli/run.sh < /dev/null
+ruby setup/tests/setup_test.rb
 ```
 
-Run the first command with terminal stdin. The runner builds and checks types,
-runs each TypeScript suite in a separate Bun process, parses emitted JavaScript
-and launchers, and exercises the Bash workspace adapter. Installation checks use
-temporary homes and cover compilation failure in source/tests/tooling, repeat
-builds, artifact contents, copied aliases, repeat-safe overlay installation, and
-unrelated-file preservation. Bash syntax and available ShellCheck checks follow.
+Run the first command with terminal stdin. The runner executes each Ruby test
+file in a separate process, checks Ruby syntax, exercises the Bash workspace
+adapter, and verifies installation. Installation tests call the production
+CLI copy function with a temporary home, check both executable aliases,
+exclude development files, and verify repeated copies preserve unrelated files.
+Bash syntax and available ShellCheck checks follow.
 
-Tests use local fixtures and fake external operations. They do not run full
-setup or alter real tmux sessions or home configuration. See the component and
-command READMEs for usage and external-tool prerequisites.
+Tests use isolated homes, local Git fixtures, and fake external commands.
+Terminal attachment checks use pseudo terminals. Shutdown tests use a separate
+temporary tmux socket to verify that stopping workspaces survives closing the
+calling pane. The tests do not run full workstation setup or touch live tmux
+sessions or home configuration.

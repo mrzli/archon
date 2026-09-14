@@ -1,32 +1,22 @@
 # Archon CLI
 
-Requires Bun on `PATH`. Build and run locally from the repository root:
+Requires Ruby on `PATH`. Run directly from the repository root:
 
 ```bash
-NODE_ENV=development bun install --frozen-lockfile --cwd components/archon-cli
-bun run --cwd components/archon-cli build
-components/archon-cli/dist/bin/archon --help
+components/archon-cli/bin/archon --help
 ```
 
-Alternatively, build with `bun components/archon-cli/scripts/build.ts`.
-Builds check TypeScript before emitting JavaScript. To check types alone, run
-`bun run --cwd components/archon-cli typecheck`.
-
-Setup installs the frozen development dependencies, builds, and installs the CLI
-automatically. To install an already-built artifact separately:
+Setup installs the CLI automatically. To install it separately:
 
 ```bash
-mkdir -p "$HOME/.local"
-rsync -a components/archon-cli/dist/ "$HOME/.local/"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/lib"
+rsync -a components/archon-cli/bin/ "$HOME/.local/bin/"
+rsync -a --exclude='*.md' components/archon-cli/lib/ "$HOME/.local/lib/"
 ```
 
 This updates managed CLI files in `~/.local/bin` and `~/.local/lib/archon`.
-Ensure `~/.local/bin` is on `PATH` to run `archon` and `arc`. The installed CLI
-requires Bun and each command's external tools, but no TypeScript compiler or
-development dependencies.
-
-New dependency resolutions require releases at least three days old, with no
-package exemptions. Locked versions are reused during setup and installation.
+Ensure `~/.local/bin` is on `PATH` to run `archon` and `arc`. The CLI needs
+Ruby and each command's external tools. No build or gem installation is required.
 
 Archon provides one command for the workstation tools maintained by this
 repository:
@@ -63,6 +53,6 @@ Commands use these exit statuses:
 
 Detailed behavior is documented with each command collection:
 
-- [Projects](./src/commands/projects/README.md)
-- [Libraries](./src/commands/libs/README.md)
-- [Workspaces](./src/commands/workspaces/README.md)
+- [Projects](./lib/archon/commands/projects/README.md)
+- [Libraries](./lib/archon/commands/libs/README.md)
+- [Workspaces](./lib/archon/commands/workspaces/README.md)

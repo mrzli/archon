@@ -1,5 +1,6 @@
-#!/usr/bin/env bun
+#!/usr/bin/env ruby
 
-import { main } from '../lib/archon/cli.js';
+require_relative '../lib/archon/cli'
 
-process.exitCode = await main(process.argv.slice(2));
+$stdout.sync = true
+exit Archon.main(ARGV)

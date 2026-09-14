@@ -18,6 +18,9 @@ def fixture
     %w[setup.sh setup/main.rb setup/setup.rb setup/helpers.rb setup/docker.rb].each do |file|
       FileUtils.cp(File.expand_path("../../#{file}", __dir__), "#{repo}/#{file}")
     end
+    cli_source = File.expand_path('../../components/archon-cli', __dir__)
+    FileUtils.mkdir_p("#{repo}/components/archon-cli")
+    %w[bin lib].each { |directory| FileUtils.cp_r("#{cli_source}/#{directory}", "#{repo}/components/archon-cli/") }
     %w[subuid subgid].each { |file| File.write("#{root}/#{file}", "other:100000:65536\n") }
     File.write("#{repo}/data/vscode-extensions.txt", "# extensions\nexisting.extension\nnew.extension\n")
     File.write("#{repo}/data/home-copy-ignore.txt", '')
@@ -59,18 +62,9 @@ def fixture
       when 'rsync'
         exit 0 if ARGV[-2].include?('archon-skills')
         exec '/usr/bin/rsync', *ARGV
-      when 'bun'
-        if ARGV.first.end_with?('/build.ts')
-          exit 1 if ENV['FAIL_BUILD']
-          dist = File.expand_path('../dist', File.dirname(ARGV.first))
-          FileUtils.mkdir_p(dist)
-          File.write("\#{dist}/cli-marker", 'built')
-        end
       when 'mise'
         if ARGV[0, 3] == %w[exec ruby --]
           exec #{RbConfig.ruby.inspect}, *ARGV.drop(4)
-        elsif ARGV[0, 3] == %w[exec bun --]
-          exec ENV.fetch('BUN_STUB'), *ARGV.drop(4)
         end
       end
     SCRIPT
@@ -120,7 +114,10 @@ checks = {
     end
     assert File.read("#{home}/personal-file") == "preserve\n"
     assert File.read("#{home}/managed-file") == "managed\n"
-    assert File.read("#{home}/.local/cli-marker") == 'built'
+    output, error, status = Open3.capture3(env, RbConfig.ruby, "#{home}/.local/bin/archon", '--help')
+    assert status.success?, error
+    assert output.include?('Usage: archon')
+    assert File.symlink?("#{home}/.local/bin/arc")
     assert JSON.parse(File.read("#{home}/.config/nvim/lazyvim.json"))['extras'] == ['lazyvim.plugins.extras.util.rest']
     assert File.read("#{home}/.bashrc").scan('source ').length == 1
     assert commands(env).none? { |args| args.include?('existing.extension') }
@@ -141,10 +138,12 @@ checks = {
     assert run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy')).last.exitstatus == 1
     assert commands(env) == [%w[omarchy pkg drop aether obsidian]]
   end,
-  'build failure prevents CLI installation' => lambda do |repo, _home, _bin, env|
-    assert run_setup(repo, env.merge('FAIL_BUILD' => '1')).last.exitstatus == 1
-    assert commands(env).none? { |args| args.any? { |arg| arg.include?('/dist/') } }
-    assert commands(env).none? { |args| args.first == 'git' }
+  'CLI installation copies Ruby directly without build tooling' => lambda do |repo, home, _bin, env|
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    assert commands(env).none? { |args| args.first == 'bun' || args[0, 3] == %w[mise exec bun] }
+    assert File.exist?("#{home}/.local/lib/archon/cli.rb")
+    assert !File.exist?("#{home}/.local/lib/archon/commands/libs/README.md")
   end,
   'managed deletion rejects symlinks outside home' => lambda do |repo, home, _bin, env|
     outside = "#{repo}/outside"
@@ -204,15 +203,13 @@ checks = {
       assert output == 'unix:///run/user/1000/docker.sock'
     end
   end,
-  'newly installed Bun is reached through mise' => lambda do |repo, home, bin, env|
-    # Keep the stub's basename so it still simulates Bun, but remove it from PATH.
-    FileUtils.mkdir_p("#{repo}/runtime")
-    FileUtils.mv("#{bin}/bun", "#{repo}/runtime/bun")
-    _, error, status = run_setup(repo, env.merge('BUN_STUB' => "#{repo}/runtime/bun"))
+  'CLI installation does not need Bun on PATH' => lambda do |repo, home, bin, env|
+    File.unlink("#{bin}/bun")
+    _, error, status = run_setup(repo, env)
     assert status.success?, error
     assert commands(env).include?(%w[omarchy install dev-env bun])
-    assert commands(env).any? { |args| args[0, 4] == %w[mise exec bun --] }
-    assert File.read("#{home}/.local/cli-marker") == 'built'
+    assert commands(env).none? { |args| args.first == 'bun' || args[0, 3] == %w[mise exec bun] }
+    assert File.exist?("#{home}/.local/lib/archon/cli.rb")
   end
 }
 

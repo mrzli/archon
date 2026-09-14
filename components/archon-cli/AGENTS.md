@@ -2,38 +2,20 @@
 
 ## Scope
 
-- Develop source, tests, and build tooling in strict TypeScript. Use Bun with
-  ECMAScript modules and no third-party runtime packages.
-- Deploy emitted JavaScript only. Keep the executable launcher in JavaScript;
-  only the launcher needs a runtime shebang.
-- Development-only tooling dependencies are permitted; keep them out of the
-  installed runtime artifact.
-- Preserve the configured minimum package release age; do not add exemptions
-  or bypass it when resolving dependencies.
+- Develop source and tests in Ruby using only the standard library.
+- Run and install source directly. Do not add compilation, generated runtime
+  artifacts, or package dependencies.
 - Keep fixed workstation paths derived from the current user's home directory.
 
 ## Code conventions
 
-- Declare explicit return types on every TypeScript function, including arrow
-  functions, callbacks, and methods. Use `void` or `Promise<void>` for functions
-  that only perform side effects.
-- Prefer `readonly` object fields and `readonly` arrays/tuples wherever mutation
-  is not required. Keep mutable types only for values intentionally updated by
-  the implementation, such as accumulators and configurable test fixtures.
-
+- Use modules, plain functions, and hashes rather than classes.
 - Give command entry functions distinct, descriptive names and explicit
-  arguments/context parameters. Avoid renaming generic exports at import sites.
-- Each command barrel exports only its entry function. Other barrels re-export
-  their modules with `export *`.
-- Use barrels across runtime module boundaries. Imports within the same
-  directory must reference sibling modules directly, never their barrel.
-  Focused tests may import internal modules directly.
-- Keep executable behavior at the executable boundary; imported modules must
-  not execute commands as an import side effect.
-- Use plain objects and functions rather than classes. Bind production
-  dependencies at command boundaries; injected replacements must not silently
-  fall back to real external operations.
-- Wrap every `switch` case body, including `default`, in braces.
+  arguments or context parameters.
+- Use `require_relative` for local modules. Imported modules must not execute
+  commands as an import side effect.
+- Bind production dependencies at command boundaries. Injected replacements
+  must not silently fall back to real external operations.
 - Keep named commands alphabetical in routing, help, and documentation.
 - Run subprocesses with argument arrays and no shell unless intentionally
   sending a command string to another program.
@@ -57,10 +39,9 @@
 
 - Run the component suite and complete installation integration checks for
   runtime changes.
-- Run strict type checking for TypeScript changes, including converted tests.
 - Update the relevant README whenever command usage or behavior changes.
-- Parse changed JavaScript executables and modules with Bun without executing
-  them; run behavioral checks against the built artifact.
+- Check Ruby syntax with `ruby -c` without executing modules. Run behavioral
+  checks against the executable and an isolated installation.
 - Use temporary roots and fake external commands for destructive or
   workstation-mutating behavior.
 - Run `git diff --check`.

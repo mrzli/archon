@@ -6,8 +6,8 @@ def log_info(message)
   puts "    #{message}"
 end
 
-def run(*command, env: {})
-  system(env, *command, exception: true)
+def run(*command)
+  system(*command, exception: true)
 end
 
 def capture(*command)

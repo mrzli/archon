@@ -1,4 +1,0 @@
-[install]
-# Require releases to be at least three days old, including transitive packages.
-minimumReleaseAge = 259200
-minimumReleaseAgeExcludes = []

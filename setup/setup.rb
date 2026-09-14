@@ -154,15 +154,10 @@ end
 def install_archon_cli(repo_root, home)
   archon_cli_source = File.join(repo_root, 'components/archon-cli')
 
-  # mise makes a newly installed Bun available without restarting the shell.
-  bun = command_available?('bun') ? ['bun'] : %w[mise exec bun -- bun]
-  log_step 'Installing Archon CLI build dependencies'
-  run(*bun, 'install', '--frozen-lockfile', '--cwd', archon_cli_source, env: { 'NODE_ENV' => 'development' })
-  log_step 'Building Archon CLI'
-  run(*bun, "#{archon_cli_source}/scripts/build.ts")
   log_step 'Installing Archon CLI'
-  FileUtils.mkdir_p("#{home}/.local")
-  run 'rsync', '-a', "#{archon_cli_source}/dist/", "#{home}/.local/"
+  FileUtils.mkdir_p(["#{home}/.local/bin", "#{home}/.local/lib"])
+  run 'rsync', '-a', "#{archon_cli_source}/bin/", "#{home}/.local/bin/"
+  run 'rsync', '-a', '--exclude=*.md', "#{archon_cli_source}/lib/", "#{home}/.local/lib/"
 end
 
 def install_user_skills(home)
