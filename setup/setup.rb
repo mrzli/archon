@@ -75,6 +75,7 @@ def install_packages
   repository_packages = %w[
     tokei foliate qbittorrent dbeaver
     img2pdf
+    texlive-latexrecommended texlive-fontsrecommended texlive-binextra
     sane sane-airscan simple-scan
   ]
   log_step 'Installing repository packages'
