@@ -13,6 +13,7 @@ def setup
   remove_unwanted_packages
   remove_unwanted_webapps
   install_applications
+  install_voice_ai
   install_packages
   install_development_environments
   install_mise_tools
@@ -51,6 +52,15 @@ def install_applications
       log_info "Installing #{name}"
       run 'omarchy', 'install', group, application
     end
+  end
+end
+
+def install_voice_ai
+  log_step 'Installing Voice AI'
+  if command_available?('voxtype')
+    log_info 'Voxtype is already installed; skipping'
+  else
+    run 'omarchy', 'voxtype', 'install'
   end
 end
 

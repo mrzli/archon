@@ -127,6 +127,16 @@ checks = {
     assert commands(env).count { |args| args.include?('clone') } == 1
     assert commands(env).count { |args| args.include?('pull') } == 1
   end,
+  'voice AI uses the Omarchy installer and skips an existing installation' => lambda do |repo, _home, bin, env|
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    assert commands(env).count { |args| args == %w[omarchy voxtype install] } == 1
+
+    File.symlink("#{bin}/omarchy", "#{bin}/voxtype")
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    assert commands(env).count { |args| args == %w[omarchy voxtype install] } == 1
+  end,
   'failed commands stop setup' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy')).last.exitstatus == 1
     assert commands(env) == [%w[omarchy pkg drop aether obsidian]]
