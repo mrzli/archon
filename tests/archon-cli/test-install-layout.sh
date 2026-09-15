@@ -92,6 +92,11 @@ test_repeated_overlay_copy() {
   done
 
   assert_exists "$home/.local/lib/archon/cli.rb" || return
+  assert_exists "$home/.local/lib/archon/commands/admin/admin.rb" || return
+  assert_absent "$home/.local/lib/archon/commands/admin/README.md" || return
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon admin --help)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc a --help)" || return
+  assert_equals "$archon_output" "$alias_output" || return
   local unexpected_files
   unexpected_files="$(find "$home/.local/lib/archon" -type f ! -name '*.rb' ! -name user-note.txt)"
   assert_equals '' "$unexpected_files" || return

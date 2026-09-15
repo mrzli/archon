@@ -22,6 +22,7 @@ Archon provides one command for the workstation tools maintained by this
 repository:
 
 ```text
+archon admin voice <start|stop>
 archon libs <command> [options]
 archon projects <command> [options]
 archon workspaces <start|stop> [options]
@@ -33,12 +34,13 @@ archon workspaces-herdr kill
 `arc` is an exact alias for `archon`, so `arc projects status` and
 `archon projects status` are equivalent.
 
-Direct subcommands also have short aliases: `h` for `help`, `l` for
+Direct subcommands also have short aliases: `a` for `admin`, `h` for `help`, `l` for
 `libs`, `p` for `projects`, `w` for `workspaces`, and `wh` for
 `workspaces-herdr`. These work with both
 `archon` and `arc`, for example:
 
 ```bash
+arc a voice stop
 arc p status
 arc l build
 arc w start
@@ -57,6 +59,7 @@ Commands use these exit statuses:
 
 Detailed behavior is documented with each command collection:
 
+- [Administration](./lib/archon/commands/admin/README.md)
 - [Libraries](./lib/archon/commands/libs/README.md)
 - [Projects](./lib/archon/commands/projects/README.md)
 - [Workspaces](./lib/archon/commands/workspaces/README.md)

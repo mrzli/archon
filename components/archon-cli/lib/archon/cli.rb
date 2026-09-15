@@ -1,3 +1,4 @@
+require_relative 'commands/admin/admin'
 require_relative 'commands/libs/libs'
 require_relative 'commands/projects/projects'
 require_relative 'commands/workspaces/workspaces'
@@ -10,6 +11,7 @@ module Archon
     Usage: archon <command> [options]
 
     Commands:
+      admin (a)                Manage workstation services
       help (h)                 Show this help
       libs (l)                 Manage local JavaScript libraries
       projects (p)             Manage personal project repositories
@@ -19,8 +21,9 @@ module Archon
 
   def main(arguments)
     command, *options = arguments
-    command = { 'h' => 'help', 'l' => 'libs', 'p' => 'projects', 'w' => 'workspaces', 'wh' => 'workspaces-herdr' }.fetch(command, command)
+    command = { 'a' => 'admin', 'h' => 'help', 'l' => 'libs', 'p' => 'projects', 'w' => 'workspaces', 'wh' => 'workspaces-herdr' }.fetch(command, command)
     case command
+    when 'admin' then return Admin.run_admin(options)
     when 'libs' then return Libraries.run_libraries(options)
     when 'projects' then return Projects.run_projects(options)
     when 'workspaces' then return Workspaces.run_workspaces(options)
