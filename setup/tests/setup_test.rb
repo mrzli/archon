@@ -26,6 +26,8 @@ def fixture
       File.write("#{root}/#{property}", value)
     end
     File.write("#{root}/voice-variant", 'whisper-avx2')
+    FileUtils.mkdir_p("#{root}/omarchy/default/voxtype")
+    File.write("#{root}/omarchy/default/voxtype/config.toml", "[hotkey]\nenabled = false\n")
     File.write("#{root}/voice-config.json", JSON.generate({
       'engine' => 'whisper', 'whisper.model' => 'base.en', 'whisper.mode' => 'local',
       'whisper.language' => 'en', 'audio.device' => 'my microphone', 'hotkey.enabled' => false,
@@ -76,9 +78,13 @@ def fixture
         end
       when 'omarchy'
         if ARGV == %w[voxtype install]
-          File.symlink($0, File.join(File.dirname($0), 'voxtype'))
+          warn 'Call failed: The name is not activatable'
+          exit 1
         end
         if ARGV[0, 2] == %w[pkg add]
+          if ARGV.include?('voxtype-bin') && !File.exist?(File.join(File.dirname($0), 'voxtype'))
+            File.symlink($0, File.join(File.dirname($0), 'voxtype'))
+          end
           (ARGV & %w[rootlesskit slirp4netns]).each { |package| FileUtils.touch("\#{state}/\#{package}") }
         end
       when 'voxtype'
@@ -154,7 +160,8 @@ def fixture
     end
     %w[realpath dirname].each { |command| File.symlink("/usr/bin/#{command}", "#{bin}/#{command}") }
     env = { 'HOME' => home, 'XDG_DATA_HOME' => "#{home}/.local/share", 'PATH' => bin,
-            'COMMAND_LOG' => "#{root}/commands.jsonl", 'SYSTEM_FIXTURE' => root }
+            'COMMAND_LOG' => "#{root}/commands.jsonl", 'SYSTEM_FIXTURE' => root,
+            'OMARCHY_PATH' => "#{root}/omarchy" }
     yield repo, home, bin, env
   end
 end
@@ -218,14 +225,18 @@ checks = {
       assert File.read("#{home}/personal-file") == "preserve\n"
     end
   end,
-  'voice AI uses the Omarchy installer and skips an existing installation' => lambda do |repo, _home, _bin, env|
+  'voice AI installs without desktop notifications and preserves existing config' => lambda do |repo, home, _bin, env|
     _, error, status = run_setup(repo, env)
     assert status.success?, error
-    assert commands(env).count { |args| args == %w[omarchy voxtype install] } == 1
+    config = "#{home}/.config/voxtype/config.toml"
+    assert File.read(config) == "[hotkey]\nenabled = false\n"
+    File.write(config, "# personal configuration\n")
 
     _, error, status = run_setup(repo, env)
     assert status.success?, error
-    assert commands(env).count { |args| args == %w[omarchy voxtype install] } == 1
+    assert File.read(config) == "# personal configuration\n"
+    assert commands(env).none? { |args| args == %w[omarchy voxtype install] }
+    assert commands(env).count { |args| args == %w[omarchy pkg add wtype voxtype-bin] } == 2
   end,
   'GPU dictation converges without repeated downloads, settings writes, or sudo' => lambda do |repo, home, _bin, env|
     _, error, status = run_setup(repo, env)

@@ -61,10 +61,14 @@ end
 
 def install_voice_ai
   log_step 'Installing Voice AI'
-  if command_available?('voxtype')
-    log_info 'Voxtype is already installed; skipping'
-  else
-    run 'omarchy', 'voxtype', 'install'
+  # The interactive installer also switches GPUs and restarts the desktop shell.
+  run 'omarchy', 'pkg', 'add', 'wtype', 'voxtype-bin'
+
+  config = File.join(ENV.fetch('HOME'), '.config/voxtype/config.toml')
+  unless path_exists?(config)
+    omarchy_path = ENV.fetch('OMARCHY_PATH', '/usr/share/omarchy')
+    FileUtils.mkdir_p(File.dirname(config))
+    FileUtils.cp(File.join(omarchy_path, 'default/voxtype/config.toml'), config)
   end
 end
 
