@@ -2,6 +2,7 @@ require 'fileutils'
 require 'json'
 require_relative 'helpers'
 require_relative 'docker'
+require_relative 'codex'
 
 def setup
   return unless parse_options
@@ -22,6 +23,7 @@ def setup
   configure_rootless_docker(home)
   install_archon_cli(repo_root, home)
   install_user_skills(home)
+  configure_codex_keybindings
   configure_lazyvim(home)
   configure_bash(home)
   reload_hyprland

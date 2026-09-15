@@ -15,7 +15,7 @@ def fixture
     home = "#{root}/home"
     bin = "#{root}/bin"
     FileUtils.mkdir_p(["#{repo}/setup", "#{repo}/data/home", home, bin])
-    %w[setup.sh setup/main.rb setup/setup.rb setup/helpers.rb setup/docker.rb].each do |file|
+    %w[setup.sh setup/main.rb setup/setup.rb setup/helpers.rb setup/docker.rb setup/codex.rb].each do |file|
       FileUtils.cp(File.expand_path("../../#{file}", __dir__), "#{repo}/#{file}")
     end
     cli_source = File.expand_path('../../components/archon-cli', __dir__)
@@ -51,6 +51,17 @@ def fixture
       exit 1 if ENV['FAIL_COMMAND'] == name
       state = ENV.fetch('SYSTEM_FIXTURE')
       case name
+      when 'codex'
+        STDIN.each_line do |line|
+          request = JSON.parse(line)
+          next unless request.key?('id')
+
+          if request['method'] == 'config/batchWrite'
+            File.write("\#{state}/codex-edits.json", JSON.generate(request.fetch('params').fetch('edits')))
+          end
+          puts JSON.generate({ id: request['id'], result: {} })
+          STDOUT.flush
+        end
       when 'id'
         puts(ARGV.first == '-un' ? 'developer' : ARGV.first == '-u' ? '1000' : File.read("\#{state}/groups"))
       when 'cat'
@@ -135,7 +146,7 @@ def fixture
         end
       end
     SCRIPT
-    %w[omarchy pacman code git rsync hyprctl mise rails uv node bun zls pnpm go id cat sudo curl docker systemctl loginctl test].each do |command|
+    %w[omarchy pacman code codex git rsync hyprctl mise rails uv node bun zls pnpm go id cat sudo curl docker systemctl loginctl test].each do |command|
       File.write("#{bin}/#{command}", stub)
       File.chmod(0o755, "#{bin}/#{command}")
     end
@@ -249,6 +260,20 @@ checks = {
   'failed commands stop setup' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy')).last.exitstatus == 1
     assert commands(env) == [%w[omarchy pkg drop aether obsidian]]
+  end,
+  'setup provisions only the requested Codex navigation bindings' => lambda do |repo, _home, _bin, env|
+    2.times do
+      _, error, status = run_setup(repo, env)
+      assert status.success?, error
+    end
+    edits = JSON.parse(File.read("#{env.fetch('SYSTEM_FIXTURE')}/codex-edits.json"))
+    assert edits == [
+      { 'keyPath' => 'tui.keymap.chat.edit_queued_message', 'value' => 'alt-shift-up', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'tui.keymap.chat.prompt_stack_back', 'value' => 'alt-shift-down', 'mergeStrategy' => 'replace' }
+    ]
+  end,
+  'Codex configuration failures stop setup' => lambda do |repo, _home, _bin, env|
+    assert run_setup(repo, env.merge('FAIL_COMMAND' => 'codex')).last.exitstatus == 1
   end,
   'CLI installation copies Ruby directly without build tooling' => lambda do |repo, home, _bin, env|
     _, error, status = run_setup(repo, env)
