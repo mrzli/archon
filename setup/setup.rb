@@ -3,6 +3,7 @@ require 'json'
 require_relative 'helpers'
 require_relative 'docker'
 require_relative 'codex'
+require_relative 'workarounds'
 
 def setup
   return unless parse_options
@@ -19,6 +20,7 @@ def setup
   install_mise_tools
   install_vscode_extensions(repo_root)
   install_home_files(repo_root, home)
+  IntelVideoWorkaround.apply(home)
   configure_voice_ai
   configure_rootless_docker(home)
   install_archon_cli(repo_root, home)

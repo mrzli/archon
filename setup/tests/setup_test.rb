@@ -15,7 +15,7 @@ def fixture
     home = "#{root}/home"
     bin = "#{root}/bin"
     FileUtils.mkdir_p(["#{repo}/setup", "#{repo}/data/home", home, bin])
-    %w[setup.sh setup/main.rb setup/setup.rb setup/helpers.rb setup/docker.rb setup/codex.rb].each do |file|
+    %w[setup.sh setup/main.rb setup/setup.rb setup/helpers.rb setup/docker.rb setup/codex.rb setup/workarounds.rb].each do |file|
       FileUtils.cp(File.expand_path("../../#{file}", __dir__), "#{repo}/#{file}")
     end
     cli_source = File.expand_path('../../components/archon-cli', __dir__)
@@ -42,6 +42,8 @@ def fixture
     File.write("#{repo}/data/home-replace-directories.txt", ".config/managed\n")
     File.write("#{repo}/data/home/managed-file", "managed\n")
     File.write("#{home}/personal-file", "preserve\n")
+    FileUtils.mkdir_p("#{home}/.config/hypr")
+    File.write("#{home}/.config/hypr/hyprland.lua", "-- existing user configuration\n")
     stub = <<~SCRIPT
       #!#{RbConfig.ruby}
       require 'fileutils'
@@ -237,6 +239,7 @@ checks = {
     assert File.read("#{state}/voice-variant") == 'whisper-vulkan'
     assert File.readlines("#{state}/voice-downloads").length == 1
     config = JSON.parse(File.read("#{state}/voice-config.json"))
+    assert config['audio.max_duration_secs'] == 300
     assert config.values_at('engine', 'whisper.mode', 'whisper.model') == %w[whisper local large-v3-turbo]
     assert config.values_at('whisper.gpu_isolation', 'whisper.on_demand_loading', 'whisper.gpu_device') == [false, false, 0]
     assert config.values_at('whisper.language', 'audio.device', 'hotkey.enabled') == ['en', 'my microphone', false]
