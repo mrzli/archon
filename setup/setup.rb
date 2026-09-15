@@ -81,6 +81,7 @@ def configure_voice_ai
   # Keep the model resident for low latency. The service override selects NVIDIA.
   settings = {
     'engine' => 'whisper',
+    'audio.max_duration_secs' => 300,
     'whisper.mode' => 'local',
     'whisper.model' => 'large-v3-turbo',
     'whisper.gpu_isolation' => false,
