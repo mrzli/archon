@@ -132,6 +132,51 @@ test('Herdr named stop only closes the selected group and tolerates an absent se
   end
 end
 
+[%w[stop], %w[stop -g general]].each do |arguments|
+  [{}, { 'HERDR_ENV' => '1' }].each do |environment|
+    test("Herdr #{arguments.join(' ')} shuts down an empty session, including from a pane: #{environment}") do
+      herdr_fixture do |fixture, path|
+        FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
+        equal 0, run_archon(%w[wh start -g general])[:status]
+        update_herdr_state(path) { |state| state['client_attached'] = true }
+        2.times { equal 0, run_archon(['wh', *arguments], environment)[:status] }
+        state = herdr_state(path)
+        assert !state['running']
+        assert state['workspaces'].none? { |workspace| workspace['label'] == '~' }
+        equal 1, state['calls'].count { |call| call == %w[session stop archon --json] }
+      end
+    end
+  end
+end
+
+test('Herdr stop reports session shutdown failures and allows retry') do
+  herdr_fixture do |fixture, path|
+    FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
+    equal 0, run_archon(%w[wh start -g general])[:status]
+    update_herdr_state(path) do |state|
+      state['failure'] = { 'prefix' => %w[session stop], 'remaining' => 1 }
+    end
+    result = run_archon(%w[wh stop])
+    equal 1, result[:status]
+    assert result[:stderr].include?('Herdr session stop failed')
+    assert herdr_state(path)['running']
+    equal 0, run_archon(%w[wh stop])[:status]
+    assert !herdr_state(path)['running']
+  end
+end
+
+test('Herdr stop preserves a pre-existing home workspace') do
+  herdr_fixture do |_, path|
+    update_herdr_state(path) do |state|
+      state['running'] = true
+      state['workspaces'] = [{ 'workspace_id' => 'w2', 'label' => '~', 'tabs' => [] }]
+    end
+    equal 0, run_archon(%w[wh stop])[:status]
+    assert herdr_state(path)['running']
+    equal ['~'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
+  end
+end
+
 test('Herdr kill stops only archon and tolerates a stopped session') do
   herdr_fixture do |_, path|
     equal 0, run_archon(%w[wh kill])[:status]

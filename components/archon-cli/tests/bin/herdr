@@ -50,6 +50,10 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
       workspace = workspaces.find { |item| item['workspace_id'] == arguments[2] }
       raise 'unknown workspace' unless workspace
       workspaces.delete(workspace)
+      if workspaces.empty? && state['client_attached']
+        state['next_id'] += 1
+        workspaces << { 'workspace_id' => "w#{state['next_id'] * 7}", 'label' => '~', 'tabs' => [] }
+      end
       response = { result: { workspace_id: workspace['workspace_id'] } }
     when ['workspace', 'focus']
       raise 'unknown workspace' unless workspaces.any? { |item| item['workspace_id'] == arguments[2] }

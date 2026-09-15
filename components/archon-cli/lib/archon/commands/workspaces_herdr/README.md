@@ -36,6 +36,10 @@ herdr --session archon
 ```
 
 Stop closes only the selected managed workspaces, preserving unrelated ones.
+When the last workspace belongs to the selected group, stop shuts down the
+`archon` session directly so Herdr does not create a replacement workspace.
+This also applies when stopping all groups. Herdr retains the last workspace's
+saved layout; its processes stop.
 It does not delete project directories or Git worktrees. Stop from a Herdr pane
 runs independently so closing that pane does not interrupt the remaining work.
 

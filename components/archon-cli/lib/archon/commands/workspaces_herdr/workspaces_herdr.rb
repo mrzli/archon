@@ -4,6 +4,7 @@ module Archon
   module WorkspacesHerdr
     HELP = (Workspaces::HELP.fetch('global').gsub('archon workspaces', 'archon workspaces-herdr') +
       "\n\nUses the dedicated Herdr session 'archon'.\n" +
+      "Stop also shuts down that session when no workspaces remain.\n" +
       "The kill action stops that entire session, including any extra workspaces in it.").freeze
 
     def run_workspaces_herdr(arguments, home: Dir.home, environment: ENV, tty: $stdin.tty?,
@@ -21,6 +22,10 @@ module Archon
       end
       backend = create_herdr(running: running, capture: capture, run: run, start_server: start_server)
       status = Workspaces.manage_groups(action, group, backend, home: home)
+      if action == 'stop' && status == 0 && running && session_running?(capture)
+        remaining = command_response(%w[workspace list], capture).fetch('workspaces')
+        command_response(['session', 'stop', SESSION, '--json'], capture) if remaining.empty?
+      end
       return status if status != 0 || action != 'start' || inside_herdr || !tty
       Workspaces.attach_after_start(group, backend)
     rescue StandardError => error
