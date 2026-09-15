@@ -25,6 +25,15 @@ def fixture
     { 'linger' => 'no', 'is-enabled' => 'yes', 'is-active' => 'yes', 'groups' => 'developer wheel docker' }.each do |property, value|
       File.write("#{root}/#{property}", value)
     end
+    File.write("#{root}/voice-variant", 'whisper-avx2')
+    File.write("#{root}/voice-config.json", JSON.generate({
+      'engine' => 'whisper', 'whisper.model' => 'base.en', 'whisper.mode' => 'local',
+      'whisper.language' => 'en', 'audio.device' => 'my microphone', 'hotkey.enabled' => false,
+      'whisper.gpu_isolation' => true, 'whisper.on_demand_loading' => true, 'whisper.gpu_device' => 1
+    }))
+    FileUtils.mkdir_p("#{repo}/data/home/.config/systemd/user/voxtype.service.d")
+    FileUtils.cp(File.expand_path('../../data/home/.config/systemd/user/voxtype.service.d/10-archon.conf', __dir__),
+                 "#{repo}/data/home/.config/systemd/user/voxtype.service.d/10-archon.conf")
     File.write("#{repo}/data/vscode-extensions.txt", "# extensions\nexisting.extension\nnew.extension\n")
     FileUtils.cp(File.expand_path('../../data/home-copy-ignore.txt', __dir__), "#{repo}/data/home-copy-ignore.txt")
     FileUtils.mkdir_p("#{repo}/data/home/.config/systemd/user")
@@ -53,8 +62,33 @@ def fixture
           exit(File.exist?("\#{state}/\#{ARGV.last}") ? 0 : 1)
         end
       when 'omarchy'
+        if ARGV == %w[voxtype install]
+          File.symlink($0, File.join(File.dirname($0), 'voxtype'))
+        end
         if ARGV[0, 2] == %w[pkg add]
           (ARGV & %w[rootlesskit slirp4netns]).each { |package| FileUtils.touch("\#{state}/\#{package}") }
+        end
+      when 'voxtype'
+        case ARGV[0, 2]
+        when %w[info variants]
+          puts JSON.generate({ 'active_variant' => File.read("\#{state}/voice-variant"),
+                               'variants' => [{ 'binary_name' => 'voxtype-vulkan', 'installed' => !ENV['NO_VULKAN'] }] })
+        when %w[setup --download]
+          exit 1 if ENV['FAIL_VOICE_DOWNLOAD']
+          unless File.exist?("\#{state}/voice-model")
+            File.write("\#{state}/voice-model", 'large-v3-turbo')
+            File.open("\#{state}/voice-downloads", 'a') { |file| file.puts('download') }
+          end
+        when %w[config get]
+          puts File.read("\#{state}/voice-config.json")
+        when %w[config set]
+          config = JSON.parse(File.read("\#{state}/voice-config.json"))
+          config[ARGV[2]] = begin
+            JSON.parse(ARGV[3])
+          rescue JSON::ParserError
+            ARGV[3]
+          end
+          File.write("\#{state}/voice-config.json", JSON.generate(config))
         end
       when 'loginctl'
         puts File.read("\#{state}/linger")
@@ -63,7 +97,9 @@ def fixture
           exit(File.read("\#{state}/\#{ARGV.first}").strip == 'yes' ? 0 : 1)
         end
       when 'sudo'
-        if ARGV.first == 'touch'
+        if ARGV[0, 3] == %w[voxtype setup variant]
+          File.write("\#{state}/voice-variant", 'whisper-vulkan')
+        elsif ARGV.first == 'touch'
           FileUtils.touch(File.join(state, File.basename(ARGV.last)))
         elsif ARGV.first == 'loginctl'
           File.write("\#{state}/linger", 'yes')
@@ -169,15 +205,46 @@ checks = {
       assert File.read("#{home}/personal-file") == "preserve\n"
     end
   end,
-  'voice AI uses the Omarchy installer and skips an existing installation' => lambda do |repo, _home, bin, env|
+  'voice AI uses the Omarchy installer and skips an existing installation' => lambda do |repo, _home, _bin, env|
     _, error, status = run_setup(repo, env)
     assert status.success?, error
     assert commands(env).count { |args| args == %w[omarchy voxtype install] } == 1
 
-    File.symlink("#{bin}/omarchy", "#{bin}/voxtype")
     _, error, status = run_setup(repo, env)
     assert status.success?, error
     assert commands(env).count { |args| args == %w[omarchy voxtype install] } == 1
+  end,
+  'GPU dictation converges without repeated downloads, settings writes, or sudo' => lambda do |repo, home, _bin, env|
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    first_run_count = commands(env).length
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    later_calls = commands(env).drop(first_run_count)
+    assert later_calls.none? { |args| args[0, 2] == %w[sudo voxtype] || args[0, 3] == %w[voxtype config set] }
+    state = env.fetch('SYSTEM_FIXTURE')
+    assert File.read("#{state}/voice-variant") == 'whisper-vulkan'
+    assert File.readlines("#{state}/voice-downloads").length == 1
+    config = JSON.parse(File.read("#{state}/voice-config.json"))
+    assert config.values_at('engine', 'whisper.mode', 'whisper.model') == %w[whisper local large-v3-turbo]
+    assert config.values_at('whisper.gpu_isolation', 'whisper.on_demand_loading', 'whisper.gpu_device') == [false, false, 0]
+    assert config.values_at('whisper.language', 'audio.device', 'hotkey.enabled') == ['en', 'my microphone', false]
+    override = "#{home}/.config/systemd/user/voxtype.service.d/10-archon.conf"
+    assert File.read(override).include?('Environment=VK_DRIVER_FILES=/usr/share/vulkan/icd.d/nvidia_icd.json')
+    assert later_calls.include?(%w[systemctl --user restart voxtype.service])
+  end,
+  'failed voice downloads preserve configuration and do not switch or restart Voxtype' => lambda do |repo, _home, _bin, env|
+    config_path = "#{env.fetch('SYSTEM_FIXTURE')}/voice-config.json"
+    original = File.read(config_path)
+    assert run_setup(repo, env.merge('FAIL_VOICE_DOWNLOAD' => '1')).last.exitstatus == 1
+    assert File.read(config_path) == original
+    assert commands(env).none? { |args| args[0, 2] == %w[sudo voxtype] || args.include?('voxtype.service') }
+  end,
+  'missing Vulkan variant stops before downloading a model' => lambda do |repo, _home, _bin, env|
+    _, error, status = run_setup(repo, env.merge('NO_VULKAN' => '1'))
+    assert status.exitstatus == 1
+    assert error.include?('Vulkan variant is missing')
+    assert commands(env).none? { |args| args[0, 3] == %w[voxtype setup --download] }
   end,
   'failed commands stop setup' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy')).last.exitstatus == 1
@@ -271,7 +338,7 @@ checks = {
     assert status.exitstatus == 1
     assert error.include?('failed')
     assert !File.exist?("#{home}/.local/lib/archon-docker/dockerd-rootless.sh")
-    assert commands(env).none? { |args| args.include?('systemctl') }
+    assert commands(env).none? { |args| args.first == 'systemctl' && args.include?('docker.service') }
   end,
   'a rootful response fails before disabling the old daemon' => lambda do |repo, _home, _bin, env|
     _, error, status = run_setup(repo, env.merge('ROOTFUL_DOCKER' => '1'))

@@ -18,6 +18,7 @@ def setup
   install_mise_tools
   install_vscode_extensions(repo_root)
   install_home_files(repo_root, home)
+  configure_voice_ai
   configure_rootless_docker(home)
   install_archon_cli(repo_root, home)
   install_user_skills(home)
@@ -61,6 +62,38 @@ def install_voice_ai
   else
     run 'omarchy', 'voxtype', 'install'
   end
+end
+
+def configure_voice_ai
+  log_step 'Configuring GPU-accelerated dictation'
+  variants = JSON.parse(capture('voxtype', 'info', 'variants', '--json'))
+  unless variants.fetch('variants').any? { |variant| variant['binary_name'] == 'voxtype-vulkan' && variant['installed'] }
+    raise 'The Vulkan variant is missing; update voxtype-bin before running setup again'
+  end
+
+  run 'voxtype', 'setup', '--download', '--model', 'large-v3-turbo', '--no-post-install'
+  unless variants['active_variant'] == 'whisper-vulkan'
+    run 'sudo', 'voxtype', 'setup', 'variant', '--to', 'voxtype-vulkan'
+  end
+
+  # Keep the model resident for low latency. The service override selects NVIDIA.
+  settings = {
+    'engine' => 'whisper',
+    'whisper.mode' => 'local',
+    'whisper.model' => 'large-v3-turbo',
+    'whisper.gpu_isolation' => false,
+    'whisper.on_demand_loading' => false,
+    'whisper.gpu_device' => 0
+  }
+  current = JSON.parse(capture('voxtype', 'config', 'get', '--json'))
+  settings.each do |key, value|
+    run 'voxtype', 'config', 'set', key, value.to_s unless current[key] == value
+  end
+
+  run 'systemctl', '--user', 'daemon-reload'
+  run 'systemctl', '--user', 'enable', 'voxtype.service'
+  run 'systemctl', '--user', 'restart', 'voxtype.service'
+  log_info 'After the model loads, verify the GPU backend with: voxtype info accel'
 end
 
 def install_packages
