@@ -49,5 +49,8 @@
   "workbench.editor.empty.hint": "hidden",
   "workbench.editor.wrapTabs": true,
   "workbench.secondarySideBar.defaultVisibility": "hidden",
-  "zig.zls.enabled": "on"
+  "zig.zls.enabled": "on",
+  "[markdown]": {
+    "editor.wordWrap": "off"
+  }
 }
