@@ -77,6 +77,11 @@ def fixture
           exit(File.exist?("\#{state}/\#{ARGV.last}") ? 0 : 1)
         end
       when 'omarchy'
+        if ARGV == %w[install gaming battlenet]
+          launcher = File.join(ENV.fetch('HOME'), 'Games/battlenet/drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe')
+          FileUtils.mkdir_p(File.dirname(launcher))
+          FileUtils.touch(launcher)
+        end
         if ARGV == %w[voxtype install]
           warn 'Call failed: The name is not activatable'
           exit 1
@@ -224,6 +229,13 @@ checks = {
       assert Dir.children("#{home}/.config/managed") == ['current']
       assert File.read("#{home}/personal-file") == "preserve\n"
     end
+  end,
+  'Battle.net installs once and skips the installed launcher on reruns' => lambda do |repo, _home, _bin, env|
+    2.times do
+      _, error, status = run_setup(repo, env)
+      assert status.success?, error
+    end
+    assert commands(env).count { |args| args == %w[omarchy install gaming battlenet] } == 1
   end,
   'voice AI installs without desktop notifications and preserves existing config' => lambda do |repo, home, _bin, env|
     _, error, status = run_setup(repo, env)

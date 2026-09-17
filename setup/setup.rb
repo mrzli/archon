@@ -57,6 +57,14 @@ def install_applications
       run 'omarchy', 'install', group, application
     end
   end
+
+  battlenet_launcher = File.join(ENV.fetch('HOME'), 'Games/battlenet/drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe')
+  if File.file?(battlenet_launcher)
+    log_info 'Battle.net is already installed; skipping'
+  else
+    log_info 'Installing Battle.net'
+    run 'omarchy', 'install', 'gaming', 'battlenet'
+  end
 end
 
 def install_voice_ai
