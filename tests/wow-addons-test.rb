@@ -87,6 +87,7 @@ fixture do |home, wow, env, run|
     wowi:25792 wowi:25655 wowi:26399 wowi:26776
     wowi:24769 wowi:25660 wowi:26458
     github:Nevcairiel/HandyNotes wowi:27067 github:DeadlyBossMods/DeadlyBossMods
+    github:EllesmereGaming/EllesmereUI
   ]
   assert state.keys.sort == expected_addons.sort, 'all requested addons and modules must be installed'
   assert state.values.all? { |version| version == 2 }, 'rerun must update every addon'

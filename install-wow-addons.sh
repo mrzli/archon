@@ -8,6 +8,7 @@ Usage: install-wow-addons.sh [--wow-dir PATH]
 
 Install or update instawow and these Retail WoW addons:
   ALL THE THINGS, BtWQuests, HandyNotes, HandyNotes: Midnight, Deadly Boss Mods
+  EllesmereUI
   BtWQuests expansion modules from The Burning Crusade through The War Within,
   plus Battle for Azeroth, Shadowlands, and Dragonflight prologues.
   Midnight is bundled with BtWQuests.
@@ -82,6 +83,7 @@ addons=(
   github:Nevcairiel/HandyNotes
   wowi:27067 # HandyNotes: Midnight (Zarillion)
   github:DeadlyBossMods/DeadlyBossMods
+  github:EllesmereGaming/EllesmereUI
 )
 
 printf '\n==> Installing or updating addons\n'
