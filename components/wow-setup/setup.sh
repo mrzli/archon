@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: install-wow-addons.sh [--wow-dir PATH]
+Usage: components/wow-setup/setup.sh [--wow-dir PATH]
 
 Install or update instawow and these Retail WoW addons:
   ALL THE THINGS, BtWQuests, HandyNotes, HandyNotes: Midnight, Deadly Boss Mods

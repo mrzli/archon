@@ -4,7 +4,7 @@ require 'open3'
 require 'rbconfig'
 require 'tmpdir'
 
-SCRIPT = File.expand_path('../install-wow-addons.sh', __dir__)
+SCRIPT = File.expand_path('../setup.sh', __dir__)
 
 def assert(value, message = 'assertion failed')
   raise message unless value
