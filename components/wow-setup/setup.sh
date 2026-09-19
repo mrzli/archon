@@ -7,8 +7,8 @@ usage() {
 Usage: components/wow-setup/setup.sh [--wow-dir PATH]
 
 Install or update instawow and these Retail WoW addons:
-  ALL THE THINGS, BtWQuests, HandyNotes, HandyNotes: Midnight, Deadly Boss Mods
-  EllesmereUI
+  ALL THE THINGS, BtWQuests, HandyNotes, Deadly Boss Mods, EllesmereUI
+  All 12 Zarillion HandyNotes expansion plugins, GatherMate2, GatherMate2_Data
   BtWQuests expansion modules from The Burning Crusade through The War Within,
   plus Battle for Azeroth, Shadowlands, and Dragonflight prologues.
   Midnight is bundled with BtWQuests.
@@ -21,6 +21,8 @@ Requires uv on PATH. Close WoW before running. Run without sudo.
 instawow is installed into ~/.local/bin. Addons use instawow's wow-retail
 profile. Unrelated addons and WoW settings are preserved. Existing addons
 not managed by this profile are not automatically overwritten.
+After installing GatherMate2_Data, use GatherMate2's in-game Import settings
+to select databases and import them with Merge to preserve discovered nodes.
 EOF
 }
 
@@ -81,7 +83,21 @@ addons=(
   wowi:25660 # BtWQuests: Shadowlands Prologue
   wowi:26458 # BtWQuests: Dragonflight Prologue
   github:Nevcairiel/HandyNotes
+  # Individual author-published packages avoid GitHub's multi-archive ambiguity.
+  wowi:26818 # HandyNotes: Kalimdor & Eastern Kingdoms (Zarillion)
+  wowi:26817 # HandyNotes: The Burning Crusade
+  wowi:26816 # HandyNotes: Wrath of the Lich King
+  wowi:26815 # HandyNotes: Cataclysm
+  wowi:26814 # HandyNotes: Mists of Pandaria
+  wowi:26813 # HandyNotes: Warlords of Draenor
+  wowi:26812 # HandyNotes: Legion
+  wowi:25829 # HandyNotes: Battle for Azeroth
+  wowi:25828 # HandyNotes: Shadowlands
+  wowi:26409 # HandyNotes: Dragonflight
+  wowi:26753 # HandyNotes: The War Within
   wowi:27067 # HandyNotes: Midnight (Zarillion)
+  github:Nevcairiel/GatherMate2
+  github:Nevcairiel/GatherMate2_Data
   github:DeadlyBossMods/DeadlyBossMods
   github:EllesmereGaming/EllesmereUI
 )
@@ -97,3 +113,4 @@ done
 "${instawow[@]}" update
 
 printf '\nAddons are ready. Start WoW and check the AddOns menu.\n'
+printf 'For preloaded gathering nodes, open GatherMate2 settings > Import and use Merge.\n'

@@ -86,7 +86,11 @@ fixture do |home, wow, env, run|
     wowi:25631 wowi:25784 wowi:25552 wowi:25547 wowi:25553 wowi:24770
     wowi:25792 wowi:25655 wowi:26399 wowi:26776
     wowi:24769 wowi:25660 wowi:26458
-    github:Nevcairiel/HandyNotes wowi:27067 github:DeadlyBossMods/DeadlyBossMods
+    github:Nevcairiel/HandyNotes
+    wowi:26818 wowi:26817 wowi:26816 wowi:26815 wowi:26814 wowi:26813
+    wowi:26812 wowi:25829 wowi:25828 wowi:26409 wowi:26753 wowi:27067
+    github:Nevcairiel/GatherMate2 github:Nevcairiel/GatherMate2_Data
+    github:DeadlyBossMods/DeadlyBossMods
     github:EllesmereGaming/EllesmereUI
   ]
   assert state.keys.sort == expected_addons.sort, 'all requested addons and modules must be installed'
