@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'digest'
 require 'json'
 require 'open3'
 require 'rbconfig'
@@ -19,6 +20,24 @@ def fixture
     File.write("#{wow}/Wow.exe", '')
     File.write("#{wow}/Interface/AddOns/Personal/keep", 'personal addon')
     File.write("#{wow}/WTF/keep", 'personal settings')
+    archive = "#{root}/auctionator.zip"
+    if ENV['AUCTIONATOR_TEST_ARCHIVE']
+      FileUtils.cp(ENV.fetch('AUCTIONATOR_TEST_ARCHIVE'), archive)
+    else
+      _, error, status = Open3.capture3('python3', '-c', <<~PYTHON, archive)
+        import sys, zipfile
+        with zipfile.ZipFile(sys.argv[1], 'w') as archive:
+            archive.writestr('Auctionator/Auctionator.toc', '## Version: 339\\n')
+      PYTHON
+      assert status.success?, error
+    end
+    script = "#{root}/setup.sh"
+    FileUtils.cp(SCRIPT, script)
+    source = File.read(File.join(File.dirname(SCRIPT), 'install-auctionator.sh'))
+    unless ENV['AUCTIONATOR_TEST_ARCHIVE']
+      source = source.sub(/^auctionator_sha256=.*$/, "auctionator_sha256=#{Digest::SHA256.file(archive).hexdigest}")
+    end
+    File.write("#{root}/install-auctionator.sh", source)
     stub = <<~'RUBY'
       require 'fileutils'
       require 'json'
@@ -26,6 +45,13 @@ def fixture
       File.open(ENV.fetch('COMMAND_LOG'), 'a') { |f| f.puts(JSON.generate([name, *ARGV])) }
       exit 1 if ENV['FAIL_COMMAND'] == name
       case name
+      when 'curl'
+        output = ARGV.fetch(ARGV.index('-o') + 1)
+        if ENV['CORRUPT_DOWNLOAD']
+          File.write(output, 'invalid download')
+        else
+          FileUtils.cp(ENV.fetch('AUCTIONATOR_ARCHIVE'), output)
+        end
       when 'uv'
         abort 'unexpected uv command' unless ARGV == %w[tool install --upgrade instawow]
         FileUtils.mkdir_p(ENV.fetch('UV_TOOL_BIN_DIR'))
@@ -58,13 +84,13 @@ def fixture
         end
       end
     RUBY
-    %w[uv instawow].each do |name|
+    %w[uv instawow curl].each do |name|
       File.write("#{bin}/#{name}", "#!#{RbConfig.ruby}\n#{stub}")
       File.chmod(0o755, "#{bin}/#{name}")
     end
     env = { 'HOME' => home, 'PATH' => "#{bin}:/usr/bin:/bin", 'STUB_BIN' => bin,
-            'COMMAND_LOG' => "#{root}/commands.jsonl" }
-    run = ->(*args, **extra) { Open3.capture3(env.merge(extra), '/bin/bash', SCRIPT, *args) }
+            'COMMAND_LOG' => "#{root}/commands.jsonl", 'AUCTIONATOR_ARCHIVE' => archive }
+    run = ->(*args, **extra) { Open3.capture3(env.merge(extra), '/bin/bash', script, *args) }
     yield home, wow, env, run
   end
 end
@@ -77,8 +103,14 @@ fixture do |home, wow, env, run|
   assert !File.exist?(env.fetch('COMMAND_LOG')), 'argument validation must precede installation'
 
   [1, 2, 2].each do |version|
-    _, error, status = run.call('--wow-dir', wow, **{ 'ADDON_VERSION' => version.to_s })
+    auctionator = "#{wow}/Interface/AddOns/Auctionator"
+    File.write("#{auctionator}/obsolete.lua", 'old code') if File.directory?(auctionator)
+    output, error, status = run.call('--wow-dir', wow, **{ 'ADDON_VERSION' => version.to_s })
     assert status.success?, error
+    assert output.include?('Auctionator is pinned to version 339')
+    assert !Dir["#{auctionator}/*.toc"].empty?
+    assert !File.exist?("#{auctionator}/obsolete.lua"), 'replacement must remove stale addon code'
+    assert Dir["#{wow}/Interface/AddOns/.auctionator-*"].empty?, 'temporary files must be cleaned up'
   end
   state = JSON.parse(File.read("#{home}/addons.json"))
   expected_addons = %w[
@@ -102,6 +134,19 @@ fixture do |home, wow, env, run|
   assert File.read("#{wow}/WTF/keep") == 'personal settings'
 
   puts 'PASS fresh install, updates including DBM, paths with spaces, and preservation'
+end
+
+%w[download checksum].each do |failure|
+  fixture do |_home, wow, _env, run|
+    addon = "#{wow}/Interface/AddOns/Auctionator"
+    FileUtils.mkdir_p(addon)
+    File.write("#{addon}/keep", 'existing addon')
+    extra = failure == 'download' ? { 'FAIL_COMMAND' => 'curl' } : { 'CORRUPT_DOWNLOAD' => '1' }
+    assert !run.call(**extra).last.success?
+    assert File.read("#{addon}/keep") == 'existing addon', 'failed download must preserve existing addon'
+    assert Dir["#{wow}/Interface/AddOns/.auctionator-*"].empty?
+  end
+  puts "PASS Auctionator #{failure} failure preserves existing installation"
 end
 
 fixture do |_home, _wow, env, run|

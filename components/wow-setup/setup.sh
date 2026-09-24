@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+# Before running this script for the user, mention the Auctionator limitation:
+# Auctionator uses a fixed CurseForge CDN URL; it cannot discover updates itself.
+# Newer releases require manually updating the version, URL, and SHA-256 in install-auctionator.sh. Check
+# https://www.curseforge.com/wow/addons/auctionator/files for the latest Retail
+# release and tell the user whether the pinned version has been checked.
+
 usage() {
   cat <<'EOF'
 Usage: components/wow-setup/setup.sh [--wow-dir PATH]
@@ -9,6 +15,7 @@ Usage: components/wow-setup/setup.sh [--wow-dir PATH]
 Install or update instawow and these Retail WoW addons:
   ALL THE THINGS, BtWQuests, HandyNotes, Deadly Boss Mods, EllesmereUI
   All 12 Zarillion HandyNotes expansion plugins, GatherMate2, GatherMate2_Data
+  Auctionator (fixed release; newer versions require a script update)
   BtWQuests expansion modules from The Burning Crusade through The War Within,
   plus Battle for Azeroth, Shadowlands, and Dragonflight prologues.
   Midnight is bundled with BtWQuests.
@@ -17,10 +24,12 @@ Install or update instawow and these Retail WoW addons:
                   Battle.net installation under ~/Games/battlenet.
   -h, --help     Show this help.
 
-Requires uv on PATH. Close WoW before running. Run without sudo.
+Requires uv, curl, unzip, and sha256sum on PATH. Close WoW before running.
+Run without sudo.
 instawow is installed into ~/.local/bin. Addons use instawow's wow-retail
 profile. Unrelated addons and WoW settings are preserved. Existing addons
-not managed by this profile are not automatically overwritten.
+not managed by this profile are not automatically overwritten, except Auctionator:
+its addon folder is replaced with the pinned release; saved settings are preserved.
 After installing GatherMate2_Data, use GatherMate2's in-game Import settings
 to select databases and import them with Merge to preserve discovered nodes.
 EOF
@@ -111,6 +120,9 @@ for addon in "${addons[@]}"; do
 done
 # Updating the profile treats already-current addons as success; named updates do not.
 "${instawow[@]}" update
+
+component_dir=$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")
+bash "$component_dir/install-auctionator.sh" "$wow_dir"
 
 printf '\nAddons are ready. Start WoW and check the AddOns menu.\n'
 printf 'For preloaded gathering nodes, open GatherMate2 settings > Import and use Merge.\n'
