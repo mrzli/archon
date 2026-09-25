@@ -5,10 +5,10 @@ def configure_codex
   log_step 'Configuring Codex'
   settings = {
     'model' => 'gpt-6-sol',
-    'model_reasoning_effort' => 'medium',
+    'model_reasoning_effort' => 'high',
     'agents.enabled' => true,
     'agents.default_subagent_model' => 'gpt-6-luna',
-    'agents.default_subagent_reasoning_effort' => 'medium',
+    'agents.default_subagent_reasoning_effort' => 'high',
     'tui.keymap.chat.edit_queued_message' => 'alt-shift-up',
     'tui.keymap.chat.prompt_stack_back' => 'alt-shift-down'
   }
@@ -37,5 +37,5 @@ def configure_codex
     end
     server.close_write
   end
-  log_info 'Codex uses Sol/Medium with Luna/Medium subagents and Alt+Shift+Up/Down navigation. Restart Codex to load the settings.'
+  log_info 'Codex uses Sol/High with Luna/High subagents and Alt+Shift+Up/Down navigation. Restart Codex to load the settings.'
 end

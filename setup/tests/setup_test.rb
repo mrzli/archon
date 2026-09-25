@@ -295,10 +295,10 @@ checks = {
     edits = JSON.parse(File.read("#{env.fetch('SYSTEM_FIXTURE')}/codex-edits.json"))
     assert edits == [
       { 'keyPath' => 'model', 'value' => 'gpt-6-sol', 'mergeStrategy' => 'replace' },
-      { 'keyPath' => 'model_reasoning_effort', 'value' => 'medium', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'model_reasoning_effort', 'value' => 'high', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'agents.enabled', 'value' => true, 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'agents.default_subagent_model', 'value' => 'gpt-6-luna', 'mergeStrategy' => 'replace' },
-      { 'keyPath' => 'agents.default_subagent_reasoning_effort', 'value' => 'medium', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'agents.default_subagent_reasoning_effort', 'value' => 'high', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'tui.keymap.chat.edit_queued_message', 'value' => 'alt-shift-up', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'tui.keymap.chat.prompt_stack_back', 'value' => 'alt-shift-down', 'mergeStrategy' => 'replace' }
     ]
