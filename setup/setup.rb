@@ -25,7 +25,7 @@ def setup
   configure_rootless_docker(home)
   install_archon_cli(repo_root, home)
   install_user_skills(home)
-  configure_codex_keybindings
+  configure_codex
   configure_lazyvim(home)
   configure_bash(home)
   reload_hyprland

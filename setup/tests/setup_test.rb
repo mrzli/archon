@@ -287,13 +287,18 @@ checks = {
     assert run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy')).last.exitstatus == 1
     assert commands(env) == [%w[omarchy pkg drop aether obsidian]]
   end,
-  'setup provisions only the requested Codex navigation bindings' => lambda do |repo, _home, _bin, env|
+  'setup provisions Codex model, subagent, and navigation settings' => lambda do |repo, _home, _bin, env|
     2.times do
       _, error, status = run_setup(repo, env)
       assert status.success?, error
     end
     edits = JSON.parse(File.read("#{env.fetch('SYSTEM_FIXTURE')}/codex-edits.json"))
     assert edits == [
+      { 'keyPath' => 'model', 'value' => 'gpt-6-sol', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'model_reasoning_effort', 'value' => 'medium', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'agents.enabled', 'value' => true, 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'agents.default_subagent_model', 'value' => 'gpt-6-luna', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'agents.default_subagent_reasoning_effort', 'value' => 'medium', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'tui.keymap.chat.edit_queued_message', 'value' => 'alt-shift-up', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'tui.keymap.chat.prompt_stack_back', 'value' => 'alt-shift-down', 'mergeStrategy' => 'replace' }
     ]
