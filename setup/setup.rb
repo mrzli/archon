@@ -151,12 +151,12 @@ end
 
 def install_mise_tools
   log_step 'Installing mise tools'
-  %w[pnpm go].each do |tool|
-    if command_available?(tool)
+  { pnpm: 'pnpm', go: 'go', rust: 'rustc' }.each do |tool, command|
+    if command_available?(command)
       log_info "#{tool} is already installed; skipping"
     else
       log_info "Installing #{tool}"
-      run 'mise', 'use', '--global', tool
+      run 'mise', 'use', '--global', tool.to_s
     end
   end
 end

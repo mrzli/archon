@@ -156,6 +156,9 @@ def fixture
       when 'rsync'
         exec '/usr/bin/rsync', *ARGV
       when 'mise'
+        if ARGV == %w[use --global rust]
+          File.symlink($0, File.join(File.dirname($0), 'rustc'))
+        end
         if ARGV[0, 3] == %w[exec ruby --]
           exec #{RbConfig.ruby.inspect}, *ARGV.drop(4)
         end
@@ -182,6 +185,14 @@ def commands(env)
 end
 
 checks = {
+  'mise installs missing Rust and skips it on repeat runs' => lambda do |repo, _home, _bin, env|
+    2.times do
+      _, error, status = Open3.capture3(env, RbConfig.ruby, '-r', "#{repo}/setup/setup.rb",
+                                      '-e', 'install_mise_tools')
+      assert status.success?, error
+    end
+    assert commands(env) == [%w[mise use --global rust]]
+  end,
   'help and invalid arguments do not provision' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env, '--help').last.success?
     assert run_setup(repo, env, '--unknown').last.exitstatus == 2
