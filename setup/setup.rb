@@ -217,13 +217,51 @@ def install_user_skills(home)
   data_home = ENV['XDG_DATA_HOME'].to_s.empty? ? "#{home}/.local/share" : ENV['XDG_DATA_HOME']
   skills_repo = File.join(data_home, 'archon-skills')
   github_git = ['git', '-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential']
-  FileUtils.mkdir_p([File.dirname(skills_repo), "#{home}/.agents/skills"])
+  FileUtils.mkdir_p(File.dirname(skills_repo))
   if File.directory?("#{skills_repo}/.git")
     run(*github_git, '-C', skills_repo, 'pull', '--ff-only')
   else
     run(*github_git, 'clone', '--depth', '1', 'https://github.com/mrzli/skills.git', skills_repo)
   end
-  run 'rsync', '-a', "#{skills_repo}/.agents/skills/", "#{home}/.agents/skills/"
+  source = "#{skills_repo}/.agents/skills"
+  # Git does not retain empty directories after the final skill is deleted.
+  FileUtils.mkdir_p(source)
+  sync_user_skill_links(source, home)
+end
+
+def sync_user_skill_links(source, home)
+  raise "Missing skills source: #{source}" unless File.directory?(source)
+
+  source = File.expand_path(source)
+  names = Dir.children(source).select { |name| File.file?(File.join(source, name, 'SKILL.md')) }.sort
+  destinations = %w[.agents/skills .claude/skills].map { |directory| File.join(home, directory) }
+  owned_link = lambda do |path|
+    File.symlink?(path) && File.expand_path(File.readlink(path), File.dirname(path)).start_with?("#{source}/")
+  end
+
+  # Check collisions before changing any links.
+  destinations.each do |directory|
+    names.each do |name|
+      path = File.join(directory, name)
+      raise "Skill path already exists and is not managed by Archon: #{path}" if path_exists?(path) && !owned_link.call(path)
+    end
+  end
+
+  destinations.each do |directory|
+    FileUtils.mkdir_p(directory)
+    Dir.children(directory).each do |name|
+      path = File.join(directory, name)
+      next unless owned_link.call(path)
+      target = File.join(source, name)
+      next if names.include?(name) && File.expand_path(File.readlink(path), directory) == target
+
+      File.unlink(path)
+    end
+    names.each do |name|
+      path = File.join(directory, name)
+      File.symlink(File.join(source, name), path) unless File.symlink?(path)
+    end
+  end
 end
 
 def configure_lazyvim(home)

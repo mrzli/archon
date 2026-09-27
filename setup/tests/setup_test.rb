@@ -149,9 +149,11 @@ def fixture
       when 'code'
         puts 'EXISTING.extension' if ARGV.first == '--list-extensions'
       when 'git'
-        FileUtils.mkdir_p("\#{ARGV.last}/.git") if ARGV.include?('clone')
+        if ARGV.include?('clone')
+          FileUtils.mkdir_p(["\#{ARGV.last}/.git", "\#{ARGV.last}/.agents/skills/example"])
+          File.write("\#{ARGV.last}/.agents/skills/example/SKILL.md", 'example skill')
+        end
       when 'rsync'
-        exit 0 if ARGV[-2].include?('archon-skills')
         exec '/usr/bin/rsync', *ARGV
       when 'mise'
         if ARGV[0, 3] == %w[exec ruby --]
@@ -218,6 +220,29 @@ checks = {
     assert commands(env).none? { |args| args.include?('existing.extension') }
     assert commands(env).count { |args| args.include?('clone') } == 1
     assert commands(env).count { |args| args.include?('pull') } == 1
+    %w[.agents .claude].each do |directory|
+      path = "#{home}/#{directory}/skills/example"
+      assert File.readlink(path) == "#{env.fetch('XDG_DATA_HOME')}/archon-skills/.agents/skills/example"
+      assert File.read("#{path}/SKILL.md") == 'example skill'
+    end
+  end,
+  'failed skills updates preserve installed skills and links' => lambda do |repo, home, _bin, env|
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    source = "#{env.fetch('XDG_DATA_HOME')}/archon-skills/.agents/skills/example"
+    _, error, status = run_setup(repo, env.merge('FAIL_COMMAND' => 'git'))
+    assert !status.success?, error
+    %w[.agents .claude].each do |directory|
+      assert File.read("#{home}/#{directory}/skills/example/SKILL.md") == 'example skill'
+    end
+    FileUtils.rm_r(File.dirname(source))
+    _, error, status = run_setup(repo, env)
+    assert status.success?, error
+    assert Dir.empty?(File.dirname(source))
+    assert !File.exist?("#{env.fetch('XDG_DATA_HOME')}/archon/skills")
+    %w[.agents .claude].each do |directory|
+      assert !File.symlink?("#{home}/#{directory}/skills/example")
+    end
   end,
   'default setup replaces managed directories' => lambda do |repo, home, _bin, env|
     FileUtils.mkdir_p(["#{repo}/data/home/.config/managed", "#{home}/.config/managed"])
