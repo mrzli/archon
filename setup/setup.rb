@@ -139,8 +139,12 @@ end
 
 def install_development_environments
   log_step 'Installing development environments'
-  { ruby: 'rails', python: 'uv', node: 'node', bun: 'bun', zig: 'zls' }.each do |environment, command|
-    if command_available?(command)
+  %w[ruby python node bun zig].each do |environment|
+    installed = mise_tool_installed?(environment)
+    installed &&= command_available?('rails') if environment == 'ruby'
+    installed &&= command_available?('uv') if environment == 'python'
+    installed &&= mise_tool_installed?('zls') if environment == 'zig'
+    if installed
       log_info "#{environment} is already installed; skipping"
     else
       log_info "Installing #{environment}"
@@ -151,13 +155,19 @@ end
 
 def install_mise_tools
   log_step 'Installing mise tools'
-  { pnpm: 'pnpm', go: 'go', rust: 'rustc' }.each do |tool, command|
-    if command_available?(command)
-      log_info "#{tool} is already installed; skipping"
+  %w[pnpm go rust].each do |tool|
+    if mise_tool_installed?(tool)
+      log_info "#{tool} is already installed via mise; skipping"
     else
       log_info "Installing #{tool}"
-      run 'mise', 'use', '--global', tool.to_s
+      run 'mise', 'use', '--global', tool
     end
+  end
+end
+
+def mise_tool_installed?(tool)
+  JSON.parse(capture('mise', 'ls', '--global', '--installed', '--json', tool)).any? do |version|
+    version['installed'] && version['version'] != 'system'
   end
 end
 

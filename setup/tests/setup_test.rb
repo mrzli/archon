@@ -15,6 +15,10 @@ def fixture
     home = "#{root}/home"
     bin = "#{root}/bin"
     FileUtils.mkdir_p(["#{repo}/setup", "#{repo}/data/home", home, bin])
+    mise_tools = %w[ruby python node bun zig zls pnpm go].to_h do |tool|
+      [tool, [{ 'version' => '1.0', 'installed' => true }]]
+    end
+    File.write("#{root}/mise-tools.json", JSON.generate(mise_tools))
     %w[setup.sh setup/main.rb setup/setup.rb setup/helpers.rb setup/docker.rb setup/codex.rb setup/workarounds.rb].each do |file|
       FileUtils.cp(File.expand_path("../../#{file}", __dir__), "#{repo}/#{file}")
     end
@@ -77,6 +81,12 @@ def fixture
           exit(File.exist?("\#{state}/\#{ARGV.last}") ? 0 : 1)
         end
       when 'omarchy'
+        if ARGV[0, 2] == %w[install dev-env]
+          tools = JSON.parse(File.read("\#{state}/mise-tools.json"))
+          names = ARGV.last == 'zig' ? %w[zig zls] : [ARGV.last]
+          names.each { |tool| tools[tool] = [{ 'version' => '1.0', 'installed' => true }] }
+          File.write("\#{state}/mise-tools.json", JSON.generate(tools))
+        end
         if ARGV == %w[install gaming battlenet]
           launcher = File.join(ENV.fetch('HOME'), 'Games/battlenet/drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe')
           FileUtils.mkdir_p(File.dirname(launcher))
@@ -156,8 +166,12 @@ def fixture
       when 'rsync'
         exec '/usr/bin/rsync', *ARGV
       when 'mise'
-        if ARGV == %w[use --global rust]
-          File.symlink($0, File.join(File.dirname($0), 'rustc'))
+        tools = JSON.parse(File.read("\#{state}/mise-tools.json"))
+        if ARGV[0, 4] == %w[ls --global --installed --json]
+          puts JSON.generate(tools.fetch(ARGV.last, []).select { |version| version['installed'] })
+        elsif ARGV[0, 2] == %w[use --global]
+          tools[ARGV.last] = [{ 'version' => '1.0', 'installed' => true }]
+          File.write("\#{state}/mise-tools.json", JSON.generate(tools))
         end
         if ARGV[0, 3] == %w[exec ruby --]
           exec #{RbConfig.ruby.inspect}, *ARGV.drop(4)
@@ -185,13 +199,30 @@ def commands(env)
 end
 
 checks = {
-  'mise installs missing Rust and skips it on repeat runs' => lambda do |repo, _home, _bin, env|
+  'mise installs tools despite system executables and skips repeat installations' => lambda do |repo, _home, bin, env|
+    File.symlink("#{bin}/go", "#{bin}/rustc")
+    File.write("#{env.fetch('SYSTEM_FIXTURE')}/mise-tools.json", '{}')
     2.times do
       _, error, status = Open3.capture3(env, RbConfig.ruby, '-r', "#{repo}/setup/setup.rb",
-                                      '-e', 'install_mise_tools')
+                                      '-e', 'install_development_environments; install_mise_tools')
       assert status.success?, error
     end
-    assert commands(env) == [%w[mise use --global rust]]
+    installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
+    assert installs == %w[ruby python node bun zig].map { |tool| %W[omarchy install dev-env #{tool}] } +
+                       %w[pnpm go rust].map { |tool| %W[mise use --global #{tool}] }
+  end,
+  'mise requires installed versions and rejects system passthrough' => lambda do |repo, _home, _bin, env|
+    state = "#{env.fetch('SYSTEM_FIXTURE')}/mise-tools.json"
+    tools = JSON.parse(File.read(state))
+    tools['pnpm'] = [{ 'version' => 'system', 'installed' => true }]
+    tools['go'] = [{ 'version' => '1.0', 'installed' => false }]
+    tools['zls'] = []
+    File.write(state, JSON.generate(tools))
+    _, error, status = Open3.capture3(env, RbConfig.ruby, '-r', "#{repo}/setup/setup.rb",
+                                    '-e', 'install_development_environments; install_mise_tools')
+    assert status.success?, error
+    installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
+    assert installs == [%w[omarchy install dev-env zig], *%w[pnpm go rust].map { |tool| %W[mise use --global #{tool}] }]
   end,
   'help and invalid arguments do not provision' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env, '--help').last.success?
@@ -453,7 +484,7 @@ checks = {
     File.unlink("#{bin}/bun")
     _, error, status = run_setup(repo, env)
     assert status.success?, error
-    assert commands(env).include?(%w[omarchy install dev-env bun])
+    assert commands(env).none? { |args| args == %w[omarchy install dev-env bun] }
     assert commands(env).none? { |args| args.first == 'bun' || args[0, 3] == %w[mise exec bun] }
     assert File.exist?("#{home}/.local/lib/archon/cli.rb")
   end
