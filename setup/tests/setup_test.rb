@@ -160,8 +160,8 @@ def fixture
         puts 'EXISTING.extension' if ARGV.first == '--list-extensions'
       when 'git'
         if ARGV.include?('clone')
-          FileUtils.mkdir_p(["\#{ARGV.last}/.git", "\#{ARGV.last}/.agents/skills/example"])
-          File.write("\#{ARGV.last}/.agents/skills/example/SKILL.md", 'example skill')
+          FileUtils.mkdir_p(["\#{ARGV.last}/.git", "\#{ARGV.last}/skills/productivity/example"])
+          File.write("\#{ARGV.last}/skills/productivity/example/SKILL.md", 'example skill')
         end
       when 'rsync'
         exec '/usr/bin/rsync', *ARGV
@@ -264,14 +264,14 @@ checks = {
     assert commands(env).count { |args| args.include?('pull') } == 1
     %w[.agents .claude].each do |directory|
       path = "#{home}/#{directory}/skills/example"
-      assert File.readlink(path) == "#{env.fetch('XDG_DATA_HOME')}/archon-skills/.agents/skills/example"
+      assert File.readlink(path) == "#{env.fetch('XDG_DATA_HOME')}/archon-skills/skills/productivity/example"
       assert File.read("#{path}/SKILL.md") == 'example skill'
     end
   end,
   'failed skills updates preserve installed skills and links' => lambda do |repo, home, _bin, env|
     _, error, status = run_setup(repo, env)
     assert status.success?, error
-    source = "#{env.fetch('XDG_DATA_HOME')}/archon-skills/.agents/skills/example"
+    source = "#{env.fetch('XDG_DATA_HOME')}/archon-skills/skills/productivity/example"
     _, error, status = run_setup(repo, env.merge('FAIL_COMMAND' => 'git'))
     assert !status.success?, error
     %w[.agents .claude].each do |directory|
@@ -280,7 +280,7 @@ checks = {
     FileUtils.rm_r(File.dirname(source))
     _, error, status = run_setup(repo, env)
     assert status.success?, error
-    assert Dir.empty?(File.dirname(source))
+    assert Dir.empty?(File.dirname(File.dirname(source)))
     assert !File.exist?("#{env.fetch('XDG_DATA_HOME')}/archon/skills")
     %w[.agents .claude].each do |directory|
       assert !File.symlink?("#{home}/#{directory}/skills/example")

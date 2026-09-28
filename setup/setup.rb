@@ -233,7 +233,7 @@ def install_user_skills(home)
   else
     run(*github_git, 'clone', '--depth', '1', 'https://github.com/mrzli/skills.git', skills_repo)
   end
-  source = "#{skills_repo}/.agents/skills"
+  source = "#{skills_repo}/skills"
   # Git does not retain empty directories after the final skill is deleted.
   FileUtils.mkdir_p(source)
   sync_user_skill_links(source, home)
@@ -243,15 +243,30 @@ def sync_user_skill_links(source, home)
   raise "Missing skills source: #{source}" unless File.directory?(source)
 
   source = File.expand_path(source)
-  names = Dir.children(source).select { |name| File.file?(File.join(source, name, 'SKILL.md')) }.sort
+  ignored_groups = %w[experimental]
+  targets = {}
+  Dir.children(source).sort.each do |group|
+    group_path = File.join(source, group)
+    next if ignored_groups.include?(group) || !File.directory?(group_path)
+
+    Dir.children(group_path).sort.each do |name|
+      target = File.join(group_path, name)
+      next unless File.file?(File.join(target, 'SKILL.md'))
+      raise "Duplicate skill name: #{name}" if targets.key?(name)
+
+      targets[name] = target
+    end
+  end
   destinations = %w[.agents/skills .claude/skills].map { |directory| File.join(home, directory) }
+  # Links into this checkout are managed, even when skills move within it.
+  skills_repo = File.dirname(source)
   owned_link = lambda do |path|
-    File.symlink?(path) && File.expand_path(File.readlink(path), File.dirname(path)).start_with?("#{source}/")
+    File.symlink?(path) && File.expand_path(File.readlink(path), File.dirname(path)).start_with?("#{skills_repo}/")
   end
 
   # Check collisions before changing any links.
   destinations.each do |directory|
-    names.each do |name|
+    targets.each_key do |name|
       path = File.join(directory, name)
       raise "Skill path already exists and is not managed by Archon: #{path}" if path_exists?(path) && !owned_link.call(path)
     end
@@ -262,14 +277,13 @@ def sync_user_skill_links(source, home)
     Dir.children(directory).each do |name|
       path = File.join(directory, name)
       next unless owned_link.call(path)
-      target = File.join(source, name)
-      next if names.include?(name) && File.expand_path(File.readlink(path), directory) == target
+      next if targets[name] == File.expand_path(File.readlink(path), directory)
 
       File.unlink(path)
     end
-    names.each do |name|
+    targets.each do |name, target|
       path = File.join(directory, name)
-      File.symlink(File.join(source, name), path) unless File.symlink?(path)
+      File.symlink(target, path) unless File.symlink?(path)
     end
   end
 end
