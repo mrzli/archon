@@ -209,7 +209,7 @@ checks = {
     end
     installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
     assert installs == %w[ruby python node bun zig].map { |tool| %W[omarchy install dev-env #{tool}] } +
-                       %w[pnpm go rust].map { |tool| %W[mise use --global #{tool}] }
+                       %w[pnpm go rust codex claude].map { |tool| %W[mise use --global #{tool}] }
   end,
   'mise requires installed versions and rejects system passthrough' => lambda do |repo, _home, _bin, env|
     state = "#{env.fetch('SYSTEM_FIXTURE')}/mise-tools.json"
@@ -222,7 +222,7 @@ checks = {
                                     '-e', 'install_development_environments; install_mise_tools')
     assert status.success?, error
     installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
-    assert installs == [%w[omarchy install dev-env zig], *%w[pnpm go rust].map { |tool| %W[mise use --global #{tool}] }]
+    assert installs == [%w[omarchy install dev-env zig], *%w[pnpm go rust codex claude].map { |tool| %W[mise use --global #{tool}] }]
   end,
   'help and invalid arguments do not provision' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env, '--help').last.success?

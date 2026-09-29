@@ -155,7 +155,7 @@ end
 
 def install_mise_tools
   log_step 'Installing mise tools'
-  %w[pnpm go rust].each do |tool|
+  %w[pnpm go rust codex claude].each do |tool|
     if mise_tool_installed?(tool)
       log_info "#{tool} is already installed via mise; skipping"
     else
