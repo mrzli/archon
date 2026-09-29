@@ -14,7 +14,7 @@ module Archon
       action, group = parsed.values_at(:action, :group)
       return run.call('tmux', ['kill-server']) if action == 'kill'
       return stop_detached.call(arguments) if action == 'stop' && !environment['TMUX'].to_s.empty?
-      tmux ||= create_tmux(run: run, capture: capture)
+      tmux ||= create_tmux(run: run, capture: capture, ai: parsed[:ai])
       status = manage_groups(action, group, tmux, home: home, handlers: handlers)
       return status if status != 0 || action != 'start' || !environment['TMUX'].to_s.empty? || !tty
       attach_after_start(group, tmux)
@@ -31,12 +31,24 @@ module Archon
         warn "\n#{help}"
         return { status: 2 }
       end
-      unless options.empty? || (action != 'kill' && options.length == 2 && %w[--group -g].include?(options.first) && GROUPS.include?(options.last))
+      parsed = { action: action, group: nil, ai: DEFAULT_AI }
+      seen = []
+      valid = options.length.even? && options.each_slice(2).all? do |flag, value|
+        key = case flag
+              when '--group', '-g' then :group if action != 'kill' && GROUPS.include?(value)
+              when '--ai' then :ai if action == 'start' && AI_COMMANDS.key?(value)
+              end
+        next false unless key && !seen.include?(key)
+        seen << key
+        parsed[key] = value
+        true
+      end
+      unless valid
         warn "Invalid workspace options: #{options.join(' ')}"
         warn "\n#{help}"
         return { status: 2 }
       end
-      { action: action, group: options.last }
+      parsed
     end
 
     def manage_groups(action, group, backend, home: Dir.home, handlers: nil)

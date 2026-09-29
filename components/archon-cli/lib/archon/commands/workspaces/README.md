@@ -6,9 +6,16 @@ Manage tmux workspace sessions through the Archon CLI:
 archon workspaces start
 archon workspaces stop
 archon workspaces start --group general
+archon workspaces start --group flashcards --ai claude
 archon workspaces stop -g jslibs
 archon workspaces kill
 ```
+
+For `start`, use `--ai codex` (the default) or `--ai claude` to choose the AI
+window. Codex runs `codex resume --last`; Claude Code runs `claude --continue`.
+The selected tool must be available on `PATH`. The option applies only to newly
+created sessions. Stop and start a group to change its AI tool. The `general`
+group has only a shell and is unaffected.
 
 `kill` takes no arguments or options and runs `tmux kill-server`, terminating
 all sessions on the server, including sessions outside Archon's workspace groups.

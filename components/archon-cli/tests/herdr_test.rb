@@ -27,7 +27,8 @@ def all_workspace_directories(fixture)
   paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
 end
 
-[[], ['unknown'], %w[start --group invalid], %w[start --group], %w[stop extra], %w[kill -g general]].each do |arguments|
+[[], ['unknown'], %w[start --group invalid], %w[start --group], %w[stop extra], %w[kill -g general],
+ %w[start --ai], %w[start --ai unknown], %w[stop --ai claude]].each do |arguments|
   test("Herdr usage errors have no effects: #{arguments.join(' ')}") do
     herdr_fixture do |_, path|
       equal 2, run_archon(['wh', *arguments])[:status]
@@ -77,6 +78,23 @@ test('Herdr creates shared project layouts with silent pane run success, repeats
       assert call.include?('--no-focus')
       assert call.include?('--cwd')
     end
+  end
+end
+
+test('Herdr Claude selection creates Claude tabs and preserves existing workspaces on later starts') do
+  herdr_fixture do |fixture, path|
+    all_workspace_directories(fixture)
+    equal 0, run_archon(%w[wh start --ai claude])[:status]
+    workspaces = herdr_state(path)['workspaces']
+    equal 11, workspaces.length
+    workspaces.reject { |workspace| workspace['label'] == 'main' }.each do |workspace|
+      ai_tab = workspace['tabs'].find { |tab| tab['label'] == 'claude' }
+      assert ai_tab
+      equal ['claude --continue'], ai_tab['commands']
+      assert workspace['tabs'].none? { |tab| tab['label'] == 'codex' }
+    end
+    equal 0, run_archon(%w[wh start --group flashcards --ai codex])[:status]
+    equal workspaces, herdr_state(path)['workspaces']
   end
 end
 

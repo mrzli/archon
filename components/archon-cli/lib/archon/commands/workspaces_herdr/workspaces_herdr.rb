@@ -20,7 +20,7 @@ module Archon
         command_response(['session', 'stop', SESSION, '--json'], capture) if running
         return 0
       end
-      backend = create_herdr(running: running, capture: capture, run: run, start_server: start_server)
+      backend = create_herdr(running: running, capture: capture, run: run, start_server: start_server, ai: parsed[:ai])
       status = Workspaces.manage_groups(action, group, backend, home: home)
       if action == 'stop' && status == 0 && running && session_running?(capture)
         remaining = command_response(%w[workspace list], capture).fetch('workspaces')

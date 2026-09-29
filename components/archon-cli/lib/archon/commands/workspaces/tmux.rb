@@ -23,11 +23,11 @@ module Archon
       { status: result[:status] || 1, output: output }
     end
 
-    def create_tmux(run: method(:run_command), capture: method(:capture_command))
+    def create_tmux(run: method(:run_command), capture: method(:capture_command), ai: DEFAULT_AI)
       has_session = ->(session) { run.call('tmux', ['has-session', '-t', session], stdio: :ignore) == 0 }
       {
         has_session: has_session,
-        create_editor_session: ->(definition) { create_editor_session(run, definition) },
+        create_editor_session: ->(definition) { create_editor_session(run, definition, ai: ai) },
         create_shell_session: ->(definition) { run.call('tmux', ['new-session', '-d', '-s', definition[:session], '-c', definition[:directory], '-n', 'shell']) },
         stop_session: ->(session) { has_session.call(session) ? run.call('tmux', ['kill-session', '-t', session]) : 0 },
         kill_session: ->(session) { run.call('tmux', ['kill-session', '-t', session]) },
@@ -36,13 +36,13 @@ module Archon
       }
     end
 
-    def create_editor_session(run, definition)
+    def create_editor_session(run, definition, ai: DEFAULT_AI)
       session, directory = definition.values_at(:session, :directory)
       if run.call('tmux', ['new-session', '-d', '-s', session, '-c', directory, '-n', 'nvim']) != 0
         return { status: 1 }
       end
       operations = []
-      editor_tabs(definition).each_with_index do |tab, index|
+      editor_tabs(definition, ai: ai).each_with_index do |tab, index|
         operations << ['new-window', '-t', session, '-c', directory, '-n', tab[:name]] unless index.zero?
         operations << ['send-keys', '-t', "#{session}:#{tab[:name]}", tab[:command], 'Enter'] if tab[:command]
       end

@@ -58,7 +58,7 @@ module Archon
       end
     end
 
-    def create_herdr(running:, capture:, run:, start_server:)
+    def create_herdr(running:, capture:, run:, start_server:, ai: Workspaces::DEFAULT_AI)
       request = ->(arguments) { command_response(arguments, capture) }
       workspaces = running ? request.call(%w[workspace list]).fetch('workspaces') : []
       ensure_server = lambda do
@@ -100,7 +100,7 @@ module Archon
       {
         name: 'Herdr', resource_label: 'Herdr workspace',
         has_session: ->(name) { ensure_server.call; !find_workspace.call(name).nil? },
-        create_editor_session: ->(definition) { create.call(definition, Workspaces.editor_tabs(definition)) },
+        create_editor_session: ->(definition) { create.call(definition, Workspaces.editor_tabs(definition, ai: ai)) },
         create_shell_session: ->(definition) { create.call(definition, [{ name: 'shell' }])[:status] },
         stop_session: close, kill_session: close,
         list_sessions: -> { { status: 0, output: workspaces.map { |workspace| workspace.fetch('label') }.join("\n") } },

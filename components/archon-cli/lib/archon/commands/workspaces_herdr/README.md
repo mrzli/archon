@@ -1,24 +1,30 @@
 # Herdr workspaces command
 
-Requires Herdr on `PATH`, plus Neovim, Codex, Bun, and pnpm for the configured
+Requires Herdr on `PATH`, plus Neovim, the selected AI tool, Bun, and pnpm for the configured
 project commands. Manage workspaces in a dedicated Herdr session named `archon`:
 
 ```bash
 archon workspaces-herdr start
 arc wh start -g flashcards
+arc wh start --group flashcards --ai claude
 arc wh stop --group jslibs
 arc wh stop
 arc wh kill
 ```
 
+For `start`, use `--ai codex` (the default) or `--ai claude` to choose the AI
+tab. Codex runs `codex resume --last`; Claude Code runs `claude --continue`.
+The option applies only to newly created workspaces. Stop and start a group to
+change its AI tool. The `general` group has only a shell and is unaffected.
+
 The groups match `archon workspaces`:
 
 - `general`: a `main` workspace with a shell at `~/projects`.
-- `flashcards`: frontend and backend workspaces, each with Neovim, Codex,
+- `flashcards`: frontend and backend workspaces, each with Neovim, the selected AI tool,
   development, and shell tabs.
 - `jslibs`: immediate non-hidden repositories under
-  `~/projects/personal/mrzli-jslib`, with Neovim, Codex, and shell tabs.
-- `misc-projects`: the configured personal projects, with Neovim, Codex,
+  `~/projects/personal/mrzli-jslib`, with Neovim, the selected AI tool, and shell tabs.
+- `misc-projects`: the configured personal projects, with Neovim, the selected AI tool,
   and shell tabs.
 
 Start runs groups in the order above; stop uses the reverse order. Missing

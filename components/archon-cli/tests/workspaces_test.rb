@@ -8,6 +8,37 @@ def workspace_fixture(fixture)
   paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
 end
 
+test('AI selection defaults to Codex and combines with group selection in either order') do
+  equal 'codex', Workspaces.parse_arguments(['start'])[:ai]
+  %w[codex claude].each do |ai|
+    [['--ai', ai, '--group', 'flashcards'], ['-g', 'flashcards', '--ai', ai]].each do |options|
+      equal({ action: 'start', group: 'flashcards', ai: ai }, Workspaces.parse_arguments(['start', *options]))
+    end
+  end
+  [%w[start --ai], %w[start --ai unknown], %w[start -a claude],
+   %w[start --ai claude --ai codex], %w[start -g general --group general],
+   %w[stop --ai claude], %w[kill --ai claude]].each do |arguments|
+    calls = []
+    equal 2, Workspaces.run_workspaces(arguments, run: ->(*args) { calls << args }, capture: ->(*args) { calls << args })
+    equal [], calls
+  end
+end
+
+test('Claude selection reaches tmux AI windows in every project group') do
+  fixture do |fixture|
+    workspace_fixture(fixture)
+    calls = []
+    run = ->(_, args, **_) { calls << args; args.first == 'has-session' ? 1 : 0 }
+    equal 0, Workspaces.run_workspaces(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, run: run)
+    ai_windows = calls.select { |args| args.first == 'new-window' && args.last == 'claude' }
+    equal 10, ai_windows.length
+    ai_windows.each do |args|
+      assert calls.include?(['send-keys', '-t', "#{args[2]}:claude", 'claude --continue', 'Enter'])
+    end
+    assert calls.none? { |args| args.include?('codex') || args.include?('codex resume --last') }
+  end
+end
+
 test('tmux session operations preserve command arguments and exit statuses') do
   calls = []
   run = ->(command, arguments, **options) { calls << [command, arguments, options]; arguments.first == 'has-session' ? 1 : 7 }
