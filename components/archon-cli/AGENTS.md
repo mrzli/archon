@@ -31,6 +31,8 @@
 - Keep every README usage-only: commands, options, examples, prerequisites,
   and user-visible behavior. Test READMEs document how to run tests and their
   prerequisites.
+- When a command has substantial subcommands, give each its own headed section
+  in the command's README, with its prerequisites, examples, and behavior.
 - Do not document internal functioning, architecture, source layout, or test
   implementation in READMEs. Keep general contributor rules in AGENTS.md and
   task-specific design decisions in the relevant planning records.

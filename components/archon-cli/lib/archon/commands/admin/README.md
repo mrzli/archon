@@ -1,5 +1,10 @@
 # Administration
 
+Use `archon admin --help` for help. Exit statuses are `0` for success, `1` for
+operation failures, and `2` for invalid arguments.
+
+## Battery
+
 Battery commands require Lenovo's Linux conservation control and a `BAT0`
 battery for status reporting:
 
@@ -18,6 +23,8 @@ and needs no sudo. Unsupported machines report an error.
 These commands do not install a startup service or change setup defaults.
 Persistence across restarts depends on the firmware.
 
+## Voice
+
 Voice commands require systemd and an installed Voxtype user service.
 
 ```bash
@@ -33,6 +40,3 @@ Start dictation to load the configured model. Stop it before gaming to release
 its memory. Starting an already running service or stopping an inactive one is
 safe to repeat. These commands need no sudo, preserve downloaded models, and
 do not change whether Voxtype starts at login.
-
-Use `archon admin --help` for help. Exit statuses are `0` for success, `1` for
-operation failures, and `2` for invalid arguments.
