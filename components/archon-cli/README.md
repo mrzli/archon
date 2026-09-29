@@ -22,6 +22,8 @@ Archon provides one command for the workstation tools maintained by this
 repository:
 
 ```text
+archon admin battery status
+archon admin battery conservation <on|off>
 archon admin voice <start|stop>
 archon libs <command> [options]
 archon projects <command> [options]

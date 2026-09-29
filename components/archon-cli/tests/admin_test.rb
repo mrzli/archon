@@ -56,3 +56,91 @@ test('admin reports service failures without claiming success') do
     assert result[:stderr].include?('Service unavailable')
   end
 end
+
+test('battery commands validate arguments and provide help without operations') do
+  run = ->(*) { raise 'unexpected operation' }
+  [%w[battery], %w[battery conservation], %w[battery conservation yes],
+   %w[battery status extra], %w[battery conservation on extra]].each do |arguments|
+    status, = capture { Archon::Admin.run_admin(arguments, run: run, sys_root: '/nonexistent') }
+    equal 2, status
+  end
+  [%w[help battery], %w[battery --help], %w[battery conservation --help],
+   %w[battery status -h], %w[battery conservation on --help]].each do |arguments|
+    status, output, error = capture { Archon::Admin.run_admin(arguments, run: run, sys_root: '/nonexistent') }
+    equal 0, status
+    assert output.include?('battery conservation')
+    equal '', error
+  end
+end
+
+def battery_fixture
+  Dir.mktmpdir('archon-battery-') do |root|
+    control = File.join(root, 'bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode')
+    battery = File.join(root, 'class/power_supply/BAT0')
+    FileUtils.mkdir_p(File.dirname(control))
+    FileUtils.mkdir_p(battery)
+    File.write(control, "0\n")
+    File.write(File.join(battery, 'capacity'), "79\n")
+    File.write(File.join(battery, 'status'), "Not charging\n")
+    yield root, control
+  end
+end
+
+test('battery status is read-only and conservation changes are verified and repeat-safe') do
+  battery_fixture do |root, control|
+    calls = []
+    run = lambda do |command, arguments, stdio:|
+      equal 'sudo', command
+      equal :inherit, stdio
+      equal ['sh', '-c', 'printf "%s\\n" "$1" > "$2"', 'archon-battery'], arguments.first(4)
+      equal control, arguments.last
+      calls << arguments[-2]
+      # Execute the exact write with ordinary permissions against the fixture.
+      Archon::Shared.run_process(arguments.first, arguments.drop(1))
+    end
+    %w[off on on off off].each do |setting|
+      status, output, error = capture do
+        Archon::Admin.run_admin(['battery', 'conservation', setting], run: run, sys_root: root)
+      end
+      equal 0, status
+      equal "Battery conservation #{setting}.\n", output
+      equal '', error
+      status, output, error = capture do
+        Archon::Admin.run_admin(%w[battery status], run: run, sys_root: root)
+      end
+      equal 0, status
+      equal "Battery: 79% (Not charging)\nConservation: #{setting}\n", output
+      equal '', error
+    end
+    equal %w[1 0], calls
+  end
+end
+
+test('battery failures never claim success') do
+  battery_fixture do |root, control|
+    [{ status: 1 }, { signal: 'SIGTERM' }, { error: Errno::ENOENT.new('sudo') },
+     { status: 0 }].each do |result|
+      status, output, error = capture do
+        Archon::Admin.run_admin(%w[battery conservation on], run: ->(*) { result }, sys_root: root)
+      end
+      equal 1, status
+      equal '', output
+      assert error.include?('Battery operation failed:')
+      equal "0\n", File.read(control)
+    end
+    File.write(control, "unexpected\n")
+    status, output, error = capture do
+      Archon::Admin.run_admin(%w[battery status], sys_root: root)
+    end
+    equal 1, status
+    equal '', output
+    assert error.include?('Unexpected conservation setting')
+    File.unlink(control)
+    status, output, error = capture do
+      Archon::Admin.run_admin(%w[battery conservation on], run: ->(*) { raise 'unexpected operation' }, sys_root: root)
+    end
+    equal 1, status
+    equal '', output
+    assert error.include?('unavailable on this machine')
+  end
+end
