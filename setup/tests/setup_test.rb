@@ -361,7 +361,7 @@ checks = {
     end
     edits = JSON.parse(File.read("#{env.fetch('SYSTEM_FIXTURE')}/codex-edits.json"))
     assert edits == [
-      { 'keyPath' => 'model', 'value' => 'gpt-6-sol', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'model', 'value' => 'gpt-6.1-sol', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'model_reasoning_effort', 'value' => 'high', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'agents.enabled', 'value' => true, 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'agents.default_subagent_model', 'value' => 'gpt-6-luna', 'mergeStrategy' => 'replace' },

@@ -4,7 +4,7 @@ require_relative 'helpers'
 def configure_codex
   log_step 'Configuring Codex'
   settings = {
-    'model' => 'gpt-6-sol',
+    'model' => 'gpt-6.1-sol',
     'model_reasoning_effort' => 'high',
     'agents.enabled' => true,
     'agents.default_subagent_model' => 'gpt-6-luna',
