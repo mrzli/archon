@@ -23,6 +23,47 @@ and needs no sudo. Unsupported machines report an error.
 These commands do not install a startup service or change setup defaults.
 Persistence across restarts depends on the firmware.
 
+## GitHub SSH
+
+Run Archon setup before using the installed CLI. Archon's initial HTTPS clone
+and setup do not require GitHub SSH authentication. With Ruby and the required
+tools available, you can also run the CLI directly from the repository:
+
+```bash
+components/archon-cli/bin/archon admin github ssh create
+```
+
+Create the key, add the public key to your account at
+https://github.com/settings/keys, and then test authentication:
+
+```bash
+archon admin github ssh create
+archon admin github ssh test
+
+# Short form
+arc a github ssh create
+arc a github ssh test
+```
+
+`create` requires `ssh-keygen`, a running SSH agent accessible to `ssh-add`, and
+`wl-copy` in a Wayland session. It creates an Ed25519 key without a passphrase at
+`~/.ssh/id_ed25519_github`, with the existing `goran.mrzljak@gmail.com` comment.
+It adds the key to the agent, adds the GitHub host configuration to
+`~/.ssh/config`, and copies the public key to the clipboard. Registering the
+public key with GitHub remains a manual step.
+
+Repeating `create` reuses the key pair and avoids duplicate host entries. It
+preserves unrelated SSH configuration and accepts the configuration produced
+by the former root script. A different existing `Host github.com` block or an
+incomplete key pair causes an error rather than overwriting existing files.
+The config file is set to mode `600`.
+
+`test` requires `ssh`. It runs `ssh -T git@github.com` and displays GitHub's
+response. Confirm a first-connection host-key prompt only after checking
+[GitHub's published fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints).
+Successful authentication returns `0` from Archon, even though GitHub's lack of
+shell access makes SSH itself return `1`. Failures return `1`.
+
 ## Voice
 
 Voice commands require systemd and an installed Voxtype user service.

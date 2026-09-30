@@ -24,6 +24,7 @@ repository:
 ```text
 archon admin battery status
 archon admin battery conservation <on|off>
+archon admin github ssh <create|test>
 archon admin voice <start|stop>
 archon libs <command> [options]
 archon projects <command> [options]

@@ -118,8 +118,11 @@ Run the setup script to apply the managed system configuration:
 
 ### GitHub SSH Key
 
+Run Archon setup first, as described above. It installs the CLI;
+the initial HTTPS clone and setup do not require this SSH key.
+
 ```bash
-~/.local/share/archon/github-ssh-create.sh
+archon admin github ssh create
 # Automatically copies the public key to clipboard.
 ```
 
@@ -134,7 +137,7 @@ Setup the SSH key in your GitHub account:
 Test the SSH connection:
 
 ```bash
-~/.local/share/archon/github-ssh-test.sh
+archon admin github ssh test
 ```
 
 Now that the SSH key is set up, change the `archon` repo to use SSH instead of HTTPS:
