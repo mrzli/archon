@@ -1,7 +1,7 @@
 require_relative 'commands/admin/admin'
 require_relative 'commands/libs/libs'
 require_relative 'commands/projects/projects'
-require_relative 'commands/workspaces/workspaces'
+require_relative 'commands/workspaces_tmux/workspaces'
 require_relative 'commands/workspaces_herdr/workspaces_herdr'
 
 module Archon

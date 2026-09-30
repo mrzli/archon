@@ -67,4 +67,4 @@ Detailed behavior is documented with each command collection:
 - [Libraries](./lib/archon/commands/libs/README.md)
 - [Projects](./lib/archon/commands/projects/README.md)
 - [Workspaces (Herdr)](./lib/archon/commands/workspaces_herdr/README.md)
-- [Tmux workspaces](./lib/archon/commands/workspaces/README.md)
+- [Tmux workspaces](./lib/archon/commands/workspaces_tmux/README.md)

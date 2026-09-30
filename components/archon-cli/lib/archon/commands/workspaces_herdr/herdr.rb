@@ -1,4 +1,4 @@
-require_relative '../workspaces/workspaces'
+require_relative '../workspaces_tmux/workspaces'
 
 module Archon
   module WorkspacesHerdr

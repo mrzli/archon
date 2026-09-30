@@ -58,8 +58,8 @@ test_repeated_overlay_copy() {
   local archon_output alias_output tree_after_first tree_after_second
   mkdir -p "$home"
 
-  mkdir -p "$home/.local/lib/archon/commands/workspaces/tests" "$home/.local/lib/unrelated"
-  : > "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt"
+  mkdir -p "$home/.local/lib/archon/commands/workspaces_tmux/tests" "$home/.local/lib/unrelated"
+  : > "$home/.local/lib/archon/commands/workspaces_tmux/tests/user-note.txt"
   : > "$home/.local/lib/unrelated/keep"
 
   install_home "$home"
@@ -83,12 +83,12 @@ test_repeated_overlay_copy() {
   assert_absent "$home/.local/lib/archon/commands/libs/README.md" || return
   assert_absent "$home/.local/lib/archon/commands/projects/AGENTS.md" || return
   assert_absent "$home/.local/lib/archon/commands/projects/README.md" || return
-  assert_absent "$home/.local/lib/archon/commands/workspaces/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/commands/workspaces/README.md" || return
+  assert_absent "$home/.local/lib/archon/commands/workspaces_tmux/AGENTS.md" || return
+  assert_absent "$home/.local/lib/archon/commands/workspaces_tmux/README.md" || return
 
   local source_test
   for source_test in "$archon_cli_source/tests"/*_test.rb; do
-    assert_absent "$home/.local/lib/archon/commands/workspaces/tests/${source_test##*/}" || return
+    assert_absent "$home/.local/lib/archon/commands/workspaces_tmux/tests/${source_test##*/}" || return
   done
 
   assert_exists "$home/.local/lib/archon/cli.rb" || return
@@ -107,7 +107,8 @@ test_repeated_overlay_copy() {
   assert_exists "$home/.local/lib/archon/commands/libs/libs.rb" || return
   assert_exists "$home/.local/lib/archon/commands/projects/github_inventory.rb" || return
   assert_exists "$home/.local/lib/archon/commands/projects/projects.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/workspaces.rb" || return
+  assert_exists "$home/.local/lib/archon/commands/workspaces_tmux/workspaces.rb" || return
+  assert_absent "$home/.local/lib/archon/commands/workspaces/workspaces.rb" || return
   assert_exists "$home/.local/lib/archon/commands/workspaces_herdr/workspaces_herdr.rb" || return
   assert_absent "$home/.local/lib/archon/commands/workspaces_herdr/README.md" || return
   archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces --help)" || return
@@ -118,7 +119,7 @@ test_repeated_overlay_copy() {
   alias_output="$(cd "$home" && HOME="$home" .local/bin/arc wt --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
   [[ "$archon_output" == 'Usage: archon workspaces-tmux '* ]] || fail 'unexpected tmux workspace help' || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt" || return
+  assert_exists "$home/.local/lib/archon/commands/workspaces_tmux/tests/user-note.txt" || return
   assert_exists "$home/.local/lib/unrelated/keep"
 }
 
