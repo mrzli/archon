@@ -1,35 +1,36 @@
 require_relative 'test_helpers'
 
 Workspaces = Archon::Workspaces
+Tmux = Archon::WorkspacesTmux
 
-def workspace_fixture(fixture)
+def all_workspace_directories(fixture)
   paths = ['projects/personal/mrzli-jslib/example/.git', 'projects/personal/mrzli/flashcards-fe',
            'projects/personal/mrzli/flashcards-be'] + Workspaces::PROJECTS.map { |project| "projects/personal/#{project}" }
   paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
 end
 
 test('AI selection defaults to Codex and combines with group selection in either order') do
-  equal 'codex', Workspaces.parse_arguments(['start'])[:ai]
+  equal 'codex', Workspaces.parse_arguments(['start'], help: Tmux::HELP)[:ai]
   %w[codex claude].each do |ai|
     [['--ai', ai, '--group', 'flashcards'], ['-g', 'flashcards', '--ai', ai]].each do |options|
-      equal({ action: 'start', group: 'flashcards', ai: ai }, Workspaces.parse_arguments(['start', *options]))
+      equal({ action: 'start', group: 'flashcards', ai: ai }, Workspaces.parse_arguments(['start', *options], help: Tmux::HELP))
     end
   end
   [%w[start --ai], %w[start --ai unknown], %w[start -a claude],
    %w[start --ai claude --ai codex], %w[start -g general --group general],
    %w[stop --ai claude], %w[kill --ai claude]].each do |arguments|
     calls = []
-    equal 2, Workspaces.run_workspaces(arguments, run: ->(*args) { calls << args }, capture: ->(*args) { calls << args })
+    equal 2, Tmux.run_workspaces_tmux(arguments, run: ->(*args) { calls << args }, capture: ->(*args) { calls << args })
     equal [], calls
   end
 end
 
 test('Claude selection reaches tmux AI windows in every project group') do
   fixture do |fixture|
-    workspace_fixture(fixture)
+    all_workspace_directories(fixture)
     calls = []
     run = ->(_, args, **_) { calls << args; args.first == 'has-session' ? 1 : 0 }
-    equal 0, Workspaces.run_workspaces(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, run: run)
+    equal 0, Tmux.run_workspaces_tmux(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, run: run)
     ai_windows = calls.select { |args| args.first == 'new-window' && args.last == 'claude' }
     equal 10, ai_windows.length
     ai_windows.each do |args|
@@ -42,7 +43,7 @@ end
 test('tmux session operations preserve command arguments and exit statuses') do
   calls = []
   run = ->(command, arguments, **options) { calls << [command, arguments, options]; arguments.first == 'has-session' ? 1 : 7 }
-  tmux = Workspaces.create_tmux(run: run, capture: ->(*_) { { status: 3, output: 'capture output' } })
+  tmux = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 3, output: 'capture output' } })
   equal 0, tmux[:stop_session].call('absent')
   equal 7, tmux[:create_shell_session].call(session: 'main', directory: '/fixture/projects')
   equal 7, tmux[:attach_session].call('main')
@@ -71,18 +72,18 @@ end
     expected.concat([['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'shell'],
                      ['select-window', '-t', 'editor:nvim']])
     calls = []
-    result = Workspaces.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
+    result = Tmux.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
     equal({ status: 0 }, result)
     equal expected, calls
     expected.each_index do |failed_index|
       calls = []
       run = ->(_, arguments) { calls << arguments; calls.length == failed_index + 1 ? 1 : 0 }
-      result = Workspaces.create_editor_session(run, definition)
+      result = Tmux.create_editor_session(run, definition)
       equal 1, result[:status]
       equal failed_index.zero? ? nil : 0, result[:cleanup_status]
       equal expected.take(failed_index + 1) + (failed_index.zero? ? [] : [%w[kill-session -t editor]]), calls
     end
-    result = Workspaces.create_editor_session(->(_, args) { args.first == 'new-session' ? 0 : 1 }, definition)
+    result = Tmux.create_editor_session(->(_, args) { args.first == 'new-session' ? 0 : 1 }, definition)
     equal({ status: 1, cleanup_status: 1 }, result)
   end
 end
@@ -91,30 +92,30 @@ test('workspace routing preserves group selection, ordering, continuation, and k
   calls = []
   handlers = Workspaces::GROUPS.to_h { |group| [group, ->(action, _, **_) { calls << [action, group]; group == 'flashcards' ? 1 : 0 }] }
   context = { handlers: handlers, tmux: {}, environment: {}, tty: false }
-  equal 1, Workspaces.run_workspaces(['start'], **context)
+  equal 1, Tmux.run_workspaces_tmux(['start'], **context)
   equal Workspaces::GROUPS.map { |group| ['start', group] }, calls
   calls.clear
-  equal 1, Workspaces.run_workspaces(['stop'], **context)
+  equal 1, Tmux.run_workspaces_tmux(['stop'], **context)
   equal Workspaces::GROUPS.reverse.map { |group| ['stop', group] }, calls
   calls.clear
-  equal 0, Workspaces.run_workspaces(%w[start -g general], **context)
+  equal 0, Tmux.run_workspaces_tmux(%w[start -g general], **context)
   equal [['start', 'general']], calls
   Workspaces::GROUPS.each do |group|
     calls.clear
-    Workspaces.run_workspaces(['start', '--group', group], **context)
+    Tmux.run_workspaces_tmux(['start', '--group', group], **context)
     equal [['start', group]], calls
   end
   calls.clear
-  equal 7, Workspaces.run_workspaces(['kill'], run: ->(command, args) { calls << [command, args]; 7 })
+  equal 7, Tmux.run_workspaces_tmux(['kill'], run: ->(command, args) { calls << [command, args]; 7 })
   equal [['tmux', ['kill-server']]], calls
 end
 
 test('validated stop inside tmux delegates to its worker and propagates failure') do
   calls = []
   arguments = %w[stop -g general]
-  equal 4, Workspaces.run_workspaces(arguments, environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args) { calls << args; 4 })
+  equal 4, Tmux.run_workspaces_tmux(arguments, environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args) { calls << args; 4 })
   equal [arguments], calls
-  equal 2, Workspaces.run_workspaces(%w[stop -g invalid], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(_) { raise 'unexpected worker' })
+  equal 2, Tmux.run_workspaces_tmux(%w[stop -g invalid], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(_) { raise 'unexpected worker' })
 end
 
 test('attachment selects only matching sessions, prefers main, and handles list and attach failures') do
@@ -130,7 +131,7 @@ test('attachment selects only matching sessions, prefers main, and handles list 
   %w[start stop].each do |action|
     calls.clear
     context = { tmux: tmux, handlers: { 'general' => ->(*_, **_) { 0 } }, environment: {}, tty: false }
-    equal 0, Workspaces.run_workspaces([action, '-g', 'general'], **context)
+    equal 0, Tmux.run_workspaces_tmux([action, '-g', 'general'], **context)
     assert calls.empty?
   end
   %w[no\ server\ running no\ sessions error\ connecting].each do |message|
@@ -142,7 +143,7 @@ end
 
 test('injected tmux reaches real groups, preserves existing sessions, and tolerates repeated stops') do
   fixture do |fixture|
-    workspace_fixture(fixture)
+    all_workspace_directories(fixture)
     sessions = {}
     creations = []
     tmux = {
@@ -155,13 +156,13 @@ test('injected tmux reaches real groups, preserves existing sessions, and tolera
       attach_session: ->(session) { equal 'main', session; 0 }
     }
     context = { home: fixture[:home], tmux: tmux, environment: {}, tty: true }
-    2.times { equal 0, Workspaces.run_workspaces(['start'], **context) }
+    2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context) }
     equal 11, creations.length
     equal 'bun run dev', sessions['flashcards-fe'][:dev_command]
     equal 'pnpm run dev', sessions['flashcards-be'][:dev_command]
     assert sessions.key?('project-mrzli-mrzli-github-io')
     sessions['unrelated'] = {}
-    2.times { equal 0, Workspaces.run_workspaces(['stop'], **context) }
+    2.times { equal 0, Tmux.run_workspaces_tmux(['stop'], **context) }
     equal ['unrelated'], sessions.keys
   end
 end
@@ -182,7 +183,7 @@ end
 
 test('group failures report rollback errors, continue to later sessions, and allow retry') do
   fixture do |fixture|
-    workspace_fixture(fixture)
+    all_workspace_directories(fixture)
     sessions = Set.new
     fail_start = true
     tmux = {
@@ -219,10 +220,10 @@ end
 
 test('signaled subprocesses become operational failures for execution and capture') do
   fixture do |fixture|
-    workspace_fixture(fixture)
+    all_workspace_directories(fixture)
     write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nkill -TERM \"$$\"\n")
     [%w[start -g flashcards], %w[stop -g jslibs], ['kill']].each do |arguments|
-      result = run_archon(['workspaces-tmux', *arguments])
+      result = run_archon(['workspaces', 'tmux', *arguments])
       equal 1, result[:status]
       equal nil, result[:signal]
     end

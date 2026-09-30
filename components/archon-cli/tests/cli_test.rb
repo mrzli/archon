@@ -1,9 +1,15 @@
 require_relative 'test_helpers'
 
 usage_cases = [%w[h extra], %w[p s], %w[l b], %w[w s], %w[wt s], [], ['unknown'], %w[help extra],
-               ['workspace'], ['workspaces'], ['workspaces-herdr'], ['wh'],
-               ['workspaces-tmux'], %w[workspaces-tmux launch], %w[workspaces-tmux start --group hubs],
-               %w[workspaces-tmux kill extra], %w[workspaces-tmux kill -g general], %w[workspaces-tmux start --group]]
+               ['workspace'], ['workspaces'], ['workspaces-herdr'], ['workspaces-tmux'], ['wh'],
+               %w[workspaces start], %w[workspaces stop], %w[workspaces kill],
+               %w[workspaces unknown], %w[workspaces help extra]]
+%w[herdr tmux].each do |backend|
+  usage_cases.concat([['workspaces', backend], ['workspaces', backend, 'launch'],
+                      ['workspaces', backend, 'start', '--group', 'hubs'],
+                      ['workspaces', backend, 'kill', 'extra'], ['workspaces', backend, 'kill', '-g', 'general'],
+                      ['workspaces', backend, 'start', '--group']])
+end
 %w[projects libs].each do |domain|
   usage_cases.concat([[domain], [domain, 'unknown'], [domain, 'global'], [domain, 'help', 'unknown'], [domain, 'help', 'status', 'extra']])
   commands = %w[delete prune remote status sync] + (domain == 'libs' ? %w[build graph] : [])
@@ -23,14 +29,24 @@ end
 test('help, aliases, and nested command help work without external commands') do
   fixture do |fixture|
     %w[git gh bun tmux herdr].each { |name| write_executable(File.join(fixture[:bin], name), "#!/bin/sh\nexit 99\n") }
-    [['h', 'help', []], ['l', 'libs', %w[help build]], ['p', 'projects', %w[help status]], ['w', 'workspaces', ['--help']], ['wt', 'workspaces-tmux', ['--help']]].each do |short, full, options|
+    [['h', 'help', []], ['l', 'libs', %w[help build]], ['p', 'projects', %w[help status]], ['w', 'workspaces', ['--help']]].each do |short, full, options|
       result = run_archon([short, *options])
       equal 0, result[:status]
       equal result, run_archon([full, *options])
       assert result[:stdout].start_with?("Usage: archon #{full} ") if full.start_with?('workspace')
     end
-    [[], ['projects'], ['libs'], ['workspaces'], ['workspaces-tmux']].each do |prefix|
+    [[], ['projects'], ['libs'], ['workspaces']].each do |prefix|
       %w[-h --help].each { |help| equal 0, run_archon([*prefix, help])[:status] }
+    end
+    { 'h' => 'herdr', 't' => 'tmux' }.each do |short, full|
+      %w[help -h --help].each do |help|
+        result = run_archon(['workspaces', full, help])
+        equal 0, result[:status]
+        assert result[:stdout].start_with?("Usage: archon workspaces #{full} ")
+        equal result, run_archon(['w', short, help])
+        equal result, run_archon(['workspaces', short, help])
+        equal result, run_archon(['w', full, help])
+      end
     end
     %w[projects libs].each do |domain|
       commands = %w[delete prune remote status sync help] + (domain == 'libs' ? %w[build graph] : [])

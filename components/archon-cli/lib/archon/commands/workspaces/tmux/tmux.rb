@@ -1,15 +1,8 @@
-require_relative '../../shared/process'
-require_relative 'layout'
+require_relative '../shared'
 
 module Archon
-  module Workspaces
+  module WorkspacesTmux
     extend self
-
-    def run_command(command, arguments, stdio: :inherit)
-      result = Shared.run_process(command, arguments, stdio: stdio)
-      warn "Could not start command: #{result[:error].message}" if result[:error]
-      result[:status] || 1
-    end
 
     def capture_command(command, arguments)
       result = Shared.run_process(command, arguments)
@@ -23,9 +16,10 @@ module Archon
       { status: result[:status] || 1, output: output }
     end
 
-    def create_tmux(run: method(:run_command), capture: method(:capture_command), ai: DEFAULT_AI)
+    def create_tmux(run: Workspaces.method(:run_command), capture: method(:capture_command), ai: Workspaces::DEFAULT_AI)
       has_session = ->(session) { run.call('tmux', ['has-session', '-t', session], stdio: :ignore) == 0 }
       {
+        name: 'tmux', resource_label: 'tmux session',
         has_session: has_session,
         create_editor_session: ->(definition) { create_editor_session(run, definition, ai: ai) },
         create_shell_session: ->(definition) { run.call('tmux', ['new-session', '-d', '-s', definition[:session], '-c', definition[:directory], '-n', 'shell']) },
@@ -36,13 +30,13 @@ module Archon
       }
     end
 
-    def create_editor_session(run, definition, ai: DEFAULT_AI)
+    def create_editor_session(run, definition, ai: Workspaces::DEFAULT_AI)
       session, directory = definition.values_at(:session, :directory)
       if run.call('tmux', ['new-session', '-d', '-s', session, '-c', directory, '-n', 'nvim']) != 0
         return { status: 1 }
       end
       operations = []
-      editor_tabs(definition, ai: ai).each_with_index do |tab, index|
+      Workspaces.editor_tabs(definition, ai: ai).each_with_index do |tab, index|
         operations << ['new-window', '-t', session, '-c', directory, '-n', tab[:name]] unless index.zero?
         operations << ['send-keys', '-t', "#{session}:#{tab[:name]}", tab[:command], 'Enter'] if tab[:command]
       end

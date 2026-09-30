@@ -1,26 +1,20 @@
 require 'rbconfig'
 require_relative 'help'
 require_relative 'groups'
+require_relative '../../shared/process'
 
 module Archon
   module Workspaces
+    extend self
     GROUPS = %w[general flashcards jslibs misc-projects].freeze
 
-    def run_workspaces(arguments, home: Dir.home, environment: ENV, tty: $stdin.tty?, tmux: nil,
-                       handlers: nil, run: method(:run_command), capture: method(:capture_command),
-                       stop_detached: method(:run_detached_stop))
-      parsed = parse_arguments(arguments)
-      return parsed[:status] if parsed.key?(:status)
-      action, group = parsed.values_at(:action, :group)
-      return run.call('tmux', ['kill-server']) if action == 'kill'
-      return stop_detached.call(arguments) if action == 'stop' && !environment['TMUX'].to_s.empty?
-      tmux ||= create_tmux(run: run, capture: capture, ai: parsed[:ai])
-      status = manage_groups(action, group, tmux, home: home, handlers: handlers)
-      return status if status != 0 || action != 'start' || !environment['TMUX'].to_s.empty? || !tty
-      attach_after_start(group, tmux)
+    def run_command(command, arguments, stdio: :inherit)
+      result = Shared.run_process(command, arguments, stdio: stdio)
+      warn "Could not start command: #{result[:error].message}" if result[:error]
+      result[:status] || 1
     end
 
-    def parse_arguments(arguments, help: HELP.fetch('global'))
+    def parse_arguments(arguments, help:)
       if arguments.length == 1 && %w[help -h --help].include?(arguments.first)
         puts help
         return { status: 0 }
@@ -88,7 +82,7 @@ module Archon
       session ? backend.fetch(:attach_session).call(session) : 0
     end
 
-    def run_detached_stop(arguments, module_path: __FILE__, entry_point: 'Archon::Workspaces.run_workspaces', log_name: 'workspaces-stop.log')
+    def run_detached_stop(arguments, module_path:, entry_point:, log_name:)
       directory = File.join(ENV.fetch('XDG_STATE_HOME', File.join(Dir.home, '.local/state')), 'archon')
       FileUtils.mkdir_p(directory)
       log = File.join(directory, log_name)

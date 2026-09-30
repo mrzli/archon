@@ -1,4 +1,4 @@
-require_relative 'tmux'
+require_relative 'layout'
 
 module Archon
   module Workspaces

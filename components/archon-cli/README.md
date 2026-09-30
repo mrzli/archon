@@ -27,32 +27,28 @@ archon admin battery conservation <on|off>
 archon admin voice <start|stop>
 archon libs <command> [options]
 archon projects <command> [options]
-archon workspaces <start|stop> [options]
-archon workspaces kill
-archon workspaces-tmux <start|stop> [options]
-archon workspaces-tmux kill
+archon workspaces herdr <start|stop|kill> [options]
+archon workspaces tmux <start|stop|kill> [options]
 ```
 
 `arc` is an exact alias for `archon`, so `arc projects status` and
 `archon projects status` are equivalent.
 
 Direct subcommands also have short aliases: `a` for `admin`, `h` for `help`, `l` for
-`libs`, `p` for `projects`, `w` for `workspaces`, and `wt` for
-`workspaces-tmux`. These work with both
+`libs`, `p` for `projects`, and `w` for `workspaces`. These work with both
 `archon` and `arc`, for example:
 
 ```bash
 arc a voice stop
 arc p status
 arc l build
-arc w start
-arc wt start -g flashcards
+arc w h start
+arc w t start -g flashcards
 arc h
 ```
 
-`workspaces` uses Herdr; `workspaces-tmux` uses tmux.
-
-Aliases apply only to direct subcommands; nested commands keep their full names.
+`workspaces` requires a backend: `herdr` (alias `h`) or `tmux` (alias `t`).
+There is no default backend. Other nested commands keep their full names.
 
 Commands use these exit statuses:
 
@@ -66,5 +62,4 @@ Detailed behavior is documented with each command collection:
 - [Administration](./lib/archon/commands/admin/README.md)
 - [Libraries](./lib/archon/commands/libs/README.md)
 - [Projects](./lib/archon/commands/projects/README.md)
-- [Workspaces (Herdr)](./lib/archon/commands/workspaces_herdr/README.md)
-- [Tmux workspaces](./lib/archon/commands/workspaces_tmux/README.md)
+- [Workspaces](./lib/archon/commands/workspaces/README.md)

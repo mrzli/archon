@@ -4,12 +4,12 @@ Requires Herdr on `PATH`, plus Neovim, the selected AI tool, Bun, and pnpm for t
 project commands. Manage workspaces in a dedicated Herdr session named `archon`:
 
 ```bash
-archon workspaces start
-arc w start -g flashcards
-arc w start --group flashcards --ai claude
-arc w stop --group jslibs
-arc w stop
-arc w kill
+archon workspaces herdr start
+arc w h start -g flashcards
+arc w h start --group flashcards --ai claude
+arc w h stop --group jslibs
+arc w h stop
+arc w h kill
 ```
 
 For `start`, use `--ai codex` (the default) or `--ai claude` to choose the AI
@@ -17,7 +17,7 @@ tab. Codex runs `codex resume --last`; Claude Code runs `claude --continue`.
 The option applies only to newly created workspaces. Stop and start a group to
 change its AI tool. The `general` group has only a shell and is unaffected.
 
-The groups match `archon workspaces-tmux`:
+The groups match `archon workspaces tmux`:
 
 - `general`: a `main` workspace with a shell at `~/projects`.
 - `flashcards`: frontend and backend workspaces, each with Neovim, the selected AI tool,

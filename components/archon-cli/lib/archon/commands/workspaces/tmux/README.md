@@ -3,12 +3,12 @@
 Manage tmux workspace sessions through the Archon CLI:
 
 ```bash
-archon workspaces-tmux start
-archon workspaces-tmux stop
-archon workspaces-tmux start --group general
-archon workspaces-tmux start --group flashcards --ai claude
-archon workspaces-tmux stop -g jslibs
-archon workspaces-tmux kill
+archon workspaces tmux start
+archon workspaces tmux stop
+archon workspaces tmux start --group general
+archon workspaces tmux start --group flashcards --ai claude
+archon workspaces tmux stop -g jslibs
+archon workspaces tmux kill
 ```
 
 For `start`, use `--ai codex` (the default) or `--ai claude` to choose the AI
@@ -28,3 +28,7 @@ attaches to an existing session from the requested group. Aggregate start
 prefers `main`. It never creates an extra session for attachment. Inside tmux,
 the current session stays selected. Stop, help, and non-interactive calls do
 not attach.
+
+Stop from a tmux pane runs independently so closing that pane does not interrupt
+the remaining work. Shutdown output is saved in
+`${XDG_STATE_HOME:-$HOME/.local/state}/archon/workspaces-tmux-stop.log`.
