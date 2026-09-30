@@ -9,6 +9,7 @@ def configure_codex
     'agents.enabled' => true,
     'agents.default_subagent_model' => 'gpt-6-luna',
     'agents.default_subagent_reasoning_effort' => 'high',
+    'tui.status_line' => %w[model-with-reasoning current-dir git-branch thread-name context-used weekly-limit],
     'tui.keymap.chat.edit_queued_message' => 'alt-shift-up',
     'tui.keymap.chat.prompt_stack_back' => 'alt-shift-down'
   }
@@ -37,5 +38,5 @@ def configure_codex
     end
     server.close_write
   end
-  log_info 'Codex uses Sol/High with Luna/High subagents and Alt+Shift+Up/Down navigation. Restart Codex to load the settings.'
+  log_info 'Codex settings configured. Restart Codex to load them.'
 end

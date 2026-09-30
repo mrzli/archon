@@ -60,12 +60,18 @@ def fixture
       state = ENV.fetch('SYSTEM_FIXTURE')
       case name
       when 'codex'
+        config_path = "\#{state}/codex-config.json"
+        config = File.exist?(config_path) ? JSON.parse(File.read(config_path)) : {}
         STDIN.each_line do |line|
           request = JSON.parse(line)
           next unless request.key?('id')
 
           if request['method'] == 'config/batchWrite'
-            File.write("\#{state}/codex-edits.json", JSON.generate(request.fetch('params').fetch('edits')))
+            edits = request.fetch('params').fetch('edits')
+            File.write("\#{state}/codex-edits.json", JSON.generate(edits))
+            config['tui'] ||= {}
+            config['tui']['status_line'] = edits.find { |edit| edit['keyPath'] == 'tui.status_line' }.fetch('value')
+            File.write(config_path, JSON.generate(config))
           end
           puts JSON.generate({ id: request['id'], result: {} })
           STDOUT.flush
@@ -354,7 +360,7 @@ checks = {
     assert run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy')).last.exitstatus == 1
     assert commands(env) == [%w[omarchy pkg drop aether obsidian]]
   end,
-  'setup provisions Codex model, subagent, and navigation settings' => lambda do |repo, _home, _bin, env|
+  'setup provisions Codex model, subagent, navigation, and status-line settings' => lambda do |repo, _home, _bin, env|
     2.times do
       _, error, status = run_setup(repo, env)
       assert status.success?, error
@@ -366,9 +372,25 @@ checks = {
       { 'keyPath' => 'agents.enabled', 'value' => true, 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'agents.default_subagent_model', 'value' => 'gpt-6-luna', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'agents.default_subagent_reasoning_effort', 'value' => 'high', 'mergeStrategy' => 'replace' },
+      { 'keyPath' => 'tui.status_line', 'value' => %w[model-with-reasoning current-dir git-branch thread-name context-used weekly-limit], 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'tui.keymap.chat.edit_queued_message', 'value' => 'alt-shift-up', 'mergeStrategy' => 'replace' },
       { 'keyPath' => 'tui.keymap.chat.prompt_stack_back', 'value' => 'alt-shift-down', 'mergeStrategy' => 'replace' }
     ]
+  end,
+  'Codex footer converges on the requested fields and ordering' => lambda do |repo, _home, _bin, env|
+    config_path = "#{env.fetch('SYSTEM_FIXTURE')}/codex-config.json"
+    expected = %w[model-with-reasoning current-dir git-branch thread-name context-used weekly-limit]
+    [nil, [], %w[git-branch weekly-limit model context-used], %w[context-used weekly-limit]].each do |existing|
+      config = { 'tui' => { 'status_line' => existing, 'show_tooltips' => false } }
+      File.write(config_path, JSON.generate(config))
+      2.times do
+        _, error, status = Open3.capture3(env, RbConfig.ruby, '-r', "#{repo}/setup/codex.rb", '-e', 'configure_codex')
+        assert status.success?, error
+        updated = JSON.parse(File.read(config_path))
+        assert updated.dig('tui', 'status_line') == expected
+        assert updated.dig('tui', 'show_tooltips') == false
+      end
+    end
   end,
   'Codex configuration failures stop setup' => lambda do |repo, _home, _bin, env|
     assert run_setup(repo, env.merge('FAIL_COMMAND' => 'codex')).last.exitstatus == 1
