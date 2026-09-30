@@ -1,14 +1,14 @@
-# Workspaces command
+# Tmux workspaces command
 
 Manage tmux workspace sessions through the Archon CLI:
 
 ```bash
-archon workspaces start
-archon workspaces stop
-archon workspaces start --group general
-archon workspaces start --group flashcards --ai claude
-archon workspaces stop -g jslibs
-archon workspaces kill
+archon workspaces-tmux start
+archon workspaces-tmux stop
+archon workspaces-tmux start --group general
+archon workspaces-tmux start --group flashcards --ai claude
+archon workspaces-tmux stop -g jslibs
+archon workspaces-tmux kill
 ```
 
 For `start`, use `--ai codex` (the default) or `--ai claude` to choose the AI

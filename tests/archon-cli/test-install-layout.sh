@@ -110,9 +110,14 @@ test_repeated_overlay_copy() {
   assert_exists "$home/.local/lib/archon/commands/workspaces/workspaces.rb" || return
   assert_exists "$home/.local/lib/archon/commands/workspaces_herdr/workspaces_herdr.rb" || return
   assert_absent "$home/.local/lib/archon/commands/workspaces_herdr/README.md" || return
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces-herdr --help)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc wh --help)" || return
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces --help)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
+  [[ "$archon_output" == 'Usage: archon workspaces '* ]] || fail 'unexpected Herdr workspace help' || return
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces-tmux --help)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc wt --help)" || return
+  assert_equals "$archon_output" "$alias_output" || return
+  [[ "$archon_output" == 'Usage: archon workspaces-tmux '* ]] || fail 'unexpected tmux workspace help' || return
   assert_exists "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt" || return
   assert_exists "$home/.local/lib/unrelated/keep"
 }

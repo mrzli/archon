@@ -2,7 +2,7 @@ require_relative 'herdr'
 
 module Archon
   module WorkspacesHerdr
-    HELP = (Workspaces::HELP.fetch('global').gsub('archon workspaces', 'archon workspaces-herdr') +
+    HELP = (Workspaces::HELP.fetch('global').gsub('archon workspaces-tmux', 'archon workspaces') +
       "\n\nUses the dedicated Herdr session 'archon'.\n" +
       "Stop also shuts down that session when no workspaces remain.\n" +
       "The kill action stops that entire session, including any extra workspaces in it.").freeze

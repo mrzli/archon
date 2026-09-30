@@ -2,8 +2,8 @@ module Archon
   module Workspaces
     HELP = {
       'global' => <<~TEXT.chomp
-        Usage: archon workspaces <start|stop> [options]
-               archon workspaces kill
+        Usage: archon workspaces-tmux <start|stop> [options]
+               archon workspaces-tmux kill
 
         Options:
           -g, --group <group>  Run only flashcards, general, jslibs, or misc-projects

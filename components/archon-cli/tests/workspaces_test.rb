@@ -222,7 +222,7 @@ test('signaled subprocesses become operational failures for execution and captur
     workspace_fixture(fixture)
     write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nkill -TERM \"$$\"\n")
     [%w[start -g flashcards], %w[stop -g jslibs], ['kill']].each do |arguments|
-      result = run_archon(['workspaces', *arguments])
+      result = run_archon(['workspaces-tmux', *arguments])
       equal 1, result[:status]
       equal nil, result[:signal]
     end

@@ -31,7 +31,7 @@ end
  %w[start --ai], %w[start --ai unknown], %w[stop --ai claude]].each do |arguments|
   test("Herdr usage errors have no effects: #{arguments.join(' ')}") do
     herdr_fixture do |_, path|
-      equal 2, run_archon(['wh', *arguments])[:status]
+      equal 2, run_archon(['w', *arguments])[:status]
       equal [], herdr_state(path)['calls']
     end
   end
@@ -39,10 +39,10 @@ end
 
 test('Herdr help and alias do not inspect or start a session') do
   herdr_fixture do |_, path|
-    short = run_archon(%w[wh --help])
+    short = run_archon(%w[w --help])
     equal 0, short[:status]
-    equal short, run_archon(%w[workspaces-herdr --help])
-    assert short[:stdout].include?('Usage: archon workspaces-herdr')
+    equal short, run_archon(%w[workspaces --help])
+    assert short[:stdout].include?('Usage: archon workspaces')
     equal [], herdr_state(path)['calls']
   end
 end
@@ -51,7 +51,7 @@ test('Herdr creates shared project layouts with silent pane run success, repeats
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
     2.times do
-      result = run_archon(%w[wh start])
+      result = run_archon(%w[w start])
       equal 0, result[:status]
       equal '', result[:stderr]
     end
@@ -84,7 +84,7 @@ end
 test('Herdr Claude selection creates Claude tabs and preserves existing workspaces on later starts') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[wh start --ai claude])[:status]
+    equal 0, run_archon(%w[w start --ai claude])[:status]
     workspaces = herdr_state(path)['workspaces']
     equal 11, workspaces.length
     workspaces.reject { |workspace| workspace['label'] == 'main' }.each do |workspace|
@@ -93,19 +93,19 @@ test('Herdr Claude selection creates Claude tabs and preserves existing workspac
       equal ['claude --continue'], ai_tab['commands']
       assert workspace['tabs'].none? { |tab| tab['label'] == 'codex' }
     end
-    equal 0, run_archon(%w[wh start --group flashcards --ai codex])[:status]
+    equal 0, run_archon(%w[w start --group flashcards --ai codex])[:status]
     equal workspaces, herdr_state(path)['workspaces']
   end
 end
 
 test('Herdr selected groups share discovery and skip missing directories without starting a server') do
   herdr_fixture do |fixture, path|
-    equal 0, run_archon(%w[wh start])[:status]
+    equal 0, run_archon(%w[w start])[:status]
     assert !herdr_state(path)['running']
     assert !herdr_state(path)['calls'].include?(['server'])
     library(fixture, 'visible')
     library(fixture, '.hidden')
-    result = run_archon(%w[wh start -g jslibs])
+    result = run_archon(%w[w start -g jslibs])
     equal 0, result[:status]
     equal ['jslib-visible'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
   end
@@ -114,12 +114,12 @@ end
 test('Herdr stop runs in reverse group order and preserves unrelated workspaces') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[wh start])[:status]
+    equal 0, run_archon(%w[w start])[:status]
     before = herdr_state(path)['workspaces']
     update_herdr_state(path) do |state|
       state['workspaces'] << { 'workspace_id' => 'w9999', 'label' => 'unrelated', 'tabs' => [] }
     end
-    2.times { equal 0, run_archon(%w[wh stop])[:status] }
+    2.times { equal 0, run_archon(%w[w stop])[:status] }
     state = herdr_state(path)
     equal ['unrelated'], state['workspaces'].map { |workspace| workspace['label'] }
     ids = state['calls'].select { |call| call.first(2) == %w[workspace close] }.map { |call| call[2] }
@@ -140,10 +140,10 @@ end
 
 test('Herdr named stop only closes the selected group and tolerates an absent session') do
   herdr_fixture do |fixture, path|
-    equal 0, run_archon(%w[wh stop -g flashcards])[:status]
+    equal 0, run_archon(%w[w stop -g flashcards])[:status]
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[wh start])[:status]
-    equal 0, run_archon(%w[wh stop -g flashcards])[:status]
+    equal 0, run_archon(%w[w start])[:status]
+    equal 0, run_archon(%w[w stop -g flashcards])[:status]
     workspaces = herdr_state(path)['workspaces']
     equal 9, workspaces.length
     assert workspaces.none? { |workspace| workspace['label'].start_with?('flashcards-') }
@@ -155,9 +155,9 @@ end
     test("Herdr #{arguments.join(' ')} shuts down an empty session, including from a pane: #{environment}") do
       herdr_fixture do |fixture, path|
         FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-        equal 0, run_archon(%w[wh start -g general])[:status]
+        equal 0, run_archon(%w[w start -g general])[:status]
         update_herdr_state(path) { |state| state['client_attached'] = true }
-        2.times { equal 0, run_archon(['wh', *arguments], environment)[:status] }
+        2.times { equal 0, run_archon(['w', *arguments], environment)[:status] }
         state = herdr_state(path)
         assert !state['running']
         assert state['workspaces'].none? { |workspace| workspace['label'] == '~' }
@@ -170,15 +170,15 @@ end
 test('Herdr stop reports session shutdown failures and allows retry') do
   herdr_fixture do |fixture, path|
     FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-    equal 0, run_archon(%w[wh start -g general])[:status]
+    equal 0, run_archon(%w[w start -g general])[:status]
     update_herdr_state(path) do |state|
       state['failure'] = { 'prefix' => %w[session stop], 'remaining' => 1 }
     end
-    result = run_archon(%w[wh stop])
+    result = run_archon(%w[w stop])
     equal 1, result[:status]
     assert result[:stderr].include?('Herdr session stop failed')
     assert herdr_state(path)['running']
-    equal 0, run_archon(%w[wh stop])[:status]
+    equal 0, run_archon(%w[w stop])[:status]
     assert !herdr_state(path)['running']
   end
 end
@@ -189,7 +189,7 @@ test('Herdr stop preserves a pre-existing home workspace') do
       state['running'] = true
       state['workspaces'] = [{ 'workspace_id' => 'w2', 'label' => '~', 'tabs' => [] }]
     end
-    equal 0, run_archon(%w[wh stop])[:status]
+    equal 0, run_archon(%w[w stop])[:status]
     assert herdr_state(path)['running']
     equal ['~'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
   end
@@ -197,9 +197,9 @@ end
 
 test('Herdr kill stops only archon and tolerates a stopped session') do
   herdr_fixture do |_, path|
-    equal 0, run_archon(%w[wh kill])[:status]
+    equal 0, run_archon(%w[w kill])[:status]
     update_herdr_state(path) { |state| state['running'] = true }
-    2.times { equal 0, run_archon(%w[wh kill])[:status] }
+    2.times { equal 0, run_archon(%w[w kill])[:status] }
     state = herdr_state(path)
     assert !state['running']
     equal 1, state['calls'].count { |call| call == %w[session stop archon --json] }
@@ -235,13 +235,13 @@ test('Herdr pane run failures roll back the new workspace, continue, and allow r
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[pane run], 'remaining' => 1 } }
-    result = run_archon(%w[wh start -g flashcards])
+    result = run_archon(%w[w start -g flashcards])
     equal 1, result[:status]
     assert result[:stderr].include?('Failed to start Herdr workspace: flashcards-fe')
     state = herdr_state(path)
     equal ['flashcards-be'], state['workspaces'].map { |workspace| workspace['label'] }
     assert state['calls'].any? { |call| call.first(2) == %w[workspace close] }
-    equal 0, run_archon(%w[wh start -g flashcards])[:status]
+    equal 0, run_archon(%w[w start -g flashcards])[:status]
     equal %w[flashcards-be flashcards-fe], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
   end
 end
@@ -249,9 +249,9 @@ end
 test('Herdr close failures are reported and do not prevent later workspace stops') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[wh start -g flashcards])[:status]
+    equal 0, run_archon(%w[w start -g flashcards])[:status]
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[workspace close], 'remaining' => 1 } }
-    result = run_archon(%w[wh stop -g flashcards])
+    result = run_archon(%w[w stop -g flashcards])
     equal 1, result[:status]
     assert result[:stderr].include?('Failed to stop Herdr workspace: flashcards-fe')
     equal ['flashcards-fe'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
@@ -297,7 +297,7 @@ test('failed Herdr server startup produces a private log and creates no workspac
   herdr_fixture do |fixture, path|
     FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => ['server'], 'remaining' => 1 } }
-    result = run_archon(%w[wh start -g general])
+    result = run_archon(%w[w start -g general])
     equal 1, result[:status]
     assert result[:stderr].include?('Herdr session archon did not start; see')
     equal [], herdr_state(path)['workspaces']
@@ -315,7 +315,7 @@ test('ambiguous Herdr workspace labels are refused without closing or creating r
       state['workspaces'] = [1, 2].map { |id| { 'workspace_id' => "w#{id}", 'label' => 'main' } }
     end
     %w[start stop].each do |action|
-      result = run_archon(['wh', action, '-g', 'general'])
+      result = run_archon(['w', action, '-g', 'general'])
       equal 1, result[:status]
       assert result[:stderr].include?('More than one Herdr workspace is named main')
     end
@@ -327,16 +327,16 @@ end
 test('Herdr stop worker preserves its target, completes all stops, and returns logged failures') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[wh start -g flashcards])[:status]
+    equal 0, run_archon(%w[w start -g flashcards])[:status]
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[workspace close], 'remaining' => 1 } }
-    result = run_archon(%w[wh stop -g flashcards], 'HERDR_ENV' => '1', 'HERDR_SESSION' => 'unrelated', 'HERDR_SOCKET_PATH' => '/unused/socket')
+    result = run_archon(%w[w stop -g flashcards], 'HERDR_ENV' => '1', 'HERDR_SESSION' => 'unrelated', 'HERDR_SOCKET_PATH' => '/unused/socket')
     equal 1, result[:status]
     assert result[:stderr].include?('Workspace shutdown failed; see')
     equal ['flashcards-fe'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
     log = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-stop.log')
     assert File.read(log).include?('Failed to stop Herdr workspace: flashcards-fe')
     equal 0o600, File.stat(log).mode & 0o777
-    equal 0, run_archon(%w[wh kill], 'HERDR_ENV' => '1')[:status]
+    equal 0, run_archon(%w[w kill], 'HERDR_ENV' => '1')[:status]
     assert !herdr_state(path)['running']
   end
 end
@@ -345,7 +345,7 @@ test('Herdr terminal attachment uses actual terminal detection and reports attac
   require 'shellwords'
   herdr_fixture do |fixture, path|
     FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-    command = Shellwords.join([RbConfig.ruby, ARCHON, 'wh', 'start', '-g', 'general'])
+    command = Shellwords.join([RbConfig.ruby, ARCHON, 'w', 'start', '-g', 'general'])
     terminal = ->(env = {}) { Open3.capture3(env.merge('SHELL' => '/bin/bash'), 'timeout', '15s', 'script', '--quiet', '--return', '--command', command, '/dev/null') }
     _, error, status = terminal.call
     assert status.success?, error

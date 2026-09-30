@@ -15,19 +15,19 @@ module Archon
       help (h)                 Show this help
       libs (l)                 Manage local JavaScript libraries
       projects (p)             Manage personal project repositories
-      workspaces (w)           Manage tmux workspace sessions
-      workspaces-herdr (wh)     Manage Herdr workspaces
+      workspaces (w)           Manage Herdr workspaces
+      workspaces-tmux (wt)     Manage tmux workspace sessions
   TEXT
 
   def main(arguments)
     command, *options = arguments
-    command = { 'a' => 'admin', 'h' => 'help', 'l' => 'libs', 'p' => 'projects', 'w' => 'workspaces', 'wh' => 'workspaces-herdr' }.fetch(command, command)
+    command = { 'a' => 'admin', 'h' => 'help', 'l' => 'libs', 'p' => 'projects', 'w' => 'workspaces', 'wt' => 'workspaces-tmux' }.fetch(command, command)
     case command
     when 'admin' then return Admin.run_admin(options)
     when 'libs' then return Libraries.run_libraries(options)
     when 'projects' then return Projects.run_projects(options)
-    when 'workspaces' then return Workspaces.run_workspaces(options)
-    when 'workspaces-herdr' then return WorkspacesHerdr.run_workspaces_herdr(options)
+    when 'workspaces' then return WorkspacesHerdr.run_workspaces_herdr(options)
+    when 'workspaces-tmux' then return Workspaces.run_workspaces(options)
     when 'help', '-h', '--help'
       if options.empty?
         puts GLOBAL_HELP

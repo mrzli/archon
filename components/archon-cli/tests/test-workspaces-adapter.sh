@@ -71,10 +71,10 @@ create_fixtures() {
 test_named_group() {
   create_fixtures || return
 
-  run_archon workspaces start --group flashcards || return
+  run_archon workspaces-tmux start --group flashcards || return
   assert_sessions flashcards-fe flashcards-be || return
 
-  run_archon workspaces stop -g flashcards || return
+  run_archon workspaces-tmux stop -g flashcards || return
   assert_sessions || return
   assert_no_attachment
 }
@@ -82,17 +82,17 @@ test_named_group() {
 test_aggregate_groups() {
   create_fixtures || return
 
-  run_archon workspaces start || return
+  run_archon workspaces-tmux start || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
     project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-repos project-mrzli-skills || return
-  run_archon workspaces stop || return
+  run_archon workspaces-tmux stop || return
   assert_sessions || return
   assert_no_attachment
 }
 
 test_terminal_aggregate() {
   create_fixtures || return
-  run_terminal_archon workspaces start || return
+  run_terminal_archon workspaces-tmux start || return
   assert_attachment main || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
     project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-repos project-mrzli-skills
@@ -100,7 +100,7 @@ test_terminal_aggregate() {
 
 test_terminal_named_group() {
   create_fixtures || return
-  run_terminal_archon workspaces start -g general || return
+  run_terminal_archon workspaces-tmux start -g general || return
   assert_attachment main || return
   assert_sessions main
 }
@@ -108,7 +108,7 @@ test_terminal_named_group() {
 test_terminal_inside_tmux() {
   create_fixtures || return
   export TMUX=fake-client
-  run_terminal_archon workspaces start -g general || return
+  run_terminal_archon workspaces-tmux start -g general || return
   assert_sessions main || return
   assert_no_attachment
 }

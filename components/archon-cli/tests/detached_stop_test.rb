@@ -18,7 +18,7 @@ require_relative 'test_helpers'
         end
         tmux.call('new-window', '-t', '=project-mrzli-archon', '-n', 'stopper', '/usr/bin/env',
           "HOME=#{fixture[:home]}", "XDG_STATE_HOME=#{ENV.fetch('XDG_STATE_HOME')}", "PATH=#{ENV.fetch('PATH')}",
-          RbConfig.ruby, File.expand_path('../bin/arc', __dir__), 'w', 'stop', *(group ? ['-g', group] : []))
+          RbConfig.ruby, File.expand_path('../bin/arc', __dir__), 'wt', 'stop', *(group ? ['-g', group] : []))
         expected = [*(group ? other : []), 'unrelated'].sort
         deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
         loop do
@@ -49,7 +49,7 @@ test('detached shutdown propagates failure and appends diagnostics to a private 
       esac
     SH
     2.times do
-      result = run_archon(%w[w stop -g general], 'TMUX' => 'fixture-server')
+      result = run_archon(%w[wt stop -g general], 'TMUX' => 'fixture-server')
       equal 1, result[:status]
       assert result[:stderr].include?('Workspace shutdown failed; see')
     end
