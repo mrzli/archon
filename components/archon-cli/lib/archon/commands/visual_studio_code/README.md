@@ -8,11 +8,11 @@ and `hyprctl` on `PATH`.
 ```bash
 archon visual-studio-code start
 arc vsc start
-arc vsc
 ```
 
-Omitting the action defaults to `start`. Choose a workspace, then select projects
-in the terminal checklist. The controls are shown in both prompts:
+Choose a workspace, then select projects in the terminal checklist.
+The action is required; `arc vsc` shows usage and exits with status 2.
+Use `arc vsc --help` for help. The controls are shown in both prompts:
 
 - `j`/`k` or Up/Down moves the cursor.
 - Workspace digits `1`–`9` and `0` select a workspace. `0` means workspace 10.

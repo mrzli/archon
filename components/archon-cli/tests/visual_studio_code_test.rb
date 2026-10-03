@@ -18,7 +18,7 @@ def vsc_terminal(home)
       launch = ->(projects, workspace, run:) { File.write(File.join(Dir.home, 'launched.json'), JSON.generate([projects, workspace])) }
       exit Archon::VisualStudioCode.run_visual_studio_code(ARGV, launch: launch)
     RUBY
-    pid = Process.spawn(RbConfig.ruby, '-r', File.expand_path('../lib/archon/cli', __dir__), '-e', script,
+    pid = Process.spawn(RbConfig.ruby, '-r', File.expand_path('../lib/archon/cli', __dir__), '-e', script, 'start',
                         in: slave, out: slave, err: slave)
     transcript = ''
     read_until = lambda do |text|
@@ -127,13 +127,17 @@ test('VS Code CLI validates arguments and routes aliases and help without extern
       equal 0, run_archon(['vsc', help])[:status]
       equal run_archon(['visual-studio-code', help]), run_archon(['vsc', help])
     end
-    [%w[vsc kill], %w[vsc start extra], %w[vsc stop extra], %w[vsc help extra]].each do |args|
+    [%w[vsc], %w[vsc kill], %w[vsc start extra], %w[vsc stop extra], %w[vsc help extra]].each do |args|
       equal 2, run_archon(args)[:status]
     end
-    equal 0, run_archon(['vsc'])[:status]
+    equal 0, run_archon(%w[vsc start])[:status]
     assert !File.exist?(File.join(fixture[:home], '.local/state/archon'))
     vsc_repository(fixture[:home], 'personal/a')
     result = run_archon(['vsc'])
+    equal 2, result[:status]
+    assert result[:stderr].include?(VSC::HELP)
+    assert !File.exist?(File.join(fixture[:home], '.local/state/archon'))
+    result = run_archon(%w[vsc start])
     equal 1, result[:status]
     assert result[:stderr].include?('interactive terminal')
   end
@@ -211,7 +215,7 @@ test('empty selection is saved and stale projects are not reopened') do
     equal({ 'workspace' => 2, 'projects' => [] }, VSC.load_selection(path))
     assert !File.exist?(File.join(home, 'launched.json'))
     File.write(path, '{broken')
-    equal 1, run_archon(['vsc'])[:status]
+    equal 1, run_archon(%w[vsc start])[:status]
     equal '{broken', File.read(path)
   end
 end

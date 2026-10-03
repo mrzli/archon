@@ -11,12 +11,12 @@ module Archon
     Usage: archon <command> [options]
 
     Commands:
-      admin (a)                Manage workstation services
-      help (h)                 Show this help
-      libs (l)                 Manage local JavaScript libraries
-      projects (p)             Manage personal project repositories
+      admin (a)                 Manage workstation services
+      help (h)                  Show this help
+      libs (l)                  Manage local JavaScript libraries
+      projects (p)              Manage personal project repositories
       visual-studio-code (vsc)  Open grouped VS Code projects or stop VS Code
-      workspaces (w)           Manage Herdr or tmux workspaces
+      workspaces (w)            Manage Herdr or tmux workspaces
   TEXT
 
   def main(arguments)

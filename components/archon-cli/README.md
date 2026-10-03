@@ -28,7 +28,7 @@ archon admin github ssh <create|test>
 archon admin voice <start|stop>
 archon libs <command> [options]
 archon projects <command> [options]
-archon visual-studio-code [start|stop]
+archon visual-studio-code <start|stop>
 archon workspaces herdr <start|stop|kill> [options]
 archon workspaces tmux <start|stop|kill> [options]
 ```
@@ -44,7 +44,7 @@ Direct subcommands also have short aliases: `a` for `admin`, `h` for `help`, `l`
 arc a voice stop
 arc p status
 arc l build
-arc vsc
+arc vsc start
 arc vsc stop
 arc w h start
 arc w t start -g flashcards

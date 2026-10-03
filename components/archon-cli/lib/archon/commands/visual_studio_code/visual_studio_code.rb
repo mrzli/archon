@@ -9,10 +9,10 @@ module Archon
     extend self
 
     HELP = <<~TEXT.chomp.freeze
-      Usage: archon visual-studio-code [start|stop]
-             archon vsc [start|stop]
+      Usage: archon visual-studio-code <start|stop>
+             archon vsc <start|stop>
 
-      start  Choose a workspace and projects, then open a Hyprland tabbed group (default)
+      start  Choose a workspace and projects, then open a Hyprland tabbed group
       stop   Stop ALL VS Code processes owned by the current user
 
       Start requires an interactive terminal, Hyprland, hyprctl, and code on PATH.
@@ -30,7 +30,7 @@ module Archon
         puts HELP
         return 0
       end
-      unless [[], %w[start], %w[stop]].include?(arguments)
+      unless [%w[start], %w[stop]].include?(arguments)
         warn "Expected start or stop.\n\n#{HELP}"
         return 2
       end
