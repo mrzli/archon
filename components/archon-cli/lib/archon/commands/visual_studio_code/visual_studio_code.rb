@@ -16,7 +16,7 @@ module Archon
       stop   Close ALL VS Code windows in the current Hyprland session
 
       Start requires an interactive terminal, Hyprland, hyprctl, and code on PATH.
-      Projects are Git repositories under ~/projects/clone and ~/projects/personal.
+      Projects are Git repositories under ~/projects/cloned and ~/projects/personal.
       Workspace and project selections are remembered for the next start.
       j/k or Up/Down: navigate. Space: toggle. Enter: accept. Esc or Ctrl+C: cancel.
       Workspace digits 1-9 and 0 (workspace 10) select a workspace; Enter accepts it.
@@ -42,7 +42,7 @@ module Archon
 
       projects = discover_projects(home)
       if projects.empty?
-        puts 'No Git repositories found under ~/projects/clone or ~/projects/personal.'
+        puts 'No Git repositories found under ~/projects/cloned or ~/projects/personal.'
         return 0
       end
       state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
@@ -69,7 +69,7 @@ module Archon
     end
 
     def discover_projects(home)
-      %w[clone personal].flat_map do |name|
+      %w[cloned personal].flat_map do |name|
         root = File.join(home, 'projects', name)
         next [] unless File.exist?(root)
         projects = []

@@ -117,11 +117,11 @@ test('VS Code discovery lists sorted repository roots and worktrees without trav
   fixture do |fixture|
     home = fixture[:home]
     equal [], VSC.discover_projects(home)
-    expected = %w[clone/z personal/owner/deep/a personal/owner/space\ project].map { |path| vsc_repository(home, path) }
+    expected = %w[cloned/z cloned/owner/deep/a personal/owner/deep/a personal/owner/space\ project].map { |path| vsc_repository(home, path) }
     expected << vsc_repository(home, 'personal/worktree', worktree: true)
     vsc_repository(home, 'personal/owner/deep/a/vendor/nested')
     FileUtils.mkdir_p(File.join(home, 'projects/personal/non-git'))
-    File.symlink(File.join(home, 'projects/personal'), File.join(home, 'projects/clone/link'))
+    File.symlink(File.join(home, 'projects/personal'), File.join(home, 'projects/cloned/link'))
     equal expected.sort, VSC.discover_projects(home)
   end
 end
@@ -183,7 +183,7 @@ end
 test('Escape at either prompt and Ctrl+C cancel the entire execution and restore the terminal') do
   fixture do |fixture|
     home = fixture[:home]
-    project = vsc_repository(home, 'clone/a')
+    project = vsc_repository(home, 'cloned/a')
     path = File.join(home, '.local/state/archon/visual-studio-code.json')
     VSC.save_selection(path, { 'workspace' => 4, 'projects' => [project] })
     before = File.read(path)
@@ -207,14 +207,14 @@ end
 test('empty selection is saved and stale projects are not reopened') do
   fixture do |fixture|
     home = fixture[:home]
-    project = vsc_repository(home, 'clone/a')
+    project = vsc_repository(home, 'cloned/a')
     path = File.join(home, '.local/state/archon/visual-studio-code.json')
     VSC.save_selection(path, { 'workspace' => 2, 'projects' => [File.join(home, 'deleted')] })
     status, = vsc_terminal(home) do |terminal, wait, text|
       wait.call('Choose workspace')
       terminal.write("\r")
       wait.call('Choose projects')
-      assert text.include?('[ ] clone/a')
+      assert text.include?('[ ] cloned/a')
       terminal.write("\r")
     end
     equal 0, status

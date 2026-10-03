@@ -21,7 +21,7 @@ Use `arc vsc --help` for help. The controls are shown in both prompts:
 - Escape cancels the entire selection without opening windows or saving changes.
 - Ctrl+C cancels and restores the terminal.
 
-Git repositories are discovered recursively under `~/projects/clone` and
+Git repositories are discovered recursively under `~/projects/cloned` and
 `~/projects/personal`, including worktrees with a `.git` file. Discovery stops
 at each repository root and does not follow directory symlinks. Missing roots
 are treated as empty. Paths relative to `~/projects` are shown alphabetically.
