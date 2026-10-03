@@ -3,7 +3,7 @@
 set -euo pipefail
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd -- "$test_dir/../.." && pwd)"
+repo_root="$(cd -- "$test_dir/../../.." && pwd)"
 
 printf '%s\n' 'Archon CLI component tests'
 bash "$repo_root/components/archon-cli/test.sh"
@@ -14,7 +14,6 @@ bash "$test_dir/test-install-layout.sh"
 mapfile -t bash_check_paths < <(
   find \
     "$repo_root/components/archon-cli" \
-    "$repo_root/tests/archon-cli" \
     -type f -name '*.sh' -print | sort
 )
 bash_check_paths=(

@@ -3,7 +3,7 @@
 set -u
 
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd -- "$test_dir/../.." && pwd)"
+repo_root="$(cd -- "$test_dir/../../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
 home_source="$repo_root/data/home"
 home_copy_ignore="$repo_root/data/home-copy-ignore.txt"

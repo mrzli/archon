@@ -37,8 +37,8 @@ are not deleted by the overlay.
 ## Verification
 
 ```bash
-bash tests/archon-cli/run.sh
-bash tests/archon-cli/run.sh < /dev/null
+bash components/archon-cli/tests/run.sh
+bash components/archon-cli/tests/run.sh < /dev/null
 ruby setup/tests/setup_test.rb
 ```
 

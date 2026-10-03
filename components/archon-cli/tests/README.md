@@ -9,8 +9,8 @@ bash components/archon-cli/test.sh
 Run complete verification with terminal stdin, then without it:
 
 ```bash
-bash tests/archon-cli/run.sh
-bash tests/archon-cli/run.sh < /dev/null
+bash components/archon-cli/tests/run.sh
+bash components/archon-cli/tests/run.sh < /dev/null
 ```
 
 Both invocations must pass. Complete verification checks behavior, installation,
