@@ -1,7 +1,7 @@
 # Visual Studio Code
 
-Requires Ruby, an interactive terminal, a running Hyprland session, and `code`
-and `hyprctl` on `PATH`.
+Requires Ruby, an interactive terminal, a running Hyprland session with Lua
+configuration (as used by current Omarchy), and `code` and `hyprctl` on `PATH`.
 
 ## Start
 
@@ -49,6 +49,11 @@ archon visual-studio-code stop
 arc vsc stop
 ```
 
-Stops **all VS Code processes owned by your user**, including instances opened
-outside this command, by sending SIGTERM to processes named `code`. It succeeds
-when no matching processes are running. Saved selections are preserved.
+Closes **all VS Code windows in the current Hyprland session**, including windows
+opened outside this command. It uses normal window-close requests so VS Code
+can save its state and shut down its helper processes. It waits up to 30 seconds
+for the windows to close and succeeds when no matching windows are open.
+
+VS Code's configured shutdown confirmations are respected. If windows remain
+open, the command reports a failure instead of forcefully terminating them.
+Saved selections are preserved. Stop also requires Hyprland and `hyprctl`.

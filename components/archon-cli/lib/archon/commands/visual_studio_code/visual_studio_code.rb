@@ -13,7 +13,7 @@ module Archon
              archon vsc <start|stop>
 
       start  Choose a workspace and projects, then open a Hyprland tabbed group
-      stop   Stop ALL VS Code processes owned by the current user
+      stop   Close ALL VS Code windows in the current Hyprland session
 
       Start requires an interactive terminal, Hyprland, hyprctl, and code on PATH.
       Projects are Git repositories under ~/projects/clone and ~/projects/personal.
@@ -35,10 +35,8 @@ module Archon
         return 2
       end
       if arguments == ['stop']
-        result = run.call('pkill', ['-TERM', '-u', Process.uid.to_s, '-x', 'code'])
-        raise result[:error] if result[:error]
-        raise 'Could not stop VS Code.' if result[:signal] || ![0, 1].include?(result[:status])
-        puts(result[:status] == 0 ? 'Stopped all VS Code processes for this user.' : 'No VS Code processes running.')
+        count = stop_windows(run: run)
+        puts(count > 0 ? 'Closed all VS Code windows.' : 'No VS Code windows running.')
         return 0
       end
 

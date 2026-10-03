@@ -78,20 +78,26 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil)
         output = JSON.generate(clients)
       else
         equal 'dispatch', arguments.first
-        dispatcher, argument = arguments.drop(1)
+        equal 2, arguments.length
+        match = /\Ahl\.dsp\.([\w.]+)\(\{ (.*) \}\)\z/.match(arguments.last)
+        assert match, "Expected Lua dispatcher: #{arguments.last}"
+        dispatcher = match[1]
+        fields = match[2].scan(/(\w+) = ("[^"]*"|true|false)/).to_h.transform_values { |value| JSON.parse(value) }
         client = clients.find { |window| window['address'] == focused }
         case dispatcher
-        when 'workspace' then workspace = argument
-        when 'focuswindow' then focused = argument.delete_prefix('address:')
-        when 'settiled' then nil
-        when 'movetoworkspacesilent'
-          destination, address = argument.split(',address:')
-          moved = clients.find { |window| window['address'] == address }
-          group = moved['grouped'].empty? ? [address] : moved['grouped']
-          clients.select { |window| group.include?(window['address']) }.each { |window| window['workspace'] = { 'id' => destination } }
-        when 'togglegroup' then client['grouped'] = [focused]
-        when 'moveintogroup'
-          unless fail_group
+        when 'focus'
+          fields.key?('workspace') ? workspace = fields['workspace'] : focused = fields.fetch('window').delete_prefix('address:')
+        when 'window.float' then equal 'disable', fields.fetch('action')
+        when 'group.toggle' then client['grouped'] = [focused]
+        when 'window.move'
+          if fields.key?('workspace')
+            equal false, fields.fetch('follow')
+            destination = fields.fetch('workspace')
+            address = fields.fetch('window').delete_prefix('address:')
+            moved = clients.find { |window| window['address'] == address }
+            group = moved['grouped'].empty? ? [address] : moved['grouped']
+            clients.select { |window| group.include?(window['address']) }.each { |window| window['workspace'] = { 'id' => destination } }
+          elsif fields.key?('into_group') && !fail_group
             target = clients.find { |window| !window['grouped'].empty? }
             group = target['grouped'] + [focused]
             clients.select { |window| group.include?(window['address']) }.each { |window| window['grouped'] = group }
@@ -232,7 +238,7 @@ end
     end
     equal({ 'id' => 3 }, backend[:clients].first['workspace'])
     equal [], backend[:clients].first['grouped']
-    equal ['hyprctl', %w[dispatch focuswindow address:0x1]], backend[:calls].last
+    equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ window = "address:0x1" })']], backend[:calls].last
   end
 end
 
@@ -241,11 +247,11 @@ test('launch and grouping failures move opened windows to the target workspace')
     backend = vsc_hyprland(**options)
     raises(/failed|could not group/) { VSC.launch_projects(['/one', '/two'], 5, run: backend[:run]) }
     backend[:clients].drop(1).each { |client| equal({ 'id' => '5' }, client['workspace']) }
-    equal ['hyprctl', %w[dispatch workspace 5]], backend[:calls].last
+    equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ workspace = "5" })']], backend[:calls].last
   end
   backend = vsc_hyprland(launch_failure: 1)
   raises(/failed/) { VSC.launch_projects(['/one'], 5, run: backend[:run]) }
-  equal ['hyprctl', %w[dispatch workspace 3]], backend[:calls].last
+  equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ workspace = "3" })']], backend[:calls].last
 end
 
 test('launch timeout and Hyprland dispatcher rejection are reported') do
@@ -256,24 +262,78 @@ test('launch timeout and Hyprland dispatcher rejection are reported') do
     { stdout: output, stderr: '', status: 0 }
   end
   raises(/Timed out/) { VSC.launch_projects(['/one'], 8, run: run, timeout: 0) }
-  equal ['hyprctl', %w[dispatch workspace 2]], calls.last
+  equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ workspace = "2" })']], calls.last
   rejected = ->(*_) { { stdout: 'Invalid dispatcher', stderr: '', status: 0 } }
-  raises(/Invalid dispatcher/) { VSC.hypr_dispatch(rejected, 'togglegroup') }
+  raises(/Invalid dispatcher/) { VSC.hypr_dispatch(rejected, 'group.toggle') }
+  lua_rejection = ->(*_) { { stdout: 'error: hl.dispatch: expected a dispatcher', stderr: '', status: 7 } }
+  raises(/hyprctl dispatch .*failed \(7\): error: hl.dispatch: expected a dispatcher/) do
+    VSC.hypr_dispatch(lua_rejection, 'focus', workspace: '1')
+  end
 end
 
-test('stop targets current-user code processes only, succeeds repeatedly, and propagates failures') do
+test('stop requests normal closure of every Code window, preserves other apps, and succeeds repeatedly') do
   fixture do |fixture|
-    write_executable(File.join(fixture[:bin], 'pkill'), <<~'RUBY')
+    state_path = File.join(fixture[:home], 'clients.json')
+    windows = [{ 'class' => 'Code', 'address' => '0x1' }, { 'class' => 'code', 'address' => '0x2' },
+               { 'class' => 'code-helper', 'address' => '0x3' }, { 'class' => 'terminal', 'address' => '0x4' }]
+    File.write(state_path, JSON.generate(windows))
+    write_executable(File.join(fixture[:bin], 'hyprctl'), <<~'RUBY')
       #!/usr/bin/env ruby
       require 'json'
-      File.write(File.join(Dir.home, 'pkill.json'), JSON.generate(ARGV))
-      exit ENV.fetch('TEST_PKILL_STATUS', '0').to_i
+      path = File.join(Dir.home, 'clients.json')
+      windows = JSON.parse(File.read(path))
+      File.open(File.join(Dir.home, 'hyprctl-calls'), 'a') { |file| file.puts(JSON.generate(ARGV)) }
+      if ARGV == %w[-j clients]
+        puts JSON.generate(windows)
+      elsif ARGV.first == 'dispatch' && (match = /\Ahl\.dsp\.window\.close\(\{ window = "address:(0x[0-9a-f]+)" \}\)\z/.match(ARGV.last))
+        windows.reject! { |window| window.fetch('address') == match[1] }
+        File.write(path, JSON.generate(windows))
+        puts 'ok'
+      else
+        exit 99
+      end
     RUBY
-    [0, 1, 2].each do |status|
-      result = run_archon(%w[vsc stop], 'TEST_PKILL_STATUS' => status.to_s)
-      equal status == 2 ? 1 : 0, result[:status]
-      equal ['-TERM', '-u', Process.uid.to_s, '-x', 'code'], JSON.parse(File.read(File.join(fixture[:home], 'pkill.json')))
-    end
+    write_executable(File.join(fixture[:bin], 'pkill'), "#!/bin/sh\nexit 99\n")
+    result = run_archon(%w[vsc stop])
+    equal 0, result[:status]
+    assert result[:stdout].include?('Closed all VS Code windows.')
+    equal windows.drop(2), JSON.parse(File.read(state_path))
+    calls = File.readlines(File.join(fixture[:home], 'hyprctl-calls')).map { |line| JSON.parse(line) }
+    equal [%w[-j clients], ['dispatch', 'hl.dsp.window.close({ window = "address:0x1" })'], ['dispatch', 'hl.dsp.window.close({ window = "address:0x2" })'], %w[-j clients]], calls
+    result = run_archon(%w[vsc stop])
+    equal 0, result[:status]
+    assert result[:stdout].include?('No VS Code windows running.')
     assert !File.exist?(File.join(fixture[:home], '.local/state/archon'))
   end
+end
+
+test('stop waits for windows to disappear and does not force termination on a shutdown veto or failure') do
+  calls = []
+  listings = 0
+  run = lambda do |command, arguments|
+    equal 'hyprctl', command
+    calls << arguments
+    if arguments == %w[-j clients]
+      listings += 1
+      output = JSON.generate(listings < 3 ? [{ 'class' => 'Code', 'address' => '0x1' }] : [])
+    else
+      equal ['dispatch', 'hl.dsp.window.close({ window = "address:0x1" })'], arguments
+      output = 'ok'
+    end
+    { stdout: output, stderr: '', status: 0 }
+  end
+  equal 1, VSC.stop_windows(run: run)
+  equal 3, listings
+
+  stuck = lambda do |command, arguments|
+    equal 'hyprctl', command
+    output = arguments == %w[-j clients] ? '[{"class":"Code","address":"0x1"}]' : 'ok'
+    { stdout: output, stderr: '', status: 0 }
+  end
+  raises(/did not finish closing/) { VSC.stop_windows(run: stuck, timeout: 0) }
+  failed = ->(*_) { { stdout: '', stderr: 'disconnected', status: 1 } }
+  status, output, error = capture { VSC.run_visual_studio_code(['stop'], run: failed) }
+  equal 1, status
+  assert !output.include?('Closed')
+  assert error.include?('disconnected')
 end
