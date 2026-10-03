@@ -28,7 +28,9 @@ end
 
 test('help, aliases, and nested command help work without external commands') do
   fixture do |fixture|
-    %w[git gh bun tmux herdr].each { |name| write_executable(File.join(fixture[:bin], name), "#!/bin/sh\nexit 99\n") }
+    %w[git gh bun tmux herdr].each do |name|
+      write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
+    end
     [['h', 'help', []], ['l', 'libs', %w[help build]], ['p', 'projects', %w[help status]], ['w', 'workspaces', ['--help']]].each do |short, full, options|
       result = run_archon([short, *options])
       equal 0, result[:status]
@@ -39,21 +41,24 @@ test('help, aliases, and nested command help work without external commands') do
       %w[-h --help].each { |help| equal 0, run_archon([*prefix, help])[:status] }
     end
     { 'h' => 'herdr', 't' => 'tmux' }.each do |short, full|
-      %w[help -h --help].each do |help|
-        result = run_archon(['workspaces', full, help])
-        equal 0, result[:status]
-        assert result[:stdout].start_with?("Usage: archon workspaces #{full} ")
-        equal result, run_archon(['w', short, help])
-        equal result, run_archon(['workspaces', short, help])
-        equal result, run_archon(['w', full, help])
+      result = run_archon(['workspaces', full, '--help'])
+      equal 0, result[:status]
+      assert result[:stdout].start_with?("Usage: archon workspaces #{full} ")
+      %w[help -h].each do |help|
+        equal result, run_archon(['workspaces', full, help])
       end
+      equal result, run_archon(['w', short, '--help'])
     end
     %w[projects libs].each do |domain|
       commands = %w[delete prune remote status sync help] + (domain == 'libs' ? %w[build graph] : [])
       commands.each do |command|
-        equal run_archon([domain, 'help', command]), run_archon([domain, command, '--help'])
+        result = run_archon([domain, 'help', command])
+        equal 0, result[:status]
+        assert result[:stdout].start_with?('Usage: archon ')
+        equal result, run_archon([domain, command, '--help'])
       end
     end
+    assert !File.exist?(File.join(fixture[:home], 'unexpected-command'))
   end
 end
 

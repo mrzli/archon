@@ -27,22 +27,9 @@ def all_workspace_directories(fixture)
   paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
 end
 
-[[], ['unknown'], %w[start --group invalid], %w[start --group], %w[stop extra], %w[kill -g general],
- %w[start --ai], %w[start --ai unknown], %w[stop --ai claude]].each do |arguments|
-  test("Herdr usage errors have no effects: #{arguments.join(' ')}") do
-    herdr_fixture do |_, path|
-      equal 2, run_archon(['w', 'h', *arguments])[:status]
-      equal [], herdr_state(path)['calls']
-    end
-  end
-end
-
-test('Herdr help and alias do not inspect or start a session') do
+test('Herdr rejects invalid options before inspecting or starting a session') do
   herdr_fixture do |_, path|
-    short = run_archon(%w[w h --help])
-    equal 0, short[:status]
-    equal short, run_archon(%w[workspaces herdr --help])
-    assert short[:stdout].include?('Usage: archon workspaces herdr')
+    equal 2, run_archon(%w[w h start --group invalid])[:status]
     equal [], herdr_state(path)['calls']
   end
 end

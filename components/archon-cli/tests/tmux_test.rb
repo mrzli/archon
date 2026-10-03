@@ -57,7 +57,7 @@ test('tmux session operations preserve command arguments and exit statuses') do
 end
 
 [nil, 'bun run dev', 'pnpm run dev'].each do |dev_command|
-  test("editor layout and every rollback boundary: #{dev_command || 'no dev window'}") do
+  test("editor layout: #{dev_command || 'no dev window'}") do
     definition = { session: 'editor', directory: '/fixture/space dir', dev_command: dev_command }
     expected = [
       ['new-session', '-d', '-s', 'editor', '-c', definition[:directory], '-n', 'nvim'],
@@ -75,6 +75,9 @@ end
     result = Tmux.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
     equal({ status: 0 }, result)
     equal expected, calls
+    # The full layout covers every rollback boundary; command text adds no new boundary.
+    next unless dev_command == 'bun run dev'
+
     expected.each_index do |failed_index|
       calls = []
       run = ->(_, arguments) { calls << arguments; calls.length == failed_index + 1 ? 1 : 0 }

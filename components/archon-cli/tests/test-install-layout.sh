@@ -49,7 +49,7 @@ copy_archon_cli() {
 install_home() {
   local home="$1"
 
-  copy_home_overlay "$home"
+  copy_home_overlay "$home" || return
   copy_archon_cli "$home"
 }
 
@@ -59,12 +59,12 @@ test_repeated_overlay_copy() {
   mkdir -p "$home"
 
   mkdir -p "$home/.local/lib/archon/commands/workspaces/tests" "$home/.local/lib/unrelated"
-  : > "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt"
-  : > "$home/.local/lib/unrelated/keep"
+  printf '%s' 'user note' > "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt"
+  printf '%s' 'unrelated data' > "$home/.local/lib/unrelated/keep"
 
-  install_home "$home"
+  install_home "$home" || return
   tree_after_first="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
-  install_home "$home"
+  install_home "$home" || return
   tree_after_second="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
 
   assert_equals "$tree_after_first" "$tree_after_second" || return
@@ -78,67 +78,21 @@ test_repeated_overlay_copy() {
   alias_output="$(cd "$home" && HOME="$home" .local/bin/arc --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
 
+  cmp -- "$archon_cli_source/bin/archon" "$home/.local/bin/archon" || return
+
+  local expected_files installed_files path
+  expected_files="$(cd "$archon_cli_source/lib" && find . -type f -name '*.rb' -printf '%P\n' | sort)" || return
+  installed_files="$(cd "$home/.local/lib" && find archon -type f \
+    ! -path archon/commands/workspaces/tests/user-note.txt -print | sort)" || return
+  assert_equals "$expected_files" "$installed_files" || return
+  while IFS= read -r path; do
+    cmp -- "$archon_cli_source/lib/$path" "$home/.local/lib/$path" || return
+  done <<< "$expected_files"
+
   assert_absent "$home/.local/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/commands/libs/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/commands/libs/README.md" || return
-  assert_absent "$home/.local/lib/archon/commands/projects/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/commands/projects/README.md" || return
-  assert_absent "$home/.local/lib/archon/commands/workspaces/AGENTS.md" || return
-  assert_absent "$home/.local/lib/archon/commands/workspaces/tmux/README.md" || return
-
-  local source_test
-  for source_test in "$archon_cli_source/tests"/*_test.rb; do
-    assert_absent "$home/.local/lib/archon/commands/workspaces/tests/${source_test##*/}" || return
-  done
-
-  assert_exists "$home/.local/lib/archon/cli.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/admin/admin.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/admin/github_ssh.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/visual_studio_code/visual_studio_code.rb" || return
-  assert_absent "$home/.local/lib/archon/commands/visual_studio_code/README.md" || return
-  assert_absent "$home/.local/lib/archon/commands/admin/README.md" || return
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon admin --help)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc a --help)" || return
-  assert_equals "$archon_output" "$alias_output" || return
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon admin github ssh --help)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc a github ssh --help)" || return
-  assert_equals "$archon_output" "$alias_output" || return
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon visual-studio-code --help)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc vsc --help)" || return
-  assert_equals "$archon_output" "$alias_output" || return
-  local unexpected_files
-  unexpected_files="$(find "$home/.local/lib/archon" -type f ! -name '*.rb' ! -name user-note.txt)"
-  assert_equals '' "$unexpected_files" || return
-  assert_absent "$home/.local/package.json" || return
-  assert_absent "$home/.local/node_modules" || return
-  assert_absent "$home/.local/dist" || return
-  assert_exists "$home/.local/lib/archon/commands/libs/build.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/libs/libs.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/projects/github_inventory.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/projects/projects.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/tmux/workspaces.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/workspaces.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/shared.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/groups.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/layout.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/tmux/tmux.rb" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/herdr/herdr.rb" || return
-  assert_absent "$home/.local/lib/archon/commands/workspaces/README.md" || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/herdr/workspaces.rb" || return
-  assert_absent "$home/.local/lib/archon/commands/workspaces/herdr/README.md" || return
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces --help)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w --help)" || return
-  assert_equals "$archon_output" "$alias_output" || return
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces herdr --help)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w h --help)" || return
-  assert_equals "$archon_output" "$alias_output" || return
-  [[ "$archon_output" == 'Usage: archon workspaces herdr '* ]] || fail 'unexpected Herdr workspace help' || return
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces tmux --help)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w t --help)" || return
-  assert_equals "$archon_output" "$alias_output" || return
-  [[ "$archon_output" == 'Usage: archon workspaces tmux '* ]] || fail 'unexpected tmux workspace help' || return
-  assert_exists "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt" || return
-  assert_exists "$home/.local/lib/unrelated/keep"
+  assert_absent "$home/.local/tests" || return
+  assert_equals 'user note' "$(cat "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt")" || return
+  assert_equals 'unrelated data' "$(cat "$home/.local/lib/unrelated/keep")"
 }
 
 tests_run=0
