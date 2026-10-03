@@ -37,13 +37,17 @@ are not deleted by the overlay.
 ## Verification
 
 ```bash
-bash components/archon-cli/tests/run.sh
-bash components/archon-cli/tests/run.sh < /dev/null
-ruby setup/tests/setup_test.rb
+bash test.sh
 ```
 
-Run the first command with terminal stdin. The runner executes each Ruby test
-file in a separate process, checks Ruby syntax, exercises the Bash workspace
+This runs setup, skill-link, video-workaround, WoW setup, and CLI checks.
+Terminal tests create their own pseudo terminals; the command also works with
+stdin redirected from `/dev/null`. The optional Codex timing stress check is
+run separately, as described in the [test instructions](../components/archon-cli/tests/README.md).
+
+For CLI checks alone, run `bash components/archon-cli/tests/run.sh`.
+The CLI runner executes each Ruby test file in a separate process, checks Ruby
+syntax, exercises the Bash workspace
 adapter, and verifies installation. Installation tests call the production
 CLI copy function with a temporary home, check both executable aliases,
 exclude development files, and verify repeated copies preserve unrelated files.

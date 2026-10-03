@@ -6,16 +6,24 @@ Run the component suite from the repository root:
 bash components/archon-cli/test.sh
 ```
 
-Run complete verification with terminal stdin, then without it:
+Run CLI verification, including installation:
 
 ```bash
 bash components/archon-cli/tests/run.sh
-bash components/archon-cli/tests/run.sh < /dev/null
 ```
 
-Both invocations must pass. Complete verification checks behavior, installation,
-syntax, and whitespace. ShellCheck runs when installed and is reported as
+CLI verification checks behavior, installation, syntax, and whitespace.
+Terminal tests create their own pseudo terminals, so one run covers terminal
+and nonterminal behavior. ShellCheck runs when installed and is reported as
 unavailable otherwise. No build or dependency installation is required.
+
+Run all Archon checks, including setup and WoW setup, from the repository root:
+
+```bash
+bash test.sh
+```
+
+The complete suite also requires Lua, Python 3, and unzip.
 
 The suite requires Ruby, Bash, Git, rsync, standard Arch command-line tools,
 the util-linux `script` and `setsid` utilities, tmux, and coreutils `timeout`.
