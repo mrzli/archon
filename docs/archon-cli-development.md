@@ -37,10 +37,12 @@ are not deleted by the overlay.
 ## Verification
 
 ```bash
-bash test.sh
+bash tests/test.sh
 ```
 
 This runs setup, skill-link, video-workaround, WoW setup, and CLI checks.
+Use `ruby tests/profile.rb` to run the same checks and print per-file and total
+times. Runner totals include their child tests; do not add those rows together.
 Terminal tests create their own pseudo terminals; the command also works with
 stdin redirected from `/dev/null`. The optional Codex timing stress check is
 run separately, as described in the [test instructions](../components/archon-cli/tests/README.md).

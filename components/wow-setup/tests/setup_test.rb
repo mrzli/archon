@@ -91,7 +91,8 @@ def fixture
     env = { 'HOME' => home, 'PATH' => "#{bin}:/usr/bin:/bin", 'STUB_BIN' => bin,
             'COMMAND_LOG' => "#{root}/commands.jsonl", 'AUCTIONATOR_ARCHIVE' => archive }
     run = ->(*args, **extra) { Open3.capture3(env.merge(extra), '/bin/bash', script, *args) }
-    yield home, wow, env, run
+    run_auctionator = ->(**extra) { Open3.capture3(env.merge(extra), '/bin/bash', "#{root}/install-auctionator.sh", wow) }
+    yield home, wow, env, run, run_auctionator
   end
 end
 
@@ -137,12 +138,12 @@ fixture do |home, wow, env, run|
 end
 
 %w[download checksum].each do |failure|
-  fixture do |_home, wow, _env, run|
+  fixture do |_home, wow, _env, _run, run_auctionator|
     addon = "#{wow}/Interface/AddOns/Auctionator"
     FileUtils.mkdir_p(addon)
     File.write("#{addon}/keep", 'existing addon')
     extra = failure == 'download' ? { 'FAIL_COMMAND' => 'curl' } : { 'CORRUPT_DOWNLOAD' => '1' }
-    assert !run.call(**extra).last.success?
+    assert !run_auctionator.call(**extra).last.success?
     assert File.read("#{addon}/keep") == 'existing addon', 'failed download must preserve existing addon'
     assert Dir["#{wow}/Interface/AddOns/.auctionator-*"].empty?
   end

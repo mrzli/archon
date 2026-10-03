@@ -21,6 +21,22 @@ def update_herdr_state(path)
   File.write(path, JSON.generate(state))
 end
 
+def seed_herdr_workspaces(path, labels)
+  update_herdr_state(path) do |state|
+    state['running'] = true
+    state['next_id'] = labels.length
+    state['workspaces'] = labels.each_with_index.map do |label, index|
+      { 'workspace_id' => "w#{(index + 1) * 7}", 'label' => label, 'tabs' => [] }
+    end
+  end
+end
+
+WORKSPACE_LABELS = %w[
+  main flashcards-fe flashcards-be jslib-example
+  project-mrzli-archon project-mrzli-docs project-mrzli-js-templates
+  project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-repos project-mrzli-skills
+].freeze
+
 def all_workspace_directories(fixture)
   paths = ['projects/personal/mrzli-jslib/example/.git', 'projects/personal/mrzli/flashcards-fe',
            'projects/personal/mrzli/flashcards-be'] + Archon::Workspaces::PROJECTS.map { |project| "projects/personal/#{project}" }
@@ -101,7 +117,7 @@ end
 test('Herdr stop runs in reverse group order and preserves unrelated workspaces') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[w h start])[:status]
+    seed_herdr_workspaces(path, WORKSPACE_LABELS)
     before = herdr_state(path)['workspaces']
     update_herdr_state(path) do |state|
       state['workspaces'] << { 'workspace_id' => 'w9999', 'label' => 'unrelated', 'tabs' => [] }
@@ -129,7 +145,7 @@ test('Herdr named stop only closes the selected group and tolerates an absent se
   herdr_fixture do |fixture, path|
     equal 0, run_archon(%w[w h stop -g flashcards])[:status]
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[w h start])[:status]
+    seed_herdr_workspaces(path, WORKSPACE_LABELS)
     equal 0, run_archon(%w[w h stop -g flashcards])[:status]
     workspaces = herdr_state(path)['workspaces']
     equal 9, workspaces.length
@@ -142,7 +158,7 @@ end
     test("Herdr #{arguments.join(' ')} shuts down an empty session, including from a pane: #{environment}") do
       herdr_fixture do |fixture, path|
         FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-        equal 0, run_archon(%w[w h start -g general])[:status]
+        seed_herdr_workspaces(path, ['main'])
         update_herdr_state(path) { |state| state['client_attached'] = true }
         2.times { equal 0, run_archon(['w', 'h', *arguments], environment)[:status] }
         state = herdr_state(path)
@@ -157,7 +173,7 @@ end
 test('Herdr stop reports session shutdown failures and allows retry') do
   herdr_fixture do |fixture, path|
     FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-    equal 0, run_archon(%w[w h start -g general])[:status]
+    seed_herdr_workspaces(path, ['main'])
     update_herdr_state(path) do |state|
       state['failure'] = { 'prefix' => %w[session stop], 'remaining' => 1 }
     end
@@ -236,7 +252,7 @@ end
 test('Herdr close failures are reported and do not prevent later workspace stops') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[w h start -g flashcards])[:status]
+    seed_herdr_workspaces(path, %w[flashcards-fe flashcards-be])
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[workspace close], 'remaining' => 1 } }
     result = run_archon(%w[w h stop -g flashcards])
     equal 1, result[:status]
@@ -314,7 +330,7 @@ end
 test('Herdr stop worker preserves its target, completes all stops, and returns logged failures') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[w h start -g flashcards])[:status]
+    seed_herdr_workspaces(path, %w[flashcards-fe flashcards-be])
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[workspace close], 'remaining' => 1 } }
     result = run_archon(%w[w h stop -g flashcards], 'HERDR_ENV' => '1', 'HERDR_SESSION' => 'unrelated', 'HERDR_SOCKET_PATH' => '/unused/socket')
     equal 1, result[:status]

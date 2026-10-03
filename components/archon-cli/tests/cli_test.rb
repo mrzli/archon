@@ -1,5 +1,10 @@
 require_relative 'test_helpers'
 
+def run_cli(arguments)
+  status, output, error = capture { Archon.main(arguments) }
+  { status: status, stdout: output, stderr: error }
+end
+
 usage_cases = [%w[h extra], %w[p s], %w[l b], %w[w s], %w[wt s], [], ['unknown'], %w[help extra],
                ['workspace'], ['workspaces'], ['workspaces-herdr'], ['workspaces-tmux'], ['wh'],
                %w[workspaces start], %w[workspaces stop], %w[workspaces kill],
@@ -18,9 +23,8 @@ end
 usage_cases.each do |arguments|
   test("usage error: #{arguments.join(' ')}") do
     fixture do
-      result = run_archon(arguments)
+      result = run_cli(arguments)
       equal 2, result[:status]
-      equal nil, result[:signal]
       assert !result[:stderr].empty?
     end
   end
@@ -32,33 +36,44 @@ test('help, aliases, and nested command help work without external commands') do
       write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
     end
     [['h', 'help', []], ['l', 'libs', %w[help build]], ['p', 'projects', %w[help status]], ['w', 'workspaces', ['--help']]].each do |short, full, options|
-      result = run_archon([short, *options])
+      result = run_cli([short, *options])
       equal 0, result[:status]
-      equal result, run_archon([full, *options])
+      equal result, run_cli([full, *options])
       assert result[:stdout].start_with?("Usage: archon #{full} ") if full.start_with?('workspace')
     end
     [[], ['projects'], ['libs'], ['workspaces']].each do |prefix|
-      %w[-h --help].each { |help| equal 0, run_archon([*prefix, help])[:status] }
+      %w[-h --help].each { |help| equal 0, run_cli([*prefix, help])[:status] }
     end
     { 'h' => 'herdr', 't' => 'tmux' }.each do |short, full|
-      result = run_archon(['workspaces', full, '--help'])
+      result = run_cli(['workspaces', full, '--help'])
       equal 0, result[:status]
       assert result[:stdout].start_with?("Usage: archon workspaces #{full} ")
       %w[help -h].each do |help|
-        equal result, run_archon(['workspaces', full, help])
+        equal result, run_cli(['workspaces', full, help])
       end
-      equal result, run_archon(['w', short, '--help'])
+      equal result, run_cli(['w', short, '--help'])
     end
     %w[projects libs].each do |domain|
       commands = %w[delete prune remote status sync help] + (domain == 'libs' ? %w[build graph] : [])
       commands.each do |command|
-        result = run_archon([domain, 'help', command])
+        result = run_cli([domain, 'help', command])
         equal 0, result[:status]
         assert result[:stdout].start_with?('Usage: archon ')
-        equal result, run_archon([domain, command, '--help'])
+        equal result, run_cli([domain, command, '--help'])
       end
     end
     assert !File.exist?(File.join(fixture[:home], 'unexpected-command'))
+  end
+end
+
+test('the executable preserves CLI output and exit codes for errors, help, and aliases') do
+  fixture do
+    [[], ['unknown'], %w[w h start --group invalid], %w[libs status --invalid],
+     ['--help'], %w[w t --help], %w[l help build], %w[p help status]].each do |arguments|
+      result = run_archon(arguments)
+      equal nil, result[:signal]
+      equal run_cli(arguments), result.slice(:status, :stdout, :stderr)
+    end
   end
 end
 

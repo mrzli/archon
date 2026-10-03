@@ -20,7 +20,13 @@ unavailable otherwise. No build or dependency installation is required.
 Run all Archon checks, including setup and WoW setup, from the repository root:
 
 ```bash
-bash test.sh
+bash tests/test.sh
+```
+
+Run the same checks with a timing summary:
+
+```bash
+ruby tests/profile.rb
 ```
 
 The complete suite also requires Lua, Python 3, and unzip.
