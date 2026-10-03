@@ -1,4 +1,4 @@
-require_relative 'test_helpers'
+require_relative 'codex_tmux_fixture'
 
 def codex_terminals(count: 2, stuck: false)
   states = count.times.map do |index|
@@ -97,85 +97,31 @@ test('resume removes selectors, prompts and images but preserves directory overr
 end
 
 test('tmux restart preserves real panes, shell processes, directories and resume arguments') do
-  fixture do |fixture|
-    socket = File.join(fixture[:root], 'codex.sock')
-    project = File.join(fixture[:root], 'project with spaces')
-    FileUtils.mkdir_p(project)
-    File.symlink('/usr/bin/tmux', File.join(fixture[:bin], 'tmux'))
-    write_executable(File.join(fixture[:bin], 'herdr'), "#!/bin/sh\nprintf '%s\\n' '{\"sessions\":[]}'\n")
-    script = File.join(fixture[:root], 'fake_codex.rb')
-    File.write(script, <<~'RUBY')
-      require 'json'
-      $stdout.sync = true
-      trap('INT') { exit }
-      sleep ENV.fetch('TEST_CODEX_STARTUP_DELAY', '0').to_f if ARGV.include?('resume')
-      File.open(ENV.fetch('TEST_CODEX_LOG'), 'a') { |file| file.puts JSON.generate(pid: Process.pid, cwd: Dir.pwd, args: ARGV) }
-      puts '? for shortcuts'
-      while (line = $stdin.gets)
-        exit if line.strip == '/quit'
-      end
-    RUBY
-    write_executable(File.join(fixture[:bin], 'codex'), "#!/bin/bash\nexec -a codex #{Shellwords.join([RbConfig.ruby, script])} \"$@\"\n")
-    log = File.join(fixture[:root], 'launches.jsonl')
-    tmux = lambda do |*args|
-      text, error, status = Open3.capture3('/usr/bin/tmux', '-S', socket, '-f', '/dev/null', *args)
-      assert status.success?, error
-      text.strip
+  with_codex_tmux do |fixture, tmux, project, log, command|
+    tmux.call('new-window', '-t', 'test', '-n', 'other', 'sleep', '60')
+    pane = tmux.call('list-panes', '-t', 'test:0', '-F', '#{pane_id}')
+    shell_pid = tmux.call('display-message', '-p', '-t', pane, '#{pane_pid}')
+    tmux.call('send-keys', '-t', pane, '-l', command)
+    tmux.call('send-keys', '-t', pane, 'Enter')
+    100.times do
+      break if File.exist?(log)
+      sleep 0.02
     end
-    begin
-      tmux.call('new-session', '-d', '-s', 'test', '-c', project, '-x', '160', '-y', '50', '/bin/bash', '--noprofile', '--norc')
-      tmux.call('new-window', '-t', 'test', '-n', 'other', 'sleep', '60')
-      pane = tmux.call('list-panes', '-t', 'test:0', '-F', '#{pane_id}')
-      shell_pid = tmux.call('display-message', '-p', '-t', pane, '#{pane_pid}')
-      command = "export PATH=#{Shellwords.escape(ENV.fetch('PATH'))} TEST_CODEX_LOG=#{Shellwords.escape(log)}; codex -m test-model"
-      tmux.call('send-keys', '-t', pane, '-l', command)
-      tmux.call('send-keys', '-t', pane, 'Enter')
-      100.times do
-        break if File.exist?(log)
-        sleep 0.02
-      end
-      assert File.exist?(log), 'fake Codex did not start'
-      result = run_archon(%w[codex restart], 'TMUX' => "#{socket},1,0", 'TMUX_TMPDIR' => fixture[:root])
-      equal 0, result[:status]
-      assert result[:stdout].include?('Sent restart commands to 1/1'), result.inspect
-      100.times do
-        break if File.readlines(log).length >= 2
-        sleep 0.01
-      end
-      launches = File.readlines(log).map { |line| JSON.parse(line) }
-      equal 2, launches.length
-      assert launches[0]['pid'] != launches[1]['pid']
-      equal [project] * 2, launches.map { |launch| launch['cwd'] }
-      equal ['resume', '--last', '-m', 'test-model', '-C', project], launches.last['args']
-      equal shell_pid, tmux.call('display-message', '-p', '-t', pane, '#{pane_pid}')
-      equal 2, tmux.call('list-windows', '-t', 'test', '-F', '#{window_id}').lines.length
-      11.times do |index|
-        extra = tmux.call('new-window', '-P', '-F', '#{pane_id}', '-t', 'test', '-n', "codex-#{index}",
-                          '-c', project, '/bin/bash', '--noprofile', '--norc')
-        tmux.call('send-keys', '-t', extra, '-l', "export TEST_CODEX_STARTUP_DELAY=3; #{command}")
-        tmux.call('send-keys', '-t', extra, 'Enter')
-      end
-      200.times do
-        break if File.readlines(log).length >= 13
-        sleep 0.01
-      end
-      equal 13, File.readlines(log).length
-      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      result = run_archon(%w[codex restart], 'TMUX' => "#{socket},1,0", 'TMUX_TMPDIR' => fixture[:root])
-      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
-      equal 0, result[:status]
-      assert result[:stdout].include?('Sent restart commands to 12/12'), result.inspect
-      assert elapsed < 3, "batch took #{elapsed.round(2)}s before returning"
-      assert File.readlines(log).length < 25, 'command waited for delayed startup'
-      STDOUT.puts "12-pane batch returned in #{elapsed.round(2)}s with three-second startup delays"
-      500.times do
-        break if File.readlines(log).length >= 25
-        sleep 0.01
-      end
-      equal 25, File.readlines(log).length
-    ensure
-      system('/usr/bin/tmux', '-S', socket, 'kill-server', out: File::NULL, err: File::NULL)
+    assert File.exist?(log), 'fake Codex did not start'
+    result = run_archon(%w[codex restart], 'TMUX' => "#{fixture[:root]}/codex.sock,1,0", 'TMUX_TMPDIR' => fixture[:root])
+    equal 0, result[:status]
+    assert result[:stdout].include?('Sent restart commands to 1/1'), result.inspect
+    100.times do
+      break if File.readlines(log).length >= 2
+      sleep 0.01
     end
+    launches = File.readlines(log).map { |line| JSON.parse(line) }
+    equal 2, launches.length
+    assert launches[0]['pid'] != launches[1]['pid']
+    equal [project] * 2, launches.map { |launch| launch['cwd'] }
+    equal ['resume', '--last', '-m', 'test-model', '-C', project], launches.last['args']
+    equal shell_pid, tmux.call('display-message', '-p', '-t', pane, '#{pane_pid}')
+    equal 2, tmux.call('list-windows', '-t', 'test', '-F', '#{window_id}').lines.length
   end
 end
 

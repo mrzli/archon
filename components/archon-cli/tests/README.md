@@ -24,3 +24,13 @@ permission to create Unix sockets.
 
 Herdr checks use a fake executable and temporary state. They do not require
 Herdr or start real editors, agents, or development servers.
+
+Run the optional twelve-pane Codex restart stress check separately:
+
+```bash
+ruby components/archon-cli/tests/stress/codex_test.rb
+```
+
+This timing check uses fake Codex processes in an isolated tmux server. Run it
+when changing restart performance, on a machine without heavy background load.
+It is excluded from the regular suite.
