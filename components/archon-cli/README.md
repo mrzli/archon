@@ -26,6 +26,7 @@ archon admin battery status
 archon admin battery conservation <on|off>
 archon admin github ssh <create|test>
 archon admin voice <start|stop>
+archon codex restart
 archon libs <command> [options]
 archon projects <command> [options]
 archon visual-studio-code <start|stop>
@@ -64,6 +65,7 @@ Commands use these exit statuses:
 Detailed behavior is documented with each command collection:
 
 - [Administration](./lib/archon/commands/admin/README.md)
+- [Codex](./lib/archon/commands/codex/README.md)
 - [Libraries](./lib/archon/commands/libs/README.md)
 - [Projects](./lib/archon/commands/projects/README.md)
 - [Visual Studio Code](./lib/archon/commands/visual_studio_code/README.md)
