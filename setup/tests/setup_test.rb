@@ -253,9 +253,11 @@ checks = {
     assert commands(env).length == count
   end,
   'repeat runs preserve user files and avoid duplicate configuration' => lambda do |repo, home, _bin, env|
+    FileUtils.mkdir_p("#{home}/Projects")
     2.times do
       _, error, status = run_setup(repo, env)
       assert status.success?, error
+      assert !File.exist?("#{home}/Projects")
     end
     assert File.read("#{home}/personal-file") == "preserve\n"
     assert File.read("#{home}/managed-file") == "managed\n"
@@ -273,6 +275,15 @@ checks = {
       assert File.readlink(path) == "#{env.fetch('XDG_DATA_HOME')}/archon-skills/skills/productivity/example"
       assert File.read("#{path}/SKILL.md") == 'example skill'
     end
+  end,
+  'populated Projects stops setup and preserves its contents' => lambda do |repo, home, _bin, env|
+    FileUtils.mkdir_p("#{home}/Projects")
+    File.write("#{home}/Projects/.keep", 'user data')
+    output, error, status = run_setup(repo, env)
+    assert status.exitstatus == 1
+    assert error.include?('~/Projects is not empty')
+    assert !output.include?('Setup complete.')
+    assert File.read("#{home}/Projects/.keep") == 'user data'
   end,
   'failed skills updates preserve installed skills and links' => lambda do |repo, home, _bin, env|
     _, error, status = run_setup(repo, env)

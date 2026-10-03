@@ -326,11 +326,13 @@ end
 def remove_default_projects_directory(home)
   log_step 'Removing the default ~/Projects directory'
   if path_exists?("#{home}/Projects")
-    FileUtils.rm_r("#{home}/Projects")
+    Dir.rmdir("#{home}/Projects")
     log_info 'Removed ~/Projects'
   else
     log_info '~/Projects does not exist; skipping'
   end
+rescue Errno::ENOTEMPTY
+  raise '~/Projects is not empty. Move or remove its contents, then run setup again.'
 end
 
 def parse_options
