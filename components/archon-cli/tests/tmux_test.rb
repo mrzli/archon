@@ -32,7 +32,7 @@ test('Claude selection reaches tmux AI windows in every project group') do
     run = ->(_, args, **_) { calls << args; args.first == 'has-session' ? 1 : 0 }
     equal 0, Tmux.run_workspaces_tmux(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, run: run)
     ai_windows = calls.select { |args| args.first == 'new-window' && args.last == 'claude' }
-    equal 10, ai_windows.length
+    equal 11, ai_windows.length
     ai_windows.each do |args|
       assert calls.include?(['send-keys', '-t', "#{args[2]}:claude", 'claude --continue', 'Enter'])
     end
@@ -160,10 +160,11 @@ test('injected tmux reaches real groups, preserves existing sessions, and tolera
     }
     context = { home: fixture[:home], tmux: tmux, environment: {}, tty: true }
     2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context) }
-    equal 11, creations.length
+    equal 12, creations.length
     equal 'bun run dev', sessions['flashcards-fe'][:dev_command]
     equal 'pnpm run dev', sessions['flashcards-be'][:dev_command]
     assert sessions.key?('project-mrzli-mrzli-github-io')
+    assert sessions.key?('project-mrzli-omarchy-lab')
     sessions['unrelated'] = {}
     2.times { equal 0, Tmux.run_workspaces_tmux(['stop'], **context) }
     equal ['unrelated'], sessions.keys

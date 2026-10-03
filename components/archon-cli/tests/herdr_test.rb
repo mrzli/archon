@@ -34,7 +34,7 @@ end
 WORKSPACE_LABELS = %w[
   main flashcards-fe flashcards-be jslib-example
   project-mrzli-archon project-mrzli-docs project-mrzli-js-templates
-  project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-repos project-mrzli-skills
+  project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-repos project-mrzli-skills
 ].freeze
 
 def all_workspace_directories(fixture)
@@ -60,7 +60,9 @@ test('Herdr creates shared project layouts with silent pane run success, repeats
     end
     state = herdr_state(path)
     equal 1, state['calls'].count { |call| call == ['server'] }
-    equal 11, state['workspaces'].length
+    equal 12, state['workspaces'].length
+    assert state['workspaces'].any? { |workspace| workspace['label'] == 'project-mrzli-omarchy-lab' &&
+      workspace['cwd'] == File.join(fixture[:home], 'projects/personal/mrzli/omarchy-lab') }
     equal 0, state['attachments']
     equal nil, state['focused']
     state['workspaces'].each do |workspace|
@@ -89,7 +91,7 @@ test('Herdr Claude selection creates Claude tabs and preserves existing workspac
     all_workspace_directories(fixture)
     equal 0, run_archon(%w[w h start --ai claude])[:status]
     workspaces = herdr_state(path)['workspaces']
-    equal 11, workspaces.length
+    equal 12, workspaces.length
     workspaces.reject { |workspace| workspace['label'] == 'main' }.each do |workspace|
       ai_tab = workspace['tabs'].find { |tab| tab['label'] == 'claude' }
       assert ai_tab
@@ -148,7 +150,7 @@ test('Herdr named stop only closes the selected group and tolerates an absent se
     seed_herdr_workspaces(path, WORKSPACE_LABELS)
     equal 0, run_archon(%w[w h stop -g flashcards])[:status]
     workspaces = herdr_state(path)['workspaces']
-    equal 9, workspaces.length
+    equal 10, workspaces.length
     assert workspaces.none? { |workspace| workspace['label'].start_with?('flashcards-') }
   end
 end

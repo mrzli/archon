@@ -2,7 +2,7 @@ require_relative 'layout'
 
 module Archon
   module Workspaces
-    PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/mrzli.github.io mrzli/repos mrzli/skills].freeze
+    PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/mrzli.github.io mrzli/omarchy-lab mrzli/repos mrzli/skills].freeze
 
     def start_editor_session(definition, backend)
       session = definition[:session]

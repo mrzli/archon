@@ -10,7 +10,7 @@ require_relative 'test_helpers'
         assert status.success?, error
         output.strip
       end
-      projects = %w[archon docs js-templates learning mrzli-github-io repos skills].map { |name| "project-mrzli-#{name}" }
+      projects = %w[archon docs js-templates learning mrzli-github-io omarchy-lab repos skills].map { |name| "project-mrzli-#{name}" }
       other = %w[jslib-example flashcards-fe flashcards-be main]
       begin
         [*projects, *other, 'unrelated'].each do |session|
