@@ -28,6 +28,7 @@ archon admin github ssh <create|test>
 archon admin voice <start|stop>
 archon libs <command> [options]
 archon projects <command> [options]
+archon visual-studio-code [start|stop]
 archon workspaces herdr <start|stop|kill> [options]
 archon workspaces tmux <start|stop|kill> [options]
 ```
@@ -36,13 +37,15 @@ archon workspaces tmux <start|stop|kill> [options]
 `archon projects status` are equivalent.
 
 Direct subcommands also have short aliases: `a` for `admin`, `h` for `help`, `l` for
-`libs`, `p` for `projects`, and `w` for `workspaces`. These work with both
-`archon` and `arc`, for example:
+`libs`, `p` for `projects`, `vsc` for `visual-studio-code`, and `w` for
+`workspaces`. These work with both `archon` and `arc`, for example:
 
 ```bash
 arc a voice stop
 arc p status
 arc l build
+arc vsc
+arc vsc stop
 arc w h start
 arc w t start -g flashcards
 arc h
@@ -63,4 +66,5 @@ Detailed behavior is documented with each command collection:
 - [Administration](./lib/archon/commands/admin/README.md)
 - [Libraries](./lib/archon/commands/libs/README.md)
 - [Projects](./lib/archon/commands/projects/README.md)
+- [Visual Studio Code](./lib/archon/commands/visual_studio_code/README.md)
 - [Workspaces](./lib/archon/commands/workspaces/README.md)
