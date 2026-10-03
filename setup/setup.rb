@@ -249,9 +249,11 @@ def sync_user_skill_links(source, home)
     group_path = File.join(source, group)
     next if ignored_groups.include?(group) || !File.directory?(group_path)
 
-    Dir.children(group_path).sort.each do |name|
-      target = File.join(group_path, name)
-      next unless File.file?(File.join(target, 'SKILL.md'))
+    Dir.glob('**/SKILL.md', base: group_path).sort.each do |relative_path|
+      next unless File.file?(File.join(group_path, relative_path))
+
+      target = File.dirname(File.join(group_path, relative_path))
+      name = File.basename(target)
       raise "Duplicate skill name: #{name}" if targets.key?(name)
 
       targets[name] = target

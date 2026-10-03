@@ -27,6 +27,17 @@ Dir.mktmpdir('archon-skills-') do |root|
   File.write("#{source}/development/third/scripts/run.sh", 'echo third')
   File.write("#{source}/experimental/first/SKILL.md", 'ignored duplicate')
   File.write("#{source}/experimental/ignored/SKILL.md", 'ignored skill')
+  nested_skills = {
+    'guide' => 'engineering/workflow/guide',
+    'implement' => 'engineering/delivery/implement',
+    'deep' => 'engineering/delivery/more/levels/deep'
+  }
+  nested_skills.each do |name, relative_path|
+    FileUtils.mkdir_p("#{source}/#{relative_path}")
+    File.write("#{source}/#{relative_path}/SKILL.md", "#{name} skill")
+  end
+  FileUtils.mkdir_p("#{source}/experimental/nested/guide")
+  File.write("#{source}/experimental/nested/guide/SKILL.md", 'ignored nested duplicate')
   FileUtils.mkdir_p("#{home}/.codex/skills/.system")
   File.write("#{home}/.codex/skills/.system/keep", 'system skill')
 
@@ -49,19 +60,23 @@ Dir.mktmpdir('archon-skills-') do |root|
     end
     assert File.readlink("#{directory}/third") == "#{source}/development/third"
     assert File.read("#{directory}/third/scripts/run.sh") == 'echo third'
+    nested_skills.each do |name, relative_path|
+      assert File.readlink("#{directory}/#{name}") == "#{source}/#{relative_path}"
+      assert File.read("#{directory}/#{name}/SKILL.md") == "#{name} skill"
+    end
     %w[experimental productivity development ignored removed not-a-skill].each do |name|
       assert !path_exists?("#{directory}/#{name}")
     end
   end
 
   # Duplicate names across included groups fail before any links are changed.
-  FileUtils.mkdir_p("#{source}/development/first")
-  File.write("#{source}/development/first/SKILL.md", 'duplicate skill')
+  FileUtils.mkdir_p("#{source}/development/nested/first")
+  File.write("#{source}/development/nested/first/SKILL.md", 'duplicate skill')
   assert_refused('Duplicate skill name: first') { sync_user_skill_links(source, home) }
   destinations.each do |directory|
     assert File.readlink("#{directory}/first") == "#{source}/productivity/first"
   end
-  FileUtils.rm_r("#{source}/development/first")
+  FileUtils.rm_r("#{source}/development/nested/first")
 
   # File changes are immediately visible; renames need link reconciliation.
   File.write("#{source}/productivity/first/SKILL.md", 'updated first skill')
