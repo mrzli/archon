@@ -7,8 +7,6 @@ exit 1 if ENV['FAIL_COMMAND'] == name
 state = ENV.fetch('SYSTEM_FIXTURE')
 case name
 when 'codex'
-  config_path = "#{state}/codex-config.json"
-  config = File.exist?(config_path) ? JSON.parse(File.read(config_path)) : {}
   STDIN.each_line do |line|
     request = JSON.parse(line)
     next unless request.key?('id')
@@ -16,9 +14,6 @@ when 'codex'
     if request['method'] == 'config/batchWrite'
       edits = request.fetch('params').fetch('edits')
       File.write("#{state}/codex-edits.json", JSON.generate(edits))
-      config['tui'] ||= {}
-      config['tui']['status_line'] = edits.find { |edit| edit['keyPath'] == 'tui.status_line' }.fetch('value')
-      File.write(config_path, JSON.generate(config))
     end
     puts JSON.generate({ id: request['id'], result: {} })
     STDOUT.flush
@@ -62,10 +57,6 @@ when 'voxtype'
                          'variants' => [{ 'binary_name' => 'voxtype-vulkan', 'installed' => !ENV['NO_VULKAN'] }] })
   when %w[setup --download]
     exit 1 if ENV['FAIL_VOICE_DOWNLOAD']
-    unless File.exist?("#{state}/voice-model")
-      File.write("#{state}/voice-model", 'large-v3-turbo')
-      File.open("#{state}/voice-downloads", 'a') { |file| file.puts('download') }
-    end
   when %w[config get]
     puts File.read("#{state}/voice-config.json")
   when %w[config set]

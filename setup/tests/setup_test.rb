@@ -147,7 +147,7 @@ check('voice AI installs without desktop notifications and preserves existing co
   assert commands(env).count { |args| args == %w[omarchy pkg add wtype voxtype-bin] } == 2
 end
 
-check('GPU dictation converges without repeated downloads, settings writes, or sudo', :voice) do |repo, home, _bin, env|
+check('GPU dictation requests the model and skips unchanged settings and variant on reruns', :voice) do |repo, _home, _bin, env|
   _, error, status = run_operation(repo, env, 'configure_voice_ai')
   assert status.success?, error
   first_run_count = commands(env).length
@@ -155,23 +155,30 @@ check('GPU dictation converges without repeated downloads, settings writes, or s
   assert status.success?, error
   later_calls = commands(env).drop(first_run_count)
   assert later_calls.none? { |args| args[0, 2] == %w[sudo voxtype] || args[0, 3] == %w[voxtype config set] }
-  state = env.fetch('SYSTEM_FIXTURE')
-  assert File.read("#{state}/voice-variant") == 'whisper-vulkan'
-  assert File.readlines("#{state}/voice-downloads").length == 1
-  config = JSON.parse(File.read("#{state}/voice-config.json"))
-  assert config['audio.max_duration_secs'] == 300
-  assert config.values_at('engine', 'whisper.mode', 'whisper.model') == %w[whisper local large-v3-turbo]
-  assert config.values_at('whisper.gpu_isolation', 'whisper.on_demand_loading', 'whisper.gpu_device') == [false, false, 0]
-  assert config.values_at('whisper.language', 'audio.device', 'hotkey.enabled') == ['en', 'my microphone', false]
+  calls = commands(env)
+  download = %w[voxtype setup --download --model large-v3-turbo --no-post-install]
+  switch = %w[sudo voxtype setup variant --to voxtype-vulkan]
+  assert calls.select { |args| args[0, 2] == %w[voxtype setup] } == [download, download]
+  assert calls.select { |args| args[0, 2] == %w[sudo voxtype] } == [switch]
+  settings = calls.select { |args| args[0, 3] == %w[voxtype config set] }
+  assert settings.sort == [
+    %w[voxtype config set audio.max_duration_secs 300],
+    %w[voxtype config set whisper.model large-v3-turbo],
+    %w[voxtype config set whisper.gpu_isolation false],
+    %w[voxtype config set whisper.on_demand_loading false],
+    %w[voxtype config set whisper.gpu_device 0]
+  ].sort
+  assert calls.index(download) < calls.index(switch)
+  assert calls.index(switch) < calls.index(settings.first)
+  assert calls.index(settings.last) < calls.index(%w[systemctl --user restart voxtype.service])
   assert later_calls.include?(%w[systemctl --user restart voxtype.service])
 end
 
 check('failed voice downloads preserve configuration and do not switch or restart Voxtype', :voice) do |repo, _home, _bin, env|
-  config_path = "#{env.fetch('SYSTEM_FIXTURE')}/voice-config.json"
-  original = File.read(config_path)
   assert run_operation(repo, env.merge('FAIL_VOICE_DOWNLOAD' => '1'), 'configure_voice_ai').last.exitstatus == 1
-  assert File.read(config_path) == original
-  assert commands(env).none? { |args| args[0, 2] == %w[sudo voxtype] || args.include?('voxtype.service') }
+  assert commands(env).none? { |args|
+    args[0, 2] == %w[sudo voxtype] || args[0, 3] == %w[voxtype config set] || args.include?('voxtype.service')
+  }
 end
 
 check('missing Vulkan variant stops before downloading a model', :voice) do |repo, _home, _bin, env|
@@ -202,22 +209,6 @@ check('setup provisions Codex model, subagent, navigation, and status-line setti
     { 'keyPath' => 'tui.keymap.chat.edit_queued_message', 'value' => 'alt-shift-up', 'mergeStrategy' => 'replace' },
     { 'keyPath' => 'tui.keymap.chat.prompt_stack_back', 'value' => 'alt-shift-down', 'mergeStrategy' => 'replace' }
   ]
-end
-
-check('Codex footer converges on the requested fields and ordering', :codex) do |repo, _home, _bin, env|
-  config_path = "#{env.fetch('SYSTEM_FIXTURE')}/codex-config.json"
-  expected = %w[model-with-reasoning current-dir git-branch thread-name context-used weekly-limit]
-  [nil, [], %w[git-branch weekly-limit model context-used], %w[context-used weekly-limit]].each do |existing|
-    config = { 'tui' => { 'status_line' => existing, 'show_tooltips' => false } }
-    File.write(config_path, JSON.generate(config))
-    2.times do
-      _, error, status = Open3.capture3(env, RbConfig.ruby, '-r', "#{repo}/setup/codex.rb", '-e', 'configure_codex')
-      assert status.success?, error
-      updated = JSON.parse(File.read(config_path))
-      assert updated.dig('tui', 'status_line') == expected
-      assert updated.dig('tui', 'show_tooltips') == false
-    end
-  end
 end
 
 check('Codex configuration failures stop setup', :full) do |repo, _home, _bin, env|

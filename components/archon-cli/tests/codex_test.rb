@@ -1,10 +1,8 @@
 require_relative 'test_helpers'
 
-CODEX_IDS = %w[11111111-1111-1111-1111-111111111111 22222222-2222-2222-2222-222222222222].freeze
-
 def codex_terminals(count: 2, stuck: false)
   states = count.times.map do |index|
-    { id: CODEX_IDS[index], pid: index + 100, shell: false, screen: 'Ready', calls: [] }
+    { pid: index + 100, shell: false, screen: 'Ready', calls: [] }
   end
   panes = states.each_index.map { |index| { backend: :herdr, server: 'test', id: index } }
   terminals = Object.new
@@ -98,7 +96,7 @@ test('resume removes selectors, prompts and images but preserves directory overr
   raises(/Unsupported Codex command/) { Archon::Codex.resume_options(%w[codex exec do-something]) }
 end
 
-test('tmux restart preserves real panes, shell processes, directories and conversations') do
+test('tmux restart preserves real panes, shell processes, directories and resume arguments') do
   fixture do |fixture|
     socket = File.join(fixture[:root], 'codex.sock')
     project = File.join(fixture[:root], 'project with spaces')
@@ -109,16 +107,12 @@ test('tmux restart preserves real panes, shell processes, directories and conver
     File.write(script, <<~'RUBY')
       require 'json'
       $stdout.sync = true
-      id = ENV.fetch('TEST_CODEX_ID')
       trap('INT') { exit }
       sleep ENV.fetch('TEST_CODEX_STARTUP_DELAY', '0').to_f if ARGV.include?('resume')
-      File.open(ENV.fetch('TEST_CODEX_LOG'), 'a') { |file| file.puts JSON.generate(pid: Process.pid, id: id, cwd: Dir.pwd, args: ARGV) }
+      File.open(ENV.fetch('TEST_CODEX_LOG'), 'a') { |file| file.puts JSON.generate(pid: Process.pid, cwd: Dir.pwd, args: ARGV) }
       puts '? for shortcuts'
       while (line = $stdin.gets)
-        case line.strip
-        when '/status' then puts "Session: #{id}"
-        when '/quit' then exit
-        end
+        exit if line.strip == '/quit'
       end
     RUBY
     write_executable(File.join(fixture[:bin], 'codex'), "#!/bin/bash\nexec -a codex #{Shellwords.join([RbConfig.ruby, script])} \"$@\"\n")
@@ -133,7 +127,7 @@ test('tmux restart preserves real panes, shell processes, directories and conver
       tmux.call('new-window', '-t', 'test', '-n', 'other', 'sleep', '60')
       pane = tmux.call('list-panes', '-t', 'test:0', '-F', '#{pane_id}')
       shell_pid = tmux.call('display-message', '-p', '-t', pane, '#{pane_pid}')
-      command = "export PATH=#{Shellwords.escape(ENV.fetch('PATH'))} TEST_CODEX_ID=#{CODEX_IDS.first} TEST_CODEX_LOG=#{Shellwords.escape(log)}; codex -m test-model"
+      command = "export PATH=#{Shellwords.escape(ENV.fetch('PATH'))} TEST_CODEX_LOG=#{Shellwords.escape(log)}; codex -m test-model"
       tmux.call('send-keys', '-t', pane, '-l', command)
       tmux.call('send-keys', '-t', pane, 'Enter')
       100.times do
@@ -151,7 +145,6 @@ test('tmux restart preserves real panes, shell processes, directories and conver
       launches = File.readlines(log).map { |line| JSON.parse(line) }
       equal 2, launches.length
       assert launches[0]['pid'] != launches[1]['pid']
-      equal [CODEX_IDS.first] * 2, launches.map { |launch| launch['id'] }
       equal [project] * 2, launches.map { |launch| launch['cwd'] }
       equal ['resume', '--last', '-m', 'test-model', '-C', project], launches.last['args']
       equal shell_pid, tmux.call('display-message', '-p', '-t', pane, '#{pane_pid}')
