@@ -1,8 +1,8 @@
 approval_policy = "on-request"
-default_permissions = "git-workspace"
+default_permissions = "local-development"
 
-[permissions.git-workspace]
+[permissions.local-development]
 extends = ":workspace"
 
-[permissions.git-workspace.filesystem.":workspace_roots"]
+[permissions.local-development.filesystem.":workspace_roots"]
 ".git" = "write"
