@@ -23,7 +23,7 @@ module Archon
       Usage: archon workspaces list [options]
 
       Options:
-        -g, --group <group>  Show only flashcards, general, jslibs, or misc
+        -g, --group <group>  Show only general, jslibs, misc, or projects
         -h, --help           Show this help
 
       Lists configured project paths by group. Missing directories are marked.

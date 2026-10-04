@@ -66,16 +66,17 @@ create_fixtures() {
     "$fixture_home/projects/personal/mrzli/mrzli.github.io" \
     "$fixture_home/projects/personal/mrzli/repos" \
     "$fixture_home/projects/personal/mrzli/omarchy-lab" \
+    "$fixture_home/projects/personal/mrzli/qt-market-chart" \
     "$fixture_home/projects/personal/mrzli/skills"
 }
 
 test_named_group() {
   create_fixtures || return
 
-  run_archon workspaces tmux start --group flashcards || return
-  assert_sessions flashcards-fe flashcards-be || return
+  run_archon workspaces tmux start --group projects || return
+  assert_sessions flashcards-fe flashcards-be project-mrzli-omarchy-lab project-mrzli-mrzli-github-io project-mrzli-qt-market-chart || return
 
-  run_archon workspaces tmux stop -g flashcards || return
+  run_archon workspaces tmux stop -g projects || return
   assert_sessions || return
   assert_no_attachment
 }
@@ -85,7 +86,7 @@ test_aggregate_groups() {
 
   run_archon workspaces tmux start || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
-    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-repos project-mrzli-skills || return
+    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-qt-market-chart project-mrzli-repos project-mrzli-skills || return
   run_archon workspaces tmux stop || return
   assert_sessions || return
   assert_no_attachment
@@ -96,7 +97,7 @@ test_terminal_aggregate() {
   run_terminal_archon workspaces tmux start || return
   assert_attachment main || return
   assert_sessions main flashcards-fe flashcards-be jslib-example \
-    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-repos project-mrzli-skills
+    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-qt-market-chart project-mrzli-repos project-mrzli-skills
 }
 
 test_terminal_named_group() {

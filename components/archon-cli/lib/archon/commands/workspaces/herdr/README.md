@@ -5,8 +5,8 @@ project commands. Manage workspaces in a dedicated Herdr session named `archon`:
 
 ```bash
 archon workspaces herdr start
-arc w h start -g flashcards
-arc w h start --group flashcards --ai claude
+arc w h start -g projects
+arc w h start --group projects --ai claude
 arc w h stop --group jslibs
 arc w h stop
 arc w h kill
@@ -20,12 +20,13 @@ change its AI tool. The `general` group has only a shell and is unaffected.
 The groups match `archon workspaces tmux`:
 
 - `general`: a `main` workspace with a shell at `~/projects`.
-- `flashcards`: frontend and backend workspaces, each with Neovim, the selected AI tool,
-  development, and shell tabs.
 - `jslibs`: immediate non-hidden repositories under
   `~/projects/personal/mrzli-jslib`, with Neovim, the selected AI tool, and shell tabs.
 - `misc`: the configured personal projects, with Neovim, the selected AI tool,
   and shell tabs.
+- `projects`: `flashcards-fe`, `flashcards-be`, `omarchy-lab`, `mrzli.github.io`,
+  and `qt-market-chart`, with Neovim, the selected AI tool, and shell tabs.
+  The two Flashcards workspaces also have development tabs.
 
 Start runs groups in the order above; stop uses the reverse order. Missing
 project directories are reported and skipped. Repeated starts preserve existing

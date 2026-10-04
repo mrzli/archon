@@ -5,15 +5,15 @@ Tmux = Archon::WorkspacesTmux
 
 def all_workspace_directories(fixture)
   paths = ['projects/personal/mrzli-jslib/example/.git', 'projects/personal/mrzli/flashcards-fe',
-           'projects/personal/mrzli/flashcards-be'] + Workspaces::MISC_PROJECTS.map { |project| "projects/personal/#{project}" }
+           'projects/personal/mrzli/flashcards-be'] + (Archon::Workspaces::MISC_PROJECTS + Archon::Workspaces::PROJECTS).map { |project| "projects/personal/#{project}" }
   paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
 end
 
 test('AI selection defaults to Codex and combines with group selection in either order') do
   equal 'codex', Workspaces.parse_arguments(['start'], help: Tmux::HELP)[:ai]
   %w[codex claude].each do |ai|
-    [['--ai', ai, '--group', 'flashcards'], ['-g', 'flashcards', '--ai', ai]].each do |options|
-      equal({ action: 'start', group: 'flashcards', ai: ai }, Workspaces.parse_arguments(['start', *options], help: Tmux::HELP))
+    [['--ai', ai, '--group', 'projects'], ['-g', 'projects', '--ai', ai]].each do |options|
+      equal({ action: 'start', group: 'projects', ai: ai }, Workspaces.parse_arguments(['start', *options], help: Tmux::HELP))
     end
   end
   [%w[start --ai], %w[start --ai unknown], %w[start -a claude],
@@ -32,7 +32,7 @@ test('Claude selection reaches tmux AI windows in every project group') do
     run = ->(_, args, **_) { calls << args; args.first == 'has-session' ? 1 : 0 }
     equal 0, Tmux.run_workspaces_tmux(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, run: run)
     ai_windows = calls.select { |args| args.first == 'new-window' && args.last == 'claude' }
-    equal 11, ai_windows.length
+    equal 12, ai_windows.length
     ai_windows.each do |args|
       assert calls.include?(['send-keys', '-t', "#{args[2]}:claude", 'claude --continue', 'Enter'])
     end
@@ -93,7 +93,7 @@ end
 
 test('workspace routing preserves group selection, ordering, continuation, and kill status') do
   calls = []
-  handlers = Workspaces::GROUPS.to_h { |group| [group, ->(action, _, **_) { calls << [action, group]; group == 'flashcards' ? 1 : 0 }] }
+  handlers = Workspaces::GROUPS.to_h { |group| [group, ->(action, _, **_) { calls << [action, group]; group == 'projects' ? 1 : 0 }] }
   context = { handlers: handlers, tmux: {}, environment: {}, tty: false }
   equal 1, Tmux.run_workspaces_tmux(['start'], **context)
   equal Workspaces::GROUPS.map { |group| ['start', group] }, calls
@@ -127,7 +127,7 @@ test('attachment selects only matching sessions, prefers main, and handles list 
     list_sessions: -> { { status: 0, output: "unrelated\nproject-mrzli-docs\njslib-a\nflashcards-be\nmain" } },
     attach_session: ->(session) { calls << session; 0 }
   }
-  { nil => 'main', 'general' => 'main', 'flashcards' => 'flashcards-be', 'jslibs' => 'jslib-a', 'misc' => 'project-mrzli-docs' }.each do |group, expected|
+  { nil => 'main', 'general' => 'main', 'projects' => 'flashcards-be', 'jslibs' => 'jslib-a', 'misc' => 'project-mrzli-docs' }.each do |group, expected|
     equal 0, Workspaces.attach_after_start(group, tmux)
     equal expected, calls.last
   end
@@ -160,7 +160,7 @@ test('injected tmux reaches real groups, preserves existing sessions, and tolera
     }
     context = { home: fixture[:home], tmux: tmux, environment: {}, tty: true }
     2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context) }
-    equal 12, creations.length
+    equal 13, creations.length
     equal 'bun run dev', sessions['flashcards-fe'][:dev_command]
     equal 'pnpm run dev', sessions['flashcards-be'][:dev_command]
     assert sessions.key?('project-mrzli-mrzli-github-io')
@@ -175,7 +175,7 @@ test('missing group directories are skipped and library discovery excludes hidde
   fixture do |fixture|
     tmux = { has_session: ->(_) { raise 'unexpected tmux access' } }
     equal 0, Workspaces.manage_general('start', tmux, home: fixture[:home])
-    equal 0, Workspaces.manage_flashcards('start', tmux, home: fixture[:home])
+    equal 0, Workspaces.manage_projects('start', tmux, home: fixture[:home])
     equal 0, Workspaces.manage_misc('start', tmux, home: fixture[:home])
     equal 0, Workspaces.manage_jslibs('start', tmux, home: fixture[:home])
     root = File.join(fixture[:home], 'projects/personal/mrzli-jslib')
@@ -201,13 +201,13 @@ test('group failures report rollback errors, continue to later sessions, and all
       },
       stop_session: ->(session) { session == 'flashcards-fe' ? 1 : (sessions.delete(session); 0) }
     }
-    result, _, error = capture { Workspaces.manage_flashcards('start', tmux, home: fixture[:home]) }
+    result, _, error = capture { Workspaces.manage_projects('start', tmux, home: fixture[:home]) }
     equal 1, result
     assert error.include?('Failed to clean up tmux session: flashcards-fe')
-    equal Set['flashcards-be'], sessions
+    equal Set['flashcards-be', 'project-mrzli-omarchy-lab', 'project-mrzli-mrzli-github-io', 'project-mrzli-qt-market-chart'], sessions
     fail_start = false
-    equal 0, Workspaces.manage_flashcards('start', tmux, home: fixture[:home])
-    equal 1, Workspaces.manage_flashcards('stop', tmux, home: fixture[:home])
+    equal 0, Workspaces.manage_projects('start', tmux, home: fixture[:home])
+    equal 1, Workspaces.manage_projects('stop', tmux, home: fixture[:home])
     equal Set['flashcards-fe'], sessions
   end
 end
@@ -226,7 +226,7 @@ test('signaled subprocesses become operational failures for execution and captur
   fixture do |fixture|
     all_workspace_directories(fixture)
     write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nkill -TERM \"$$\"\n")
-    [%w[start -g flashcards], %w[stop -g jslibs], ['kill']].each do |arguments|
+    [%w[start -g projects], %w[stop -g jslibs], ['kill']].each do |arguments|
       result = run_archon(['workspaces', 'tmux', *arguments])
       equal 1, result[:status]
       equal nil, result[:signal]

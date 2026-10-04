@@ -11,14 +11,31 @@ test('workspace listing groups configured paths and marks missing directories') 
     status, output, error = capture { Archon::Workspaces.run_workspaces(['list'], home: home) }
     equal 0, status
     equal '', error
-    equal %w[general: flashcards: jslibs: misc:], output.lines(chomp: true).reject { |line| line.start_with?(' ') }
+    equal %w[general: jslibs: misc: projects:], output.lines(chomp: true).reject { |line| line.start_with?(' ') }
     assert output.include?("general:\n  ~/projects\n")
-    assert output.include?("flashcards:\n  ~/projects/personal/mrzli/flashcards-fe\n  ~/projects/personal/mrzli/flashcards-be (missing)\n")
+    assert output.include?("projects:\n  ~/projects/personal/mrzli/flashcards-fe\n  ~/projects/personal/mrzli/flashcards-be (missing)\n")
     assert output.include?("jslibs:\n  ~/projects/personal/mrzli-jslib/alpha\n  ~/projects/personal/mrzli-jslib/zeta\n")
     assert output.include?("  ~/projects/personal/mrzli/archon\n")
     assert output.include?('  ~/projects/personal/mrzli/docs (missing)')
     assert !output.include?('.hidden') && !output.include?('ignored')
     assert !output.include?(home)
+  end
+end
+
+test('projects contains the moved repositories and primary groups do not overlap') do
+  fixture do |fixture|
+    definitions = Archon::Workspaces.workspace_definitions('projects', home: fixture[:home])
+    equal %w[flashcards-fe flashcards-be omarchy-lab mrzli.github.io qt-market-chart], definitions.map { |definition| File.basename(definition[:directory]) }
+    equal ['bun run dev', 'pnpm run dev'], definitions.first(2).map { |definition| definition[:dev_command] }
+    equal %w[archon docs js-templates learning repos skills], Archon::Workspaces.workspace_definitions('misc', home: fixture[:home]).map { |definition| File.basename(definition[:directory]) }
+    paths = Archon::Workspaces::GROUPS.flat_map do |group|
+      Archon::Workspaces.workspace_definitions(group, home: fixture[:home]).map { |definition| definition[:directory] }
+    end
+    equal paths.uniq, paths
+    equal 2, run_archon(%w[w list -g flashcards])[:status]
+    %w[herdr tmux].each do |backend|
+      equal 2, run_archon(['w', backend, 'start', '-g', 'flashcards'])[:status]
+    end
   end
 end
 
@@ -44,11 +61,11 @@ test('workspace list and help work through executable aliases without external c
     %w[git gh bun tmux herdr].each do |name|
       write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
     end
-    result = run_archon(%w[workspaces list -g flashcards])
+    result = run_archon(%w[workspaces list -g projects])
     equal 0, result[:status]
     equal '', result[:stderr]
     assert result[:stdout].include?('flashcards-fe (missing)')
-    equal result, run_archon(%w[w list --group flashcards])
+    equal result, run_archon(%w[w list --group projects])
     %w[help -h --help].each do |help|
       result = run_archon(['w', 'list', help])
       equal 0, result[:status]
@@ -62,7 +79,7 @@ end
 test('workspace listing rejects invalid groups, operands, and lifecycle options') do
   fixture do
     [%w[-g], %w[-g unknown], %w[--ai claude], %w[extra], %w[--help extra],
-     %w[-g general -g flashcards]].each do |options|
+     %w[-g general -g projects]].each do |options|
       result = run_archon(['workspaces', 'list', *options])
       equal 2, result[:status]
       equal '', result[:stdout]

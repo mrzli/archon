@@ -10,10 +10,10 @@ require_relative 'test_helpers'
         assert status.success?, error
         output.strip
       end
-      projects = %w[archon docs js-templates learning mrzli-github-io omarchy-lab repos skills].map { |name| "project-mrzli-#{name}" }
-      other = %w[jslib-example flashcards-fe flashcards-be main]
+      misc = %w[archon docs js-templates learning repos skills].map { |name| "project-mrzli-#{name}" }
+      other = %w[jslib-example flashcards-fe flashcards-be project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-qt-market-chart main]
       begin
-        [*projects, *other, 'unrelated'].each do |session|
+        [*misc, *other, 'unrelated'].each do |session|
           tmux.call('new-session', '-d', '-s', session, 'sleep', '60')
         end
         tmux.call('new-window', '-t', '=project-mrzli-archon', '-n', 'stopper', '/usr/bin/env',

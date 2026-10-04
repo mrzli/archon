@@ -49,7 +49,7 @@ arc l build
 arc vsc start
 arc vsc stop
 arc w h start
-arc w t start -g flashcards
+arc w t start -g projects
 arc h
 ```
 

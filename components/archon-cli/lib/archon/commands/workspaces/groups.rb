@@ -2,17 +2,13 @@ require_relative 'layout'
 
 module Archon
   module Workspaces
-    MISC_PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/mrzli.github.io mrzli/omarchy-lab mrzli/repos mrzli/skills].freeze
+    MISC_PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/repos mrzli/skills].freeze
+    PROJECTS = %w[mrzli/omarchy-lab mrzli/mrzli.github.io mrzli/qt-market-chart].freeze
 
     def workspace_definitions(group, home: Dir.home)
       case group
       when 'general'
         [{ session: 'main', directory: File.join(home, 'projects') }]
-      when 'flashcards'
-        [
-          { session: 'flashcards-fe', directory: File.join(home, 'projects/personal/mrzli/flashcards-fe'), dev_command: 'bun run dev' },
-          { session: 'flashcards-be', directory: File.join(home, 'projects/personal/mrzli/flashcards-be'), dev_command: 'pnpm run dev' }
-        ]
       when 'jslibs'
         root = File.join(home, 'projects/personal/mrzli-jslib')
         return [] unless File.directory?(root)
@@ -21,6 +17,13 @@ module Archon
         end
       when 'misc'
         MISC_PROJECTS.map do |project|
+          { session: "project-#{project.tr('/.', '--')}", directory: File.join(home, 'projects/personal', project) }
+        end
+      when 'projects'
+        [
+          { session: 'flashcards-fe', directory: File.join(home, 'projects/personal/mrzli/flashcards-fe'), dev_command: 'bun run dev' },
+          { session: 'flashcards-be', directory: File.join(home, 'projects/personal/mrzli/flashcards-be'), dev_command: 'pnpm run dev' }
+        ] + PROJECTS.map do |project|
           { session: "project-#{project.tr('/.', '--')}", directory: File.join(home, 'projects/personal', project) }
         end
       end
@@ -73,8 +76,8 @@ module Archon
       0
     end
 
-    def manage_flashcards(action, backend, home: Dir.home)
-      manage_editor_sessions(action, workspace_definitions('flashcards', home: home), backend)
+    def manage_projects(action, backend, home: Dir.home)
+      manage_editor_sessions(action, workspace_definitions('projects', home: home), backend)
     end
 
     def manage_misc(action, backend, home: Dir.home)

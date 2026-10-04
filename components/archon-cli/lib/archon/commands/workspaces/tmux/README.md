@@ -6,7 +6,7 @@ Manage tmux workspace sessions through the Archon CLI:
 archon workspaces tmux start
 archon workspaces tmux stop
 archon workspaces tmux start --group general
-archon workspaces tmux start --group flashcards --ai claude
+archon workspaces tmux start --group projects --ai claude
 archon workspaces tmux stop -g jslibs
 archon workspaces tmux kill
 ```
