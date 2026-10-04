@@ -84,6 +84,11 @@ test_repeated_overlay_copy() {
   assert_equals $'projects:\n  ~/projects/personal/mrzli/flashcards-fe (missing)\n  ~/projects/personal/mrzli/flashcards-be (missing)\n  ~/projects/personal/mrzli/omarchy-lab (missing)\n  ~/projects/personal/mrzli/mrzli.github.io (missing)\n  ~/projects/personal/mrzli/qt-market-chart (missing)' "$archon_output" || return
   assert_absent "$home/projects" || return
 
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list -g current)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w list --group current)" || return
+  assert_equals "$archon_output" "$alias_output" || return
+  assert_equals $'current:\n  ~/projects (missing)\n  ~/projects/personal/mrzli/archon (missing)\n  ~/projects/personal/mrzli/learning (missing)\n  ~/projects/personal/mrzli/omarchy-lab (missing)\n  ~/projects/personal/mrzli/skills (missing)\n  ~/projects/personal/mrzli/qt-market-chart (missing)' "$archon_output" || return
+
   cmp -- "$archon_cli_source/bin/archon" "$home/.local/bin/archon" || return
 
   local expected_files installed_files path

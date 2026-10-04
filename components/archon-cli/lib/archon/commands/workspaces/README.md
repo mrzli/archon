@@ -36,17 +36,21 @@ arc w list -g projects
 archon workspaces list --help
 ```
 
-`-g` and `--group` select `general`, `jslibs`, `misc`, or `projects`.
-Without a group, all groups appear in startup order. Missing configured
+`-g` and `--group` select `current`, `general`, `jslibs`, `misc`, or `projects`.
+Without a group, all groups appear alphabetically. Missing configured
 directories are marked `(missing)`. JavaScript libraries are discovered from
 local repositories, using the same selection as workspace startup; an empty
 group shows `(no projects found)`. No Herdr or tmux installation is required.
 
-Each workspace belongs to one group. `projects` contains `flashcards-fe`,
+Each workspace belongs to one primary group. `projects` contains `flashcards-fe`,
 `flashcards-be`, `omarchy-lab`, `mrzli.github.io`, and `qt-market-chart`.
 `misc` contains `archon`, `docs`, `js-templates`, `learning`, `repos`, and `skills`.
 `general` provides the shell at `~/projects`, and `jslibs` contains the local
 JavaScript library repositories.
+
+`current` is a hardcoded selection from those groups: the general shell workspace,
+`archon`, `learning`, `omarchy-lab`, `skills`, and `qt-market-chart`. It uses the
+same workspaces, so starting a primary group and `current` does not create copies.
 
 ## tmux
 

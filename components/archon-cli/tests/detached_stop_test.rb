@@ -1,6 +1,6 @@
 require_relative 'test_helpers'
 
-[nil, 'misc'].each do |group|
+[nil, 'misc', 'current'].each do |group|
   test("workspace stop survives closing its calling pane: #{group || 'all groups'}") do
     fixture do |fixture|
       socket = File.join(fixture[:root], 'tmux.sock')
@@ -19,7 +19,12 @@ require_relative 'test_helpers'
         tmux.call('new-window', '-t', '=project-mrzli-archon', '-n', 'stopper', '/usr/bin/env',
           "HOME=#{fixture[:home]}", "XDG_STATE_HOME=#{ENV.fetch('XDG_STATE_HOME')}", "PATH=#{ENV.fetch('PATH')}",
           RbConfig.ruby, File.expand_path('../bin/arc', __dir__), 'w', 't', 'stop', *(group ? ['-g', group] : []))
-        expected = [*(group ? other : []), 'unrelated'].sort
+        remaining = case group
+                    when 'misc' then other
+                    when 'current' then %w[project-mrzli-docs project-mrzli-js-templates project-mrzli-repos jslib-example flashcards-fe flashcards-be project-mrzli-mrzli-github-io]
+                    else []
+                    end
+        expected = [*remaining, 'unrelated'].sort
         deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
         loop do
           sessions = tmux.call('list-sessions', '-F', '#S').lines.map(&:strip).sort

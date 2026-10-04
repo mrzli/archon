@@ -6,6 +6,7 @@ Manage tmux workspace sessions through the Archon CLI:
 archon workspaces tmux start
 archon workspaces tmux stop
 archon workspaces tmux start --group general
+archon workspaces tmux start --group current
 archon workspaces tmux start --group projects --ai claude
 archon workspaces tmux stop -g jslibs
 archon workspaces tmux kill
@@ -21,8 +22,11 @@ group has only a shell and is unaffected.
 all sessions on the server, including sessions outside Archon's workspace groups.
 It returns tmux's exit status.
 
-Without `--group` or `-g`, the command runs every group in the listed order for
-start and reverse order for stop. Every group is attempted after a failure.
+Without `--group` or `-g`, the command runs the primary groups (`general`,
+`jslibs`, `misc`, `projects`) in that order for start and reverse order for stop.
+`current` selects the general shell, `archon`, `learning`, `omarchy-lab`, `skills`,
+and `qt-market-chart` from those groups, using the same sessions.
+Every selected group is attempted after a failure.
 After a successful start in an interactive terminal outside tmux, the command
 attaches to an existing session from the requested group. Aggregate start
 prefers `main`. It never creates an extra session for attachment. Inside tmux,

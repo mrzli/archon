@@ -96,10 +96,10 @@ test('workspace routing preserves group selection, ordering, continuation, and k
   handlers = Workspaces::GROUPS.to_h { |group| [group, ->(action, _, **_) { calls << [action, group]; group == 'projects' ? 1 : 0 }] }
   context = { handlers: handlers, tmux: {}, environment: {}, tty: false }
   equal 1, Tmux.run_workspaces_tmux(['start'], **context)
-  equal Workspaces::GROUPS.map { |group| ['start', group] }, calls
+  equal Workspaces::PRIMARY_GROUPS.map { |group| ['start', group] }, calls
   calls.clear
   equal 1, Tmux.run_workspaces_tmux(['stop'], **context)
-  equal Workspaces::GROUPS.reverse.map { |group| ['stop', group] }, calls
+  equal Workspaces::PRIMARY_GROUPS.reverse.map { |group| ['stop', group] }, calls
   calls.clear
   equal 0, Tmux.run_workspaces_tmux(%w[start -g general], **context)
   equal [['start', 'general']], calls
@@ -127,7 +127,7 @@ test('attachment selects only matching sessions, prefers main, and handles list 
     list_sessions: -> { { status: 0, output: "unrelated\nproject-mrzli-docs\njslib-a\nflashcards-be\nmain" } },
     attach_session: ->(session) { calls << session; 0 }
   }
-  { nil => 'main', 'general' => 'main', 'projects' => 'flashcards-be', 'jslibs' => 'jslib-a', 'misc' => 'project-mrzli-docs' }.each do |group, expected|
+  { nil => 'main', 'current' => 'main', 'general' => 'main', 'projects' => 'flashcards-be', 'jslibs' => 'jslib-a', 'misc' => 'project-mrzli-docs' }.each do |group, expected|
     equal 0, Workspaces.attach_after_start(group, tmux)
     equal expected, calls.last
   end
@@ -160,6 +160,7 @@ test('injected tmux reaches real groups, preserves existing sessions, and tolera
     }
     context = { home: fixture[:home], tmux: tmux, environment: {}, tty: true }
     2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context) }
+    2.times { equal 0, Tmux.run_workspaces_tmux(%w[start -g current], **context) }
     equal 13, creations.length
     equal 'bun run dev', sessions['flashcards-fe'][:dev_command]
     equal 'pnpm run dev', sessions['flashcards-be'][:dev_command]
@@ -168,6 +169,23 @@ test('injected tmux reaches real groups, preserves existing sessions, and tolera
     sessions['unrelated'] = {}
     2.times { equal 0, Tmux.run_workspaces_tmux(['stop'], **context) }
     equal ['unrelated'], sessions.keys
+  end
+end
+
+test('current continues after shell failures when starting and stopping') do
+  fixture do |fixture|
+    all_workspace_directories(fixture)
+    %w[start stop].each do |action|
+      calls = []
+      backend = {
+        has_session: ->(_) { false },
+        create_shell_session: ->(definition) { calls << definition[:session]; 1 },
+        create_editor_session: ->(definition) { calls << definition[:session]; { status: 0 } },
+        stop_session: ->(session) { calls << session; session == 'main' ? 1 : 0 }
+      }
+      equal 1, Workspaces.manage_current(action, backend, home: fixture[:home])
+      equal %w[main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart], calls
+    end
   end
 end
 

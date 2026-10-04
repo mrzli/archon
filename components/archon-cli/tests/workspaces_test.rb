@@ -11,7 +11,7 @@ test('workspace listing groups configured paths and marks missing directories') 
     status, output, error = capture { Archon::Workspaces.run_workspaces(['list'], home: home) }
     equal 0, status
     equal '', error
-    equal %w[general: jslibs: misc: projects:], output.lines(chomp: true).reject { |line| line.start_with?(' ') }
+    equal %w[current: general: jslibs: misc: projects:], output.lines(chomp: true).reject { |line| line.start_with?(' ') }
     assert output.include?("general:\n  ~/projects\n")
     assert output.include?("projects:\n  ~/projects/personal/mrzli/flashcards-fe\n  ~/projects/personal/mrzli/flashcards-be (missing)\n")
     assert output.include?("jslibs:\n  ~/projects/personal/mrzli-jslib/alpha\n  ~/projects/personal/mrzli-jslib/zeta\n")
@@ -28,7 +28,7 @@ test('projects contains the moved repositories and primary groups do not overlap
     equal %w[flashcards-fe flashcards-be omarchy-lab mrzli.github.io qt-market-chart], definitions.map { |definition| File.basename(definition[:directory]) }
     equal ['bun run dev', 'pnpm run dev'], definitions.first(2).map { |definition| definition[:dev_command] }
     equal %w[archon docs js-templates learning repos skills], Archon::Workspaces.workspace_definitions('misc', home: fixture[:home]).map { |definition| File.basename(definition[:directory]) }
-    paths = Archon::Workspaces::GROUPS.flat_map do |group|
+    paths = Archon::Workspaces::PRIMARY_GROUPS.flat_map do |group|
       Archon::Workspaces.workspace_definitions(group, home: fixture[:home]).map { |definition| definition[:directory] }
     end
     equal paths.uniq, paths
@@ -36,6 +36,21 @@ test('projects contains the moved repositories and primary groups do not overlap
     %w[herdr tmux].each do |backend|
       equal 2, run_archon(['w', backend, 'start', '-g', 'flashcards'])[:status]
     end
+  end
+end
+
+test('current reuses exactly the selected primary workspace definitions') do
+  fixture do |fixture|
+    current = Archon::Workspaces.workspace_definitions('current', home: fixture[:home])
+    equal %w[projects archon learning omarchy-lab skills qt-market-chart], current.map { |definition| File.basename(definition[:directory]) }
+    primary = Archon::Workspaces::PRIMARY_GROUPS.flat_map do |group|
+      Archon::Workspaces.workspace_definitions(group, home: fixture[:home])
+    end
+    current.each { |definition| assert primary.include?(definition) }
+    equal current.uniq, current
+    result = run_archon(%w[w list -g current])
+    equal 0, result[:status]
+    equal "current:\n  ~/projects (missing)\n  ~/projects/personal/mrzli/archon (missing)\n  ~/projects/personal/mrzli/learning (missing)\n  ~/projects/personal/mrzli/omarchy-lab (missing)\n  ~/projects/personal/mrzli/skills (missing)\n  ~/projects/personal/mrzli/qt-market-chart (missing)\n", result[:stdout]
   end
 end
 

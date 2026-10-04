@@ -4,9 +4,14 @@ module Archon
   module Workspaces
     MISC_PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/repos mrzli/skills].freeze
     PROJECTS = %w[mrzli/omarchy-lab mrzli/mrzli.github.io mrzli/qt-market-chart].freeze
+    CURRENT_SESSIONS = %w[main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart].freeze
 
     def workspace_definitions(group, home: Dir.home)
       case group
+      when 'current'
+        definitions = %w[general misc projects].flat_map { |name| workspace_definitions(name, home: home) }
+        by_session = definitions.to_h { |definition| [definition[:session], definition] }
+        CURRENT_SESSIONS.map { |session| by_session.fetch(session) }
       when 'general'
         [{ session: 'main', directory: File.join(home, 'projects') }]
       when 'jslibs'
@@ -76,12 +81,25 @@ module Archon
       0
     end
 
-    def manage_projects(action, backend, home: Dir.home)
-      manage_editor_sessions(action, workspace_definitions('projects', home: home), backend)
+    def manage_current(action, backend, home: Dir.home)
+      status = 0
+      workspace_definitions('current', home: home).each do |definition|
+        result = if definition[:session] == 'main'
+                   manage_general(action, backend, home: home)
+                 else
+                   manage_editor_sessions(action, [definition], backend)
+                 end
+        status = 1 unless result == 0
+      end
+      status
     end
 
     def manage_misc(action, backend, home: Dir.home)
       manage_editor_sessions(action, workspace_definitions('misc', home: home), backend)
+    end
+
+    def manage_projects(action, backend, home: Dir.home)
+      manage_editor_sessions(action, workspace_definitions('projects', home: home), backend)
     end
 
     def find_libraries(root)

@@ -5,7 +5,7 @@ module Archon
              archon workspaces <backend> kill
 
       Options:
-        -g, --group <group>  Run only general, jslibs, misc, or projects
+        -g, --group <group>  Run only current, general, jslibs, misc, or projects
             --ai <tool>      AI tool for start: codex or claude (default: codex)
         -h, --help           Show this help
     TEXT

@@ -6,6 +6,7 @@ project commands. Manage workspaces in a dedicated Herdr session named `archon`:
 ```bash
 archon workspaces herdr start
 arc w h start -g projects
+arc w h start -g current
 arc w h start --group projects --ai claude
 arc w h stop --group jslibs
 arc w h stop
@@ -27,8 +28,11 @@ The groups match `archon workspaces tmux`:
 - `projects`: `flashcards-fe`, `flashcards-be`, `omarchy-lab`, `mrzli.github.io`,
   and `qt-market-chart`, with Neovim, the selected AI tool, and shell tabs.
   The two Flashcards workspaces also have development tabs.
+- `current`: a hardcoded selection of the same workspaces: the general shell,
+  `archon`, `learning`, `omarchy-lab`, `skills`, and `qt-market-chart`.
 
-Start runs groups in the order above; stop uses the reverse order. Missing
+Without a group, start runs the primary groups in the order above and stop uses
+the reverse order. `current` is selected explicitly and does not add copies. Missing
 project directories are reported and skipped. Repeated starts preserve existing
 workspaces and tabs. Failed creations roll back the new workspace and report
 cleanup failures; later workspaces are still attempted.

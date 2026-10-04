@@ -156,6 +156,24 @@ test('Herdr named stop only closes the selected group and tolerates an absent se
   end
 end
 
+test('Herdr current shares resources with primary groups and stops only its selection') do
+  herdr_fixture do |fixture, path|
+    all_workspace_directories(fixture)
+    2.times { equal 0, run_archon(%w[w h start -g current])[:status] }
+    state = herdr_state(path)
+    expected = %w[main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart]
+    equal expected, state['workspaces'].map { |workspace| workspace['label'] }
+    equal 6, state['calls'].count { |call| call.first(2) == %w[workspace create] }
+    equal ['shell'], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
+    equal 0, run_archon(%w[w h start -g projects])[:status]
+    state = herdr_state(path)
+    equal 9, state['workspaces'].length
+    equal 9, state['calls'].count { |call| call.first(2) == %w[workspace create] }
+    2.times { equal 0, run_archon(%w[w h stop -g current])[:status] }
+    equal %w[flashcards-fe flashcards-be project-mrzli-mrzli-github-io], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
+  end
+end
+
 [%w[stop], %w[stop -g general]].each do |arguments|
   [{}, { 'HERDR_ENV' => '1' }].each do |environment|
     test("Herdr #{arguments.join(' ')} shuts down an empty session, including from a pane: #{environment}") do
