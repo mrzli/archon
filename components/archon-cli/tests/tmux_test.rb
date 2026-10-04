@@ -125,6 +125,9 @@ end
 
 test('stop closes only tagged sessions, ignores saved state and discovery, continues after failure, and tolerates absent servers') do
   fixture do |fixture|
+    state = File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces/tmux.json')
+    FileUtils.mkdir_p(File.dirname(state))
+    File.write(state, '{broken state}')
     calls = []
     run = ->(command, arguments) { calls << [command, arguments]; arguments.last == '=first' ? 7 : 0 }
     context = { home: fixture[:home], environment: {}, picker: ->(*_, **_) { raise 'must not pick' }, run: run }
@@ -139,6 +142,7 @@ test('stop closes only tagged sessions, ignores saved state and discovery, conti
       equal 1, Tmux.run_workspaces_tmux(['stop'], **context, capture: ->(*_) { { status: 1, output: message } })
     end
     equal [], calls
+    equal '{broken state}', File.read(state)
     equal 2, Tmux.run_workspaces_tmux(['kill'], **context, capture: ->(*_) { raise 'must not capture' })
   end
 end

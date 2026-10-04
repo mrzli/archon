@@ -5,7 +5,7 @@ module Archon
     HELP = (Workspaces::ACTION_HELP.gsub('<backend>', 'tmux') +
       "\n\nStop closes all Archon-managed sessions on the current tmux server; unrelated sessions are preserved.").freeze
 
-    def run_workspaces_tmux(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?, tmux: nil,
+    def run_workspaces_tmux(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?,
                             capture: method(:capture_command), run: Workspaces.method(:run_command),
                             picker: WorkspaceProjects.method(:pick_projects), stop_detached: method(:run_detached_stop))
       parsed = Workspaces.parse_arguments(arguments, help: HELP)
@@ -17,7 +17,7 @@ module Archon
       projects = Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker)
       return 0 if projects.nil? || projects.empty?
       definitions = Workspaces.project_definitions(projects)
-      backend = tmux || create_tmux(run: run, capture: capture, ai: parsed[:ai])
+      backend = create_tmux(run: run, capture: capture, ai: parsed[:ai])
       status = Workspaces.start_projects(definitions, backend)
       return status if status != 0 || inside_tmux || !tty
       Workspaces.attach_after_start(definitions, backend)

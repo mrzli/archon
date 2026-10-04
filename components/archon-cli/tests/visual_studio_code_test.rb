@@ -4,10 +4,9 @@ require_relative 'test_helpers'
 
 VSC = Archon::VisualStudioCode
 
-def vsc_repository(home, relative, worktree: false)
+def vsc_project(home, relative)
   path = File.join(home, 'projects', relative)
   FileUtils.mkdir_p(path)
-  worktree ? File.write(File.join(path, '.git'), 'gitdir: /fixture') : FileUtils.mkdir_p(File.join(path, '.git'))
   path
 end
 
@@ -117,13 +116,13 @@ test('VS Code discovery uses exact directory depths without requiring Git or fol
   fixture do |fixture|
     home = fixture[:home]
     equal [], Archon::WorkspaceProjects.discover_projects(home)
-    expected = %w[cloned/z cloned/owner personal/owner/a personal/owner/space\ project].map do |relative|
+    expected = %w[cloned/z cloned/.hidden cloned/owner personal/owner/a personal/owner/space\ project].map do |relative|
       path = File.join(home, 'projects', relative)
       FileUtils.mkdir_p(path)
       path
     end
-    vsc_repository(home, 'cloned/owner/deep/nested')
-    vsc_repository(home, 'personal/owner/a/vendor/nested')
+    vsc_project(home, 'cloned/owner/deep/nested')
+    vsc_project(home, 'personal/owner/a/vendor/nested')
     FileUtils.mkdir_p(File.join(home, 'projects/personal/empty-owner'))
     File.write(File.join(home, 'projects/cloned/file'), '')
     File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
@@ -145,7 +144,7 @@ test('VS Code CLI validates arguments and routes aliases and help without extern
     end
     equal 0, run_archon(%w[w vsc start])[:status]
     assert !File.exist?(File.join(fixture[:home], '.local/state/archon'))
-    vsc_repository(fixture[:home], 'personal/owner/a')
+    vsc_project(fixture[:home], 'personal/owner/a')
     result = run_archon(%w[w vsc])
     equal 2, result[:status]
     assert result[:stderr].include?(VSC::HELP)
@@ -159,7 +158,7 @@ end
 test('terminal navigation, toggling, saved defaults, scrolling, and launch order') do
   fixture do |fixture|
     home = fixture[:home]
-    projects = (1..12).map { |number| vsc_repository(home, "personal/owner/project-#{number.to_s.rjust(2, '0')}") }
+    projects = (1..12).map { |number| vsc_project(home, "personal/owner/project-#{number.to_s.rjust(2, '0')}") }
     status, transcript = vsc_terminal(home) do |terminal, wait, _|
       wait.call('Choose workspace')
       terminal.write("0\r")
@@ -190,7 +189,7 @@ end
 test('Escape at either prompt and Ctrl+C cancel the entire execution and restore the terminal') do
   fixture do |fixture|
     home = fixture[:home]
-    project = vsc_repository(home, 'cloned/a')
+    project = vsc_project(home, 'cloned/a')
     path = File.join(home, '.local/state/archon/workspaces/visual-studio-code.json')
     Archon::WorkspaceProjects.save_selection(path, { 'workspace' => 4, 'projects' => [project] })
     before = File.read(path)
@@ -214,7 +213,7 @@ end
 test('empty selection is saved and stale projects are not reopened') do
   fixture do |fixture|
     home = fixture[:home]
-    project = vsc_repository(home, 'cloned/a')
+    project = vsc_project(home, 'cloned/a')
     path = File.join(home, '.local/state/archon/workspaces/visual-studio-code.json')
     Archon::WorkspaceProjects.save_selection(path, { 'workspace' => 2, 'projects' => [File.join(home, 'deleted')] })
     status, = vsc_terminal(home) do |terminal, wait, text|

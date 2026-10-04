@@ -73,15 +73,14 @@ module Archon
         raise "More than one Herdr workspace is named #{name}; rename duplicates before continuing." if matches.length > 1
         matches.first
       end
-      create = lambda do |definition, tabs|
-        result = create_workspace(definition, tabs, request)
-        workspaces << result[:workspace] if result[:workspace]
-        result
-      end
       {
-        name: 'Herdr', resource_label: 'Herdr workspace',
+        resource_label: 'Herdr workspace',
         has_session: ->(name) { ensure_server.call; !find_workspace.call(name).nil? },
-        create_editor_session: ->(definition) { create.call(definition, Workspaces.editor_tabs(ai: ai)) },
+        create_editor_session: ->(definition) {
+          result = create_workspace(definition, Workspaces.editor_tabs(ai: ai), request)
+          workspaces << result[:workspace] if result[:workspace]
+          result
+        },
         attach_session: ->(name) {
           workspace = find_workspace.call(name)
           request.call(['workspace', 'focus', workspace.fetch('workspace_id')])

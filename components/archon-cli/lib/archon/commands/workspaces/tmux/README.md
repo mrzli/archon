@@ -24,5 +24,6 @@ interrupt the remaining work. Shutdown diagnostics are saved in
 
 Stop closes all sessions tagged as Archon-managed on the current tmux server,
 including projects no longer selected or present on disk. Untagged sessions are
-preserved, even when their names resemble Archon sessions. Stopping an absent
+preserved, even when their names resemble Archon sessions. Sessions created by
+earlier versions without management tags are also preserved. Stopping an absent
 server succeeds.

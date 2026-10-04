@@ -8,9 +8,9 @@ Every direct directory under `~/projects/cloned` is a project. Under
 is a project. Discovery does not search deeper, require Git, or follow directory
 symlinks. All backends share this discovery and project checklist.
 
-
 Terminal backend start requires an interactive terminal. Use `j`/`k` or Up/Down
-to move, Space to toggle projects, and Enter to accept. Escape or Ctrl+C cancels without saving.
+to move, Space to toggle projects, and Enter to accept. Escape or Ctrl+C cancels
+without saving.
 There is no desktop workspace prompt for terminal backends.
 
 Selections are remembered independently under
@@ -22,8 +22,9 @@ Selections are remembered independently under
 
 Each backend starts with no projects selected when its file does not exist.
 Removed projects are omitted and new ones start unchecked. An accepted empty
-selection is saved and opens nothing. Existing sessions survive a later start
-with a different selection. Each project has Neovim, the selected AI tool
+selection is saved and opens nothing. For terminal backends, existing sessions
+survive a later start with a different selection. Each terminal project has
+Neovim, the selected AI tool
 (Codex by default, or Claude), and a shell. Development servers are not started.
 
 ## Herdr

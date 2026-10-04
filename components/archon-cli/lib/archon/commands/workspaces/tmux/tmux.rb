@@ -26,7 +26,7 @@ module Archon
         true
       end
       {
-        name: 'tmux', resource_label: 'tmux session',
+        resource_label: 'tmux session',
         has_session: has_session,
         create_editor_session: ->(definition) { create_editor_session(run, definition, ai: ai) },
         attach_session: ->(session) { run.call('tmux', ['attach-session', '-t', "=#{session}"]) }

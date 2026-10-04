@@ -1,5 +1,7 @@
 # Project workspace simplification
 
+Status: complete.
+
 Branch: feature/project-workspaces. Endpoint: verified local commits; no push or installation.
 
 1. VS Code exact-depth directory discovery, without Git requirements.
@@ -25,3 +27,16 @@ Step 4 complete: tag tmux sessions with @archon-managed, stop every tagged sessi
 Step 5 complete: VS Code now routes only under workspaces, using visual-studio-code/vsc. Moved its implementation and usage README alongside the other backends. Executable aliases, VS Code window behavior, component suite and isolated installed routing passed.
 
 Step 6 complete: all selections now use separate files under archon/workspaces. Older files are ignored and preserved. Full component, syntax and isolated installation verification passed, including actual interactive installed starts through archon and arc.
+
+Final self-review complete: removed obsolete option-parser bookkeeping, unused
+backend fields/injection and a single-use creation wrapper. Removed outdated Git
+fixture setup and test prerequisites. No blocking findings remain.
+
+Final verification: `bash tests/test.sh` passed (setup checks use isolated
+fixtures, CLI suite includes real PTYs and isolated installation), plus all 3
+cases in `bash components/archon-cli/tests/run-integration.sh`. Ruby/Bash syntax
+and `git diff --check` passed. ShellCheck unavailable. VS Code/Herdr external
+operations are verified with fakes; real tmux checks use temporary sockets.
+
+No hardcoded project selections, state migration or old-path fallback. No real
+home installation, push or merge performed. All requested work is committed.

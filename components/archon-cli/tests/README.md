@@ -34,7 +34,7 @@ ruby tests/profile.rb
 The complete suite also requires Lua, Python 3, and unzip.
 
 The suite requires Ruby, Bash, Git, rsync, standard Arch command-line tools,
-the util-linux `script` and `setsid` utilities, and coreutils `timeout`.
+and the util-linux `setsid` utility.
 
 Herdr checks use a fake executable and temporary state. They do not require
 Herdr or start real editors, agents, or development servers.

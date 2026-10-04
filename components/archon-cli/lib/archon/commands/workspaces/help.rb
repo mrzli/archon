@@ -4,7 +4,7 @@ module Archon
       Usage: archon workspaces <backend> <start|stop> [options]
 
       Options:
-        --ai <tool>          AI tool for start: codex or claude (default: codex)
+        --ai <tool>    AI tool for start: codex or claude (default: codex)
         -h, --help     Show this help
 
       Start chooses projects in an interactive checklist. Selections are remembered.

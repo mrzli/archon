@@ -1,6 +1,6 @@
+require 'digest'
 require 'rbconfig'
 require_relative 'help'
-require 'digest'
 require_relative 'layout'
 require_relative 'project_selection'
 require_relative '../../shared/process'
@@ -26,23 +26,14 @@ module Archon
         warn "\n#{help}"
         return { status: 2 }
       end
-      parsed = { action: action, ai: DEFAULT_AI }
-      seen = []
-      valid = options.length.even? && options.each_slice(2).all? do |flag, value|
-        key = case flag
-              when '--ai' then :ai if action == 'start' && AI_COMMANDS.key?(value)
-              end
-        next false unless key && !seen.include?(key)
-        seen << key
-        parsed[key] = value
-        true
-      end
+      valid = options.empty? || (action == 'start' && options.length == 2 &&
+                                 options.first == '--ai' && AI_COMMANDS.key?(options.last))
       unless valid
         warn "Invalid workspace options: #{options.join(' ')}"
         warn "\n#{help}"
         return { status: 2 }
       end
-      parsed
+      { action: action, ai: options.empty? ? DEFAULT_AI : options.last }
     end
 
     def project_definitions(projects)

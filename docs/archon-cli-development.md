@@ -25,7 +25,8 @@ Markdown from the library copy. Tests and contributor documentation are not
 installed. The installed commands need Ruby on `PATH` and the external tools
 used by their operations. They do not depend on the source checkout.
 
-Bun remains an external tool for `archon libs build`. CLI installation and tests do not require Bun.
+Bun remains an external tool for `archon libs build`. CLI installation and
+tests do not require Bun.
 
 Installation updates managed CLI files and preserves unrelated destination
 files. Repeated installation converges without generating artifacts. Setup
@@ -49,8 +50,8 @@ Codex timing stress check run separately, as described in the
 
 For CLI checks alone, run `bash components/archon-cli/tests/run.sh`.
 The CLI runner executes each default Ruby test file in a separate process,
-checks Ruby syntax and verifies installation. Installation tests call the production
-CLI copy function with a temporary home, check both executable aliases,
+checks Ruby syntax and verifies installation. Installation tests call the
+production CLI copy function with a temporary home, check both executable aliases,
 exclude development files, and verify repeated copies preserve unrelated files.
 Bash syntax and available ShellCheck checks follow.
 
