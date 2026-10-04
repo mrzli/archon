@@ -78,16 +78,15 @@ test_repeated_overlay_copy() {
   alias_output="$(cd "$home" && HOME="$home" .local/bin/arc --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
 
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list -g projects)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w list --group projects)" || return
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w list)" || return
   assert_equals "$archon_output" "$alias_output" || return
-  assert_equals $'projects:\n  ~/projects/personal/mrzli/flashcards-fe (missing)\n  ~/projects/personal/mrzli/flashcards-be (missing)\n  ~/projects/personal/mrzli/omarchy-lab (missing)\n  ~/projects/personal/mrzli/mrzli.github.io (missing)\n  ~/projects/personal/mrzli/qt-market-chart (missing)' "$archon_output" || return
+  assert_equals 'No projects found under ~/projects/cloned or ~/projects/personal.' "$archon_output" || return
   assert_absent "$home/projects" || return
 
-  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list -g current)" || return
-  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w list --group current)" || return
-  assert_equals "$archon_output" "$alias_output" || return
-  assert_equals $'current:\n  ~/projects (missing)\n  ~/projects/personal/mrzli/archon (missing)\n  ~/projects/personal/mrzli/learning (missing)\n  ~/projects/personal/mrzli/omarchy-lab (missing)\n  ~/projects/personal/mrzli/skills (missing)\n  ~/projects/personal/mrzli/qt-market-chart (missing)' "$archon_output" || return
+  mkdir -p "$home/projects/cloned/plain folder" "$home/projects/personal/owner/plain" || return
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list)" || return
+  assert_equals $'~/projects/cloned/plain folder\n~/projects/personal/owner/plain' "$archon_output" || return
 
   cmp -- "$archon_cli_source/bin/archon" "$home/.local/bin/archon" || return
 
@@ -104,25 +103,6 @@ test_repeated_overlay_copy() {
   assert_absent "$home/.local/tests" || return
   assert_equals 'user note' "$(cat "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt")" || return
   assert_equals 'unrelated data' "$(cat "$home/.local/lib/unrelated/keep")"
-}
-
-test_installed_default_group() {
-  local default_home="$temporary_root/default-home" fixture_state="$temporary_root/default-tmux"
-  local name actual expected
-  mkdir -p "$default_home" || return
-  copy_archon_cli "$default_home" || return
-  for name in archon docs flashcards-fe flashcards-be js-templates learning mrzli.github.io omarchy-lab qt-market-chart repos skills; do
-    mkdir -p "$default_home/projects/personal/mrzli/$name" || return
-  done
-  mkdir -p "$default_home/projects/personal/mrzli-jslib/example/.git" || return
-  for name in archon arc; do
-    env HOME="$default_home" PATH="$test_dir/bin:$PATH" TMUX= TMW_TMUX_FAIL_COMMAND= TMW_TMUX_STATE="$fixture_state" \
-      "$default_home/.local/bin/$name" workspaces tmux start < /dev/null || return
-  done
-  actual="$(find "$fixture_state/sessions" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)" || return
-  expected=$'main\nproject-mrzli-archon\nproject-mrzli-learning\nproject-mrzli-omarchy-lab\nproject-mrzli-qt-market-chart\nproject-mrzli-skills'
-  assert_equals "$expected" "$actual" || return
-  assert_equals 6 "$(grep -c ' new-session ' "$fixture_state/calls")"
 }
 
 tests_run=0
@@ -142,7 +122,6 @@ run_test() {
 }
 
 run_test 'repeated home-overlay copy' test_repeated_overlay_copy
-run_test 'installed commands default to current without duplicate sessions' test_installed_default_group
 
 printf '%s tests, %s failures\n' "$tests_run" "$tests_failed"
 [[ "$tests_failed" -eq 0 ]]

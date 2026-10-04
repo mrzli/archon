@@ -31,7 +31,7 @@ archon libs <command> [options]
 archon projects <command> [options]
 archon visual-studio-code <start|stop>
 archon workspaces herdr <start|stop|kill> [options]
-archon workspaces list [-g <group>]
+archon workspaces list
 archon workspaces tmux <start|stop|kill> [options]
 ```
 
@@ -49,13 +49,13 @@ arc l build
 arc vsc start
 arc vsc stop
 arc w h start
-arc w t start -g projects
+arc w t start --ai claude
 arc h
 ```
 
 Workspace lifecycle commands require a backend: `herdr` (alias `h`) or `tmux`
-(alias `t`). There is no default backend. `workspaces list` shows projects by
-group without a backend. Other nested commands keep their full names.
+(alias `t`). There is no default backend. `workspaces list` shows discovered project directories
+without a backend. Other nested commands keep their full names.
 
 Commands use these exit statuses:
 

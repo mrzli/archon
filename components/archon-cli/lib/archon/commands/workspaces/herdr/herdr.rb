@@ -101,7 +101,6 @@ module Archon
         name: 'Herdr', resource_label: 'Herdr workspace',
         has_session: ->(name) { ensure_server.call; !find_workspace.call(name).nil? },
         create_editor_session: ->(definition) { create.call(definition, Workspaces.editor_tabs(ai: ai)) },
-        create_shell_session: ->(definition) { create.call(definition, [{ name: 'shell' }])[:status] },
         stop_session: close, kill_session: close,
         list_sessions: -> { { status: 0, output: workspaces.map { |workspace| workspace.fetch('label') }.join("\n") } },
         attach_session: ->(name) {

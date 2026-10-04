@@ -1,4 +1,4 @@
-require_relative 'test_helpers'
+require_relative 'workspace_helpers'
 
 Herdr = Archon::WorkspacesHerdr
 
@@ -31,268 +31,6 @@ def seed_herdr_workspaces(path, labels)
   end
 end
 
-WORKSPACE_LABELS = %w[
-  main jslib-example
-  project-mrzli-archon project-mrzli-docs project-mrzli-js-templates
-  project-mrzli-learning project-mrzli-repos project-mrzli-skills
-  flashcards-fe flashcards-be project-mrzli-omarchy-lab project-mrzli-mrzli-github-io project-mrzli-qt-market-chart
-].freeze
-
-def all_workspace_directories(fixture)
-  paths = ['projects/personal/mrzli-jslib/example/.git', 'projects/personal/mrzli/flashcards-fe',
-           'projects/personal/mrzli/flashcards-be'] + (Archon::Workspaces::MISC_PROJECTS + Archon::Workspaces::PROJECTS).map { |project| "projects/personal/#{project}" }
-  paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
-end
-
-test('Herdr rejects invalid options before inspecting or starting a session') do
-  herdr_fixture do |_, path|
-    equal 2, run_archon(%w[w h start --group invalid])[:status]
-    equal [], herdr_state(path)['calls']
-  end
-end
-
-test('Herdr creates shared project layouts with silent pane run success, repeats safely, and does not attach') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    2.times do
-      Archon::Workspaces::PRIMARY_GROUPS.each do |group|
-        result = run_archon(['w', 'h', 'start', '-g', group])
-        equal 0, result[:status]
-        equal '', result[:stderr]
-      end
-    end
-    state = herdr_state(path)
-    equal 1, state['calls'].count { |call| call == ['server'] }
-    equal 13, state['workspaces'].length
-    assert state['workspaces'].any? { |workspace| workspace['label'] == 'project-mrzli-omarchy-lab' &&
-      workspace['cwd'] == File.join(fixture[:home], 'projects/personal/mrzli/omarchy-lab') }
-    equal 0, state['attachments']
-    equal nil, state['focused']
-    state['workspaces'].each do |workspace|
-      label = workspace['label']
-      expected = label == 'main' ? ['shell'] : %w[nvim codex shell]
-      equal expected, workspace['tabs'].map { |tab| tab['label'] }
-      commands = workspace['tabs'].flat_map { |tab| tab['commands'] }
-      unless label == 'main'
-        assert commands.include?('nvim .')
-        assert commands.include?('codex resume --last')
-      end
-      assert workspace['cwd'].start_with?(fixture[:home])
-    end
-    state['calls'].select { |call| [%w[workspace create], %w[tab create]].include?(call.first(2)) }.each do |call|
-      assert call.include?('--no-focus')
-      assert call.include?('--cwd')
-    end
-  end
-end
-
-test('Herdr Claude selection creates Claude tabs and preserves existing workspaces on later starts') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    Archon::Workspaces::PRIMARY_GROUPS.each do |group|
-      equal 0, run_archon(['w', 'h', 'start', '-g', group, '--ai', 'claude'])[:status]
-    end
-    workspaces = herdr_state(path)['workspaces']
-    equal 13, workspaces.length
-    workspaces.reject { |workspace| workspace['label'] == 'main' }.each do |workspace|
-      ai_tab = workspace['tabs'].find { |tab| tab['label'] == 'claude' }
-      assert ai_tab
-      equal ['claude --continue'], ai_tab['commands']
-      assert workspace['tabs'].none? { |tab| tab['label'] == 'codex' }
-    end
-    equal 0, run_archon(%w[w h start --group projects --ai codex])[:status]
-    equal workspaces, herdr_state(path)['workspaces']
-  end
-end
-
-test('Herdr selected groups share discovery and skip missing directories without starting a server') do
-  herdr_fixture do |fixture, path|
-    equal 0, run_archon(%w[w h start])[:status]
-    assert !herdr_state(path)['running']
-    assert !herdr_state(path)['calls'].include?(['server'])
-    library(fixture, 'visible')
-    library(fixture, '.hidden')
-    result = run_archon(%w[w h start -g jslibs])
-    equal 0, result[:status]
-    equal ['jslib-visible'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
-  end
-end
-
-test('Herdr stop runs in reverse group order and preserves unrelated workspaces') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    seed_herdr_workspaces(path, WORKSPACE_LABELS)
-    before = herdr_state(path)['workspaces']
-    update_herdr_state(path) do |state|
-      state['workspaces'] << { 'workspace_id' => 'w9999', 'label' => 'unrelated', 'tabs' => [] }
-    end
-    2.times { equal 0, run_archon(%w[w h stop])[:status] }
-    state = herdr_state(path)
-    equal ['unrelated'], state['workspaces'].map { |workspace| workspace['label'] }
-    ids = state['calls'].select { |call| call.first(2) == %w[workspace close] }.map { |call| call[2] }
-    groups = before.group_by do |workspace|
-      case workspace['label']
-      when 'main' then 'general'
-      when /^(flashcards-|project-mrzli-(omarchy-lab|mrzli-github-io|qt-market-chart)$)/ then 'projects'
-      when /^jslib-/ then 'jslibs'
-      else 'misc'
-      end
-    end
-    expected = %w[projects misc jslibs general].flat_map { |group| groups.fetch(group).map { |workspace| workspace['workspace_id'] } }
-    equal expected, ids
-    equal 0, state['attachments']
-    assert state['running']
-  end
-end
-
-test('Herdr named stop only closes the selected group and tolerates an absent session') do
-  herdr_fixture do |fixture, path|
-    equal 0, run_archon(%w[w h stop -g projects])[:status]
-    all_workspace_directories(fixture)
-    seed_herdr_workspaces(path, WORKSPACE_LABELS)
-    equal 0, run_archon(%w[w h stop -g projects])[:status]
-    workspaces = herdr_state(path)['workspaces']
-    equal 8, workspaces.length
-    assert workspaces.none? { |workspace| %w[flashcards-fe flashcards-be project-mrzli-omarchy-lab project-mrzli-mrzli-github-io project-mrzli-qt-market-chart].include?(workspace['label']) }
-  end
-end
-
-test('Herdr defaults to current, shares primary resources, and stops only its selection') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    2.times { equal 0, run_archon(%w[w h start])[:status] }
-    equal 0, run_archon(%w[w h start -g current])[:status]
-    state = herdr_state(path)
-    expected = %w[main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart]
-    equal expected, state['workspaces'].map { |workspace| workspace['label'] }
-    equal 6, state['calls'].count { |call| call.first(2) == %w[workspace create] }
-    equal ['shell'], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
-    equal 0, run_archon(%w[w h start -g projects])[:status]
-    state = herdr_state(path)
-    equal 9, state['workspaces'].length
-    equal 9, state['calls'].count { |call| call.first(2) == %w[workspace create] }
-    2.times { equal 0, run_archon(%w[w h stop -g current])[:status] }
-    equal %w[flashcards-fe flashcards-be project-mrzli-mrzli-github-io], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
-  end
-end
-
-[%w[stop], %w[stop -g general]].each do |arguments|
-  [{}, { 'HERDR_ENV' => '1' }].each do |environment|
-    test("Herdr #{arguments.join(' ')} shuts down an empty session, including from a pane: #{environment}") do
-      herdr_fixture do |fixture, path|
-        FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-        seed_herdr_workspaces(path, ['main'])
-        update_herdr_state(path) { |state| state['client_attached'] = true }
-        2.times { equal 0, run_archon(['w', 'h', *arguments], environment)[:status] }
-        state = herdr_state(path)
-        assert !state['running']
-        assert state['workspaces'].none? { |workspace| workspace['label'] == '~' }
-        equal 1, state['calls'].count { |call| call == %w[session stop archon --json] }
-      end
-    end
-  end
-end
-
-test('Herdr stop reports session shutdown failures and allows retry') do
-  herdr_fixture do |fixture, path|
-    FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-    seed_herdr_workspaces(path, ['main'])
-    update_herdr_state(path) do |state|
-      state['failure'] = { 'prefix' => %w[session stop], 'remaining' => 1 }
-    end
-    result = run_archon(%w[w h stop])
-    equal 1, result[:status]
-    assert result[:stderr].include?('Herdr session stop failed')
-    assert herdr_state(path)['running']
-    equal 0, run_archon(%w[w h stop])[:status]
-    assert !herdr_state(path)['running']
-  end
-end
-
-test('Herdr stop preserves a pre-existing home workspace') do
-  herdr_fixture do |_, path|
-    update_herdr_state(path) do |state|
-      state['running'] = true
-      state['workspaces'] = [{ 'workspace_id' => 'w2', 'label' => '~', 'tabs' => [] }]
-    end
-    equal 0, run_archon(%w[w h stop])[:status]
-    assert herdr_state(path)['running']
-    equal ['~'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
-  end
-end
-
-test('Herdr kill stops only archon and tolerates a stopped session') do
-  herdr_fixture do |_, path|
-    equal 0, run_archon(%w[w h kill])[:status]
-    update_herdr_state(path) { |state| state['running'] = true }
-    2.times { equal 0, run_archon(%w[w h kill])[:status] }
-    state = herdr_state(path)
-    assert !state['running']
-    equal 1, state['calls'].count { |call| call == %w[session stop archon --json] }
-    assert state['calls'].none? { |call| call == %w[server stop] }
-  end
-end
-
-test('Herdr attaches only for interactive starts outside Herdr, focusing the selected group') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    arguments = %w[start -g projects]
-    equal 0, Herdr.run_workspaces_herdr(arguments, tty: true, environment: {})
-    state = herdr_state(path)
-    equal 1, state['attachments']
-    equal state['workspaces'].first['workspace_id'], state['focused']
-    equal 0, Herdr.run_workspaces_herdr(arguments, tty: true, environment: { 'HERDR_ENV' => '1' })
-    equal 1, herdr_state(path)['attachments']
-    equal 0, Herdr.run_workspaces_herdr(arguments, tty: false, environment: {})
-    equal 1, herdr_state(path)['attachments']
-  end
-end
-
-test('Herdr validates stop and kill before delegating from a Herdr pane') do
-  calls = []
-  context = { environment: { 'HERDR_ENV' => '1' }, stop_detached: ->(arguments) { calls << arguments; 7 } }
-  equal 7, Herdr.run_workspaces_herdr(%w[stop -g general], **context)
-  equal 7, Herdr.run_workspaces_herdr(['kill'], **context)
-  equal 2, Herdr.run_workspaces_herdr(%w[kill extra], **context)
-  equal [%w[stop -g general], ['kill']], calls
-end
-
-test('Herdr pane run failures roll back the new workspace, continue, and allow retry') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[pane run], 'remaining' => 1 } }
-    result = run_archon(%w[w h start -g projects])
-    equal 1, result[:status]
-    assert result[:stderr].include?('Failed to start Herdr workspace: flashcards-fe')
-    state = herdr_state(path)
-    equal %w[flashcards-be project-mrzli-omarchy-lab project-mrzli-mrzli-github-io project-mrzli-qt-market-chart], state['workspaces'].map { |workspace| workspace['label'] }
-    assert state['calls'].any? { |call| call.first(2) == %w[workspace close] }
-    equal 0, run_archon(%w[w h start -g projects])[:status]
-    equal %w[flashcards-be project-mrzli-omarchy-lab project-mrzli-mrzli-github-io project-mrzli-qt-market-chart flashcards-fe], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
-  end
-end
-
-test('Herdr close failures are reported and do not prevent later workspace stops') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    seed_herdr_workspaces(path, %w[flashcards-fe flashcards-be])
-    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[workspace close], 'remaining' => 1 } }
-    result = run_archon(%w[w h stop -g projects])
-    equal 1, result[:status]
-    assert result[:stderr].include?('Failed to stop Herdr workspace: flashcards-fe')
-    equal ['flashcards-fe'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
-  end
-end
-
-test('Herdr errors and malformed responses fail without creating workspaces') do
-  ['', 'invalid JSON', '[]', '{"error":{"message":"permission denied"}}', '{"result":{}}'].each do |output|
-    result = Herdr.run_workspaces_herdr(['start'], capture: ->(*_) { { status: 0, output: output } },
-      start_server: ->(_) { raise 'must not start server' })
-    equal 1, result
-  end
-  equal 1, Herdr.run_workspaces_herdr(['start'], capture: ->(*_) { { status: 1, output: 'herdr not found' } })
-end
-
 test('every failed Herdr creation step rolls back only its newly returned workspace ID') do
   definition = { session: 'example', directory: '/fixture/project' }
   created = { 'workspace' => { 'workspace_id' => 'w401', 'label' => 'example' },
@@ -319,72 +57,6 @@ test('every failed Herdr creation step rolls back only its newly returned worksp
   equal 1, Herdr.create_workspace(definition, tabs, request)[:cleanup_status]
 end
 
-test('failed Herdr server startup produces a private log and creates no workspaces') do
-  herdr_fixture do |fixture, path|
-    FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => ['server'], 'remaining' => 1 } }
-    result = run_archon(%w[w h start -g general])
-    equal 1, result[:status]
-    assert result[:stderr].include?('Herdr session archon did not start; see')
-    equal [], herdr_state(path)['workspaces']
-    log = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-server.log')
-    assert File.read(log).include?('injected Herdr failure')
-    equal 0o600, File.stat(log).mode & 0o777
-  end
-end
-
-test('ambiguous Herdr workspace labels are refused without closing or creating resources') do
-  herdr_fixture do |fixture, path|
-    FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-    update_herdr_state(path) do |state|
-      state['running'] = true
-      state['workspaces'] = [1, 2].map { |id| { 'workspace_id' => "w#{id}", 'label' => 'main' } }
-    end
-    %w[start stop].each do |action|
-      result = run_archon(['w', 'h', action, '-g', 'general'])
-      equal 1, result[:status]
-      assert result[:stderr].include?('More than one Herdr workspace is named main')
-    end
-    equal 2, herdr_state(path)['workspaces'].length
-    assert herdr_state(path)['calls'].all? { |call| [%w[session list --json], %w[workspace list]].include?(call) }
-  end
-end
-
-test('Herdr stop worker preserves its target, completes all stops, and returns logged failures') do
-  herdr_fixture do |fixture, path|
-    all_workspace_directories(fixture)
-    seed_herdr_workspaces(path, %w[flashcards-fe flashcards-be])
-    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[workspace close], 'remaining' => 1 } }
-    result = run_archon(%w[w h stop -g projects], 'HERDR_ENV' => '1', 'HERDR_SESSION' => 'unrelated', 'HERDR_SOCKET_PATH' => '/unused/socket')
-    equal 1, result[:status]
-    assert result[:stderr].include?('Workspace shutdown failed; see')
-    equal ['flashcards-fe'], herdr_state(path)['workspaces'].map { |workspace| workspace['label'] }
-    log = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-stop.log')
-    assert File.read(log).include?('Failed to stop Herdr workspace: flashcards-fe')
-    equal 0o600, File.stat(log).mode & 0o777
-    equal 0, run_archon(%w[w h kill], 'HERDR_ENV' => '1')[:status]
-    assert !herdr_state(path)['running']
-  end
-end
-
-test('Herdr terminal attachment uses actual terminal detection and reports attachment failures') do
-  require 'shellwords'
-  herdr_fixture do |fixture, path|
-    FileUtils.mkdir_p(File.join(fixture[:home], 'projects'))
-    command = Shellwords.join([RbConfig.ruby, ARCHON, 'w', 'h', 'start', '-g', 'general'])
-    terminal = ->(env = {}) { Open3.capture3(env.merge('SHELL' => '/bin/bash'), 'timeout', '15s', 'script', '--quiet', '--return', '--command', command, '/dev/null') }
-    _, error, status = terminal.call
-    assert status.success?, error
-    equal 1, herdr_state(path)['attachments']
-    _, error, status = terminal.call('HERDR_ENV' => '1')
-    assert status.success?, error
-    equal 1, herdr_state(path)['attachments']
-    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => [], 'remaining' => 1 } }
-    equal 1, Herdr.run_workspaces_herdr(%w[start -g general], tty: true, environment: {})
-    equal 1, herdr_state(path)['attachments']
-  end
-end
-
 test('Herdr JSON capture separates successful stdout from diagnostic stderr') do
   herdr_fixture do |fixture, _|
     write_executable(File.join(fixture[:bin], 'herdr'), <<~'SH')
@@ -393,5 +65,98 @@ test('Herdr JSON capture separates successful stdout from diagnostic stderr') do
       printf '%s\n' '{"sessions":[]}'
     SH
     equal 0, Herdr.run_workspaces_herdr(['stop'], environment: {})
+  end
+end
+
+test('Herdr creates selected uniform workspaces, repeats safely and attaches only outside Herdr') do
+  herdr_fixture do |fixture, path|
+    project = workspace_directory(fixture)
+    context = { home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: false }
+    2.times { equal 0, Herdr.run_workspaces_herdr(%w[start --ai claude], **context) }
+    state = herdr_state(path)
+    equal 1, state['workspaces'].length
+    equal %w[nvim claude shell], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
+    equal ['nvim .', 'claude --continue'], state['workspaces'].first['tabs'].flat_map { |tab| tab['commands'] }
+    equal project, state['workspaces'].first['cwd']
+    equal 0, state['attachments']
+    equal 1, state['calls'].count { |call| call == ['server'] }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context.merge(tty: true))
+    equal 1, herdr_state(path)['attachments']
+    equal herdr_state(path)['workspaces'].first['workspace_id'], herdr_state(path)['focused']
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context.merge(tty: true, environment: { 'HERDR_ENV' => '1' }))
+    equal 1, herdr_state(path)['attachments']
+    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => [], 'remaining' => 1 } }
+    equal 1, Herdr.run_workspaces_herdr(['start'], **context.merge(tty: true))
+  end
+end
+
+test('Herdr picker cancellation, empty discovery and empty selections do not start a server') do
+  herdr_fixture do |fixture, path|
+    operation = ->(*_, **_) { raise 'must not operate on backend' }
+    context = { home: fixture[:home], capture: operation, start_server: operation }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context, picker: operation)
+    workspace_directory(fixture)
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context, picker: ->(*_, **_) { nil })
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context, picker: workspace_picker([]))
+    equal [], herdr_state(path)['calls']
+  end
+end
+
+test('Herdr pane run failures roll back newly created workspaces, continue, and allow retry') do
+  herdr_fixture do |fixture, path|
+    projects = %w[cloned/one cloned/two].map { |relative| workspace_directory(fixture, relative) }
+    context = { home: fixture[:home], picker: workspace_picker(projects), environment: {}, tty: false }
+    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[pane run], 'remaining' => 1 } }
+    equal 1, Herdr.run_workspaces_herdr(['start'], **context)
+    equal [projects.last], herdr_state(path)['workspaces'].map { |workspace| workspace['cwd'] }
+    assert herdr_state(path)['calls'].any? { |call| call.first(2) == %w[workspace close] }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    equal projects.sort, herdr_state(path)['workspaces'].map { |workspace| workspace['cwd'] }.sort
+  end
+end
+
+test('Herdr errors and malformed responses fail without creating resources') do
+  fixture do |fixture|
+    project = workspace_directory(fixture)
+    ['', 'invalid JSON', '[]', '{"error":{"message":"denied"}}', '{"result":{}}'].each do |output|
+      equal 1, Herdr.run_workspaces_herdr(['start'], home: fixture[:home], picker: workspace_picker([project]),
+        capture: ->(*_) { { status: 0, output: output } }, start_server: ->(_) { raise 'must not start server' })
+    end
+    equal 1, Herdr.run_workspaces_herdr(['stop'], capture: ->(*_) { { status: 1, output: 'not found' } })
+  end
+end
+
+test('failed Herdr server startup produces a private log and creates no workspaces') do
+  herdr_fixture do |fixture, path|
+    project = workspace_directory(fixture)
+    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => ['server'], 'remaining' => 1 } }
+    equal 1, Herdr.run_workspaces_herdr(['start'], home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: false)
+    equal [], herdr_state(path)['workspaces']
+    log = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-server.log')
+    assert File.read(log).include?('injected Herdr failure')
+    equal 0o600, File.stat(log).mode & 0o777
+  end
+end
+
+test('ambiguous Herdr workspace labels are refused without creating resources') do
+  herdr_fixture do |fixture, path|
+    project = workspace_directory(fixture)
+    label = Archon::Workspaces.project_definitions([project]).first[:session]
+    seed_herdr_workspaces(path, [label, label])
+    status, _, error = capture do
+      Herdr.run_workspaces_herdr(['start'], home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: false)
+    end
+    equal 1, status
+    assert error.include?('More than one Herdr workspace is named')
+    assert herdr_state(path)['calls'].none? { |call| call.first(2) == %w[workspace create] }
+  end
+end
+
+test('Herdr stop tolerates a stopped session and stops an empty dedicated session') do
+  herdr_fixture do |_, path|
+    2.times { equal 0, run_archon(%w[w h stop])[:status] }
+    update_herdr_state(path) { |state| state['running'] = true }
+    equal 0, run_archon(%w[w h stop])[:status]
+    assert !herdr_state(path)['running']
   end
 end

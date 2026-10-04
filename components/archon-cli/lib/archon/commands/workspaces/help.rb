@@ -5,11 +5,11 @@ module Archon
              archon workspaces <backend> kill
 
       Options:
-        -g, --group <group>  Run only current, general, jslibs, misc, or projects
-            --ai <tool>      AI tool for start: codex or claude (default: codex)
-        -h, --help           Show this help
+        --ai <tool>          AI tool for start: codex or claude (default: codex)
+        -h, --help     Show this help
 
-      Start defaults to current. Stop defaults to all primary groups.
+      Start chooses projects in an interactive checklist. Selections are remembered.
+      Each project has Neovim, the selected AI tool, and a shell.
     TEXT
   end
 end

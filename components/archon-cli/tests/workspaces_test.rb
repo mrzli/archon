@@ -1,114 +1,70 @@
-require_relative 'test_helpers'
+require_relative 'workspace_helpers'
 
-test('workspace listing groups configured paths and marks missing directories') do
-  fixture do |fixture|
-    home = fixture[:home]
-    FileUtils.mkdir_p(File.join(home, 'projects/personal/mrzli/flashcards-fe'))
-    FileUtils.mkdir_p(File.join(home, 'projects/personal/mrzli/archon'))
-    %w[zeta/.git alpha/.git .hidden/.git ignored/nested/.git].each do |path|
-      FileUtils.mkdir_p(File.join(home, 'projects/personal/mrzli-jslib', path))
-    end
-    status, output, error = capture { Archon::Workspaces.run_workspaces(['list'], home: home) }
-    equal 0, status
-    equal '', error
-    equal %w[current: general: jslibs: misc: projects:], output.lines(chomp: true).reject { |line| line.start_with?(' ') }
-    assert output.include?("general:\n  ~/projects\n")
-    assert output.include?("projects:\n  ~/projects/personal/mrzli/flashcards-fe\n  ~/projects/personal/mrzli/flashcards-be (missing)\n")
-    assert output.include?("jslibs:\n  ~/projects/personal/mrzli-jslib/alpha\n  ~/projects/personal/mrzli-jslib/zeta\n")
-    assert output.include?("  ~/projects/personal/mrzli/archon\n")
-    assert output.include?('  ~/projects/personal/mrzli/docs (missing)')
-    assert !output.include?('.hidden') && !output.include?('ignored')
-    assert !output.include?(home)
-  end
-end
+Projects = Archon::WorkspaceProjects
 
-test('projects contains the moved repositories and primary groups do not overlap') do
+test('workspace list uses shared discovery and aliases without external commands or filesystem changes') do
   fixture do |fixture|
-    definitions = Archon::Workspaces.workspace_definitions('projects', home: fixture[:home])
-    equal %w[flashcards-fe flashcards-be omarchy-lab mrzli.github.io qt-market-chart], definitions.map { |definition| File.basename(definition[:directory]) }
-    equal %w[archon docs js-templates learning repos skills], Archon::Workspaces.workspace_definitions('misc', home: fixture[:home]).map { |definition| File.basename(definition[:directory]) }
-    paths = Archon::Workspaces::PRIMARY_GROUPS.flat_map do |group|
-      Archon::Workspaces.workspace_definitions(group, home: fixture[:home]).map { |definition| definition[:directory] }
-    end
-    equal paths.uniq, paths
-    equal 2, run_archon(%w[w list -g flashcards])[:status]
-    %w[herdr tmux].each do |backend|
-      equal 2, run_archon(['w', backend, 'start', '-g', 'flashcards'])[:status]
-    end
-  end
-end
-
-test('current reuses exactly the selected primary workspace definitions') do
-  fixture do |fixture|
-    current = Archon::Workspaces.workspace_definitions('current', home: fixture[:home])
-    equal %w[projects archon learning omarchy-lab skills qt-market-chart], current.map { |definition| File.basename(definition[:directory]) }
-    primary = Archon::Workspaces::PRIMARY_GROUPS.flat_map do |group|
-      Archon::Workspaces.workspace_definitions(group, home: fixture[:home])
-    end
-    current.each { |definition| assert primary.include?(definition) }
-    equal current.uniq, current
-    result = run_archon(%w[w list -g current])
+    equal 0, run_archon(%w[w list])[:status]
+    assert !File.exist?(File.join(fixture[:home], 'projects'))
+    paths = %w[cloned/one personal/owner/two].map { |relative| workspace_directory(fixture, relative) }
+    expected = paths.map { |path| path.sub(fixture[:home], '~') }.join("\n") + "\n"
+    result = run_archon(%w[workspaces list])
+    equal expected, result[:stdout]
     equal 0, result[:status]
-    equal "current:\n  ~/projects (missing)\n  ~/projects/personal/mrzli/archon (missing)\n  ~/projects/personal/mrzli/learning (missing)\n  ~/projects/personal/mrzli/omarchy-lab (missing)\n  ~/projects/personal/mrzli/skills (missing)\n  ~/projects/personal/mrzli/qt-market-chart (missing)\n", result[:stdout]
+    equal result, run_archon(%w[w list])
+    equal paths, Projects.discover_projects(fixture[:home])
+    %w[help -h --help].each { |flag| equal 0, run_archon(['w', 'list', flag])[:status] }
+    [%w[-g current], ['extra'], %w[--ai codex]].each { |options| equal 2, run_archon(['w', 'list', *options])[:status] }
+    assert !File.exist?(File.join(ENV.fetch('XDG_STATE_HOME'), 'archon'))
   end
 end
 
-test('workspace listing supports group selection and empty groups without filesystem changes') do
+test('terminal backends share discovery and remember selections independently from VS Code') do
   fixture do |fixture|
-    %w[-g --group].each do |flag|
-      status, output, error = capture do
-        Archon::Workspaces.run_workspaces(['list', flag, 'jslibs'], home: fixture[:home])
+    first = workspace_directory(fixture, 'cloned/one')
+    second = workspace_directory(fixture)
+    state_root = File.join(fixture[:root], 'custom-state')
+    context = { home: fixture[:home], state_home: state_root }
+    seen = []
+    %w[tmux herdr].each_with_index do |backend, index|
+      project = [first, second][index]
+      picker = lambda do |paths, previous, home:|
+        seen << [backend, paths, previous, home]
+        { 'projects' => [project] }
       end
-      equal 0, status
-      equal "jslibs:\n  (no projects found)\n", output
-      equal '', error
+      equal [project], Archon::Workspaces.select_projects(backend, **context, picker: picker)
+      state_path = File.join(state_root, 'archon', "#{backend}.json")
+      equal({ 'projects' => [project] }, Projects.load_selection(state_path))
+      equal 0o600, File.stat(state_path).mode & 0o777
+      equal 1, Dir.children(File.dirname(state_path)).count { |name| name == "#{backend}.json" }
     end
-    status, output, = capture { Archon::Workspaces.run_workspaces(['list'], home: fixture[:home]) }
-    equal 0, status
-    assert output.include?('~/projects (missing)')
-    assert !File.exist?(File.join(fixture[:home], 'projects'))
+    equal %w[tmux herdr], seen.map(&:first)
+    seen.each do |_, paths, previous, home|
+      equal [first, second], paths
+      equal({ 'projects' => [] }, previous)
+      equal fixture[:home], home
+    end
+    assert !File.exist?(File.join(state_root, 'archon/visual-studio-code.json'))
+    restored = nil
+    equal [], Archon::Workspaces.select_projects('tmux', **context, picker: ->(_, previous, **_) { restored = previous; { 'projects' => [] } })
+    equal({ 'projects' => [first] }, restored)
+    equal({ 'projects' => [] }, Projects.load_selection(File.join(state_root, 'archon/tmux.json')))
   end
 end
 
-test('workspace list and help work through executable aliases without external commands') do
+test('invalid state is reported without overwriting data or calling the picker') do
   fixture do |fixture|
-    %w[git gh bun tmux herdr].each do |name|
-      write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
+    workspace_directory(fixture)
+    path = File.join(ENV['XDG_STATE_HOME'], 'archon/tmux.json')
+    ['{broken', '[]', '{"projects":null}', '{"projects":[1]}'].each do |content|
+      FileUtils.mkdir_p(File.dirname(path))
+      File.write(path, content)
+      equal 1, Archon::WorkspacesTmux.run_workspaces_tmux(['start'], home: fixture[:home], picker: ->(*_, **_) { raise 'must not pick' })
+      equal content, File.read(path)
     end
-    result = run_archon(%w[workspaces list -g projects])
-    equal 0, result[:status]
-    equal '', result[:stderr]
-    assert result[:stdout].include?('flashcards-fe (missing)')
-    equal result, run_archon(%w[w list --group projects])
-    %w[help -h --help].each do |help|
-      result = run_archon(['w', 'list', help])
-      equal 0, result[:status]
-      assert result[:stdout].start_with?('Usage: archon workspaces list ')
-    end
-    assert !File.exist?(File.join(fixture[:home], 'unexpected-command'))
-    assert !File.exist?(File.join(fixture[:home], 'projects'))
-  end
-end
-
-test('workspace listing rejects invalid groups, operands, and lifecycle options') do
-  fixture do
-    [%w[-g], %w[-g unknown], %w[--ai claude], %w[extra], %w[--help extra],
-     %w[-g general -g projects]].each do |options|
-      result = run_archon(['workspaces', 'list', *options])
-      equal 2, result[:status]
-      equal '', result[:stdout]
-      assert result[:stderr].include?('Usage: archon workspaces list ')
-    end
-  end
-end
-
-test('misc is available for listing and both backends reject its previous group name') do
-  fixture do
-    equal 0, run_archon(%w[w list -g misc])[:status]
-    equal 2, run_archon(%w[w list -g misc-projects])[:status]
-    equal 'misc', Archon::Workspaces.parse_arguments(%w[start -g misc], help: Archon::Workspaces::ACTION_HELP)[:group]
-    %w[herdr tmux].each do |backend|
-      equal 2, run_archon(['w', backend, 'start', '-g', 'misc-projects'])[:status]
+    ['{"projects":[]}', '{"projects":[],"workspace":0}', '{"projects":[],"workspace":"1"}'].each do |content|
+      File.write(path, content)
+      raises(/Invalid saved selection/) { Projects.load_selection(path, workspace: true) }
     end
   end
 end

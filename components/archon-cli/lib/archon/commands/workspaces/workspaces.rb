@@ -4,11 +4,11 @@ require_relative 'tmux/workspaces'
 module Archon
   module Workspaces
     HELP = <<~TEXT.chomp.freeze
-      Usage: archon workspaces list [-g <group>]
+      Usage: archon workspaces list
              archon workspaces <backend> <start|stop|kill> [options]
 
       Commands:
-        list       List configured projects by group without a backend
+        list       List available projects without a backend
 
       Backends:
         herdr (h)  Manage Herdr workspaces
@@ -22,11 +22,7 @@ module Archon
     LIST_HELP = <<~TEXT.chomp.freeze
       Usage: archon workspaces list [options]
 
-      Options:
-        -g, --group <group>  Show only current, general, jslibs, misc, or projects
-        -h, --help           Show this help
-
-      Lists configured project paths by group. Missing directories are marked.
+      Lists project directories under ~/projects/cloned and ~/projects/personal/<owner>.
       No backend or running workspace session is required.
     TEXT
 
@@ -35,22 +31,13 @@ module Archon
         puts LIST_HELP
         return 0
       end
-      unless arguments.empty? || (arguments.length == 2 && %w[-g --group].include?(arguments.first) && GROUPS.include?(arguments.last))
-        warn "Invalid workspace list options: #{arguments.join(' ')}"
-        warn "\n#{LIST_HELP}"
+      unless arguments.empty?
+        warn "Invalid workspace list options: #{arguments.join(' ')}\n\n#{LIST_HELP}"
         return 2
       end
-      groups = arguments.empty? ? GROUPS : [arguments.last]
-      groups.each do |group|
-        puts "#{group}:"
-        definitions = workspace_definitions(group, home: home)
-        puts '  (no projects found)' if definitions.empty?
-        definitions.each do |definition|
-          directory = definition.fetch(:directory).delete_suffix('/')
-          path = directory.sub(/\A#{Regexp.escape(home)}\//, '~/')
-          puts "  #{path}#{File.directory?(directory) ? '' : ' (missing)'}"
-        end
-      end
+      projects = WorkspaceProjects.discover_projects(home)
+      puts 'No projects found under ~/projects/cloned or ~/projects/personal.' if projects.empty?
+      projects.each { |directory| puts directory.sub(/\A#{Regexp.escape(home)}\//, '~/') }
       0
     rescue SystemCallError => error
       warn "Could not list workspace projects: #{error.message}"

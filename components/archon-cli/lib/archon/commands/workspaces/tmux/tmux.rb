@@ -22,7 +22,6 @@ module Archon
         name: 'tmux', resource_label: 'tmux session',
         has_session: has_session,
         create_editor_session: ->(definition) { create_editor_session(run, definition, ai: ai) },
-        create_shell_session: ->(definition) { run.call('tmux', ['new-session', '-d', '-s', definition[:session], '-c', definition[:directory], '-n', 'shell']) },
         stop_session: ->(session) { has_session.call(session) ? run.call('tmux', ['kill-session', '-t', session]) : 0 },
         kill_session: ->(session) { run.call('tmux', ['kill-session', '-t', session]) },
         list_sessions: -> { capture.call('tmux', ['list-sessions', '-F', '#S']) },

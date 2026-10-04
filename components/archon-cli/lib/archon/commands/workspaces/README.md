@@ -1,72 +1,57 @@
 # Workspaces command
 
-List configured projects or choose a backend explicitly to manage workspaces.
-There is no default backend:
+List available projects or choose a backend explicitly. There is no default backend.
+`w` aliases `workspaces`, `h` aliases `herdr`, and `t` aliases `tmux`.
 
-```bash
-archon workspaces herdr start
-archon workspaces tmux start
-archon workspaces --help
-```
-
-`w` is an alias for `workspaces`. Backend aliases are `h` for `herdr` and `t`
-for `tmux`; both work with `archon` and `arc`.
-
-For either backend, `start` defaults to the `current` group. Use `-g` to start
-another group. `stop` without a group stops all primary groups; use
-`stop -g current` to stop only the current selection.
+Every direct directory under `~/projects/cloned` is a project. Under
+`~/projects/personal`, each directory directly under an owner or organization
+is a project. Discovery does not search deeper, require Git, or follow directory
+symlinks. All backends share this discovery and project checklist.
 
 ## Herdr
 
-Requires Herdr on `PATH`, plus the tools used by the configured projects.
-Manage workspaces in the dedicated Herdr session named `archon`:
+Requires Herdr, Neovim and the selected AI tool on `PATH`.
 
 ```bash
-arc w h start -g projects
+arc w h start
+arc w h start --ai claude
 arc w h stop
-arc w h kill
 arc w h --help
 ```
 
-See [Herdr usage](./herdr/README.md) for prerequisites, options, and behavior.
+See [Herdr usage](./herdr/README.md).
 
 ## List
 
-Show project paths under each workspace group without starting a backend:
+List discovered paths alphabetically without starting a backend:
 
 ```bash
 archon workspaces list
-arc w list -g projects
-archon workspaces list --help
+arc w list
 ```
 
-`-g` and `--group` select `current`, `general`, `jslibs`, `misc`, or `projects`.
-Without a group, all groups appear alphabetically. Missing configured
-directories are marked `(missing)`. JavaScript libraries are discovered from
-local repositories, using the same selection as workspace startup; an empty
-group shows `(no projects found)`. No Herdr or tmux installation is required.
-
-Each workspace belongs to one primary group. `projects` contains `flashcards-fe`,
-`flashcards-be`, `omarchy-lab`, `mrzli.github.io`, and `qt-market-chart`.
-`misc` contains `archon`, `docs`, `js-templates`, `learning`, `repos`, and `skills`.
-`general` provides the shell at `~/projects`, and `jslibs` contains the local
-JavaScript library repositories.
-
-`current` is a hardcoded selection from those groups: the general shell workspace,
-`archon`, `learning`, `omarchy-lab`, `skills`, and `qt-market-chart`. It uses the
-same workspaces, so starting a primary group and `current` does not create copies.
+Missing roots are treated as empty. Listing takes no options except help.
 
 ## tmux
 
-Requires tmux on `PATH`, plus the tools used by the configured projects.
-Manage the configured tmux session groups:
+Requires tmux, Neovim and the selected AI tool on `PATH`.
 
 ```bash
-arc w t start -g projects
+arc w t start
+arc w t start --ai claude
 arc w t stop
-arc w t kill
 arc w t --help
 ```
 
-See [tmux usage](./tmux/README.md) for options and behavior. `kill` stops the
-entire tmux server, including sessions outside Archon's workspace groups.
+See [tmux usage](./tmux/README.md).
+
+Start requires an interactive terminal. Use `j`/`k` or Up/Down to move, Space to
+toggle projects, and Enter to accept. Escape or Ctrl+C cancels without saving.
+There is no desktop workspace prompt for terminal backends.
+
+Selections are remembered independently in
+`${XDG_STATE_HOME:-~/.local/state}/archon/herdr.json` and `tmux.json`.
+Removed projects are omitted and new ones start unchecked. An accepted empty
+selection is saved and opens nothing. Existing sessions survive a later start
+with a different selection. Each project has Neovim, the selected AI tool
+(Codex by default, or Claude), and a shell. Development servers are not started.

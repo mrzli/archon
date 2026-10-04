@@ -1,39 +1,25 @@
-# Tmux workspaces command
-
-Manage tmux workspace sessions through the Archon CLI:
+# tmux workspaces command
 
 ```bash
 archon workspaces tmux start
+archon workspaces tmux start --ai claude
 archon workspaces tmux stop
-archon workspaces tmux start --group general
-archon workspaces tmux start --group current
-archon workspaces tmux start --group projects --ai claude
-archon workspaces tmux stop -g jslibs
-archon workspaces tmux kill
+archon workspaces tmux --help
 ```
 
-For `start`, use `--ai codex` (the default) or `--ai claude` to choose the AI
-window. Codex runs `codex resume --last`; Claude Code runs `claude --continue`.
-The selected tool must be available on `PATH`. The option applies only to newly
-created sessions. Stop and start a group to change its AI tool. The `general`
-group has only a shell and is unaffected.
+Start chooses projects using the [shared project checklist](../README.md).
+Each project has Neovim, an AI tool, and a shell. `--ai codex` is the default
+and runs `codex resume --last`; `--ai claude` runs `claude --continue`.
+The tool must be on `PATH`. The option affects newly created workspaces.
+Repeated starts preserve existing workspaces. Failed creations roll back their
+new resources and later projects are still attempted.
 
-`kill` takes no arguments or options and runs `tmux kill-server`, terminating
-all sessions on the server, including sessions outside Archon's workspace groups.
-It returns tmux's exit status.
+Interactive starts outside tmux attach in the current terminal and focus the
+first selected project. Inside tmux, the current view is preserved.
+Stop never attaches or prompts, and stops all discovered project workspaces.
 
-Without `--group` or `-g`, start opens only `current`. Stop closes all primary
-groups in reverse order (`projects`, `misc`, `jslibs`, `general`). Use
-`stop -g current` to stop only the current selection.
-`current` selects the general shell, `archon`, `learning`, `omarchy-lab`, `skills`,
-and `qt-market-chart` from those groups, using the same sessions.
-Every selected group is attempted after a failure.
-After a successful start in an interactive terminal outside tmux, the command
-attaches to an existing session from the requested group. Starting `current`
-prefers `main`. It never creates an extra session for attachment. Inside tmux,
-the current session stays selected. Stop, help, and non-interactive calls do
-not attach.
+Stop from a tmux pane runs independently so closing that pane does not
+interrupt the remaining work. Shutdown diagnostics are saved in
+`${XDG_STATE_HOME:-~/.local/state}/archon/workspaces-tmux-stop.log`.
 
-Stop from a tmux pane runs independently so closing that pane does not interrupt
-the remaining work. Shutdown output is saved in
-`${XDG_STATE_HOME:-$HOME/.local/state}/archon/workspaces-tmux-stop.log`.
+`kill` stops the entire tmux server, including unrelated sessions.

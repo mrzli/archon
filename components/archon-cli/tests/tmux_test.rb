@@ -1,65 +1,7 @@
-require_relative 'test_helpers'
+require_relative 'workspace_helpers'
 
 Workspaces = Archon::Workspaces
 Tmux = Archon::WorkspacesTmux
-
-def all_workspace_directories(fixture)
-  paths = ['projects/personal/mrzli-jslib/example/.git', 'projects/personal/mrzli/flashcards-fe',
-           'projects/personal/mrzli/flashcards-be'] + (Archon::Workspaces::MISC_PROJECTS + Archon::Workspaces::PROJECTS).map { |project| "projects/personal/#{project}" }
-  paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
-end
-
-test('AI selection defaults to Codex and combines with group selection in either order') do
-  equal 'codex', Workspaces.parse_arguments(['start'], help: Tmux::HELP)[:ai]
-  equal 'current', Workspaces.parse_arguments(['start'], help: Tmux::HELP)[:group]
-  equal 'current', Workspaces.parse_arguments(%w[start --ai claude], help: Tmux::HELP)[:group]
-  equal nil, Workspaces.parse_arguments(['stop'], help: Tmux::HELP)[:group]
-  %w[codex claude].each do |ai|
-    [['--ai', ai, '--group', 'projects'], ['-g', 'projects', '--ai', ai]].each do |options|
-      equal({ action: 'start', group: 'projects', ai: ai }, Workspaces.parse_arguments(['start', *options], help: Tmux::HELP))
-    end
-  end
-  [%w[start --ai], %w[start --ai unknown], %w[start -a claude],
-   %w[start --ai claude --ai codex], %w[start -g general --group general],
-   %w[stop --ai claude], %w[kill --ai claude]].each do |arguments|
-    calls = []
-    equal 2, Tmux.run_workspaces_tmux(arguments, run: ->(*args) { calls << args }, capture: ->(*args) { calls << args })
-    equal [], calls
-  end
-end
-
-test('Claude selection reaches tmux AI windows in every project group') do
-  fixture do |fixture|
-    all_workspace_directories(fixture)
-    calls = []
-    run = ->(_, args, **_) { calls << args; args.first == 'has-session' ? 1 : 0 }
-    Workspaces::PRIMARY_GROUPS.each do |group|
-      equal 0, Tmux.run_workspaces_tmux(['start', '-g', group, '--ai', 'claude'], home: fixture[:home], environment: {}, tty: false, run: run)
-    end
-    ai_windows = calls.select { |args| args.first == 'new-window' && args.last == 'claude' }
-    equal 12, ai_windows.length
-    ai_windows.each do |args|
-      assert calls.include?(['send-keys', '-t', "#{args[2]}:claude", 'claude --continue', 'Enter'])
-    end
-    assert calls.none? { |args| args.include?('codex') || args.include?('codex resume --last') }
-  end
-end
-
-test('tmux session operations preserve command arguments and exit statuses') do
-  calls = []
-  run = ->(command, arguments, **options) { calls << [command, arguments, options]; arguments.first == 'has-session' ? 1 : 7 }
-  tmux = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 3, output: 'capture output' } })
-  equal 0, tmux[:stop_session].call('absent')
-  equal 7, tmux[:create_shell_session].call(session: 'main', directory: '/fixture/projects')
-  equal 7, tmux[:attach_session].call('main')
-  equal 7, tmux[:kill_session].call('main')
-  equal({ status: 3, output: 'capture output' }, tmux[:list_sessions].call)
-  equal [
-    ['tmux', %w[has-session -t absent], { stdio: :ignore }],
-    ['tmux', %w[new-session -d -s main -c /fixture/projects -n shell], {}],
-    ['tmux', %w[attach-session -t =main], {}], ['tmux', %w[kill-session -t main], {}]
-  ], calls
-end
 
 test('uniform editor layout rolls back each failed creation operation') do
   definition = { session: 'editor', directory: '/fixture/space dir' }
@@ -87,163 +29,95 @@ test('uniform editor layout rolls back each failed creation operation') do
   equal({ status: 1, cleanup_status: 1 }, result)
 end
 
-test('workspace routing preserves group selection, ordering, continuation, and kill status') do
-  calls = []
-  handlers = Workspaces::GROUPS.to_h { |group| [group, ->(action, _, **_) { calls << [action, group]; group == 'projects' ? 1 : 0 }] }
-  context = { handlers: handlers, tmux: {}, environment: {}, tty: false }
-  equal 0, Tmux.run_workspaces_tmux(['start'], **context)
-  equal [['start', 'current']], calls
-  calls.clear
-  equal 1, Tmux.run_workspaces_tmux(['stop'], **context)
-  equal Workspaces::PRIMARY_GROUPS.reverse.map { |group| ['stop', group] }, calls
-  calls.clear
-  equal 0, Tmux.run_workspaces_tmux(%w[start -g general], **context)
-  equal [['start', 'general']], calls
-  Workspaces::GROUPS.each do |group|
-    calls.clear
-    Tmux.run_workspaces_tmux(['start', '--group', group], **context)
-    equal [['start', group]], calls
+
+test('AI options and removed group options are validated before any operation') do
+  equal({ action: 'start', ai: 'codex' }, Workspaces.parse_arguments(['start'], help: Tmux::HELP))
+  equal({ action: 'start', ai: 'claude' }, Workspaces.parse_arguments(%w[start --ai claude], help: Tmux::HELP))
+  [%w[start --ai], %w[start --ai unknown], %w[start --ai claude --ai codex],
+   %w[start -g current], %w[stop --ai codex], %w[stop -g projects]].each do |arguments|
+    operation = ->(*_, **_) { raise 'must not perform operations' }
+    equal 2, Tmux.run_workspaces_tmux(arguments, run: operation, capture: operation, picker: operation)
   end
-  calls.clear
-  equal 7, Tmux.run_workspaces_tmux(['kill'], run: ->(command, args) { calls << [command, args]; 7 })
-  equal [['tmux', ['kill-server']]], calls
 end
 
-test('validated stop inside tmux delegates to its worker and propagates failure') do
-  calls = []
-  arguments = %w[stop -g general]
-  equal 4, Tmux.run_workspaces_tmux(arguments, environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args) { calls << args; 4 })
-  equal [arguments], calls
-  equal 2, Tmux.run_workspaces_tmux(%w[stop -g invalid], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(_) { raise 'unexpected worker' })
+test('project names distinguish owners and punctuation without tmux target syntax') do
+  definitions = Workspaces.project_definitions(['/cloned/a.b', '/cloned/a-b', '/personal/one/a.b', '/personal/two/a.b'])
+  equal 4, definitions.map { |definition| definition[:session] }.uniq.length
+  assert definitions.all? { |definition| definition[:session].match?(/\Aarchon-[a-zA-Z0-9_-]+\z/) }
+  equal definitions, Workspaces.project_definitions(definitions.map { |definition| definition[:directory] })
 end
 
-test('attachment selects only matching sessions, prefers main, and handles list and attach failures') do
-  calls = []
-  tmux = {
-    list_sessions: -> { { status: 0, output: "unrelated\nproject-mrzli-docs\njslib-a\nflashcards-be\nmain" } },
-    attach_session: ->(session) { calls << session; 0 }
-  }
-  { nil => 'main', 'current' => 'main', 'general' => 'main', 'projects' => 'flashcards-be', 'jslibs' => 'jslib-a', 'misc' => 'project-mrzli-docs' }.each do |group, expected|
-    equal 0, Workspaces.attach_after_start(group, tmux)
-    equal expected, calls.last
-  end
-  %w[start stop].each do |action|
-    calls.clear
-    context = { tmux: tmux, handlers: { 'general' => ->(*_, **_) { 0 } }, environment: {}, tty: false }
-    equal 0, Tmux.run_workspaces_tmux([action, '-g', 'general'], **context)
-    assert calls.empty?
-  end
-  %w[no\ server\ running no\ sessions error\ connecting].each do |message|
-    equal 0, Workspaces.attach_after_start(nil, tmux.merge(list_sessions: -> { { status: 1, output: message } }))
-  end
-  equal 1, Workspaces.attach_after_start(nil, tmux.merge(list_sessions: -> { { status: 1, output: 'unexpected error' } }))
-  equal 7, Workspaces.attach_after_start(nil, tmux.merge(attach_session: ->(_) { 7 }))
-end
-
-test('injected tmux reaches real groups, preserves existing sessions, and tolerates repeated stops') do
+test('tmux selects projects, creates uniform Claude windows and preserves them on repeated starts') do
   fixture do |fixture|
-    all_workspace_directories(fixture)
-    sessions = {}
-    creations = []
-    tmux = {
-      has_session: ->(session) { sessions.key?(session) },
-      create_shell_session: ->(definition) { sessions[definition[:session]] = definition; creations << definition; 0 },
-      create_editor_session: ->(definition) { sessions[definition[:session]] = definition; creations << definition; { status: 0 } },
-      stop_session: ->(session) { sessions.delete(session); 0 },
-      kill_session: ->(session) { sessions.delete(session); 0 },
-      list_sessions: -> { { status: 0, output: sessions.keys.join("\n") } },
-      attach_session: ->(session) { equal 'main', session; 0 }
-    }
-    context = { home: fixture[:home], tmux: tmux, environment: {}, tty: false }
+    first = workspace_directory(fixture, 'cloned/space project')
+    second = workspace_directory(fixture)
+    ENV['TMW_TMUX_STATE'] = File.join(fixture[:root], 'tmux')
+    picker = workspace_picker([first, second])
     2.times do
-      Workspaces::PRIMARY_GROUPS.each { |group| equal 0, Tmux.run_workspaces_tmux(['start', '-g', group], **context) }
+      equal 0, Tmux.run_workspaces_tmux(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, picker: picker)
     end
-    2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context.merge(tty: true)) }
-    equal 13, creations.length
-    assert sessions.key?('project-mrzli-mrzli-github-io')
-    assert sessions.key?('project-mrzli-omarchy-lab')
-    sessions['unrelated'] = {}
-    2.times { equal 0, Tmux.run_workspaces_tmux(['stop'], **context) }
-    equal ['unrelated'], sessions.keys
-  end
-end
-
-test('current continues after shell failures when starting and stopping') do
-  fixture do |fixture|
-    all_workspace_directories(fixture)
-    %w[start stop].each do |action|
-      calls = []
-      backend = {
-        has_session: ->(_) { false },
-        create_shell_session: ->(definition) { calls << definition[:session]; 1 },
-        create_editor_session: ->(definition) { calls << definition[:session]; { status: 0 } },
-        stop_session: ->(session) { calls << session; session == 'main' ? 1 : 0 }
-      }
-      equal 1, Workspaces.manage_current(action, backend, home: fixture[:home])
-      equal %w[main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart], calls
+    definitions = Workspaces.project_definitions([first, second])
+    definitions.each do |definition|
+      directory = File.join(ENV['TMW_TMUX_STATE'], 'sessions', definition[:session])
+      equal %w[nvim claude shell], File.readlines(File.join(directory, 'windows')).map { |line| line.split("\t").first }
+      assert File.read(File.join(directory, 'commands')).include?('claude --continue')
+      equal definition[:directory], File.read(File.join(directory, 'root')).strip
     end
+    calls = File.read(File.join(ENV['TMW_TMUX_STATE'], 'calls'))
+    equal 2, calls.scan(' new-session ').length
+    assert !calls.include?('attach-session')
   end
 end
 
-test('missing group directories are skipped and library discovery excludes hidden and nested repos') do
+test('start continues after failures, reports failed cleanup, skips vanished directories, and can retry') do
   fixture do |fixture|
-    tmux = { has_session: ->(_) { raise 'unexpected tmux access' } }
-    equal 0, Workspaces.manage_general('start', tmux, home: fixture[:home])
-    equal 0, Workspaces.manage_projects('start', tmux, home: fixture[:home])
-    equal 0, Workspaces.manage_misc('start', tmux, home: fixture[:home])
-    equal 0, Workspaces.manage_jslibs('start', tmux, home: fixture[:home])
-    root = File.join(fixture[:home], 'projects/personal/mrzli-jslib')
-    %w[alpha/.git zeta/.git .hidden/.git ignored/nested/.git worktree].each { |path| FileUtils.mkdir_p(File.join(root, path)) }
-    File.write(File.join(root, 'worktree/.git'), 'gitdir: unused')
-    equal ["#{root}/alpha/", "#{root}/zeta/"], Workspaces.find_libraries(root)
-  end
-end
-
-test('group failures report rollback errors, continue to later sessions, and allow retry') do
-  fixture do |fixture|
-    all_workspace_directories(fixture)
+    projects = ['cloned/one', 'cloned/two', 'cloned/missing'].map { |path| File.join(fixture[:home], 'projects', path) }
+    projects.first(2).each { |path| FileUtils.mkdir_p(path) }
+    definitions = Workspaces.project_definitions(projects)
     sessions = Set.new
     fail_start = true
-    tmux = {
-      has_session: ->(session) { sessions.include?(session) },
+    backend = {
+      resource_label: 'tmux session', has_session: ->(name) { sessions.include?(name) },
       create_editor_session: ->(definition) {
-        if definition[:session] == 'flashcards-fe' && fail_start
+        if definition == definitions.first && fail_start
           { status: 1, cleanup_status: 1 }
         else
           sessions.add(definition[:session]); { status: 0 }
         end
-      },
-      stop_session: ->(session) { session == 'flashcards-fe' ? 1 : (sessions.delete(session); 0) }
+      }
     }
-    result, _, error = capture { Workspaces.manage_projects('start', tmux, home: fixture[:home]) }
-    equal 1, result
-    assert error.include?('Failed to clean up tmux session: flashcards-fe')
-    equal Set['flashcards-be', 'project-mrzli-omarchy-lab', 'project-mrzli-mrzli-github-io', 'project-mrzli-qt-market-chart'], sessions
+    status, _, error = capture { Workspaces.start_projects(definitions, backend) }
+    equal 1, status
+    assert error.include?('Failed to clean up') && error.include?('Skipping')
+    equal Set[definitions[1][:session]], sessions
     fail_start = false
-    equal 0, Workspaces.manage_projects('start', tmux, home: fixture[:home])
-    equal 1, Workspaces.manage_projects('stop', tmux, home: fixture[:home])
-    equal Set['flashcards-fe'], sessions
+    equal 0, Workspaces.start_projects(definitions, backend)
+    equal Set.new(definitions.first(2).map { |definition| definition[:session] }), sessions
   end
 end
 
-test('library stopping tolerates an absent server and reports other list and kill failures') do
-  equal 0, Workspaces.manage_jslibs('stop', { list_sessions: -> { { status: 1, output: 'no server running' } } })
-  equal 1, Workspaces.manage_jslibs('stop', { list_sessions: -> { { status: 1, output: 'permission denied' } } })
+test('validated stop inside tmux delegates once and propagates failure') do
   calls = []
-  tmux = { list_sessions: -> { { status: 0, output: "main\njslib-alpha\njslib-beta" } },
-           kill_session: ->(session) { calls << session; session == 'jslib-alpha' ? 1 : 0 } }
-  equal 1, Workspaces.manage_jslibs('stop', tmux)
-  equal %w[jslib-alpha jslib-beta], calls
+  context = { environment: { 'TMUX' => 'fixture' }, stop_detached: ->(arguments) { calls << arguments; 7 } }
+  equal 7, Tmux.run_workspaces_tmux(['stop'], **context)
+  equal 2, Tmux.run_workspaces_tmux(%w[stop extra], **context)
+  equal [['stop']], calls
+end
+
+test('attachment focuses the first selected existing project and propagates failure') do
+  definitions = Workspaces.project_definitions(['/one', '/two'])
+  calls = []
+  backend = { has_session: ->(name) { name == definitions.last[:session] }, attach_session: ->(name) { calls << name; 7 } }
+  equal 7, Workspaces.attach_after_start(definitions, backend)
+  equal [definitions.last[:session]], calls
+  backend[:has_session] = ->(_) { false }
+  equal 0, Workspaces.attach_after_start(definitions, backend)
 end
 
 test('signaled subprocesses become operational failures for execution and capture') do
   fixture do |fixture|
-    all_workspace_directories(fixture)
     write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nkill -TERM \"$$\"\n")
-    [%w[start -g projects], %w[stop -g jslibs], ['kill']].each do |arguments|
-      result = run_archon(['workspaces', 'tmux', *arguments])
-      equal 1, result[:status]
-      equal nil, result[:signal]
-    end
+    equal 1, Workspaces.run_command('tmux', [])
+    equal 1, Tmux.capture_command('tmux', [])[:status]
   end
 end

@@ -49,8 +49,7 @@ Codex timing stress check run separately, as described in the
 
 For CLI checks alone, run `bash components/archon-cli/tests/run.sh`.
 The CLI runner executes each default Ruby test file in a separate process,
-checks Ruby syntax, exercises the Bash workspace
-adapter, and verifies installation. Installation tests call the production
+checks Ruby syntax and verifies installation. Installation tests call the production
 CLI copy function with a temporary home, check both executable aliases,
 exclude development files, and verify repeated copies preserve unrelated files.
 Bash syntax and available ShellCheck checks follow.

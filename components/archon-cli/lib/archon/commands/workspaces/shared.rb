@@ -1,13 +1,13 @@
 require 'rbconfig'
 require_relative 'help'
-require_relative 'groups'
+require 'digest'
+require_relative 'layout'
+require_relative 'project_selection'
 require_relative '../../shared/process'
 
 module Archon
   module Workspaces
     extend self
-    PRIMARY_GROUPS = %w[general jslibs misc projects].freeze
-    GROUPS = ['current', *PRIMARY_GROUPS].freeze
 
     def run_command(command, arguments, stdio: :inherit)
       result = Shared.run_process(command, arguments, stdio: stdio)
@@ -26,11 +26,10 @@ module Archon
         warn "\n#{help}"
         return { status: 2 }
       end
-      parsed = { action: action, group: action == 'start' ? 'current' : nil, ai: DEFAULT_AI }
+      parsed = { action: action, ai: DEFAULT_AI }
       seen = []
       valid = options.length.even? && options.each_slice(2).all? do |flag, value|
         key = case flag
-              when '--group', '-g' then :group if action != 'kill' && GROUPS.include?(value)
               when '--ai' then :ai if action == 'start' && AI_COMMANDS.key?(value)
               end
         next false unless key && !seen.include?(key)
@@ -46,41 +45,61 @@ module Archon
       parsed
     end
 
-    def manage_groups(action, group, backend, home: Dir.home, handlers: nil)
-      handlers ||= {
-        'current' => method(:manage_current),
-        'general' => method(:manage_general), 'jslibs' => method(:manage_jslibs),
-        'misc' => method(:manage_misc), 'projects' => method(:manage_projects)
-      }
-      groups = group ? [group] : action == 'start' ? PRIMARY_GROUPS : PRIMARY_GROUPS.reverse
+    def project_definitions(projects)
+      projects.map do |directory|
+        name = File.basename(directory).gsub(/[^a-zA-Z0-9_-]/, '-')
+        { session: "archon-#{name}-#{Digest::SHA256.hexdigest(directory)[0, 12]}", directory: directory }
+      end
+    end
+
+    def select_projects(backend, home:, state_home:, picker:)
+      projects = WorkspaceProjects.discover_projects(home)
+      if projects.empty?
+        puts 'No projects found under ~/projects/cloned or ~/projects/personal.'
+        return nil
+      end
+      state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
+      state_path = File.join(state_root, 'archon', "#{backend}.json")
+      selection = picker.call(projects, WorkspaceProjects.load_selection(state_path), home: home)
+      unless selection
+        puts 'Cancelled.'
+        return nil
+      end
+      WorkspaceProjects.save_selection(state_path, selection)
+      puts 'No projects selected.' if selection.fetch('projects').empty?
+      selection.fetch('projects')
+    end
+
+    def start_projects(definitions, backend)
       status = 0
-      groups.each do |name|
-        if handlers.fetch(name).call(action, backend, home: home) != 0
-          warn "Failed to #{action} #{backend.fetch(:name, 'tmux')} group: #{name}" unless group
-          status = 1
+      definitions.each do |definition|
+        unless File.directory?(definition[:directory])
+          warn "Skipping #{definition[:session]}: directory does not exist: #{definition[:directory]}"
+          next
         end
+        next if backend.fetch(:has_session).call(definition[:session])
+        result = backend.fetch(:create_editor_session).call(definition)
+        next if result[:status] == 0
+        warn "Failed to start #{backend.fetch(:resource_label)}: #{definition[:session]}"
+        warn "Failed to clean up #{backend.fetch(:resource_label)}: #{definition[:session]}" if result[:cleanup_status] && result[:cleanup_status] != 0
+        status = 1
       end
       status
     end
 
-    def attach_after_start(group, backend)
-      result = backend.fetch(:list_sessions).call
-      if result[:status] != 0
-        return 0 if result[:output].match?(/no server running|no sessions|error connecting/)
-        warn "Failed to list #{backend.fetch(:resource_label, 'tmux session')}s: #{result[:output]}"
-        return 1
+    def stop_projects(definitions, backend)
+      status = 0
+      definitions.each do |definition|
+        next if backend.fetch(:stop_session).call(definition[:session]) == 0
+        warn "Failed to stop #{backend.fetch(:resource_label)}: #{definition[:session]}"
+        status = 1
       end
-      sessions = result[:output].lines(chomp: true).select do |session|
-        case group
-        when 'general' then session == 'main'
-        when 'jslibs' then session.start_with?('jslib-')
-        when 'current', 'misc', 'projects' then workspace_definitions(group).any? { |definition| definition[:session] == session }
-        else
-          %w[main flashcards-fe flashcards-be].include?(session) || session.start_with?('jslib-', 'project-')
-        end
-      end
-      session = sessions.include?('main') ? 'main' : sessions.first
-      session ? backend.fetch(:attach_session).call(session) : 0
+      status
+    end
+
+    def attach_after_start(definitions, backend)
+      session = definitions.find { |definition| backend.fetch(:has_session).call(definition[:session]) }
+      session ? backend.fetch(:attach_session).call(session[:session]) : 0
     end
 
     def run_detached_stop(arguments, module_path:, entry_point:, log_name:)

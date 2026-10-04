@@ -17,3 +17,5 @@ Step 1 complete: component suite, syntax, isolated installation and diff checks 
 Step 2a complete: removed development-server windows and commands. Uniform project layouts and rollback checks pass in the full component suite, including installation.
 
 Step 3a complete: extracted shared discovery, terminal picker and atomic JSON helpers. VS Code behavior is unchanged; component suite including terminal and installation checks passed.
+
+Steps 2b/3b complete: removed general and all groups, shared terminal checklist, independent saved selections. Replaced obsolete group/adapter tests with project behavior and real PTY coverage. All component, syntax and isolated installation checks passed; fixed trailing whitespace from removed adapter runner. Real tmux integration (2 cases) passed.
