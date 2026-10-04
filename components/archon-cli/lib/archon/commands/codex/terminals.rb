@@ -26,7 +26,10 @@ module Archon
       end
 
       def output(run, command, arguments)
-        result = run.call(command, arguments)
+        command_output(command, run.call(command, arguments))
+      end
+
+      def command_output(command, result)
         raise "#{command}: #{result[:error].message}" if result[:error]
         unless result[:status] == 0
           detail = Shared.single_line([result[:stderr], result[:stdout]].join(' '))
@@ -67,7 +70,11 @@ module Archon
         sockets << env['TMUX'].split(',').first unless env.fetch('TMUX', '').empty?
         sockets.uniq.each do |socket|
           begin
-            text = output(run, 'tmux', ['-S', socket, 'list-panes', '-a', '-F', '#{pane_id}'])
+            result = run.call('tmux', ['-S', socket, 'list-panes', '-a', '-F', '#{pane_id}'])
+            detail = [result[:stderr], result[:stdout]].join.strip
+            absent = ["no server running on #{socket}", "error connecting to #{socket} (No such file or directory)", 'no sessions']
+            next if result[:status] == 1 && !result[:error] && absent.include?(detail)
+            text = command_output('tmux', result)
             text.each_line do |line|
               pane = { backend: :tmux, server: socket, id: line.strip }
               panes << pane if process_info(pane, run: run)&.key?(:argv)

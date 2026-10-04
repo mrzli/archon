@@ -1,7 +1,11 @@
 require_relative '../codex_tmux_fixture'
+require 'socket'
 
-test('tmux restart preserves real panes, shell processes, directories and resume arguments') do
+test('tmux restart skips stale sockets and preserves real panes, shell processes, directories and resume arguments') do
   with_codex_tmux do |fixture, tmux, project, log, command|
+    socket_directory = File.join(fixture[:root], "tmux-#{Process.uid}")
+    FileUtils.mkdir_p(socket_directory)
+    UNIXServer.new(File.join(socket_directory, 'stopped')).close
     tmux.call('new-window', '-t', 'test', '-n', 'other', 'sleep', '60')
     pane = tmux.call('list-panes', '-t', 'test:0', '-F', '#{pane_id}')
     shell_pid = tmux.call('display-message', '-p', '-t', pane, '#{pane_pid}')

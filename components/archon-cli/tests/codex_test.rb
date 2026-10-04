@@ -123,6 +123,31 @@ test('Codex empty discovery is a successful no-op') do
   equal '', error
 end
 
+test('Codex discovery ignores stopped tmux servers but reports real discovery errors') do
+  fixture do |fixture|
+    socket = File.join(fixture[:root], 'tmux.sock')
+    ["no server running on #{socket}", "error connecting to #{socket} (No such file or directory)", 'no sessions',
+     "error connecting to #{socket} (Permission denied)", 'server exited unexpectedly'].each do |message|
+      run = lambda do |command, _arguments|
+        if command == 'herdr'
+          { status: 0, stdout: JSON.generate(sessions: []) }
+        else
+          { status: 1, stdout: message, stderr: '' }
+        end
+      end
+      panes, errors = Archon::Codex::Terminals.discover(run: run,
+        env: { 'TMUX_TMPDIR' => fixture[:root], 'TMUX' => "#{socket},123,0" })
+      equal [], panes
+      if message.include?('Permission denied') || message == 'server exited unexpectedly'
+        equal 1, errors.length
+        assert errors.first.include?(message)
+      else
+        equal [], errors
+      end
+    end
+  end
+end
+
 test('Codex usage never invokes terminal discovery') do
   fixture do
     [[], ['unknown'], ['restart', 'extra']].each do |arguments|

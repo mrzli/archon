@@ -24,4 +24,5 @@ are not reproduced. The shared Codex daemon stays running.
 
 Discovery covers running named Herdr sessions and tmux sockets under
 `${TMUX_TMPDIR:-/tmp}/tmux-$UID`, plus the calling shell's `TMUX` socket.
+Sockets left behind by stopped tmux servers are ignored.
 Standalone terminals and other custom tmux socket locations are not supported.
