@@ -26,7 +26,7 @@ module Archon
         warn "\n#{help}"
         return { status: 2 }
       end
-      parsed = { action: action, group: nil, ai: DEFAULT_AI }
+      parsed = { action: action, group: action == 'start' ? 'current' : nil, ai: DEFAULT_AI }
       seen = []
       valid = options.length.even? && options.each_slice(2).all? do |flag, value|
         key = case flag

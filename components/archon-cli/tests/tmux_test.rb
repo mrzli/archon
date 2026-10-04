@@ -11,6 +11,9 @@ end
 
 test('AI selection defaults to Codex and combines with group selection in either order') do
   equal 'codex', Workspaces.parse_arguments(['start'], help: Tmux::HELP)[:ai]
+  equal 'current', Workspaces.parse_arguments(['start'], help: Tmux::HELP)[:group]
+  equal 'current', Workspaces.parse_arguments(%w[start --ai claude], help: Tmux::HELP)[:group]
+  equal nil, Workspaces.parse_arguments(['stop'], help: Tmux::HELP)[:group]
   %w[codex claude].each do |ai|
     [['--ai', ai, '--group', 'projects'], ['-g', 'projects', '--ai', ai]].each do |options|
       equal({ action: 'start', group: 'projects', ai: ai }, Workspaces.parse_arguments(['start', *options], help: Tmux::HELP))
@@ -30,7 +33,9 @@ test('Claude selection reaches tmux AI windows in every project group') do
     all_workspace_directories(fixture)
     calls = []
     run = ->(_, args, **_) { calls << args; args.first == 'has-session' ? 1 : 0 }
-    equal 0, Tmux.run_workspaces_tmux(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, run: run)
+    Workspaces::PRIMARY_GROUPS.each do |group|
+      equal 0, Tmux.run_workspaces_tmux(['start', '-g', group, '--ai', 'claude'], home: fixture[:home], environment: {}, tty: false, run: run)
+    end
     ai_windows = calls.select { |args| args.first == 'new-window' && args.last == 'claude' }
     equal 12, ai_windows.length
     ai_windows.each do |args|
@@ -95,8 +100,8 @@ test('workspace routing preserves group selection, ordering, continuation, and k
   calls = []
   handlers = Workspaces::GROUPS.to_h { |group| [group, ->(action, _, **_) { calls << [action, group]; group == 'projects' ? 1 : 0 }] }
   context = { handlers: handlers, tmux: {}, environment: {}, tty: false }
-  equal 1, Tmux.run_workspaces_tmux(['start'], **context)
-  equal Workspaces::PRIMARY_GROUPS.map { |group| ['start', group] }, calls
+  equal 0, Tmux.run_workspaces_tmux(['start'], **context)
+  equal [['start', 'current']], calls
   calls.clear
   equal 1, Tmux.run_workspaces_tmux(['stop'], **context)
   equal Workspaces::PRIMARY_GROUPS.reverse.map { |group| ['stop', group] }, calls
@@ -158,9 +163,11 @@ test('injected tmux reaches real groups, preserves existing sessions, and tolera
       list_sessions: -> { { status: 0, output: sessions.keys.join("\n") } },
       attach_session: ->(session) { equal 'main', session; 0 }
     }
-    context = { home: fixture[:home], tmux: tmux, environment: {}, tty: true }
-    2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context) }
-    2.times { equal 0, Tmux.run_workspaces_tmux(%w[start -g current], **context) }
+    context = { home: fixture[:home], tmux: tmux, environment: {}, tty: false }
+    2.times do
+      Workspaces::PRIMARY_GROUPS.each { |group| equal 0, Tmux.run_workspaces_tmux(['start', '-g', group], **context) }
+    end
+    2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context.merge(tty: true)) }
     equal 13, creations.length
     equal 'bun run dev', sessions['flashcards-fe'][:dev_command]
     equal 'pnpm run dev', sessions['flashcards-be'][:dev_command]

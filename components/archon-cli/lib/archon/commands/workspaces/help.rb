@@ -8,6 +8,8 @@ module Archon
         -g, --group <group>  Run only current, general, jslibs, misc, or projects
             --ai <tool>      AI tool for start: codex or claude (default: codex)
         -h, --help           Show this help
+
+      Start defaults to current. Stop defaults to all primary groups.
     TEXT
   end
 end

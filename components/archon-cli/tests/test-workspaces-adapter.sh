@@ -84,7 +84,9 @@ test_named_group() {
 test_aggregate_groups() {
   create_fixtures || return
 
-  run_archon workspaces tmux start || return
+  for group in general jslibs misc projects; do
+    run_archon workspaces tmux start -g "$group" || return
+  done
   assert_sessions main flashcards-fe flashcards-be jslib-example \
     project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-qt-market-chart project-mrzli-repos project-mrzli-skills || return
   run_archon workspaces tmux stop || return
@@ -92,12 +94,22 @@ test_aggregate_groups() {
   assert_no_attachment
 }
 
-test_terminal_aggregate() {
+test_default_group() {
+  create_fixtures || return
+  run_archon workspaces tmux start || return
+  run_archon workspaces tmux start || return
+  assert_sessions main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart || return
+  run_archon workspaces tmux stop -g current || return
+  run_archon workspaces tmux stop -g current || return
+  assert_sessions || return
+  assert_no_attachment
+}
+
+test_terminal_default() {
   create_fixtures || return
   run_terminal_archon workspaces tmux start || return
   assert_attachment main || return
-  assert_sessions main flashcards-fe flashcards-be jslib-example \
-    project-mrzli-archon project-mrzli-docs project-mrzli-js-templates project-mrzli-learning project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-qt-market-chart project-mrzli-repos project-mrzli-skills
+  assert_sessions main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart
 }
 
 test_terminal_named_group() {
@@ -133,13 +145,14 @@ run_test() {
 
 run_test 'named workspace group' test_named_group
 run_test 'aggregate workspace groups' test_aggregate_groups
+run_test 'default current group and repeated starts and stops' test_default_group
 for prerequisite in script timeout; do
   if ! command -v "$prerequisite" >/dev/null 2>&1; then
     fail "terminal tests require $prerequisite"
     exit 1
   fi
 done
-run_test 'terminal aggregate attachment' test_terminal_aggregate
+run_test 'terminal default current attachment' test_terminal_default
 run_test 'terminal named-group attachment' test_terminal_named_group
 run_test 'terminal inside tmux' test_terminal_inside_tmux
 

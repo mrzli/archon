@@ -12,6 +12,10 @@ archon workspaces --help
 `w` is an alias for `workspaces`. Backend aliases are `h` for `herdr` and `t`
 for `tmux`; both work with `archon` and `arc`.
 
+For either backend, `start` defaults to the `current` group. Use `-g` to start
+another group. `stop` without a group stops all primary groups; use
+`stop -g current` to stop only the current selection.
+
 ## Herdr
 
 Requires Herdr on `PATH`, plus the tools used by the configured projects.

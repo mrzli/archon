@@ -31,15 +31,17 @@ The groups match `archon workspaces tmux`:
 - `current`: a hardcoded selection of the same workspaces: the general shell,
   `archon`, `learning`, `omarchy-lab`, `skills`, and `qt-market-chart`.
 
-Without a group, start runs the primary groups in the order above and stop uses
-the reverse order. `current` is selected explicitly and does not add copies. Missing
-project directories are reported and skipped. Repeated starts preserve existing
+Without a group, start opens only `current`. Select another group with `-g` or
+`--group`. Stop without a group closes all primary groups in reverse order
+(`projects`, `misc`, `jslibs`, `general`); `stop -g current` closes only the
+current selection. Missing project directories are reported and skipped.
+Repeated starts preserve existing
 workspaces and tabs. Failed creations roll back the new workspace and report
 cleanup failures; later workspaces are still attempted.
 
 Start launches the session's background server when needed. An interactive
 start outside Herdr focuses the requested group and attaches to `archon`.
-Aggregate start prefers `main`. Inside Herdr, start preserves your current
+Starting `current` prefers `main`. Inside Herdr, start preserves your current
 view. Non-interactive starts do not attach. Attach manually with:
 
 ```bash

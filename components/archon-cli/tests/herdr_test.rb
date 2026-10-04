@@ -55,9 +55,11 @@ test('Herdr creates shared project layouts with silent pane run success, repeats
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
     2.times do
-      result = run_archon(%w[w h start])
-      equal 0, result[:status]
-      equal '', result[:stderr]
+      Archon::Workspaces::PRIMARY_GROUPS.each do |group|
+        result = run_archon(['w', 'h', 'start', '-g', group])
+        equal 0, result[:status]
+        equal '', result[:stderr]
+      end
     end
     state = herdr_state(path)
     equal 1, state['calls'].count { |call| call == ['server'] }
@@ -90,7 +92,9 @@ end
 test('Herdr Claude selection creates Claude tabs and preserves existing workspaces on later starts') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    equal 0, run_archon(%w[w h start --ai claude])[:status]
+    Archon::Workspaces::PRIMARY_GROUPS.each do |group|
+      equal 0, run_archon(['w', 'h', 'start', '-g', group, '--ai', 'claude'])[:status]
+    end
     workspaces = herdr_state(path)['workspaces']
     equal 13, workspaces.length
     workspaces.reject { |workspace| workspace['label'] == 'main' }.each do |workspace|
@@ -156,10 +160,11 @@ test('Herdr named stop only closes the selected group and tolerates an absent se
   end
 end
 
-test('Herdr current shares resources with primary groups and stops only its selection') do
+test('Herdr defaults to current, shares primary resources, and stops only its selection') do
   herdr_fixture do |fixture, path|
     all_workspace_directories(fixture)
-    2.times { equal 0, run_archon(%w[w h start -g current])[:status] }
+    2.times { equal 0, run_archon(%w[w h start])[:status] }
+    equal 0, run_archon(%w[w h start -g current])[:status]
     state = herdr_state(path)
     expected = %w[main project-mrzli-archon project-mrzli-learning project-mrzli-omarchy-lab project-mrzli-skills project-mrzli-qt-market-chart]
     equal expected, state['workspaces'].map { |workspace| workspace['label'] }

@@ -22,13 +22,14 @@ group has only a shell and is unaffected.
 all sessions on the server, including sessions outside Archon's workspace groups.
 It returns tmux's exit status.
 
-Without `--group` or `-g`, the command runs the primary groups (`general`,
-`jslibs`, `misc`, `projects`) in that order for start and reverse order for stop.
+Without `--group` or `-g`, start opens only `current`. Stop closes all primary
+groups in reverse order (`projects`, `misc`, `jslibs`, `general`). Use
+`stop -g current` to stop only the current selection.
 `current` selects the general shell, `archon`, `learning`, `omarchy-lab`, `skills`,
 and `qt-market-chart` from those groups, using the same sessions.
 Every selected group is attempted after a failure.
 After a successful start in an interactive terminal outside tmux, the command
-attaches to an existing session from the requested group. Aggregate start
+attaches to an existing session from the requested group. Starting `current`
 prefers `main`. It never creates an extra session for attachment. Inside tmux,
 the current session stays selected. Stop, help, and non-interactive calls do
 not attach.
