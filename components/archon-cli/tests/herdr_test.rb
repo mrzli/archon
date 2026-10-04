@@ -32,7 +32,7 @@ def seed_herdr_workspaces(path, labels)
 end
 
 test('every failed Herdr creation step rolls back only its newly returned workspace ID') do
-  definition = { session: 'example', directory: '/fixture/project' }
+  definition = { session: 'example', directory: '/fixture/project', label: 'project' }
   created = { 'workspace' => { 'workspace_id' => 'w401', 'label' => 'example' },
               'tab' => { 'tab_id' => 'w401:t709' }, 'root_pane' => { 'pane_id' => 'w401:p901' } }
   operations = []
@@ -75,6 +75,7 @@ test('Herdr creates selected uniform workspaces, repeats safely and attaches onl
     2.times { equal 0, Herdr.run_workspaces_herdr(%w[start --ai claude], **context) }
     state = herdr_state(path)
     equal 1, state['workspaces'].length
+    equal File.basename(project), state['workspaces'].first['label']
     equal %w[nvim claude shell], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
     equal ['nvim .', 'claude --continue'], state['workspaces'].first['tabs'].flat_map { |tab| tab['commands'] }
     equal project, state['workspaces'].first['cwd']
@@ -88,6 +89,60 @@ test('Herdr creates selected uniform workspaces, repeats safely and attaches onl
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => [], 'remaining' => 1 } }
     equal 1, Herdr.run_workspaces_herdr(['start'], **context.merge(tty: true))
   end
+end
+
+test('Herdr uses exact folder labels and remembers distinct IDs for same-named projects') do
+  herdr_fixture do |fixture, path|
+    projects = %w[personal/one/a.b personal/two/a.b].map { |relative| workspace_directory(fixture, relative) }
+    context = { home: fixture[:home], picker: workspace_picker(projects), environment: {}, tty: false }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    state = herdr_state(path)
+    equal ['a.b', 'a.b'], state['workspaces'].map { |workspace| workspace['label'] }
+    ids = state['workspaces'].map { |workspace| workspace['workspace_id'] }
+    equal 2, ids.uniq.length
+    selection_path = Archon::WorkspaceProjects.selection_path('herdr', home: fixture[:home], state_home: ENV['XDG_STATE_HOME'])
+    equal projects.zip(ids).to_h, JSON.parse(File.read(selection_path))['workspace_ids']
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context.merge(picker: workspace_picker([projects.last]), tty: true))
+    equal ids.last, herdr_state(path)['focused']
+    equal 0, Herdr.run_workspaces_herdr(['stop'], **context)
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context.merge(picker: workspace_picker(projects.reverse)))
+    equal ids, herdr_state(path)['workspaces'].map { |workspace| workspace['workspace_id'] }
+    equal projects.zip(ids).to_h, JSON.parse(File.read(selection_path))['workspace_ids']
+    update_herdr_state(path) { |value| value['workspaces'].delete_at(0) }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    state = herdr_state(path)
+    equal 2, state['workspaces'].length
+    equal ids.last, state['workspaces'].first['workspace_id']
+    assert !ids.include?(state['workspaces'].last['workspace_id'])
+  end
+end
+
+test('Herdr shortens existing Archon labels and preserves manually created same-named workspaces') do
+  herdr_fixture do |fixture, path|
+    project = workspace_directory(fixture)
+    legacy = Archon::Workspaces.project_definitions([project]).first[:session]
+    seed_herdr_workspaces(path, [legacy, File.basename(project)])
+    before = herdr_state(path)['workspaces'].map { |workspace| workspace['workspace_id'] }
+    context = { home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: true }
+    2.times { equal 0, Herdr.run_workspaces_herdr(['start'], **context) }
+    state = herdr_state(path)
+    equal before, state['workspaces'].map { |workspace| workspace['workspace_id'] }
+    equal [File.basename(project)] * 2, state['workspaces'].map { |workspace| workspace['label'] }
+    equal before.first, state['focused']
+    equal 1, state['calls'].count { |call| call.first(2) == %w[workspace rename] }
+    assert state['calls'].none? { |call| call.first(2) == %w[workspace create] }
+  end
+end
+
+test('Herdr rolls back a new workspace if remembering its ID fails') do
+  definition = { session: 'example', directory: '/fixture/project', label: 'project' }
+  created = { 'workspace' => { 'workspace_id' => 'w401', 'label' => 'project' },
+              'tab' => { 'tab_id' => 'w401:t709' }, 'root_pane' => { 'pane_id' => 'w401:p901' } }
+  calls = []
+  request = ->(arguments) { calls << arguments; created }
+  result = Herdr.create_workspace(definition, Archon::Workspaces.editor_tabs, request) { raise 'cannot save IDs' }
+  equal({ status: 1, cleanup_status: 0 }, result)
+  equal %w[workspace close w401], calls.last
 end
 
 test('Herdr picker cancellation, empty discovery and empty selections do not start a server') do

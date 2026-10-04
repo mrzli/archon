@@ -43,7 +43,19 @@ home installation, push or merge performed. All requested work is committed.
 
 ## Follow-up: kill and names
 
-Status: in progress. Restore kill for every running Herdr session / the entire
-current tmux server, then simplify visible project names while retaining
-repeat safety and distinct project identity. Keep VS Code unchanged. Commit
-each part separately. Installed Herdr: 0.8.2.
+Status: complete. Restored kill for every running Herdr session / the entire
+current tmux server, then simplified Herdr workspace labels to exact folder
+names. VS Code is unchanged. Each part is committed separately.
+
+Herdr 0.8.2 allows duplicate workspace labels; its workspace list does not expose
+project directories. Keep a project-path-to-workspace-ID map in the existing
+Herdr selection file and preserve it across selection changes. Adopt and rename
+selected workspaces with earlier Archon labels without recreating them. Missing
+IDs are replaced when the workspace is recreated; ID-save failures roll back
+new resources. tmux requires unique names, so its existing names are retained.
+
+Verification: full CLI/component and isolated installation checks passed after
+both changes. All four isolated real tmux integration cases passed for kill,
+including shutdown from the calling pane and preservation of another server.
+Herdr checks use fakes and the installed CLI help / official v0.8.2 source, not
+live sessions. ShellCheck unavailable. No installation, push or merge performed.

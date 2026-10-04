@@ -14,6 +14,12 @@ The tool must be on `PATH`. The option affects newly created workspaces.
 Repeated starts preserve existing workspaces. Failed creations roll back their
 new resources and later projects are still attempted.
 
+Workspace labels are just the project folder name. Same-named projects have
+separate workspaces. Start also shortens selected workspaces' labels created by
+earlier Archon versions. Workspace IDs are remembered alongside the project selection in
+`${XDG_STATE_HOME:-~/.local/state}/archon/workspaces/herdr.json`; keep this file
+to reuse the correct workspaces on later starts.
+
 Interactive starts outside Herdr attach in the current terminal and focus the
 first selected project. Inside Herdr, the current view is preserved.
 Stop never attaches or prompts.

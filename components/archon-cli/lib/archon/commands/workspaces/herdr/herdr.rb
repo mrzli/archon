@@ -73,8 +73,19 @@ module Archon
       end
     end
 
-    def create_herdr(running:, capture:, run:, start_server:, ai: Workspaces::DEFAULT_AI)
+    def create_herdr(definitions:, state_path:, running:, capture:, run:, start_server:, ai: Workspaces::DEFAULT_AI)
       request = ->(arguments) { command_response(arguments, capture) }
+      selection = WorkspaceProjects.load_selection(state_path)
+      workspace_ids = selection.fetch('workspace_ids', {})
+      unless workspace_ids.is_a?(Hash) && workspace_ids.all? { |path, id| path.is_a?(String) && id.is_a?(String) }
+        raise "Invalid saved Herdr workspace IDs: #{state_path}"
+      end
+      by_name = definitions.to_h { |definition| [definition[:session], definition] }
+      remember_workspace = lambda do |definition, workspace|
+        ids = workspace_ids.merge(definition[:directory] => workspace.fetch('workspace_id'))
+        WorkspaceProjects.save_selection(state_path, selection.merge('workspace_ids' => ids))
+        workspace_ids.replace(ids)
+      end
       workspaces = running ? request.call(%w[workspace list]).fetch('workspaces') : []
       ensure_server = lambda do
         unless running
@@ -84,15 +95,30 @@ module Archon
         end
       end
       find_workspace = lambda do |name|
-        matches = workspaces.select { |workspace| workspace.fetch('label') == name }
+        definition = by_name.fetch(name)
+        id = workspace_ids[definition[:directory]]
+        workspace = workspaces.find { |item| item.fetch('workspace_id') == id }
+        # Adopt the previous Archon label once, then identify projects by ID.
+        matches = workspaces.select { |item| item.fetch('label') == name } unless workspace
+        matches ||= []
         raise "More than one Herdr workspace is named #{name}; rename duplicates before continuing." if matches.length > 1
-        matches.first
+        workspace ||= matches.first
+        if workspace
+          if workspace.fetch('label') != definition[:label]
+            request.call(['workspace', 'rename', workspace.fetch('workspace_id'), definition[:label]])
+            workspace['label'] = definition[:label]
+          end
+          remember_workspace.call(definition, workspace) unless id == workspace.fetch('workspace_id')
+        end
+        workspace
       end
       {
         resource_label: 'Herdr workspace',
         has_session: ->(name) { ensure_server.call; !find_workspace.call(name).nil? },
         create_editor_session: ->(definition) {
-          result = create_workspace(definition, Workspaces.editor_tabs(ai: ai), request)
+          result = create_workspace(definition, Workspaces.editor_tabs(ai: ai), request) do |workspace|
+            remember_workspace.call(definition, workspace)
+          end
           workspaces << result[:workspace] if result[:workspace]
           result
         },
@@ -107,7 +133,7 @@ module Archon
     def create_workspace(definition, tabs, request)
       workspace_id = nil
       begin
-        created = request.call(['workspace', 'create', '--cwd', definition[:directory], '--label', definition[:session], '--no-focus'])
+        created = request.call(['workspace', 'create', '--cwd', definition[:directory], '--label', definition[:label], '--no-focus'])
         workspace = created.fetch('workspace')
         workspace_id = workspace.fetch('workspace_id')
         first_tab = created.fetch('tab').fetch('tab_id')
@@ -120,6 +146,7 @@ module Archon
                         end
           request.call(['pane', 'run', created_tab.fetch('root_pane').fetch('pane_id'), tab[:command]]) if tab[:command]
         end
+        yield workspace if block_given?
         { status: 0, workspace: workspace }
       rescue StandardError => error
         warn error.message

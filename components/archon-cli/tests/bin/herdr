@@ -45,7 +45,7 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
       response = { session: { name: session, running: false } }
     when ['workspace', 'list']
       raise 'session not running' unless state['running']
-      response = { result: { workspaces: workspaces } }
+      response = { result: { workspaces: workspaces.map { |workspace| workspace.reject { |key, _| %w[cwd tabs].include?(key) } } } }
     when ['workspace', 'create']
       raise 'session not running' unless state['running']
       state['next_id'] += 1
@@ -67,6 +67,11 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
       raise 'unknown workspace' unless workspaces.any? { |item| item['workspace_id'] == arguments[2] }
       state['focused'] = arguments[2]
       response = { result: {} }
+    when ['workspace', 'rename']
+      workspace = workspaces.find { |item| item['workspace_id'] == arguments[2] }
+      raise 'unknown workspace' unless workspace
+      workspace['label'] = arguments[3]
+      response = { result: { workspace: workspace } }
     when ['tab', 'create']
       workspace = workspaces.find { |item| item['workspace_id'] == option.call('--workspace') }
       tab = new_tab.call(workspace, option.call('--label'))

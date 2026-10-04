@@ -39,7 +39,7 @@ module Archon
     def project_definitions(projects)
       projects.map do |directory|
         name = File.basename(directory).gsub(/[^a-zA-Z0-9_-]/, '-')
-        { session: "archon-#{name}-#{Digest::SHA256.hexdigest(directory)[0, 12]}", directory: directory }
+        { session: "archon-#{name}-#{Digest::SHA256.hexdigest(directory)[0, 12]}", directory: directory, label: File.basename(directory) }
       end
     end
 
@@ -50,12 +50,13 @@ module Archon
         return nil
       end
       state_path = WorkspaceProjects.selection_path(backend, home: home, state_home: state_home)
-      selection = picker.call(projects, WorkspaceProjects.load_selection(state_path), home: home)
+      saved = WorkspaceProjects.load_selection(state_path)
+      selection = picker.call(projects, saved, home: home)
       unless selection
         puts 'Cancelled.'
         return nil
       end
-      WorkspaceProjects.save_selection(state_path, selection)
+      WorkspaceProjects.save_selection(state_path, saved.merge(selection))
       puts 'No projects selected.' if selection.fetch('projects').empty?
       selection.fetch('projects')
     end
