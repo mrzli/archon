@@ -33,10 +33,21 @@ module Archon
       }
     end
 
+    def absent_server?(output)
+      output.match?(/no server running|no sessions|error connecting .*No such file or directory/)
+    end
+
+    def kill_server(capture)
+      result = capture.call('tmux', ['kill-server'])
+      return 0 if result[:status] == 0 || absent_server?(result[:output])
+      warn "Failed to kill tmux server: #{result[:output]}"
+      1
+    end
+
     def stop_managed_sessions(run:, capture:)
       result = capture.call('tmux', ['list-sessions', '-F', '#{session_name}' + "\t" + '#{@archon-managed}'])
       if result[:status] != 0
-        return 0 if result[:output].match?(/no server running|no sessions|error connecting .*No such file or directory/)
+        return 0 if absent_server?(result[:output])
         warn "Failed to list tmux sessions: #{result[:output]}"
         return 1
       end

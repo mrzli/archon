@@ -29,9 +29,9 @@ archon admin voice <start|stop>
 archon codex restart
 archon libs <command> [options]
 archon projects <command> [options]
-archon workspaces herdr <start|stop> [options]
+archon workspaces herdr <start|stop|kill> [options]
 archon workspaces list
-archon workspaces tmux <start|stop> [options]
+archon workspaces tmux <start|stop|kill> [options]
 archon workspaces visual-studio-code <start|stop>
 ```
 

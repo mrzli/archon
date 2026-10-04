@@ -172,7 +172,6 @@ test('Herdr stop shuts down its entire dedicated session, including extras, with
     assert state['calls'].none? { |call| call.first(2) == %w[workspace close] }
     assert !File.exist?(File.join(fixture[:home], 'projects'))
     assert !File.exist?(File.join(ENV['XDG_STATE_HOME'], 'archon/herdr.json'))
-    equal 2, run_archon(%w[w h kill])[:status]
   end
 end
 
@@ -193,12 +192,49 @@ test('Herdr detached stop preserves its target, logs failures, and allows retry'
   end
 end
 
-test('Herdr validates removed commands and filters before delegating stop') do
+test('Herdr validates shutdown options before delegating') do
   calls = []
   context = { environment: { 'HERDR_ENV' => '1' }, stop_detached: ->(arguments) { calls << arguments; 7 } }
   equal 7, Herdr.run_workspaces_herdr(['stop'], **context)
-  [%w[stop -g current], ['kill'], %w[stop extra]].each do |arguments|
+  equal 7, Herdr.run_workspaces_herdr(['kill'], **context)
+  [%w[stop -g current], %w[kill --ai codex], %w[stop extra]].each do |arguments|
     equal 2, Herdr.run_workspaces_herdr(arguments, **context)
   end
-  equal [['stop']], calls
+  equal [['stop'], ['kill']], calls
+end
+
+test('Herdr kill stops every running session, preserves saved layouts and tolerates repeated calls') do
+  herdr_fixture do |_, path|
+    seed_herdr_workspaces(path, %w[project extra])
+    before = herdr_state(path)['workspaces']
+    update_herdr_state(path) do |state|
+      state['other_sessions'] = [{ 'name' => 'default', 'running' => true }, { 'name' => 'outside', 'running' => true }, { 'name' => 'idle', 'running' => false }]
+    end
+    2.times { equal 0, run_archon(%w[w h kill])[:status] }
+    state = herdr_state(path)
+    assert !state['running'] && state['other_sessions'].none? { |session| session['running'] }
+    equal before, state['workspaces']
+    equal %w[archon default outside], state['calls'].select { |call| call.first(2) == %w[session stop] }.map { |call| call[2] }
+    state['targets'].each do |target, arguments|
+      equal arguments[2], target if arguments.first(2) == %w[session stop]
+    end
+  end
+end
+
+test('Herdr kill continues after a session failure and its detached worker can retry') do
+  herdr_fixture do |_, path|
+    seed_herdr_workspaces(path, ['project'])
+    update_herdr_state(path) do |state|
+      state['failure'] = { 'prefix' => %w[session stop], 'remaining' => 1 }
+      state['other_sessions'] = [{ 'name' => 'outside', 'running' => true }]
+    end
+    environment = { 'HERDR_ENV' => '1', 'HERDR_SESSION' => 'outside', 'HERDR_SOCKET_PATH' => '/unused/socket' }
+    result = run_archon(%w[w h kill], environment)
+    equal 1, result[:status]
+    assert herdr_state(path)['running']
+    assert !herdr_state(path)['other_sessions'].first['running']
+    assert result[:stderr].include?('Workspace shutdown failed; see')
+    equal 0, run_archon(%w[w h kill], environment)[:status]
+    assert !herdr_state(path)['running']
+  end
 end

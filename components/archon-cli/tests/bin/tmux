@@ -128,6 +128,9 @@ case "$command" in
       cat "$sessions_dir/$session/managed"
     fi
     ;;
+  kill-server)
+    rm -rf -- "$sessions_dir"
+    ;;
   list-sessions)
     shopt -s nullglob
     session_paths=("$sessions_dir"/*)

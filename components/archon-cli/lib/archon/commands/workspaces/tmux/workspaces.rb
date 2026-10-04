@@ -3,7 +3,7 @@ require_relative 'tmux'
 module Archon
   module WorkspacesTmux
     HELP = (Workspaces::ACTION_HELP.gsub('<backend>', 'tmux') +
-      "\n\nStop closes all Archon-managed sessions on the current tmux server; unrelated sessions are preserved.").freeze
+      "\n\nStop closes all Archon-managed sessions on the current tmux server; unrelated sessions are preserved.\nKill stops the ENTIRE current tmux server, including unrelated sessions.").freeze
 
     def run_workspaces_tmux(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?,
                             capture: method(:capture_command), run: Workspaces.method(:run_command),
@@ -12,7 +12,8 @@ module Archon
       return parsed[:status] if parsed.key?(:status)
       action = parsed[:action]
       inside_tmux = !environment['TMUX'].to_s.empty?
-      return stop_detached.call(arguments) if action == 'stop' && inside_tmux
+      return stop_detached.call(arguments) if %w[stop kill].include?(action) && inside_tmux
+      return kill_server(capture) if action == 'kill'
       return stop_managed_sessions(run: run, capture: capture) if action == 'stop'
       projects = Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker)
       return 0 if projects.nil? || projects.empty?

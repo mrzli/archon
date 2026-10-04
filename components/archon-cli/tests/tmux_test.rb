@@ -143,7 +143,6 @@ test('stop closes only tagged sessions, ignores saved state and discovery, conti
     end
     equal [], calls
     equal '{broken state}', File.read(state)
-    equal 2, Tmux.run_workspaces_tmux(['kill'], **context, capture: ->(*_) { raise 'must not capture' })
   end
 end
 
@@ -168,5 +167,33 @@ test('stop removes tagged sessions after project deletion and preserves untagged
     FileUtils.rm_rf(File.join(fixture[:home], 'projects'))
     2.times { equal 0, Tmux.run_workspaces_tmux(['stop'], **context) }
     equal ['archon-unmanaged'], Dir.children(root)
+  end
+end
+
+test('tmux kill shuts down the whole server including untagged sessions and repeats safely') do
+  fixture do |fixture|
+    project = workspace_directory(fixture)
+    ENV['TMW_TMUX_STATE'] = File.join(fixture[:root], 'tmux')
+    context = { home: fixture[:home], environment: {}, tty: false, picker: workspace_picker([project]) }
+    equal 0, Tmux.run_workspaces_tmux(['start'], **context)
+    FileUtils.mkdir_p(File.join(ENV['TMW_TMUX_STATE'], 'sessions/unrelated'))
+    2.times { equal 0, run_archon(%w[w t kill])[:status] }
+    assert !File.exist?(File.join(ENV['TMW_TMUX_STATE'], 'sessions'))
+  end
+end
+
+test('tmux kill distinguishes absent servers from errors and detaches before closing its calling pane') do
+  calls = []
+  %w[stop kill].each do |action|
+    equal 7, Tmux.run_workspaces_tmux([action], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args) { calls << args; 7 })
+  end
+  equal [%w[stop], %w[kill]], calls
+  ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)'].each do |message|
+    equal 0, Tmux.run_workspaces_tmux(['kill'], environment: {}, capture: ->(_, args) { equal ['kill-server'], args; { status: 1, output: message } })
+  end
+  equal 1, Tmux.run_workspaces_tmux(['kill'], environment: {}, capture: ->(*_) { { status: 1, output: 'permission denied' } })
+  operation = ->(*_, **_) { raise 'must not perform any operation' }
+  [%w[kill extra], %w[kill --ai codex], %w[kill -g current]].each do |arguments|
+    equal 2, Tmux.run_workspaces_tmux(arguments, capture: operation, picker: operation)
   end
 end

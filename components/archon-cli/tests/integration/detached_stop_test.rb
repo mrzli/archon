@@ -34,3 +34,35 @@ test('workspace stop survives closing its calling pane and preserves unrelated s
     end
   end
 end
+
+test('tmux kill from its own pane shuts down unrelated sessions on the same server and preserves other servers') do
+  fixture do |fixture|
+    socket = File.join(fixture[:root], 'tmux.sock')
+    other_socket = File.join(fixture[:root], 'other.sock')
+    File.symlink('/usr/bin/tmux', File.join(fixture[:bin], 'tmux'))
+    invoke = lambda do |target, *arguments|
+      output, error, status = Open3.capture3('/usr/bin/tmux', '-S', target, '-f', '/dev/null', *arguments)
+      { status: status.exitstatus, output: "#{output}#{error}" }
+    end
+    begin
+      %w[calling unrelated].each { |name| equal 0, invoke.call(socket, 'new-session', '-d', '-s', name, 'sleep', '60')[:status] }
+      equal 0, invoke.call(other_socket, 'new-session', '-d', '-s', 'elsewhere', 'sleep', '60')[:status]
+      equal 0, invoke.call(socket, 'new-window', '-t', '=calling', '-n', 'killer', '/usr/bin/env',
+        "HOME=#{fixture[:home]}", "XDG_STATE_HOME=#{ENV.fetch('XDG_STATE_HOME')}", "PATH=#{ENV.fetch('PATH')}",
+        RbConfig.ruby, File.expand_path('../../bin/arc', __dir__), 'w', 't', 'kill')[:status]
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+      loop do
+        result = invoke.call(socket, 'list-sessions')
+        break if result[:status] != 0 && Archon::WorkspacesTmux.absent_server?(result[:output])
+        assert Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline, result.inspect
+        sleep 0.05
+      end
+      equal "elsewhere\n", invoke.call(other_socket, 'list-sessions', '-F', '#S')[:output]
+      capture = ->(_, args) { invoke.call(socket, *args) }
+      equal 0, Archon::WorkspacesTmux.run_workspaces_tmux(['kill'], environment: {}, capture: capture)
+    ensure
+      invoke.call(socket, 'kill-server')
+      invoke.call(other_socket, 'kill-server')
+    end
+  end
+end

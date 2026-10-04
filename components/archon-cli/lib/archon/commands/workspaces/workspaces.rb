@@ -6,7 +6,7 @@ module Archon
   module Workspaces
     HELP = <<~TEXT.chomp.freeze
       Usage: archon workspaces list
-             archon workspaces <backend> <start|stop> [options]
+             archon workspaces <backend> <start|stop|kill> [options]
 
       Commands:
         herdr (h)                Manage Herdr workspaces
@@ -14,7 +14,7 @@ module Archon
         tmux (t)                 Manage tmux workspace sessions
         visual-studio-code (vsc)  Open grouped VS Code projects or stop VS Code
 
-      Choose a backend explicitly for start or stop. There is no default.
+      Choose a backend explicitly for start, stop, or kill. There is no default.
       Use archon workspaces list --help for listing options.
       Use archon workspaces <backend> --help for backend options.
     TEXT

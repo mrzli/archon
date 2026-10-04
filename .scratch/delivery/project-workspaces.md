@@ -40,3 +40,10 @@ operations are verified with fakes; real tmux checks use temporary sockets.
 
 No hardcoded project selections, state migration or old-path fallback. No real
 home installation, push or merge performed. All requested work is committed.
+
+## Follow-up: kill and names
+
+Status: in progress. Restore kill for every running Herdr session / the entire
+current tmux server, then simplify visible project names while retaining
+repeat safety and distinct project identity. Keep VS Code unchanged. Commit
+each part separately. Installed Herdr: 0.8.2.

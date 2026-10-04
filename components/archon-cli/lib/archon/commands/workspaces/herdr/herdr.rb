@@ -19,8 +19,8 @@ module Archon
       { status: result[:status] || 1, output: output }
     end
 
-    def command_response(arguments, capture)
-      result = capture.call('herdr', ['--session', SESSION, *arguments])
+    def command_response(arguments, capture, session: SESSION)
+      result = capture.call('herdr', ['--session', session, *arguments])
       raise "Herdr #{arguments.first(2).join(' ')} failed: #{result[:output]}" unless result[:status] == 0
       # pane run reports success through its exit status and prints no JSON.
       return nil if arguments.first(2) == %w[pane run]
@@ -30,6 +30,21 @@ module Archon
       response.fetch('result', response)
     rescue JSON::ParserError => error
       raise "Could not read Herdr #{arguments.first(2).join(' ')} output: #{error.message}"
+    end
+
+    def kill_all_sessions(capture)
+      sessions = command_response(%w[session list --json], capture).fetch('sessions')
+      status = 0
+      sessions.select { |session| session.fetch('running') }.each do |session|
+        name = session.fetch('name')
+        begin
+          command_response(['session', 'stop', name, '--json'], capture, session: name)
+        rescue StandardError => error
+          warn error.message
+          status = 1
+        end
+      end
+      status
     end
 
     def session_running?(capture)

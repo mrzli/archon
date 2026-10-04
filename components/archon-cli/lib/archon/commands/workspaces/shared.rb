@@ -21,7 +21,7 @@ module Archon
         return { status: 0 }
       end
       action, *options = arguments
-      unless %w[start stop].include?(action)
+      unless %w[start stop kill].include?(action)
         warn(action ? "Unknown workspace action: #{action}" : 'Missing workspace action.')
         warn "\n#{help}"
         return { status: 2 }

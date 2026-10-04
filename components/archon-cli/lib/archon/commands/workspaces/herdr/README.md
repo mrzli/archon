@@ -27,3 +27,16 @@ when needed. Stop shuts down this entire session, including extra workspaces
 you added there, and preserves its saved layout. Other Herdr sessions are
 unaffected. Stopping an already stopped session succeeds. Server diagnostics
 are saved in `archon/workspaces-herdr-server.log` under the state directory.
+
+## Kill
+
+```bash
+arc w h kill
+```
+
+Stops **all running Herdr sessions**, including sessions outside Archon. Saved
+layouts and project files are preserved. Later sessions are still attempted if
+one fails. Running it again when no sessions are running succeeds.
+
+Takes no options or project filters. From a multiplexer pane it runs
+independently, using the same shutdown log as `stop`.

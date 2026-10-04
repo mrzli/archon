@@ -27,3 +27,16 @@ including projects no longer selected or present on disk. Untagged sessions are
 preserved, even when their names resemble Archon sessions. Sessions created by
 earlier versions without management tags are also preserved. Stopping an absent
 server succeeds.
+
+## Kill
+
+```bash
+arc w t kill
+```
+
+Stops the **entire current tmux server**, including sessions opened outside
+Archon. Other tmux servers are unaffected. Running it when the server is already
+stopped succeeds.
+
+Takes no options or project filters. From a multiplexer pane it runs
+independently, using the same shutdown log as `stop`.
