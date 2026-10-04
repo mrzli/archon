@@ -1,4 +1,3 @@
-require 'find'
 require 'tempfile'
 require_relative '../../shared/process'
 require_relative 'picker'
@@ -16,7 +15,7 @@ module Archon
       stop   Close ALL VS Code windows in the current Hyprland session
 
       Start requires an interactive terminal, Hyprland, hyprctl, and code on PATH.
-      Projects are Git repositories under ~/projects/cloned and ~/projects/personal.
+      Projects are direct directories in ~/projects/cloned and ~/projects/personal/<owner>.
       Workspace and project selections are remembered for the next start.
       j/k or Up/Down: navigate. Space: toggle. Enter: accept. Esc or Ctrl+C: cancel.
       Workspace digits 1-9 and 0 (workspace 10) select a workspace; Enter accepts it.
@@ -42,7 +41,7 @@ module Archon
 
       projects = discover_projects(home)
       if projects.empty?
-        puts 'No Git repositories found under ~/projects/cloned or ~/projects/personal.'
+        puts 'No projects found under ~/projects/cloned or ~/projects/personal.'
         return 0
       end
       state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
@@ -69,20 +68,15 @@ module Archon
     end
 
     def discover_projects(home)
-      %w[cloned personal].flat_map do |name|
-        root = File.join(home, 'projects', name)
-        next [] unless File.exist?(root)
-        projects = []
-        Find.find(root) do |path|
-          Find.prune if File.symlink?(path)
-          next unless File.directory?(path)
-          if File.directory?(File.join(path, '.git')) || File.file?(File.join(path, '.git'))
-            projects << path
-            Find.prune
-          end
-        end
-        projects
-      end.sort
+      cloned = File.join(home, 'projects/cloned')
+      personal = File.join(home, 'projects/personal')
+      (project_directories(cloned) + project_directories(personal).flat_map { |owner| project_directories(owner) }).sort
+    end
+
+    def project_directories(root)
+      return [] unless File.directory?(root) && !File.symlink?(root)
+      Dir.children(root).map { |name| File.join(root, name) }
+         .select { |path| File.directory?(path) && !File.symlink?(path) }
     end
 
     def load_selection(path)

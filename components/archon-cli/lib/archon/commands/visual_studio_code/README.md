@@ -21,10 +21,11 @@ Use `arc vsc --help` for help. The controls are shown in both prompts:
 - Escape cancels the entire selection without opening windows or saving changes.
 - Ctrl+C cancels and restores the terminal.
 
-Git repositories are discovered recursively under `~/projects/cloned` and
-`~/projects/personal`, including worktrees with a `.git` file. Discovery stops
-at each repository root and does not follow directory symlinks. Missing roots
-are treated as empty. Paths relative to `~/projects` are shown alphabetically.
+Every direct directory under `~/projects/cloned` is a project. Under
+`~/projects/personal`, the first directory level is an owner or organization;
+each directory directly under an owner is a project. Discovery uses these exact
+levels, does not require Git, and does not follow directory symlinks. Missing
+roots are treated as empty. Paths relative to `~/projects` are shown alphabetically.
 
 The workspace and selected paths are saved in
 `${XDG_STATE_HOME:-~/.local/state}/archon/visual-studio-code.json` when you accept

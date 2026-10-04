@@ -113,15 +113,22 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil)
   { run: run, calls: calls, clients: clients }
 end
 
-test('VS Code discovery lists sorted repository roots and worktrees without traversing repositories or symlinks') do
+test('VS Code discovery uses exact directory depths without requiring Git or following symlinks') do
   fixture do |fixture|
     home = fixture[:home]
     equal [], VSC.discover_projects(home)
-    expected = %w[cloned/z cloned/owner/deep/a personal/owner/deep/a personal/owner/space\ project].map { |path| vsc_repository(home, path) }
-    expected << vsc_repository(home, 'personal/worktree', worktree: true)
-    vsc_repository(home, 'personal/owner/deep/a/vendor/nested')
-    FileUtils.mkdir_p(File.join(home, 'projects/personal/non-git'))
-    File.symlink(File.join(home, 'projects/personal'), File.join(home, 'projects/cloned/link'))
+    expected = %w[cloned/z cloned/owner personal/owner/a personal/owner/space\ project].map do |relative|
+      path = File.join(home, 'projects', relative)
+      FileUtils.mkdir_p(path)
+      path
+    end
+    vsc_repository(home, 'cloned/owner/deep/nested')
+    vsc_repository(home, 'personal/owner/a/vendor/nested')
+    FileUtils.mkdir_p(File.join(home, 'projects/personal/empty-owner'))
+    File.write(File.join(home, 'projects/cloned/file'), '')
+    File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
+    File.symlink(File.join(home, 'projects/personal/owner'), File.join(home, 'projects/personal/linked-owner'))
+    File.symlink(expected.first, File.join(home, 'projects/personal/owner/link'))
     equal expected.sort, VSC.discover_projects(home)
   end
 end
@@ -138,7 +145,7 @@ test('VS Code CLI validates arguments and routes aliases and help without extern
     end
     equal 0, run_archon(%w[vsc start])[:status]
     assert !File.exist?(File.join(fixture[:home], '.local/state/archon'))
-    vsc_repository(fixture[:home], 'personal/a')
+    vsc_repository(fixture[:home], 'personal/owner/a')
     result = run_archon(['vsc'])
     equal 2, result[:status]
     assert result[:stderr].include?(VSC::HELP)
