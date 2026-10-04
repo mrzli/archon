@@ -19,6 +19,11 @@ module Archon
          .select { |path| File.directory?(path) && !File.symlink?(path) }
     end
 
+    def selection_path(backend, home:, state_home:)
+      state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
+      File.join(state_root, 'archon/workspaces', "#{backend}.json")
+    end
+
     def load_selection(path, workspace: false)
       return workspace ? { 'workspace' => 1, 'projects' => [] } : { 'projects' => [] } unless File.exist?(path)
       selection = JSON.parse(File.read(path))

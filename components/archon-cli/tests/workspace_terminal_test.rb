@@ -11,7 +11,7 @@ test('tmux checklist saves choices, restores defaults, ignores deleted projects,
       terminal.write(" \r")
     end
     equal 0, status
-    path = File.join(ENV['XDG_STATE_HOME'], 'archon/tmux.json')
+    path = File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces/tmux.json')
     equal({ 'projects' => [first] }, JSON.parse(File.read(path)))
     name = Archon::Workspaces.project_definitions([first]).first[:session]
     equal "=#{name}\n", File.read(File.join(ENV['TMW_TMUX_STATE'], 'attachments'))
@@ -30,7 +30,7 @@ end
 test('terminal checklist cancellation preserves state and empty choices save without backend operations') do
   fixture do |fixture|
     workspace_directory(fixture)
-    path = File.join(ENV['XDG_STATE_HOME'], 'archon/tmux.json')
+    path = File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces/tmux.json')
     Archon::WorkspaceProjects.save_selection(path, { 'projects' => [File.join(fixture[:home], 'deleted')] })
     before = File.read(path)
     [["\e", 0], ["\u0003", 130]].each do |key, expected|
@@ -72,5 +72,28 @@ test('Herdr uses the same checklist and actual terminal attachment rules') do
     equal 1, state['workspaces'].length
     equal project, state['workspaces'].first['cwd']
     equal %w[nvim claude shell], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
+  end
+end
+
+test('an isolated installed CLI selects and starts projects through both executable aliases') do
+  fixture do |fixture|
+    project = workspace_directory(fixture, 'cloned/plain project')
+    ENV['TMW_TMUX_STATE'] = File.join(fixture[:root], 'tmux')
+    repo = File.expand_path('../../..', __dir__)
+    result = Archon::Shared.run_process(RbConfig.ruby, ['-r', File.join(repo, 'setup/setup.rb'), '-e', 'install_archon_cli(*ARGV)', repo, fixture[:home]])
+    equal 0, result[:status]
+    %w[archon arc].each_with_index do |name, index|
+      executable = File.join(fixture[:home], '.local/bin', name)
+      status, = workspace_terminal(%w[w t start], executable: executable) do |terminal, wait, text|
+        wait.call('Choose projects')
+        assert text.include?('[x] cloned/plain project') unless index.zero?
+        terminal.write(index.zero? ? " \r" : "\r")
+      end
+      equal 0, status
+    end
+    directory = File.join(ENV['TMW_TMUX_STATE'], 'sessions')
+    equal 1, Dir.children(directory).length
+    equal project, File.read(File.join(directory, Dir.children(directory).first, 'root')).strip
+    equal({ 'projects' => [project] }, JSON.parse(File.read(File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces/tmux.json'))))
   end
 end

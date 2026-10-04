@@ -13,8 +13,14 @@ Terminal backend start requires an interactive terminal. Use `j`/`k` or Up/Down
 to move, Space to toggle projects, and Enter to accept. Escape or Ctrl+C cancels without saving.
 There is no desktop workspace prompt for terminal backends.
 
-Selections are remembered independently in
-`${XDG_STATE_HOME:-~/.local/state}/archon/herdr.json` and `tmux.json`.
+Selections are remembered independently under
+`${XDG_STATE_HOME:-~/.local/state}/archon/workspaces/`:
+
+- `herdr.json`: Herdr project selection.
+- `tmux.json`: tmux project selection.
+- `visual-studio-code.json`: VS Code workspace and project selection.
+
+Each backend starts with no projects selected when its file does not exist.
 Removed projects are omitted and new ones start unchecked. An accepted empty
 selection is saved and opens nothing. Existing sessions survive a later start
 with a different selection. Each project has Neovim, the selected AI tool

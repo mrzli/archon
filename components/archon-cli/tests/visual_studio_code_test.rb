@@ -169,7 +169,7 @@ test('terminal navigation, toggling, saved defaults, scrolling, and launch order
     equal 0, status
     assert transcript.include?('Space: toggle') && transcript.include?('Esc / Ctrl+C: cancel')
     expected = { 'workspace' => 10, 'projects' => [projects[1]] }
-    state_path = File.join(home, '.local/state/archon/visual-studio-code.json')
+    state_path = File.join(home, '.local/state/archon/workspaces/visual-studio-code.json')
     equal expected, JSON.parse(File.read(state_path))
     equal [[projects[1]], 10], JSON.parse(File.read(File.join(home, 'launched.json')))
     equal 0o600, File.stat(state_path).mode & 0o777
@@ -191,7 +191,7 @@ test('Escape at either prompt and Ctrl+C cancel the entire execution and restore
   fixture do |fixture|
     home = fixture[:home]
     project = vsc_repository(home, 'cloned/a')
-    path = File.join(home, '.local/state/archon/visual-studio-code.json')
+    path = File.join(home, '.local/state/archon/workspaces/visual-studio-code.json')
     Archon::WorkspaceProjects.save_selection(path, { 'workspace' => 4, 'projects' => [project] })
     before = File.read(path)
     [['Choose workspace', "\e", 0], ['Choose projects', "\e", 0], ['Choose projects', "\u0003", 130]].each do |prompt, key, expected_status|
@@ -215,7 +215,7 @@ test('empty selection is saved and stale projects are not reopened') do
   fixture do |fixture|
     home = fixture[:home]
     project = vsc_repository(home, 'cloned/a')
-    path = File.join(home, '.local/state/archon/visual-studio-code.json')
+    path = File.join(home, '.local/state/archon/workspaces/visual-studio-code.json')
     Archon::WorkspaceProjects.save_selection(path, { 'workspace' => 2, 'projects' => [File.join(home, 'deleted')] })
     status, = vsc_terminal(home) do |terminal, wait, text|
       wait.call('Choose workspace')

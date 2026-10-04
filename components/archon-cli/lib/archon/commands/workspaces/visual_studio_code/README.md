@@ -28,7 +28,7 @@ levels, does not require Git, and does not follow directory symlinks. Missing
 roots are treated as empty. Paths relative to `~/projects` are shown alphabetically.
 
 The workspace and selected paths are saved in
-`${XDG_STATE_HOME:-~/.local/state}/archon/visual-studio-code.json` when you accept
+`${XDG_STATE_HOME:-~/.local/state}/archon/workspaces/visual-studio-code.json` when you accept
 the project checklist. The next start restores those choices; removed projects
 are omitted and new projects start unchecked. Accepting an empty selection
 saves it and opens nothing.

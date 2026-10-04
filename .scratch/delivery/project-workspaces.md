@@ -23,3 +23,5 @@ Steps 2b/3b complete: removed general and all groups, shared terminal checklist,
 Step 4 complete: tag tmux sessions with @archon-managed, stop every tagged session regardless of disk/state, preserve untagged sessions, refuse untagged name collisions. Herdr stop now stops the dedicated archon session. Removed kill and old resource-filtering code. Full component checks passed; all 3 real tmux integration cases passed after correcting option commands to use session: targets.
 
 Step 5 complete: VS Code now routes only under workspaces, using visual-studio-code/vsc. Moved its implementation and usage README alongside the other backends. Executable aliases, VS Code window behavior, component suite and isolated installed routing passed.
+
+Step 6 complete: all selections now use separate files under archon/workspaces. Older files are ignored and preserved. Full component, syntax and isolated installation verification passed, including actual interactive installed starts through archon and arc.

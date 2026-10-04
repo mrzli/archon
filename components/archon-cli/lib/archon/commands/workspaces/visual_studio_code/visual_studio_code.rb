@@ -43,8 +43,7 @@ module Archon
         puts 'No projects found under ~/projects/cloned or ~/projects/personal.'
         return 0
       end
-      state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
-      state_path = File.join(state_root, 'archon/visual-studio-code.json')
+      state_path = WorkspaceProjects.selection_path('visual-studio-code', home: home, state_home: state_home)
       selection = picker.call(projects, WorkspaceProjects.load_selection(state_path, workspace: true), home: home, workspace: true)
       unless selection
         puts 'Cancelled.'

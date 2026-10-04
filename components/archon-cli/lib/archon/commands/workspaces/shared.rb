@@ -58,8 +58,7 @@ module Archon
         puts 'No projects found under ~/projects/cloned or ~/projects/personal.'
         return nil
       end
-      state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
-      state_path = File.join(state_root, 'archon', "#{backend}.json")
+      state_path = WorkspaceProjects.selection_path(backend, home: home, state_home: state_home)
       selection = picker.call(projects, WorkspaceProjects.load_selection(state_path), home: home)
       unless selection
         puts 'Cancelled.'
