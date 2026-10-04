@@ -1,6 +1,6 @@
 require_relative '../workspace_helpers'
 
-test('real Herdr kill clears saved sessions and start launches tools only for the new selection') do
+test('real Herdr start revives stopped tools and kill clears saved sessions before a new selection') do
   fixture do |fixture|
     File.symlink('/usr/bin/herdr', File.join(fixture[:bin], 'herdr'))
     ENV['XDG_RUNTIME_DIR'] = File.join(fixture[:root], 'runtime')
@@ -18,10 +18,10 @@ test('real Herdr kill clears saved sessions and start launches tools only for th
     projects = %w[cloned/old cloned/new].map { |relative| workspace_directory(fixture, relative) }
     context = { home: fixture[:home], environment: {}, tty: false }
     invoke = ->(session, arguments) { Archon::WorkspacesHerdr.command_response(arguments, Archon::WorkspacesHerdr.method(:capture_command), session: session) }
-    wait_for_tools = lambda do |project|
+    wait_for_tools = lambda do |project, count = 2|
       Timeout.timeout(10) do
         path = File.join(project, 'tool-starts')
-        sleep 0.05 until File.exist?(path) && File.readlines(path).length == 2
+        sleep 0.05 until File.exist?(path) && File.readlines(path).length == count
         assert File.read(path).include?('codex resume --last')
         assert File.read(path).include?('nvim .')
       end
@@ -30,6 +30,13 @@ test('real Herdr kill clears saved sessions and start launches tools only for th
       status, _, error = capture { Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **context, picker: workspace_picker([projects.first])) }
       assert status == 0, "#{error}\n#{File.read(File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-server.log'))}"
       wait_for_tools.call(projects.first)
+      before = invoke.call('archon', %w[workspace list]).fetch('workspaces').map { |item| item['workspace_id'] }
+      equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['stop'], **context)
+      inside = context.merge(environment: { 'HERDR_ENV' => '1' }, picker: workspace_picker([projects.first]))
+      equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **inside)
+      wait_for_tools.call(projects.first, 4)
+      equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **inside)
+      equal before, invoke.call('archon', %w[workspace list]).fetch('workspaces').map { |item| item['workspace_id'] }
       %w[default outside].each do |session|
         output = File.open(File.join(fixture[:root], "#{session}.log"), 'a')
         pid = Process.spawn('/usr/bin/herdr', '--session', session, 'server', in: File::NULL, out: output, err: output)
@@ -51,7 +58,7 @@ test('real Herdr kill clears saved sessions and start launches tools only for th
       wait_for_tools.call(projects.last)
       workspaces = invoke.call('archon', %w[workspace list]).fetch('workspaces')
       equal ['new'], workspaces.map { |workspace| workspace['label'] }
-      equal 2, File.readlines(File.join(projects.first, 'tool-starts')).length
+      equal 4, File.readlines(File.join(projects.first, 'tool-starts')).length
     ensure
       %w[archon default outside].each do |session|
         Archon::WorkspacesHerdr.capture_command('herdr', ['--session', session, 'session', 'stop', session, '--json'])

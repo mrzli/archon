@@ -43,6 +43,7 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
       raise 'wrong session stop target' unless arguments == ['session', 'stop', session, '--json']
       if session == 'archon'
         state['running'] = false
+        workspaces.flat_map { |workspace| workspace['tabs'] }.each { |tab| tab['running_tool'] = false }
       else
         state['other_sessions'].find { |item| item.fetch('name') == session }.store('running', false)
       end
@@ -93,6 +94,16 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
       workspace = workspaces.find { |item| item['workspace_id'] == option.call('--workspace') }
       tab = new_tab.call(workspace, option.call('--label'))
       response = { result: { tab: tab, root_pane: { pane_id: tab['pane_id'] } } }
+    when ['tab', 'list']
+      workspace = workspaces.find { |item| item['workspace_id'] == option.call('--workspace') }
+      response = { result: { tabs: workspace['tabs'].map { |tab| tab.merge('pane_count' => 1) } } }
+    when ['pane', 'list']
+      workspace = workspaces.find { |item| item['workspace_id'] == option.call('--workspace') }
+      response = { result: { panes: workspace['tabs'].map { |tab| tab.slice('pane_id', 'tab_id') } } }
+    when ['pane', 'process-info']
+      tab = workspaces.flat_map { |item| item['tabs'] }.find { |item| item['pane_id'] == option.call('--pane') }
+      response = { result: { process_info: { shell_pid: 100, foreground_process_group_id: tab['running_tool'] ? 200 : 100,
+                                           foreground_processes: [{ pid: 100, name: 'bash' }] } } }
     when ['tab', 'rename']
       tab = workspaces.flat_map { |item| item['tabs'] }.find { |item| item['tab_id'] == arguments[2] }
       tab['label'] = arguments[3]
@@ -100,6 +111,7 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
     when ['pane', 'run']
       tab = workspaces.flat_map { |item| item['tabs'] }.find { |item| item['pane_id'] == arguments[2] }
       tab['commands'] << arguments[3]
+      tab['running_tool'] = true
     when ['server']
       state['running'] = true
       state['archon_deleted'] = false

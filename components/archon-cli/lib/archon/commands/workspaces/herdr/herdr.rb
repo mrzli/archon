@@ -132,6 +132,9 @@ module Archon
       {
         resource_label: 'Herdr workspace',
         has_session: ->(name) { ensure_server.call; !find_workspace.call(name).nil? },
+        start_existing_session: ->(definition) {
+          start_existing_tools(find_workspace.call(definition[:session]).fetch('workspace_id'), request)
+        },
         create_editor_session: ->(definition) {
           result = create_workspace(definition, Workspaces.editor_tabs(ai: ai), request) do |workspace|
             remember_workspace.call(definition, workspace)
@@ -145,6 +148,29 @@ module Archon
           run.call('herdr', ['--session', SESSION])
         }
       }
+    end
+
+    def start_existing_tools(workspace_id, request)
+      commands = Workspaces.editor_tabs.to_h { |tab| [tab[:name], tab[:command]] }.merge(Workspaces::AI_COMMANDS)
+      tabs = request.call(['tab', 'list', '--workspace', workspace_id]).fetch('tabs')
+      panes = request.call(['pane', 'list', '--workspace', workspace_id]).fetch('panes')
+      panes.each do |pane|
+        tab = tabs.find { |item| item.fetch('tab_id') == pane.fetch('tab_id') }
+        next unless tab && tab.fetch('pane_count') == 1
+        command = commands[tab.fetch('label')]
+        # Native agent restores can be pending before a client attaches.
+        next unless command && !pane['agent']
+        pane_id = pane.fetch('pane_id')
+        info = request.call(['pane', 'process-info', '--pane', pane_id]).fetch('process_info')
+        next unless info['shell_pid'] && info['foreground_process_group_id'] == info['shell_pid']
+        shell = info.fetch('foreground_processes', []).find { |process| process['pid'] == info['shell_pid'] }
+        next unless shell && %w[bash sh zsh fish dash ksh nu].include?(shell['name'])
+        request.call(['pane', 'run', pane_id, command])
+      end
+      { status: 0 }
+    rescue StandardError => error
+      warn error.message
+      { status: 1 }
     end
 
     def create_workspace(definition, tabs, request)

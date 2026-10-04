@@ -68,8 +68,12 @@ module Archon
           warn "Skipping #{definition[:session]}: directory does not exist: #{definition[:directory]}"
           next
         end
-        next if backend.fetch(:has_session).call(definition[:session])
-        result = backend.fetch(:create_editor_session).call(definition)
+        if backend.fetch(:has_session).call(definition[:session])
+          next unless backend[:start_existing_session]
+          result = backend.fetch(:start_existing_session).call(definition)
+        else
+          result = backend.fetch(:create_editor_session).call(definition)
+        end
         next if result[:status] == 0
         warn "Failed to start #{backend.fetch(:resource_label)}: #{definition[:session]}"
         warn "Failed to clean up #{backend.fetch(:resource_label)}: #{definition[:session]}" if result[:cleanup_status] && result[:cleanup_status] != 0

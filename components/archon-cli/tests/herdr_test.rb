@@ -68,6 +68,35 @@ test('Herdr JSON capture separates successful stdout from diagnostic stderr') do
   end
 end
 
+test('Herdr existing tool recovery only submits commands to a single idle shell pane') do
+  [
+    ['codex', 1, nil, 100, 'bash', 'codex resume --last'],
+    ['claude', 1, nil, 100, 'bash', 'claude --continue'],
+    ['nvim', 1, nil, 100, 'bash', 'nvim .'],
+    ['codex', 1, nil, 200, 'bash', nil],
+    ['codex', 1, 'codex', 100, 'bash', nil],
+    ['shell', 1, nil, 100, 'bash', nil],
+    ['codex', 2, nil, 100, 'bash', nil],
+    ['nvim', 1, nil, 100, 'nvim', nil]
+  ].each do |label, count, agent, foreground, process_name, expected|
+    submitted = []
+    request = lambda do |args|
+      case args.first(2)
+      when %w[tab list] then { 'tabs' => [{ 'tab_id' => 't1', 'label' => label, 'pane_count' => count }] }
+      when %w[pane list] then { 'panes' => [{ 'tab_id' => 't1', 'pane_id' => 'p1', 'agent' => agent }] }
+      when %w[pane process-info]
+        assert !agent, 'native restore must not require a live shell'
+        { 'process_info' => { 'shell_pid' => 100, 'foreground_process_group_id' => foreground,
+                              'foreground_processes' => [{ 'pid' => 100, 'name' => process_name }] } }
+      when %w[pane run] then submitted << args.last
+      else raise "Unexpected command: #{args.inspect}"
+      end
+    end
+    equal({ status: 0 }, Herdr.start_existing_tools('w1', request))
+    equal Array(expected), submitted
+  end
+end
+
 test('Herdr creates selected uniform workspaces, repeats safely and attaches only outside Herdr') do
   herdr_fixture do |fixture, path|
     project = workspace_directory(fixture)
