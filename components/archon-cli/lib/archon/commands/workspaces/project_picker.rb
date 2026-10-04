@@ -1,20 +1,24 @@
 require 'io/console'
 
 module Archon
-  module VisualStudioCode
-    def pick_projects(projects, previous, home:, input: $stdin, output: $stdout)
+  module WorkspaceProjects
+    def pick_projects(projects, previous, home:, workspace: false, input: $stdin, output: $stdout)
       raise 'Start requires an interactive terminal.' unless input.tty? && output.tty?
       input.raw do
         output.write("\e[?1049h\e[?25l")
-        workspaces = (1..10).map { |number| number == 10 ? '10 (key 0)' : number.to_s }
-        workspace = pick_list('Choose workspace', workspaces, [], previous.fetch('workspace') - 1,
+        selection = {}
+        if workspace
+          workspaces = (1..10).map { |number| number == 10 ? '10 (key 0)' : number.to_s }
+          indices = pick_list('Choose workspace', workspaces, [], previous.fetch('workspace') - 1,
                               input, output, multiple: false)
-        return nil unless workspace
+          return nil unless indices
+          selection['workspace'] = indices.first + 1
+        end
         selected = projects.each_index.select { |index| previous.fetch('projects').include?(projects[index]) }
         labels = projects.map { |path| path.delete_prefix("#{home}/projects/") }
         indices = pick_list('Choose projects', labels, selected, selected.first || 0, input, output, multiple: true)
         return nil unless indices
-        { 'workspace' => workspace.first + 1, 'projects' => indices.map { |index| projects[index] } }
+        selection.merge('projects' => indices.map { |index| projects[index] })
       ensure
         output.write("\e[?25h\e[?1049l")
         output.flush

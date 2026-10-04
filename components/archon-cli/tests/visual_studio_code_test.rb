@@ -116,7 +116,7 @@ end
 test('VS Code discovery uses exact directory depths without requiring Git or following symlinks') do
   fixture do |fixture|
     home = fixture[:home]
-    equal [], VSC.discover_projects(home)
+    equal [], Archon::WorkspaceProjects.discover_projects(home)
     expected = %w[cloned/z cloned/owner personal/owner/a personal/owner/space\ project].map do |relative|
       path = File.join(home, 'projects', relative)
       FileUtils.mkdir_p(path)
@@ -129,7 +129,7 @@ test('VS Code discovery uses exact directory depths without requiring Git or fol
     File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
     File.symlink(File.join(home, 'projects/personal/owner'), File.join(home, 'projects/personal/linked-owner'))
     File.symlink(expected.first, File.join(home, 'projects/personal/owner/link'))
-    equal expected.sort, VSC.discover_projects(home)
+    equal expected.sort, Archon::WorkspaceProjects.discover_projects(home)
   end
 end
 
@@ -192,7 +192,7 @@ test('Escape at either prompt and Ctrl+C cancel the entire execution and restore
     home = fixture[:home]
     project = vsc_repository(home, 'cloned/a')
     path = File.join(home, '.local/state/archon/visual-studio-code.json')
-    VSC.save_selection(path, { 'workspace' => 4, 'projects' => [project] })
+    Archon::WorkspaceProjects.save_selection(path, { 'workspace' => 4, 'projects' => [project] })
     before = File.read(path)
     [['Choose workspace', "\e", 0], ['Choose projects', "\e", 0], ['Choose projects', "\u0003", 130]].each do |prompt, key, expected_status|
       status, text = vsc_terminal(home) do |terminal, wait, _|
@@ -216,7 +216,7 @@ test('empty selection is saved and stale projects are not reopened') do
     home = fixture[:home]
     project = vsc_repository(home, 'cloned/a')
     path = File.join(home, '.local/state/archon/visual-studio-code.json')
-    VSC.save_selection(path, { 'workspace' => 2, 'projects' => [File.join(home, 'deleted')] })
+    Archon::WorkspaceProjects.save_selection(path, { 'workspace' => 2, 'projects' => [File.join(home, 'deleted')] })
     status, = vsc_terminal(home) do |terminal, wait, text|
       wait.call('Choose workspace')
       terminal.write("\r")
@@ -225,7 +225,7 @@ test('empty selection is saved and stale projects are not reopened') do
       terminal.write("\r")
     end
     equal 0, status
-    equal({ 'workspace' => 2, 'projects' => [] }, VSC.load_selection(path))
+    equal({ 'workspace' => 2, 'projects' => [] }, Archon::WorkspaceProjects.load_selection(path, workspace: true))
     assert !File.exist?(File.join(home, 'launched.json'))
     File.write(path, '{broken')
     equal 1, run_archon(%w[vsc start])[:status]

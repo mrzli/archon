@@ -1,6 +1,5 @@
-require 'tempfile'
 require_relative '../../shared/process'
-require_relative 'picker'
+require_relative '../workspaces/project_selection'
 require_relative 'hyprland'
 
 module Archon
@@ -22,7 +21,7 @@ module Archon
     TEXT
 
     def run_visual_studio_code(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'],
-                             run: Shared.method(:run_process), picker: method(:pick_projects),
+                             run: Shared.method(:run_process), picker: WorkspaceProjects.method(:pick_projects),
                              launch: method(:launch_projects))
       if [%w[help], %w[-h], %w[--help], %w[help start], %w[help stop],
           %w[start -h], %w[start --help], %w[stop -h], %w[stop --help]].include?(arguments)
@@ -39,19 +38,19 @@ module Archon
         return 0
       end
 
-      projects = discover_projects(home)
+      projects = WorkspaceProjects.discover_projects(home)
       if projects.empty?
         puts 'No projects found under ~/projects/cloned or ~/projects/personal.'
         return 0
       end
       state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
       state_path = File.join(state_root, 'archon/visual-studio-code.json')
-      selection = picker.call(projects, load_selection(state_path), home: home)
+      selection = picker.call(projects, WorkspaceProjects.load_selection(state_path, workspace: true), home: home, workspace: true)
       unless selection
         puts 'Cancelled.'
         return 0
       end
-      save_selection(state_path, selection)
+      WorkspaceProjects.save_selection(state_path, selection)
       if selection.fetch('projects').empty?
         puts 'No projects selected.'
         return 0
@@ -67,35 +66,5 @@ module Archon
       1
     end
 
-    def discover_projects(home)
-      cloned = File.join(home, 'projects/cloned')
-      personal = File.join(home, 'projects/personal')
-      (project_directories(cloned) + project_directories(personal).flat_map { |owner| project_directories(owner) }).sort
-    end
-
-    def project_directories(root)
-      return [] unless File.directory?(root) && !File.symlink?(root)
-      Dir.children(root).map { |name| File.join(root, name) }
-         .select { |path| File.directory?(path) && !File.symlink?(path) }
-    end
-
-    def load_selection(path)
-      return { 'workspace' => 1, 'projects' => [] } unless File.exist?(path)
-      selection = JSON.parse(File.read(path))
-      unless selection.is_a?(Hash) && selection['workspace'].is_a?(Integer) && (1..10).include?(selection['workspace']) &&
-             selection['projects'].is_a?(Array) && selection['projects'].all? { |project| project.is_a?(String) }
-        raise "Invalid saved selection: #{path}"
-      end
-      selection
-    end
-
-    def save_selection(path, selection)
-      FileUtils.mkdir_p(File.dirname(path))
-      Tempfile.create(['visual-studio-code', '.json'], File.dirname(path)) do |file|
-        file.write("#{JSON.pretty_generate(selection)}\n")
-        file.close
-        File.rename(file.path, path)
-      end
-    end
   end
 end
