@@ -5,7 +5,7 @@ Tmux = Archon::WorkspacesTmux
 
 def all_workspace_directories(fixture)
   paths = ['projects/personal/mrzli-jslib/example/.git', 'projects/personal/mrzli/flashcards-fe',
-           'projects/personal/mrzli/flashcards-be'] + Workspaces::PROJECTS.map { |project| "projects/personal/#{project}" }
+           'projects/personal/mrzli/flashcards-be'] + Workspaces::MISC_PROJECTS.map { |project| "projects/personal/#{project}" }
   paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
 end
 
@@ -127,7 +127,7 @@ test('attachment selects only matching sessions, prefers main, and handles list 
     list_sessions: -> { { status: 0, output: "unrelated\nproject-mrzli-docs\njslib-a\nflashcards-be\nmain" } },
     attach_session: ->(session) { calls << session; 0 }
   }
-  { nil => 'main', 'general' => 'main', 'flashcards' => 'flashcards-be', 'jslibs' => 'jslib-a', 'misc-projects' => 'project-mrzli-docs' }.each do |group, expected|
+  { nil => 'main', 'general' => 'main', 'flashcards' => 'flashcards-be', 'jslibs' => 'jslib-a', 'misc' => 'project-mrzli-docs' }.each do |group, expected|
     equal 0, Workspaces.attach_after_start(group, tmux)
     equal expected, calls.last
   end
@@ -176,7 +176,7 @@ test('missing group directories are skipped and library discovery excludes hidde
     tmux = { has_session: ->(_) { raise 'unexpected tmux access' } }
     equal 0, Workspaces.manage_general('start', tmux, home: fixture[:home])
     equal 0, Workspaces.manage_flashcards('start', tmux, home: fixture[:home])
-    equal 0, Workspaces.manage_misc_projects('start', tmux, home: fixture[:home])
+    equal 0, Workspaces.manage_misc('start', tmux, home: fixture[:home])
     equal 0, Workspaces.manage_jslibs('start', tmux, home: fixture[:home])
     root = File.join(fixture[:home], 'projects/personal/mrzli-jslib')
     %w[alpha/.git zeta/.git .hidden/.git ignored/nested/.git worktree].each { |path| FileUtils.mkdir_p(File.join(root, path)) }

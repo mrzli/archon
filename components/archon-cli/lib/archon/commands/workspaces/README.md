@@ -36,7 +36,7 @@ arc w list -g flashcards
 archon workspaces list --help
 ```
 
-`-g` and `--group` select `flashcards`, `general`, `jslibs`, or `misc-projects`.
+`-g` and `--group` select `flashcards`, `general`, `jslibs`, or `misc`.
 Without a group, all groups appear in startup order. Missing configured
 directories are marked `(missing)`. JavaScript libraries are discovered from
 local repositories, using the same selection as workspace startup; an empty

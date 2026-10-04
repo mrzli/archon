@@ -11,7 +11,7 @@ test('workspace listing groups configured paths and marks missing directories') 
     status, output, error = capture { Archon::Workspaces.run_workspaces(['list'], home: home) }
     equal 0, status
     equal '', error
-    equal %w[general: flashcards: jslibs: misc-projects:], output.lines(chomp: true).reject { |line| line.start_with?(' ') }
+    equal %w[general: flashcards: jslibs: misc:], output.lines(chomp: true).reject { |line| line.start_with?(' ') }
     assert output.include?("general:\n  ~/projects\n")
     assert output.include?("flashcards:\n  ~/projects/personal/mrzli/flashcards-fe\n  ~/projects/personal/mrzli/flashcards-be (missing)\n")
     assert output.include?("jslibs:\n  ~/projects/personal/mrzli-jslib/alpha\n  ~/projects/personal/mrzli-jslib/zeta\n")
@@ -67,6 +67,17 @@ test('workspace listing rejects invalid groups, operands, and lifecycle options'
       equal 2, result[:status]
       equal '', result[:stdout]
       assert result[:stderr].include?('Usage: archon workspaces list ')
+    end
+  end
+end
+
+test('misc is available for listing and both backends reject its previous group name') do
+  fixture do
+    equal 0, run_archon(%w[w list -g misc])[:status]
+    equal 2, run_archon(%w[w list -g misc-projects])[:status]
+    equal 'misc', Archon::Workspaces.parse_arguments(%w[start -g misc], help: Archon::Workspaces::ACTION_HELP)[:group]
+    %w[herdr tmux].each do |backend|
+      equal 2, run_archon(['w', backend, 'start', '-g', 'misc-projects'])[:status]
     end
   end
 end

@@ -39,7 +39,7 @@ WORKSPACE_LABELS = %w[
 
 def all_workspace_directories(fixture)
   paths = ['projects/personal/mrzli-jslib/example/.git', 'projects/personal/mrzli/flashcards-fe',
-           'projects/personal/mrzli/flashcards-be'] + Archon::Workspaces::PROJECTS.map { |project| "projects/personal/#{project}" }
+           'projects/personal/mrzli/flashcards-be'] + Archon::Workspaces::MISC_PROJECTS.map { |project| "projects/personal/#{project}" }
   paths.each { |path| FileUtils.mkdir_p(File.join(fixture[:home], path)) }
 end
 
@@ -133,10 +133,10 @@ test('Herdr stop runs in reverse group order and preserves unrelated workspaces'
       when 'main' then 'general'
       when /^flashcards-/ then 'flashcards'
       when /^jslib-/ then 'jslibs'
-      else 'misc-projects'
+      else 'misc'
       end
     end
-    expected = %w[misc-projects jslibs flashcards general].flat_map { |group| groups.fetch(group).map { |workspace| workspace['workspace_id'] } }
+    expected = %w[misc jslibs flashcards general].flat_map { |group| groups.fetch(group).map { |workspace| workspace['workspace_id'] } }
     equal expected, ids
     equal 0, state['attachments']
     assert state['running']

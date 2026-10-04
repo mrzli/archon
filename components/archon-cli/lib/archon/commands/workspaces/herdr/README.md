@@ -24,7 +24,7 @@ The groups match `archon workspaces tmux`:
   development, and shell tabs.
 - `jslibs`: immediate non-hidden repositories under
   `~/projects/personal/mrzli-jslib`, with Neovim, the selected AI tool, and shell tabs.
-- `misc-projects`: the configured personal projects, with Neovim, the selected AI tool,
+- `misc`: the configured personal projects, with Neovim, the selected AI tool,
   and shell tabs.
 
 Start runs groups in the order above; stop uses the reverse order. Missing

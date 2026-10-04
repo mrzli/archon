@@ -2,7 +2,7 @@ require_relative 'layout'
 
 module Archon
   module Workspaces
-    PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/mrzli.github.io mrzli/omarchy-lab mrzli/repos mrzli/skills].freeze
+    MISC_PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/mrzli.github.io mrzli/omarchy-lab mrzli/repos mrzli/skills].freeze
 
     def workspace_definitions(group, home: Dir.home)
       case group
@@ -19,8 +19,8 @@ module Archon
         find_libraries(root).map do |directory|
           { session: "jslib-#{File.basename(directory)}", directory: directory }
         end
-      when 'misc-projects'
-        PROJECTS.map do |project|
+      when 'misc'
+        MISC_PROJECTS.map do |project|
           { session: "project-#{project.tr('/.', '--')}", directory: File.join(home, 'projects/personal', project) }
         end
       end
@@ -77,8 +77,8 @@ module Archon
       manage_editor_sessions(action, workspace_definitions('flashcards', home: home), backend)
     end
 
-    def manage_misc_projects(action, backend, home: Dir.home)
-      manage_editor_sessions(action, workspace_definitions('misc-projects', home: home), backend)
+    def manage_misc(action, backend, home: Dir.home)
+      manage_editor_sessions(action, workspace_definitions('misc', home: home), backend)
     end
 
     def find_libraries(root)

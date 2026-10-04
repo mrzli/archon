@@ -1,6 +1,6 @@
 require_relative 'test_helpers'
 
-[nil, 'misc-projects'].each do |group|
+[nil, 'misc'].each do |group|
   test("workspace stop survives closing its calling pane: #{group || 'all groups'}") do
     fixture do |fixture|
       socket = File.join(fixture[:root], 'tmux.sock')

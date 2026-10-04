@@ -6,7 +6,7 @@ require_relative '../../shared/process'
 module Archon
   module Workspaces
     extend self
-    GROUPS = %w[general flashcards jslibs misc-projects].freeze
+    GROUPS = %w[general flashcards jslibs misc].freeze
 
     def run_command(command, arguments, stdio: :inherit)
       result = Shared.run_process(command, arguments, stdio: stdio)
@@ -48,7 +48,7 @@ module Archon
     def manage_groups(action, group, backend, home: Dir.home, handlers: nil)
       handlers ||= {
         'general' => method(:manage_general), 'flashcards' => method(:manage_flashcards),
-        'jslibs' => method(:manage_jslibs), 'misc-projects' => method(:manage_misc_projects)
+        'jslibs' => method(:manage_jslibs), 'misc' => method(:manage_misc)
       }
       groups = group ? [group] : action == 'start' ? GROUPS : GROUPS.reverse
       status = 0
@@ -73,7 +73,7 @@ module Archon
         when 'general' then session == 'main'
         when 'flashcards' then %w[flashcards-fe flashcards-be].include?(session)
         when 'jslibs' then session.start_with?('jslib-')
-        when 'misc-projects' then session.start_with?('project-')
+        when 'misc' then session.start_with?('project-')
         else
           %w[main flashcards-fe flashcards-be].include?(session) || session.start_with?('jslib-', 'project-')
         end
