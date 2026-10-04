@@ -113,19 +113,21 @@ case "$command" in
     rm -rf -- "$sessions_dir/$session"
     ;;
   set-option | show-options)
+    option_file=""
     while [ "$#" -gt 0 ]; do
       case "$1" in
         -t) session="${2#=}"; session="${session%:}"; shift 2 ;;
         -qv) shift ;;
-        @archon-managed) shift; break ;;
+        @archon-managed) option_file=managed; shift; break ;;
+        @archon-project) option_file=project; shift; break ;;
         *) exit 99 ;;
       esac
     done
     [ -d "$sessions_dir/$session" ] || exit 1
     if [ "$command" = set-option ]; then
-      printf '%s' "$1" > "$sessions_dir/$session/managed"
-    elif [ -f "$sessions_dir/$session/managed" ]; then
-      cat "$sessions_dir/$session/managed"
+      printf '%s' "$1" > "$sessions_dir/$session/$option_file"
+    elif [ -f "$sessions_dir/$session/$option_file" ]; then
+      cat "$sessions_dir/$session/$option_file"
     fi
     ;;
   kill-server)

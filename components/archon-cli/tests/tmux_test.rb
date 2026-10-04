@@ -8,6 +8,7 @@ test('uniform editor layout rolls back each failed creation operation') do
   expected = [
     ['new-session', '-d', '-s', 'editor', '-c', definition[:directory], '-n', 'nvim'],
     ['set-option', '-t', '=editor:', '@archon-managed', '1'],
+    ['set-option', '-t', '=editor:', '@archon-project', definition[:directory]],
     ['send-keys', '-t', '=editor:nvim', 'nvim .', 'Enter'],
     ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'codex'],
     ['send-keys', '-t', '=editor:codex', 'codex resume --last', 'Enter']
@@ -41,11 +42,11 @@ test('AI options and removed group options are validated before any operation') 
   end
 end
 
-test('project names distinguish owners and punctuation without tmux target syntax') do
-  definitions = Workspaces.project_definitions(['/cloned/a.b', '/cloned/a-b', '/personal/one/a.b', '/personal/two/a.b'])
-  equal 4, definitions.map { |definition| definition[:session] }.uniq.length
-  assert definitions.all? { |definition| definition[:session].match?(/\Aarchon-[a-zA-Z0-9_-]+\z/) }
-  equal definitions, Workspaces.project_definitions(definitions.map { |definition| definition[:directory] })
+test('tmux uses folder names and rejects duplicate names including reserved-character collisions') do
+  definitions = Tmux.project_definitions(['/cloned/a.b', '/cloned/plain project', '/personal/one/app'])
+  equal ['a-b', 'plain project', 'app'], definitions.map { |definition| definition[:session] }
+  raises(/conflicts between projects/) { Tmux.project_definitions(['/cloned/app', '/personal/one/app']) }
+  raises(/conflicts between projects/) { Tmux.project_definitions(['/cloned/a.b', '/personal/one/a:b']) }
 end
 
 test('tmux selects projects, creates uniform Claude windows and preserves them on repeated starts') do
@@ -57,7 +58,7 @@ test('tmux selects projects, creates uniform Claude windows and preserves them o
     2.times do
       equal 0, Tmux.run_workspaces_tmux(%w[start --ai claude], home: fixture[:home], environment: {}, tty: false, picker: picker)
     end
-    definitions = Workspaces.project_definitions([first, second])
+    definitions = Tmux.project_definitions([first, second])
     definitions.each do |definition|
       directory = File.join(ENV['TMW_TMUX_STATE'], 'sessions', definition[:session])
       equal %w[nvim claude shell], File.readlines(File.join(directory, 'windows')).map { |line| line.split("\t").first }
@@ -149,11 +150,14 @@ end
 test('starting refuses an untagged name collision and preserves the existing session') do
   calls = []
   run = ->(command, arguments, **_) { calls << [command, arguments]; 0 }
-  backend = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 0, output: '' } })
+  definitions = [{ session: 'archon-name', directory: '/project' }]
+  backend = Tmux.create_tmux(definitions: definitions, run: run, capture: ->(*_) { { status: 0, output: '' } })
   raises(/not managed by Archon/) { backend[:has_session].call('archon-name') }
   equal [['tmux', %w[has-session -t =archon-name]]], calls
-  backend = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 0, output: '1' } })
+  backend = Tmux.create_tmux(definitions: definitions, run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/project' } })
   equal true, backend[:has_session].call('archon-name')
+  backend = Tmux.create_tmux(definitions: definitions, run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/other/project' } })
+  raises(/belongs to another project/) { backend[:has_session].call('archon-name') }
 end
 
 test('stop removes tagged sessions after project deletion and preserves untagged lookalikes') do

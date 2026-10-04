@@ -13,7 +13,7 @@ test('tmux checklist saves choices, restores defaults, ignores deleted projects,
     equal 0, status
     path = File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces/tmux.json')
     equal({ 'projects' => [first] }, JSON.parse(File.read(path)))
-    name = Archon::Workspaces.project_definitions([first]).first[:session]
+    name = 'one'
     equal "=#{name}\n", File.read(File.join(ENV['TMW_TMUX_STATE'], 'attachments'))
     FileUtils.rm_rf(first)
     status, = workspace_terminal(%w[w t start], environment: { 'TMUX' => 'fixture' }) do |terminal, wait, text|

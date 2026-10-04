@@ -14,6 +14,12 @@ The tool must be on `PATH`. The option affects newly created workspaces.
 Repeated starts preserve existing workspaces. Failed creations roll back their
 new resources and later projects are still attempted.
 
+Session names use the project folder name, with `.` and `:` replaced by `-`
+because tmux reserves those characters. tmux requires unique session names.
+Start reports conflicting project names and refuses to reuse another project's
+session. Stop or kill existing sessions before starting to replace older,
+prefixed session names.
+
 Interactive starts outside tmux attach in the current terminal and focus the
 first selected project. Inside tmux, the current view is preserved.
 Stop never attaches or prompts.

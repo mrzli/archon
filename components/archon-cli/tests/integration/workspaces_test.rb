@@ -15,11 +15,12 @@ test('real tmux project layouts are tagged, repeat safely, and stop preserves un
       result = invoke.call(arguments)
       { status: result[:status] || 1, output: "#{result[:stdout]}#{result[:stderr]}".rstrip }
     end
-    projects = %w[cloned/a-b personal/owner/a.b].map { |relative| workspace_directory(fixture, relative) }
+    projects = ['cloned/a.b', 'personal/owner/plain project'].map { |relative| workspace_directory(fixture, relative) }
     context = { home: fixture[:home], environment: {}, tty: false, run: run, capture: capture, picker: workspace_picker(projects) }
     begin
       2.times { equal 0, Archon::WorkspacesTmux.run_workspaces_tmux(['start'], **context) }
-      definitions = Archon::Workspaces.project_definitions(projects)
+      definitions = Archon::WorkspacesTmux.project_definitions(projects)
+      equal ['a-b', 'plain project'], definitions.map { |definition| definition[:session] }
       definitions.each do |definition|
         result = invoke.call(['list-windows', '-t', "=#{definition[:session]}", '-F', '#{window_name}'])
         equal 0, result[:status]
