@@ -36,7 +36,7 @@ module Archon
         return { status: 1 }
       end
       operations = []
-      Workspaces.editor_tabs(definition, ai: ai).each_with_index do |tab, index|
+      Workspaces.editor_tabs(ai: ai).each_with_index do |tab, index|
         operations << ['new-window', '-t', session, '-c', directory, '-n', tab[:name]] unless index.zero?
         operations << ['send-keys', '-t', "#{session}:#{tab[:name]}", tab[:command], 'Enter'] if tab[:command]
       end

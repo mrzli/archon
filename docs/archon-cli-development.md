@@ -25,8 +25,7 @@ Markdown from the library copy. Tests and contributor documentation are not
 installed. The installed commands need Ruby on `PATH` and the external tools
 used by their operations. They do not depend on the source checkout.
 
-Bun remains an external tool for `archon libs build` and the configured
-frontend workspace command. CLI installation and tests do not require Bun.
+Bun remains an external tool for `archon libs build`. CLI installation and tests do not require Bun.
 
 Installation updates managed CLI files and preserves unrelated destination
 files. Repeated installation converges without generating artifacts. Setup

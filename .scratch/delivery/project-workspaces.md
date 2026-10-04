@@ -13,3 +13,5 @@ Verify each commit with component tests, including isolated installation and syn
 Run isolated real tmux integration checks for shutdown changes. Preserve unrelated sessions.
 
 Step 1 complete: component suite, syntax, isolated installation and diff checks passed. ShellCheck unavailable.
+
+Step 2a complete: removed development-server windows and commands. Uniform project layouts and rollback checks pass in the full component suite, including installation.

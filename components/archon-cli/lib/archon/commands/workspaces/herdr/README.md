@@ -1,6 +1,6 @@
 # Herdr workspaces command
 
-Requires Herdr on `PATH`, plus Neovim, the selected AI tool, Bun, and pnpm for the configured
+Requires Herdr on `PATH`, plus Neovim, the selected AI tool for the configured
 project commands. Manage workspaces in a dedicated Herdr session named `archon`:
 
 ```bash
@@ -27,7 +27,6 @@ The groups match `archon workspaces tmux`:
   and shell tabs.
 - `projects`: `flashcards-fe`, `flashcards-be`, `omarchy-lab`, `mrzli.github.io`,
   and `qt-market-chart`, with Neovim, the selected AI tool, and shell tabs.
-  The two Flashcards workspaces also have development tabs.
 - `current`: a hardcoded selection of the same workspaces: the general shell,
   `archon`, `learning`, `omarchy-lab`, `skills`, and `qt-market-chart`.
 

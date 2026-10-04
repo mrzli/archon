@@ -26,7 +26,6 @@ test('projects contains the moved repositories and primary groups do not overlap
   fixture do |fixture|
     definitions = Archon::Workspaces.workspace_definitions('projects', home: fixture[:home])
     equal %w[flashcards-fe flashcards-be omarchy-lab mrzli.github.io qt-market-chart], definitions.map { |definition| File.basename(definition[:directory]) }
-    equal ['bun run dev', 'pnpm run dev'], definitions.first(2).map { |definition| definition[:dev_command] }
     equal %w[archon docs js-templates learning repos skills], Archon::Workspaces.workspace_definitions('misc', home: fixture[:home]).map { |definition| File.basename(definition[:directory]) }
     paths = Archon::Workspaces::PRIMARY_GROUPS.flat_map do |group|
       Archon::Workspaces.workspace_definitions(group, home: fixture[:home]).map { |definition| definition[:directory] }

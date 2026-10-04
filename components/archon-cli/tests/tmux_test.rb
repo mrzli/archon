@@ -61,39 +61,30 @@ test('tmux session operations preserve command arguments and exit statuses') do
   ], calls
 end
 
-[nil, 'bun run dev', 'pnpm run dev'].each do |dev_command|
-  test("editor layout: #{dev_command || 'no dev window'}") do
-    definition = { session: 'editor', directory: '/fixture/space dir', dev_command: dev_command }
-    expected = [
-      ['new-session', '-d', '-s', 'editor', '-c', definition[:directory], '-n', 'nvim'],
-      ['send-keys', '-t', 'editor:nvim', 'nvim .', 'Enter'],
-      ['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'codex'],
-      ['send-keys', '-t', 'editor:codex', 'codex resume --last', 'Enter']
-    ]
-    if dev_command
-      expected.concat([['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'dev'],
-                       ['send-keys', '-t', 'editor:dev', dev_command, 'Enter']])
-    end
-    expected.concat([['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'shell'],
-                     ['select-window', '-t', 'editor:nvim']])
+test('uniform editor layout rolls back each failed creation operation') do
+  definition = { session: 'editor', directory: '/fixture/space dir' }
+  expected = [
+    ['new-session', '-d', '-s', 'editor', '-c', definition[:directory], '-n', 'nvim'],
+    ['send-keys', '-t', 'editor:nvim', 'nvim .', 'Enter'],
+    ['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'codex'],
+    ['send-keys', '-t', 'editor:codex', 'codex resume --last', 'Enter']
+  ]
+  expected.concat([['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'shell'],
+                   ['select-window', '-t', 'editor:nvim']])
+  calls = []
+  result = Tmux.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
+  equal({ status: 0 }, result)
+  equal expected, calls
+  expected.each_index do |failed_index|
     calls = []
-    result = Tmux.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
-    equal({ status: 0 }, result)
-    equal expected, calls
-    # The full layout covers every rollback boundary; command text adds no new boundary.
-    next unless dev_command == 'bun run dev'
-
-    expected.each_index do |failed_index|
-      calls = []
-      run = ->(_, arguments) { calls << arguments; calls.length == failed_index + 1 ? 1 : 0 }
-      result = Tmux.create_editor_session(run, definition)
-      equal 1, result[:status]
-      equal failed_index.zero? ? nil : 0, result[:cleanup_status]
-      equal expected.take(failed_index + 1) + (failed_index.zero? ? [] : [%w[kill-session -t editor]]), calls
-    end
-    result = Tmux.create_editor_session(->(_, args) { args.first == 'new-session' ? 0 : 1 }, definition)
-    equal({ status: 1, cleanup_status: 1 }, result)
+    run = ->(_, arguments) { calls << arguments; calls.length == failed_index + 1 ? 1 : 0 }
+    result = Tmux.create_editor_session(run, definition)
+    equal 1, result[:status]
+    equal failed_index.zero? ? nil : 0, result[:cleanup_status]
+    equal expected.take(failed_index + 1) + (failed_index.zero? ? [] : [%w[kill-session -t editor]]), calls
   end
+  result = Tmux.create_editor_session(->(_, args) { args.first == 'new-session' ? 0 : 1 }, definition)
+  equal({ status: 1, cleanup_status: 1 }, result)
 end
 
 test('workspace routing preserves group selection, ordering, continuation, and kill status') do
@@ -169,8 +160,6 @@ test('injected tmux reaches real groups, preserves existing sessions, and tolera
     end
     2.times { equal 0, Tmux.run_workspaces_tmux(['start'], **context.merge(tty: true)) }
     equal 13, creations.length
-    equal 'bun run dev', sessions['flashcards-fe'][:dev_command]
-    equal 'pnpm run dev', sessions['flashcards-be'][:dev_command]
     assert sessions.key?('project-mrzli-mrzli-github-io')
     assert sessions.key?('project-mrzli-omarchy-lab')
     sessions['unrelated'] = {}

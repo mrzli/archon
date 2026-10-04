@@ -71,15 +71,12 @@ test('Herdr creates shared project layouts with silent pane run success, repeats
     state['workspaces'].each do |workspace|
       label = workspace['label']
       expected = label == 'main' ? ['shell'] : %w[nvim codex shell]
-      expected = %w[nvim codex dev shell] if label.start_with?('flashcards-')
       equal expected, workspace['tabs'].map { |tab| tab['label'] }
       commands = workspace['tabs'].flat_map { |tab| tab['commands'] }
       unless label == 'main'
         assert commands.include?('nvim .')
         assert commands.include?('codex resume --last')
       end
-      assert commands.include?('bun run dev') if label == 'flashcards-fe'
-      assert commands.include?('pnpm run dev') if label == 'flashcards-be'
       assert workspace['cwd'].start_with?(fixture[:home])
     end
     state['calls'].select { |call| [%w[workspace create], %w[tab create]].include?(call.first(2)) }.each do |call|
@@ -297,12 +294,12 @@ test('Herdr errors and malformed responses fail without creating workspaces') do
 end
 
 test('every failed Herdr creation step rolls back only its newly returned workspace ID') do
-  definition = { session: 'example', directory: '/fixture/project', dev_command: 'bun run dev' }
+  definition = { session: 'example', directory: '/fixture/project' }
   created = { 'workspace' => { 'workspace_id' => 'w401', 'label' => 'example' },
               'tab' => { 'tab_id' => 'w401:t709' }, 'root_pane' => { 'pane_id' => 'w401:p901' } }
   operations = []
   request = ->(arguments) { operations << arguments; created }
-  tabs = Archon::Workspaces.editor_tabs(definition)
+  tabs = Archon::Workspaces.editor_tabs
   equal 0, Herdr.create_workspace(definition, tabs, request)[:status]
   operations.each_index do |failed_index|
     calls = []

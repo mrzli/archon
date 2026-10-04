@@ -26,8 +26,8 @@ module Archon
         end
       when 'projects'
         [
-          { session: 'flashcards-fe', directory: File.join(home, 'projects/personal/mrzli/flashcards-fe'), dev_command: 'bun run dev' },
-          { session: 'flashcards-be', directory: File.join(home, 'projects/personal/mrzli/flashcards-be'), dev_command: 'pnpm run dev' }
+          { session: 'flashcards-fe', directory: File.join(home, 'projects/personal/mrzli/flashcards-fe') },
+          { session: 'flashcards-be', directory: File.join(home, 'projects/personal/mrzli/flashcards-be') }
         ] + PROJECTS.map do |project|
           { session: "project-#{project.tr('/.', '--')}", directory: File.join(home, 'projects/personal', project) }
         end
