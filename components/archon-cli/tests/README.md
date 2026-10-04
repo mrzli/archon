@@ -14,8 +14,8 @@ bash components/archon-cli/tests/run.sh
 
 CLI verification checks behavior, installation, syntax, and whitespace.
 Terminal tests create their own pseudo terminals, so one run covers terminal
-and nonterminal behavior. Real tmux integration tests run separately; the
-default suite does not require Unix socket access. ShellCheck runs when
+and nonterminal behavior. Real Herdr and tmux integration tests run separately.
+The default suite does not require Unix socket access. ShellCheck runs when
 installed and is reported as unavailable otherwise. No build or dependency
 installation is required.
 
@@ -36,19 +36,20 @@ The complete suite also requires Lua, Python 3, and unzip.
 The suite requires Ruby, Bash, Git, rsync, standard Arch command-line tools,
 and the util-linux `setsid` utility.
 
-Herdr checks use a fake executable and temporary state. They do not require
-Herdr or start real editors, agents, or development servers.
+Default Herdr checks use a fake executable and temporary state. They do not
+require Herdr or start real editors, agents, or development servers.
 
-Run real tmux integration tests when changing workspace shutdown or Codex
+Run real Herdr and tmux integration tests when changing workspace shutdown or Codex
 restart behavior, and before releases:
 
 ```bash
 bash components/archon-cli/tests/run-integration.sh
 ```
 
-These checks require tmux at `/usr/bin/tmux` and permission to create Unix
-sockets. They use isolated temporary servers and fake Codex processes, and
-preserve live sessions. The default suite and timing command exclude them.
+These checks require Herdr at `/usr/bin/herdr`, tmux at `/usr/bin/tmux`, and
+permission to create Unix sockets. They use isolated temporary servers and
+fake Codex processes, and preserve live sessions. The default suite and timing
+command exclude them.
 
 Run the optional twelve-pane Codex restart stress check separately:
 

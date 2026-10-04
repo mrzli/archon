@@ -11,7 +11,7 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
   state['other_sessions'] ||= [{ 'name' => 'default', 'running' => true }]
   state['targets'] ||= []
   state['targets'] << [session, arguments]
-  unless session == 'archon' || %w[list stop].include?(arguments[1]) && arguments.first == 'session'
+  unless session == 'archon' || %w[list stop delete].include?(arguments[1]) && arguments.first == 'session'
     raise 'workspace operations require the archon session'
   end
   state['calls'] << arguments
@@ -34,7 +34,11 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
     workspaces = state['workspaces']
     case arguments.first(2)
     when ['session', 'list']
-      response = { sessions: [{ name: 'archon', running: state['running'] }, *state['other_sessions']] }
+      sessions = state['other_sessions'].map do |item|
+        item.merge('default' => item['name'] == 'default', 'session_dir' => File.join(ENV.fetch('XDG_CONFIG_HOME'), 'herdr'))
+      end
+      sessions.unshift({ name: 'archon', default: false, running: state['running'] }) unless state['archon_deleted']
+      response = { sessions: sessions }
     when ['session', 'stop']
       raise 'wrong session stop target' unless arguments == ['session', 'stop', session, '--json']
       if session == 'archon'
@@ -43,6 +47,19 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
         state['other_sessions'].find { |item| item.fetch('name') == session }.store('running', false)
       end
       response = { session: { name: session, running: false } }
+    when ['session', 'delete']
+      raise 'default session cannot be deleted' if session == 'default'
+      if session == 'archon'
+        raise 'session is running' if state['running']
+        state['archon_deleted'] = true
+        workspaces.clear
+        state['next_id'] = 0
+      else
+        target = state['other_sessions'].find { |item| item.fetch('name') == session }
+        raise 'session is running' if target && target['running']
+        state['other_sessions'].delete(target)
+      end
+      response = { deleted: true }
     when ['workspace', 'list']
       raise 'session not running' unless state['running']
       response = { result: { workspaces: workspaces.map { |workspace| workspace.reject { |key, _| %w[cwd tabs].include?(key) } } } }
@@ -85,6 +102,7 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
       tab['commands'] << arguments[3]
     when ['server']
       state['running'] = true
+      state['archon_deleted'] = false
     when []
       state['attachments'] += 1
     else

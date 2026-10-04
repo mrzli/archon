@@ -258,21 +258,35 @@ test('Herdr validates shutdown options before delegating') do
   equal [['stop'], ['kill']], calls
 end
 
-test('Herdr kill stops every running session, preserves saved layouts and tolerates repeated calls') do
-  herdr_fixture do |_, path|
+test('Herdr kill clears running and stopped sessions and default layouts, preserving configuration and projects') do
+  herdr_fixture do |fixture, path|
     seed_herdr_workspaces(path, %w[project extra])
-    before = herdr_state(path)['workspaces']
+    project = workspace_directory(fixture)
+    config = File.join(ENV.fetch('XDG_CONFIG_HOME'), 'herdr')
+    FileUtils.mkdir_p(config)
+    %w[session.json session-history.json config.toml plugins.json].each { |name| File.write(File.join(config, name), 'keep') }
+    selection_path = Archon::WorkspaceProjects.selection_path('herdr', home: fixture[:home], state_home: ENV['XDG_STATE_HOME'])
+    Archon::WorkspaceProjects.save_selection(selection_path, { 'projects' => [project], 'workspace_ids' => { project => 'w7' } })
     update_herdr_state(path) do |state|
       state['other_sessions'] = [{ 'name' => 'default', 'running' => true }, { 'name' => 'outside', 'running' => true }, { 'name' => 'idle', 'running' => false }]
     end
     2.times { equal 0, run_archon(%w[w h kill])[:status] }
     state = herdr_state(path)
     assert !state['running'] && state['other_sessions'].none? { |session| session['running'] }
-    equal before, state['workspaces']
+    equal [], state['workspaces']
+    equal ['default'], state['other_sessions'].map { |session| session['name'] }
+    equal %w[archon outside idle], state['calls'].select { |call| call.first(2) == %w[session delete] }.map { |call| call[2] }
     equal %w[archon default outside], state['calls'].select { |call| call.first(2) == %w[session stop] }.map { |call| call[2] }
+    %w[session.json session-history.json].each { |name| assert !File.exist?(File.join(config, name)) }
+    %w[config.toml plugins.json].each { |name| equal 'keep', File.read(File.join(config, name)) }
+    equal({ 'projects' => [project] }, JSON.parse(File.read(selection_path)))
+    assert File.directory?(project)
     state['targets'].each do |target, arguments|
-      equal arguments[2], target if arguments.first(2) == %w[session stop]
+      equal arguments[2], target if [%w[session stop], %w[session delete]].include?(arguments.first(2))
     end
+    Archon::WorkspaceProjects.save_selection(selection_path, { 'projects' => [project], 'workspace_ids' => { project => 'w7' } })
+    equal 0, run_archon(%w[w h kill])[:status]
+    equal({ 'projects' => [project] }, JSON.parse(File.read(selection_path)))
   end
 end
 
@@ -287,9 +301,48 @@ test('Herdr kill continues after a session failure and its detached worker can r
     result = run_archon(%w[w h kill], environment)
     equal 1, result[:status]
     assert herdr_state(path)['running']
-    assert !herdr_state(path)['other_sessions'].first['running']
+    equal [], herdr_state(path)['other_sessions']
     assert result[:stderr].include?('Workspace shutdown failed; see')
     equal 0, run_archon(%w[w h kill], environment)[:status]
     assert !herdr_state(path)['running']
+  end
+end
+
+test('Herdr kill then start creates only newly selected projects and launches their tools') do
+  herdr_fixture do |fixture, path|
+    projects = %w[personal/one/same personal/two/same cloned/new cloned/old].map { |relative| workspace_directory(fixture, relative) }
+    context = { home: fixture[:home], environment: {}, tty: false }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context, picker: workspace_picker([*projects.first(2), projects.last]))
+    equal 0, Herdr.run_workspaces_herdr(['kill'], **context)
+    selected = [projects[2], projects[1], projects.first]
+    2.times { equal 0, Herdr.run_workspaces_herdr(['start'], **context, picker: workspace_picker(selected)) }
+    workspaces = herdr_state(path)['workspaces']
+    equal selected, workspaces.map { |workspace| workspace['cwd'] }
+    workspaces.each do |workspace|
+      equal %w[nvim codex shell], workspace['tabs'].map { |tab| tab['label'] }
+      equal ['nvim .', 'codex resume --last'], workspace['tabs'].flat_map { |tab| tab['commands'] }
+    end
+  end
+end
+
+test('Herdr kill reports layout cleanup and session deletion failures, continues and allows retry') do
+  herdr_fixture do |_, path|
+    seed_herdr_workspaces(path, ['project'])
+    config = File.join(ENV.fetch('XDG_CONFIG_HOME'), 'herdr')
+    layout = File.join(config, 'session.json')
+    FileUtils.mkdir_p(layout)
+    update_herdr_state(path) do |state|
+      state['failure'] = { 'prefix' => %w[session delete], 'remaining' => 1 }
+      state['other_sessions'] = [{ 'name' => 'default', 'running' => false }, { 'name' => 'outside', 'running' => true }]
+    end
+    result = run_archon(%w[w h kill])
+    equal 1, result[:status]
+    assert result[:stderr].include?('Herdr session delete failed')
+    assert result[:stderr].include?('session.json')
+    equal ['default'], herdr_state(path)['other_sessions'].map { |session| session['name'] }
+    assert !herdr_state(path)['running']
+    FileUtils.rmdir(layout)
+    equal 0, run_archon(%w[w h kill])[:status]
+    equal [], herdr_state(path)['workspaces']
   end
 end

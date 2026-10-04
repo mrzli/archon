@@ -40,9 +40,11 @@ are saved in `archon/workspaces-herdr-server.log` under the state directory.
 arc w h kill
 ```
 
-Stops **all running Herdr sessions**, including sessions outside Archon. Saved
-layouts and project files are preserved. Later sessions are still attempted if
-one fails. Running it again when no sessions are running succeeds.
+Stops **all Herdr sessions**, including sessions outside Archon, and clears
+saved layouts for running and stopped sessions. The next start creates fresh
+workspaces for the selected projects and launches their tools. Project files,
+shared Herdr configuration, and the saved project checklist are preserved.
+Later sessions are still attempted if one fails. Repeated kills succeed.
 
 Takes no options or project filters. From a multiplexer pane it runs
 independently, using the same shutdown log as `stop`.

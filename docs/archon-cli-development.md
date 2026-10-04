@@ -56,7 +56,7 @@ exclude development files, and verify repeated copies preserve unrelated files.
 Bash syntax and available ShellCheck checks follow.
 
 Tests use isolated homes, local Git fixtures, and fake external commands.
-Terminal attachment checks use pseudo terminals. Herdr checks simulate the
+Terminal attachment checks use pseudo terminals. Default Herdr checks simulate the
 installed CLI response shapes with a fake executable and temporary state,
 including server startup and detached shutdown. The tests
 do not run full workstation setup or touch live tmux or Herdr sessions or home
@@ -64,6 +64,7 @@ configuration.
 
 Run `bash components/archon-cli/tests/run-integration.sh` when changing workspace
 shutdown or Codex restart behavior, and before releases. These separate tests
-use temporary tmux sockets to verify that stopping workspaces survives closing
-the calling pane and that Codex restart preserves real shells and panes. They
-require Unix socket access; the default suite and timing command do not.
+use isolated Herdr sessions and temporary tmux sockets to verify that kill
+clears saved layouts, stopping workspaces survives closing the calling pane,
+and Codex restart preserves real shells and panes. They require Unix socket
+access; the default suite and timing command do not.

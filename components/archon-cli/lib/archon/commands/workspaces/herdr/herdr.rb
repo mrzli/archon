@@ -32,17 +32,34 @@ module Archon
       raise "Could not read Herdr #{arguments.first(2).join(' ')} output: #{error.message}"
     end
 
-    def kill_all_sessions(capture)
+    def kill_all_sessions(capture, state_path:)
       sessions = command_response(%w[session list --json], capture).fetch('sessions')
       status = 0
-      sessions.select { |session| session.fetch('running') }.each do |session|
+      reset_ids = sessions.none? { |session| session.fetch('name') == SESSION }
+      sessions.each do |session|
         name = session.fetch('name')
         begin
-          command_response(['session', 'stop', name, '--json'], capture, session: name)
+          command_response(['session', 'stop', name, '--json'], capture, session: name) if session.fetch('running')
+          if session.fetch('default')
+            # Herdr cannot delete the default session: it shares the config directory.
+            %w[session.json session-history.json].each do |file|
+              File.unlink(File.join(session.fetch('session_dir'), file))
+            rescue Errno::ENOENT
+              next
+            end
+          else
+            command_response(['session', 'delete', name, '--json'], capture, session: name)
+          end
+          reset_ids = true if name == SESSION
         rescue StandardError => error
           warn error.message
           status = 1
         end
+      end
+      if reset_ids && File.exist?(state_path)
+        selection = WorkspaceProjects.load_selection(state_path)
+        selection.delete('workspace_ids')
+        WorkspaceProjects.save_selection(state_path, selection)
       end
       status
     end

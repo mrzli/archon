@@ -3,7 +3,7 @@ require_relative 'herdr'
 module Archon
   module WorkspacesHerdr
     HELP = (Workspaces::ACTION_HELP.gsub('<backend>', 'herdr') +
-      "\n\nUses the dedicated Herdr session 'archon'. Stop shuts down that entire session.\nKill stops ALL running Herdr sessions.").freeze
+      "\n\nUses the dedicated Herdr session 'archon'. Stop shuts down that entire session.\nKill stops ALL Herdr sessions and clears their saved layouts.").freeze
 
     def run_workspaces_herdr(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?,
                              capture: method(:capture_command), run: Workspaces.method(:run_command),
@@ -13,7 +13,10 @@ module Archon
       action = parsed[:action]
       inside_herdr = environment['HERDR_ENV'] == '1'
       return stop_detached.call(arguments) if %w[stop kill].include?(action) && inside_herdr
-      return kill_all_sessions(capture) if action == 'kill'
+      if action == 'kill'
+        state_path = WorkspaceProjects.selection_path('herdr', home: home, state_home: state_home)
+        return kill_all_sessions(capture, state_path: state_path)
+      end
       if action == 'stop'
         command_response(['session', 'stop', SESSION, '--json'], capture) if session_running?(capture)
         return 0
