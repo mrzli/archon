@@ -44,22 +44,27 @@ This runs setup, skill-link, video-workaround, WoW setup, and CLI checks.
 Use `ruby tests/profile.rb` to run the same checks and print per-file and total
 times. Runner totals include their child tests; do not add those rows together.
 Terminal tests create their own pseudo terminals; the command also works with
-stdin redirected from `/dev/null`. The optional Codex timing stress check is
-run separately, as described in the [test instructions](../components/archon-cli/tests/README.md).
+stdin redirected from `/dev/null`. Real tmux integration tests and the optional
+Codex timing stress check run separately, as described in the
+[test instructions](../components/archon-cli/tests/README.md).
 
 For CLI checks alone, run `bash components/archon-cli/tests/run.sh`.
-The CLI runner executes each Ruby test file in a separate process, checks Ruby
-syntax, exercises the Bash workspace
+The CLI runner executes each default Ruby test file in a separate process,
+checks Ruby syntax, exercises the Bash workspace
 adapter, and verifies installation. Installation tests call the production
 CLI copy function with a temporary home, check both executable aliases,
 exclude development files, and verify repeated copies preserve unrelated files.
 Bash syntax and available ShellCheck checks follow.
 
 Tests use isolated homes, local Git fixtures, and fake external commands.
-Terminal attachment checks use pseudo terminals. Shutdown tests use a separate
-temporary tmux socket to verify that stopping workspaces survives closing the
-calling pane. Herdr checks simulate the installed CLI response shapes with a
-fake executable and temporary state, including server startup and detached
-shutdown. The tests
+Terminal attachment checks use pseudo terminals. Herdr checks simulate the
+installed CLI response shapes with a fake executable and temporary state,
+including server startup and detached shutdown. The tests
 do not run full workstation setup or touch live tmux or Herdr sessions or home
 configuration.
+
+Run `bash components/archon-cli/tests/run-integration.sh` when changing workspace
+shutdown or Codex restart behavior, and before releases. These separate tests
+use temporary tmux sockets to verify that stopping workspaces survives closing
+the calling pane and that Codex restart preserves real shells and panes. They
+require Unix socket access; the default suite and timing command do not.

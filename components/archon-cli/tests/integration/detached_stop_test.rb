@@ -1,0 +1,44 @@
+require_relative '../test_helpers'
+
+[nil, 'misc', 'current'].each do |group|
+  test("workspace stop survives closing its calling pane: #{group || 'all groups'}") do
+    fixture do |fixture|
+      socket = File.join(fixture[:root], 'tmux.sock')
+      File.symlink('/usr/bin/tmux', File.join(fixture[:bin], 'tmux'))
+      tmux = lambda do |*arguments|
+        output, error, status = Open3.capture3('/usr/bin/tmux', '-S', socket, '-f', '/dev/null', *arguments)
+        assert status.success?, error
+        output.strip
+      end
+      misc = %w[archon docs js-templates learning repos skills].map { |name| "project-mrzli-#{name}" }
+      other = %w[jslib-example flashcards-fe flashcards-be project-mrzli-mrzli-github-io project-mrzli-omarchy-lab project-mrzli-qt-market-chart main]
+      begin
+        [*misc, *other, 'unrelated'].each do |session|
+          tmux.call('new-session', '-d', '-s', session, 'sleep', '60')
+        end
+        tmux.call('new-window', '-t', '=project-mrzli-archon', '-n', 'stopper', '/usr/bin/env',
+          "HOME=#{fixture[:home]}", "XDG_STATE_HOME=#{ENV.fetch('XDG_STATE_HOME')}", "PATH=#{ENV.fetch('PATH')}",
+          RbConfig.ruby, File.expand_path('../../bin/arc', __dir__), 'w', 't', 'stop', *(group ? ['-g', group] : []))
+        remaining = case group
+                    when 'misc' then other
+                    when 'current' then %w[project-mrzli-docs project-mrzli-js-templates project-mrzli-repos jslib-example flashcards-fe flashcards-be project-mrzli-mrzli-github-io]
+                    else []
+                    end
+        expected = [*remaining, 'unrelated'].sort
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+        loop do
+          sessions = tmux.call('list-sessions', '-F', '#S').lines.map(&:strip).sort
+          break if sessions == expected
+          if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+            log = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-tmux-stop.log')
+            warn File.read(log) if File.exist?(log)
+            equal expected, sessions
+          end
+          sleep 0.05
+        end
+      ensure
+        system('/usr/bin/tmux', '-S', socket, 'kill-server', out: File::NULL, err: File::NULL)
+      end
+    end
+  end
+end
