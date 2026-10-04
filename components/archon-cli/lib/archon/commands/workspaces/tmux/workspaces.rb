@@ -3,7 +3,7 @@ require_relative 'tmux'
 module Archon
   module WorkspacesTmux
     HELP = (Workspaces::ACTION_HELP.gsub('<backend>', 'tmux') +
-      "\n\nThe kill action stops the entire tmux server, including unrelated sessions.").freeze
+      "\n\nStop closes all Archon-managed sessions on the current tmux server; unrelated sessions are preserved.").freeze
 
     def run_workspaces_tmux(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?, tmux: nil,
                             capture: method(:capture_command), run: Workspaces.method(:run_command),
@@ -11,15 +11,15 @@ module Archon
       parsed = Workspaces.parse_arguments(arguments, help: HELP)
       return parsed[:status] if parsed.key?(:status)
       action = parsed[:action]
-      return run.call('tmux', ['kill-server']) if action == 'kill'
       inside_tmux = !environment['TMUX'].to_s.empty?
       return stop_detached.call(arguments) if action == 'stop' && inside_tmux
-      projects = action == 'start' ? Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker) : WorkspaceProjects.discover_projects(home)
-      return 0 if projects.nil? || (action == 'start' && projects.empty?)
+      return stop_managed_sessions(run: run, capture: capture) if action == 'stop'
+      projects = Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker)
+      return 0 if projects.nil? || projects.empty?
       definitions = Workspaces.project_definitions(projects)
       backend = tmux || create_tmux(run: run, capture: capture, ai: parsed[:ai])
-      status = action == 'start' ? Workspaces.start_projects(definitions, backend) : Workspaces.stop_projects(definitions, backend)
-      return status if status != 0 || action != 'start' || inside_tmux || !tty
+      status = Workspaces.start_projects(definitions, backend)
+      return status if status != 0 || inside_tmux || !tty
       Workspaces.attach_after_start(definitions, backend)
     rescue Interrupt
       puts 'Cancelled.'

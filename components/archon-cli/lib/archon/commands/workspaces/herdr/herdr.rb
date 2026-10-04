@@ -78,31 +78,10 @@ module Archon
         workspaces << result[:workspace] if result[:workspace]
         result
       end
-      close = lambda do |name|
-        workspace = find_workspace.call(name)
-        next 0 unless workspace
-        begin
-          # Closing the last workspace with a client attached creates a new default
-          # workspace. Stop the session instead, checking live IDs before shutdown.
-          remaining = request.call(%w[workspace list]).fetch('workspaces')
-          if remaining.map { |item| item.fetch('workspace_id') } == [workspace.fetch('workspace_id')]
-            request.call(['session', 'stop', SESSION, '--json'])
-          else
-            request.call(['workspace', 'close', workspace.fetch('workspace_id')])
-          end
-          workspaces.delete(workspace)
-          0
-        rescue StandardError => error
-          warn error.message
-          1
-        end
-      end
       {
         name: 'Herdr', resource_label: 'Herdr workspace',
         has_session: ->(name) { ensure_server.call; !find_workspace.call(name).nil? },
         create_editor_session: ->(definition) { create.call(definition, Workspaces.editor_tabs(ai: ai)) },
-        stop_session: close, kill_session: close,
-        list_sessions: -> { { status: 0, output: workspaces.map { |workspace| workspace.fetch('label') }.join("\n") } },
         attach_session: ->(name) {
           workspace = find_workspace.call(name)
           request.call(['workspace', 'focus', workspace.fetch('workspace_id')])

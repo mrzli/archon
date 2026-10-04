@@ -3,9 +3,7 @@ require_relative 'herdr'
 module Archon
   module WorkspacesHerdr
     HELP = (Workspaces::ACTION_HELP.gsub('<backend>', 'herdr') +
-      "\n\nUses the dedicated Herdr session 'archon'.\n" +
-      "Stop also shuts down that session when no workspaces remain.\n" +
-      "The kill action stops that entire session, including any extra workspaces in it.").freeze
+      "\n\nUses the dedicated Herdr session 'archon'. Stop shuts down that entire session.").freeze
 
     def run_workspaces_herdr(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?,
                              capture: method(:capture_command), run: Workspaces.method(:run_command),
@@ -14,22 +12,18 @@ module Archon
       return parsed[:status] if parsed.key?(:status)
       action = parsed[:action]
       inside_herdr = environment['HERDR_ENV'] == '1'
-      return stop_detached.call(arguments) if %w[stop kill].include?(action) && inside_herdr
-      projects = action == 'start' ? Workspaces.select_projects('herdr', home: home, state_home: state_home, picker: picker) : WorkspaceProjects.discover_projects(home)
-      return 0 if action == 'start' && (projects.nil? || projects.empty?)
-      definitions = Workspaces.project_definitions(projects)
-      running = session_running?(capture)
-      if action == 'kill'
-        command_response(['session', 'stop', SESSION, '--json'], capture) if running
+      return stop_detached.call(arguments) if action == 'stop' && inside_herdr
+      if action == 'stop'
+        command_response(['session', 'stop', SESSION, '--json'], capture) if session_running?(capture)
         return 0
       end
+      projects = Workspaces.select_projects('herdr', home: home, state_home: state_home, picker: picker)
+      return 0 if projects.nil? || projects.empty?
+      definitions = Workspaces.project_definitions(projects)
+      running = session_running?(capture)
       backend = create_herdr(running: running, capture: capture, run: run, start_server: start_server, ai: parsed[:ai])
-      status = action == 'start' ? Workspaces.start_projects(definitions, backend) : Workspaces.stop_projects(definitions, backend)
-      if action == 'stop' && status == 0 && running && session_running?(capture)
-        remaining = command_response(%w[workspace list], capture).fetch('workspaces')
-        command_response(['session', 'stop', SESSION, '--json'], capture) if remaining.empty?
-      end
-      return status if status != 0 || action != 'start' || inside_herdr || !tty
+      status = Workspaces.start_projects(definitions, backend)
+      return status if status != 0 || inside_herdr || !tty
       Workspaces.attach_after_start(definitions, backend)
     rescue Interrupt
       puts 'Cancelled.'

@@ -7,12 +7,13 @@ test('uniform editor layout rolls back each failed creation operation') do
   definition = { session: 'editor', directory: '/fixture/space dir' }
   expected = [
     ['new-session', '-d', '-s', 'editor', '-c', definition[:directory], '-n', 'nvim'],
-    ['send-keys', '-t', 'editor:nvim', 'nvim .', 'Enter'],
-    ['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'codex'],
-    ['send-keys', '-t', 'editor:codex', 'codex resume --last', 'Enter']
+    ['set-option', '-t', '=editor:', '@archon-managed', '1'],
+    ['send-keys', '-t', '=editor:nvim', 'nvim .', 'Enter'],
+    ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'codex'],
+    ['send-keys', '-t', '=editor:codex', 'codex resume --last', 'Enter']
   ]
-  expected.concat([['new-window', '-t', 'editor', '-c', definition[:directory], '-n', 'shell'],
-                   ['select-window', '-t', 'editor:nvim']])
+  expected.concat([['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'shell'],
+                   ['select-window', '-t', '=editor:nvim']])
   calls = []
   result = Tmux.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
   equal({ status: 0 }, result)
@@ -23,7 +24,7 @@ test('uniform editor layout rolls back each failed creation operation') do
     result = Tmux.create_editor_session(run, definition)
     equal 1, result[:status]
     equal failed_index.zero? ? nil : 0, result[:cleanup_status]
-    equal expected.take(failed_index + 1) + (failed_index.zero? ? [] : [%w[kill-session -t editor]]), calls
+    equal expected.take(failed_index + 1) + (failed_index.zero? ? [] : [%w[kill-session -t =editor]]), calls
   end
   result = Tmux.create_editor_session(->(_, args) { args.first == 'new-session' ? 0 : 1 }, definition)
   equal({ status: 1, cleanup_status: 1 }, result)
@@ -119,5 +120,49 @@ test('signaled subprocesses become operational failures for execution and captur
     write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nkill -TERM \"$$\"\n")
     equal 1, Workspaces.run_command('tmux', [])
     equal 1, Tmux.capture_command('tmux', [])[:status]
+  end
+end
+
+test('stop closes only tagged sessions, ignores saved state and discovery, continues after failure, and tolerates absent servers') do
+  fixture do |fixture|
+    calls = []
+    run = ->(command, arguments) { calls << [command, arguments]; arguments.last == '=first' ? 7 : 0 }
+    context = { home: fixture[:home], environment: {}, picker: ->(*_, **_) { raise 'must not pick' }, run: run }
+    capture = ->(*_) { { status: 0, output: "first\t1\nunrelated\t\narchon-lookalike\t\nlast\t1\n" } }
+    equal 1, Tmux.run_workspaces_tmux(['stop'], **context, capture: capture)
+    equal [['tmux', %w[kill-session -t =first]], ['tmux', %w[kill-session -t =last]]], calls
+    calls.clear
+    ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)'].each do |message|
+      equal 0, Tmux.run_workspaces_tmux(['stop'], **context, capture: ->(*_) { { status: 1, output: message } })
+    end
+    ['permission denied', 'error connecting to /fixture (Operation not permitted)', ''].each do |message|
+      equal 1, Tmux.run_workspaces_tmux(['stop'], **context, capture: ->(*_) { { status: 1, output: message } })
+    end
+    equal [], calls
+    equal 2, Tmux.run_workspaces_tmux(['kill'], **context, capture: ->(*_) { raise 'must not capture' })
+  end
+end
+
+test('starting refuses an untagged name collision and preserves the existing session') do
+  calls = []
+  run = ->(command, arguments, **_) { calls << [command, arguments]; 0 }
+  backend = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 0, output: '' } })
+  raises(/not managed by Archon/) { backend[:has_session].call('archon-name') }
+  equal [['tmux', %w[has-session -t =archon-name]]], calls
+  backend = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 0, output: '1' } })
+  equal true, backend[:has_session].call('archon-name')
+end
+
+test('stop removes tagged sessions after project deletion and preserves untagged lookalikes') do
+  fixture do |fixture|
+    project = workspace_directory(fixture)
+    ENV['TMW_TMUX_STATE'] = File.join(fixture[:root], 'tmux')
+    context = { home: fixture[:home], environment: {}, tty: false, picker: workspace_picker([project]) }
+    equal 0, Tmux.run_workspaces_tmux(['start'], **context)
+    root = File.join(ENV['TMW_TMUX_STATE'], 'sessions')
+    FileUtils.mkdir_p(File.join(root, 'archon-unmanaged'))
+    FileUtils.rm_rf(File.join(fixture[:home], 'projects'))
+    2.times { equal 0, Tmux.run_workspaces_tmux(['stop'], **context) }
+    equal ['archon-unmanaged'], Dir.children(root)
   end
 end

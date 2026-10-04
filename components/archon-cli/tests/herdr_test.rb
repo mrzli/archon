@@ -160,3 +160,45 @@ test('Herdr stop tolerates a stopped session and stops an empty dedicated sessio
     assert !herdr_state(path)['running']
   end
 end
+
+test('Herdr stop shuts down its entire dedicated session, including extras, with no project or state requirements') do
+  herdr_fixture do |fixture, path|
+    seed_herdr_workspaces(path, %w[project extra ~])
+    update_herdr_state(path) { |state| state['client_attached'] = true }
+    2.times { equal 0, run_archon(%w[w h stop])[:status] }
+    state = herdr_state(path)
+    assert !state['running']
+    equal 1, state['calls'].count { |call| call == %w[session stop archon --json] }
+    assert state['calls'].none? { |call| call.first(2) == %w[workspace close] }
+    assert !File.exist?(File.join(fixture[:home], 'projects'))
+    assert !File.exist?(File.join(ENV['XDG_STATE_HOME'], 'archon/herdr.json'))
+    equal 2, run_archon(%w[w h kill])[:status]
+  end
+end
+
+test('Herdr detached stop preserves its target, logs failures, and allows retry') do
+  herdr_fixture do |_, path|
+    seed_herdr_workspaces(path, %w[one two extra])
+    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[session stop], 'remaining' => 1 } }
+    environment = { 'HERDR_ENV' => '1', 'HERDR_SESSION' => 'unrelated', 'HERDR_SOCKET_PATH' => '/unused/socket' }
+    result = run_archon(%w[w h stop], environment)
+    equal 1, result[:status]
+    assert result[:stderr].include?('Workspace shutdown failed; see')
+    assert herdr_state(path)['running']
+    log = File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces-herdr-stop.log')
+    assert File.read(log).include?('Herdr session stop failed')
+    equal 0o600, File.stat(log).mode & 0o777
+    equal 0, run_archon(%w[w h stop], environment)[:status]
+    assert !herdr_state(path)['running']
+  end
+end
+
+test('Herdr validates removed commands and filters before delegating stop') do
+  calls = []
+  context = { environment: { 'HERDR_ENV' => '1' }, stop_detached: ->(arguments) { calls << arguments; 7 } }
+  equal 7, Herdr.run_workspaces_herdr(['stop'], **context)
+  [%w[stop -g current], ['kill'], %w[stop extra]].each do |arguments|
+    equal 2, Herdr.run_workspaces_herdr(arguments, **context)
+  end
+  equal [['stop']], calls
+end

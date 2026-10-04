@@ -16,10 +16,13 @@ new resources and later projects are still attempted.
 
 Interactive starts outside tmux attach in the current terminal and focus the
 first selected project. Inside tmux, the current view is preserved.
-Stop never attaches or prompts, and stops all discovered project workspaces.
+Stop never attaches or prompts.
 
 Stop from a tmux pane runs independently so closing that pane does not
 interrupt the remaining work. Shutdown diagnostics are saved in
 `${XDG_STATE_HOME:-~/.local/state}/archon/workspaces-tmux-stop.log`.
 
-`kill` stops the entire tmux server, including unrelated sessions.
+Stop closes all sessions tagged as Archon-managed on the current tmux server,
+including projects no longer selected or present on disk. Untagged sessions are
+preserved, even when their names resemble Archon sessions. Stopping an absent
+server succeeds.

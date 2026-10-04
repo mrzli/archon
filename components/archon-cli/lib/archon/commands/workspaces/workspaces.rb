@@ -5,7 +5,7 @@ module Archon
   module Workspaces
     HELP = <<~TEXT.chomp.freeze
       Usage: archon workspaces list
-             archon workspaces <backend> <start|stop|kill> [options]
+             archon workspaces <backend> <start|stop> [options]
 
       Commands:
         list       List available projects without a backend
@@ -14,7 +14,7 @@ module Archon
         herdr (h)  Manage Herdr workspaces
         tmux (t)   Manage tmux workspace sessions
 
-      Choose a backend explicitly for start, stop, or kill. There is no default.
+      Choose a backend explicitly for start or stop. There is no default.
       Use archon workspaces list --help for listing options.
       Use archon workspaces <backend> --help for backend options.
     TEXT

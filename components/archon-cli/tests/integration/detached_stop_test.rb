@@ -13,6 +13,8 @@ test('workspace stop survives closing its calling pane and preserves unrelated s
     names = Archon::Workspaces.project_definitions(projects).map { |definition| definition[:session] }
     begin
       [*names, 'unrelated'].each { |name| tmux.call('new-session', '-d', '-s', name, 'sleep', '60') }
+      names.each { |name| tmux.call('set-option', '-t', "=#{name}:", '@archon-managed', '1') }
+      FileUtils.rm_rf(File.join(fixture[:home], 'projects'))
       tmux.call('new-window', '-t', "=#{names.first}", '-n', 'stopper', '/usr/bin/env',
         "HOME=#{fixture[:home]}", "XDG_STATE_HOME=#{ENV.fetch('XDG_STATE_HOME')}", "PATH=#{ENV.fetch('PATH')}",
         RbConfig.ruby, File.expand_path('../../bin/arc', __dir__), 'w', 't', 'stop')

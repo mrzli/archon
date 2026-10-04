@@ -16,13 +16,14 @@ new resources and later projects are still attempted.
 
 Interactive starts outside Herdr attach in the current terminal and focus the
 first selected project. Inside Herdr, the current view is preserved.
-Stop never attaches or prompts, and stops all discovered project workspaces.
+Stop never attaches or prompts.
 
 Stop from a Herdr pane runs independently so closing that pane does not
 interrupt the remaining work. Shutdown diagnostics are saved in
 `${XDG_STATE_HOME:-~/.local/state}/archon/workspaces-herdr-stop.log`.
 
-Uses the dedicated Herdr session `archon`. It starts its background server when
-needed. `kill` stops this entire session, including extra workspaces.
-Server diagnostics are saved in `archon/workspaces-herdr-server.log` under the
-state directory.
+Uses the dedicated Herdr session `archon`. Start launches its background server
+when needed. Stop shuts down this entire session, including extra workspaces
+you added there, and preserves its saved layout. Other Herdr sessions are
+unaffected. Stopping an already stopped session succeeds. Server diagnostics
+are saved in `archon/workspaces-herdr-server.log` under the state directory.

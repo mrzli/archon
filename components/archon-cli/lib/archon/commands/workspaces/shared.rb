@@ -21,7 +21,7 @@ module Archon
         return { status: 0 }
       end
       action, *options = arguments
-      unless %w[start stop kill].include?(action)
+      unless %w[start stop].include?(action)
         warn(action ? "Unknown workspace action: #{action}" : 'Missing workspace action.')
         warn "\n#{help}"
         return { status: 2 }
@@ -82,16 +82,6 @@ module Archon
         next if result[:status] == 0
         warn "Failed to start #{backend.fetch(:resource_label)}: #{definition[:session]}"
         warn "Failed to clean up #{backend.fetch(:resource_label)}: #{definition[:session]}" if result[:cleanup_status] && result[:cleanup_status] != 0
-        status = 1
-      end
-      status
-    end
-
-    def stop_projects(definitions, backend)
-      status = 0
-      definitions.each do |definition|
-        next if backend.fetch(:stop_session).call(definition[:session]) == 0
-        warn "Failed to stop #{backend.fetch(:resource_label)}: #{definition[:session]}"
         status = 1
       end
       status
