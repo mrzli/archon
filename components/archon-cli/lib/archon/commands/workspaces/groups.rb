@@ -4,6 +4,28 @@ module Archon
   module Workspaces
     PROJECTS = %w[mrzli/archon mrzli/docs mrzli/js-templates mrzli/learning mrzli/mrzli.github.io mrzli/omarchy-lab mrzli/repos mrzli/skills].freeze
 
+    def workspace_definitions(group, home: Dir.home)
+      case group
+      when 'general'
+        [{ session: 'main', directory: File.join(home, 'projects') }]
+      when 'flashcards'
+        [
+          { session: 'flashcards-fe', directory: File.join(home, 'projects/personal/mrzli/flashcards-fe'), dev_command: 'bun run dev' },
+          { session: 'flashcards-be', directory: File.join(home, 'projects/personal/mrzli/flashcards-be'), dev_command: 'pnpm run dev' }
+        ]
+      when 'jslibs'
+        root = File.join(home, 'projects/personal/mrzli-jslib')
+        return [] unless File.directory?(root)
+        find_libraries(root).map do |directory|
+          { session: "jslib-#{File.basename(directory)}", directory: directory }
+        end
+      when 'misc-projects'
+        PROJECTS.map do |project|
+          { session: "project-#{project.tr('/.', '--')}", directory: File.join(home, 'projects/personal', project) }
+        end
+      end
+    end
+
     def start_editor_session(definition, backend)
       session = definition[:session]
       return 0 if backend.fetch(:has_session).call(session)
@@ -33,7 +55,7 @@ module Archon
     end
 
     def manage_general(action, backend, home: Dir.home, exists: File.method(:exist?))
-      directory = File.join(home, 'projects')
+      directory = workspace_definitions('general', home: home).first.fetch(:directory)
       if action == 'start'
         unless exists.call(directory)
           warn "Skipping main: directory does not exist: #{directory}"
@@ -52,18 +74,11 @@ module Archon
     end
 
     def manage_flashcards(action, backend, home: Dir.home)
-      definitions = [
-        { session: 'flashcards-fe', directory: File.join(home, 'projects/personal/mrzli/flashcards-fe'), dev_command: 'bun run dev' },
-        { session: 'flashcards-be', directory: File.join(home, 'projects/personal/mrzli/flashcards-be'), dev_command: 'pnpm run dev' }
-      ]
-      manage_editor_sessions(action, definitions, backend)
+      manage_editor_sessions(action, workspace_definitions('flashcards', home: home), backend)
     end
 
     def manage_misc_projects(action, backend, home: Dir.home)
-      definitions = PROJECTS.map do |project|
-        { session: "project-#{project.tr('/.', '--')}", directory: File.join(home, 'projects/personal', project) }
-      end
-      manage_editor_sessions(action, definitions, backend)
+      manage_editor_sessions(action, workspace_definitions('misc-projects', home: home), backend)
     end
 
     def find_libraries(root)
@@ -79,8 +94,7 @@ module Archon
           warn "Skipping JavaScript libraries: directory does not exist: #{root}"
           return 0
         end
-        find_libraries(root).each do |directory|
-          definition = { session: "jslib-#{File.basename(directory)}", directory: directory }
+        workspace_definitions('jslibs', home: home).each do |definition|
           status = 1 unless start_editor_session(definition, backend) == 0
         end
       else

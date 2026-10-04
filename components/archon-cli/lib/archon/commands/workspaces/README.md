@@ -1,6 +1,7 @@
 # Workspaces command
 
-Choose a backend explicitly. There is no default:
+List configured projects or choose a backend explicitly to manage workspaces.
+There is no default backend:
 
 ```bash
 archon workspaces herdr start
@@ -24,6 +25,22 @@ arc w h --help
 ```
 
 See [Herdr usage](./herdr/README.md) for prerequisites, options, and behavior.
+
+## List
+
+Show project paths under each workspace group without starting a backend:
+
+```bash
+archon workspaces list
+arc w list -g flashcards
+archon workspaces list --help
+```
+
+`-g` and `--group` select `flashcards`, `general`, `jslibs`, or `misc-projects`.
+Without a group, all groups appear in startup order. Missing configured
+directories are marked `(missing)`. JavaScript libraries are discovered from
+local repositories, using the same selection as workspace startup; an empty
+group shows `(no projects found)`. No Herdr or tmux installation is required.
 
 ## tmux
 

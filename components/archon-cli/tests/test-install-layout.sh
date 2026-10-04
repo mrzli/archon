@@ -78,6 +78,12 @@ test_repeated_overlay_copy() {
   alias_output="$(cd "$home" && HOME="$home" .local/bin/arc --help)" || return
   assert_equals "$archon_output" "$alias_output" || return
 
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list -g flashcards)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w list --group flashcards)" || return
+  assert_equals "$archon_output" "$alias_output" || return
+  assert_equals $'flashcards:\n  ~/projects/personal/mrzli/flashcards-fe (missing)\n  ~/projects/personal/mrzli/flashcards-be (missing)' "$archon_output" || return
+  assert_absent "$home/projects" || return
+
   cmp -- "$archon_cli_source/bin/archon" "$home/.local/bin/archon" || return
 
   local expected_files installed_files path
