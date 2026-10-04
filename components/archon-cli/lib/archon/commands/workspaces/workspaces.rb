@@ -1,5 +1,6 @@
 require_relative 'herdr/workspaces'
 require_relative 'tmux/workspaces'
+require_relative 'visual_studio_code/visual_studio_code'
 
 module Archon
   module Workspaces
@@ -8,11 +9,10 @@ module Archon
              archon workspaces <backend> <start|stop> [options]
 
       Commands:
-        list       List available projects without a backend
-
-      Backends:
-        herdr (h)  Manage Herdr workspaces
-        tmux (t)   Manage tmux workspace sessions
+        herdr (h)                Manage Herdr workspaces
+        list                     List available projects without a backend
+        tmux (t)                 Manage tmux workspace sessions
+        visual-studio-code (vsc)  Open grouped VS Code projects or stop VS Code
 
       Choose a backend explicitly for start or stop. There is no default.
       Use archon workspaces list --help for listing options.
@@ -50,11 +50,12 @@ module Archon
         return 0
       end
       backend, *options = arguments
-      return run_workspace_list(options, home: home) if backend == 'list'
-      backend = { 'h' => 'herdr', 't' => 'tmux' }.fetch(backend, backend)
+      backend = { 'h' => 'herdr', 't' => 'tmux', 'vsc' => 'visual-studio-code' }.fetch(backend, backend)
       case backend
       when 'herdr' then return WorkspacesHerdr.run_workspaces_herdr(options, home: home)
+      when 'list' then return run_workspace_list(options, home: home)
       when 'tmux' then return WorkspacesTmux.run_workspaces_tmux(options, home: home)
+      when 'visual-studio-code' then return VisualStudioCode.run_visual_studio_code(options, home: home)
       when nil then warn 'Missing workspace backend.'
       else warn "Unknown workspace backend: #{backend}"
       end

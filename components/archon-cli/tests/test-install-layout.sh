@@ -88,6 +88,10 @@ test_repeated_overlay_copy() {
   archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list)" || return
   assert_equals $'~/projects/cloned/plain folder\n~/projects/personal/owner/plain' "$archon_output" || return
 
+  archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces visual-studio-code --help)" || return
+  alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w vsc --help)" || return
+  assert_equals "$archon_output" "$alias_output" || return
+
   cmp -- "$archon_cli_source/bin/archon" "$home/.local/bin/archon" || return
 
   local expected_files installed_files path

@@ -6,7 +6,7 @@ def run_cli(arguments)
 end
 
 usage_cases = [%w[h extra], %w[p s], %w[l b], %w[w s], %w[wt s], [], ['unknown'], %w[help extra],
-               ['workspace'], ['workspaces'], ['workspaces-herdr'], ['workspaces-tmux'], ['wh'],
+               ['visual-studio-code'], ['vsc'], ['workspace'], ['workspaces'], ['workspaces-herdr'], ['workspaces-tmux'], ['wh'],
                %w[workspaces start], %w[workspaces stop], %w[workspaces kill],
                %w[workspaces unknown], %w[workspaces help extra]]
 %w[herdr tmux].each do |backend|
@@ -44,7 +44,7 @@ test('help, aliases, and nested command help work without external commands') do
     [[], ['projects'], ['libs'], ['workspaces']].each do |prefix|
       %w[-h --help].each { |help| equal 0, run_cli([*prefix, help])[:status] }
     end
-    { 'h' => 'herdr', 't' => 'tmux' }.each do |short, full|
+    { 'h' => 'herdr', 't' => 'tmux', 'vsc' => 'visual-studio-code' }.each do |short, full|
       result = run_cli(['workspaces', full, '--help'])
       equal 0, result[:status]
       assert result[:stdout].start_with?("Usage: archon workspaces #{full} ")

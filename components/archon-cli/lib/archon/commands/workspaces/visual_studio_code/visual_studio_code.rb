@@ -1,5 +1,5 @@
-require_relative '../../shared/process'
-require_relative '../workspaces/project_selection'
+require_relative '../../../shared/process'
+require_relative '../project_selection'
 require_relative 'hyprland'
 
 module Archon
@@ -7,8 +7,8 @@ module Archon
     extend self
 
     HELP = <<~TEXT.chomp.freeze
-      Usage: archon visual-studio-code <start|stop>
-             archon vsc <start|stop>
+      Usage: archon workspaces visual-studio-code <start|stop>
+             archon w vsc <start|stop>
 
       start  Choose a workspace and projects, then open a Hyprland tabbed group
       stop   Close ALL VS Code windows in the current Hyprland session

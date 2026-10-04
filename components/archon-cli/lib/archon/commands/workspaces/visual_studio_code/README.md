@@ -6,13 +6,13 @@ configuration (as used by current Omarchy), and `code` and `hyprctl` on `PATH`.
 ## Start
 
 ```bash
-archon visual-studio-code start
-arc vsc start
+archon workspaces visual-studio-code start
+arc w vsc start
 ```
 
 Choose a workspace, then select projects in the terminal checklist.
-The action is required; `arc vsc` shows usage and exits with status 2.
-Use `arc vsc --help` for help. The controls are shown in both prompts:
+The action is required; `arc w vsc` shows usage and exits with status 2.
+Use `arc w vsc --help` for help. The controls are shown in both prompts:
 
 - `j`/`k` or Up/Down moves the cursor.
 - Workspace digits `1`–`9` and `0` select a workspace. `0` means workspace 10.
@@ -46,8 +46,8 @@ rules that prevent grouping must be resolved before retrying.
 ## Stop
 
 ```bash
-archon visual-studio-code stop
-arc vsc stop
+archon workspaces visual-studio-code stop
+arc w vsc stop
 ```
 
 Closes **all VS Code windows in the current Hyprland session**, including windows
