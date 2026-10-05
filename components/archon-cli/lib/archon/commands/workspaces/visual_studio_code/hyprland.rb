@@ -22,7 +22,7 @@ module Archon
     end
 
     def code_window?(client)
-      %w[code com.microsoft.vscode].include?(client.fetch('class').downcase)
+      client.fetch('class') == 'com.microsoft.VSCode'
     end
 
     def stop_windows(run:, timeout: 30)

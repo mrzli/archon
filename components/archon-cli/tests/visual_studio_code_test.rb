@@ -47,9 +47,9 @@ def vsc_terminal(home)
   end
 end
 
-def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, window_class: 'Code')
+def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil)
   calls = []
-  clients = [{ 'address' => '0xmanual', 'class' => 'Code', 'grouped' => [], 'workspace' => { 'id' => 3 }, 'at' => [0, 0] }]
+  clients = [{ 'address' => '0xmanual', 'class' => 'com.microsoft.VSCode', 'grouped' => [], 'workspace' => { 'id' => 3 }, 'at' => [0, 0] }]
   workspace, focused, count = 3, nil, 0
   run = lambda do |command, arguments|
     calls << [command, arguments]
@@ -60,7 +60,7 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, window
       if count == launch_failure
         status = 1
       else
-        client = { 'address' => "0x#{count}", 'class' => window_class, 'grouped' => [], 'workspace' => { 'id' => workspace }, 'at' => [100, 0] }
+        client = { 'address' => "0x#{count}", 'class' => 'com.microsoft.VSCode', 'grouped' => [], 'workspace' => { 'id' => workspace }, 'at' => [100, 0] }
         target = clients.find { |window| window['address'] == focused }
         if automatic && target && !target['grouped'].empty?
           group = target['grouped'] + [client['address']]
@@ -232,9 +232,9 @@ test('empty selection is saved and stale projects are not reopened') do
   end
 end
 
-[[true, 'Code'], [false, 'Code'], [true, 'com.microsoft.VSCode']].each do |automatic, window_class|
-  test("launch groups #{window_class} windows and preserves existing windows, automatic grouping: #{automatic}") do
-    backend = vsc_hyprland(automatic: automatic, window_class: window_class)
+[true, false].each do |automatic|
+  test("launch groups new windows in order and preserves existing windows, automatic grouping: #{automatic}") do
+    backend = vsc_hyprland(automatic: automatic)
     projects = ['/fixture/one space', '/fixture/two', '/fixture/three']
     VSC.launch_projects(projects, 10, run: backend[:run], timeout: 0)
     equal projects.map { |path| ['code', ['--new-window', path]] }, backend[:calls].select { |command, _| command == 'code' }
@@ -280,8 +280,7 @@ end
 test('stop requests normal closure of every Code window, preserves other apps, and succeeds repeatedly') do
   fixture do |fixture|
     state_path = File.join(fixture[:home], 'clients.json')
-    windows = [{ 'class' => 'Code', 'address' => '0x1' }, { 'class' => 'code', 'address' => '0x2' },
-               { 'class' => 'com.microsoft.VSCode', 'address' => '0x5' },
+    windows = [{ 'class' => 'com.microsoft.VSCode', 'address' => '0x1' }, { 'class' => 'com.microsoft.VSCode', 'address' => '0x2' },
                { 'class' => 'code-helper', 'address' => '0x3' }, { 'class' => 'terminal', 'address' => '0x4' }]
     File.write(state_path, JSON.generate(windows))
     write_executable(File.join(fixture[:bin], 'hyprctl'), <<~'RUBY')
@@ -304,9 +303,9 @@ test('stop requests normal closure of every Code window, preserves other apps, a
     result = run_archon(%w[w vsc stop])
     equal 0, result[:status]
     assert result[:stdout].include?('Closed all VS Code windows.')
-    equal windows.drop(3), JSON.parse(File.read(state_path))
+    equal windows.drop(2), JSON.parse(File.read(state_path))
     calls = File.readlines(File.join(fixture[:home], 'hyprctl-calls')).map { |line| JSON.parse(line) }
-    equal [%w[-j clients], ['dispatch', 'hl.dsp.window.close({ window = "address:0x1" })'], ['dispatch', 'hl.dsp.window.close({ window = "address:0x2" })'], ['dispatch', 'hl.dsp.window.close({ window = "address:0x5" })'], %w[-j clients]], calls
+    equal [%w[-j clients], ['dispatch', 'hl.dsp.window.close({ window = "address:0x1" })'], ['dispatch', 'hl.dsp.window.close({ window = "address:0x2" })'], %w[-j clients]], calls
     result = run_archon(%w[w vsc stop])
     equal 0, result[:status]
     assert result[:stdout].include?('No VS Code windows running.')
@@ -322,7 +321,7 @@ test('stop waits for windows to disappear and does not force termination on a sh
     calls << arguments
     if arguments == %w[-j clients]
       listings += 1
-      output = JSON.generate(listings < 3 ? [{ 'class' => 'Code', 'address' => '0x1' }] : [])
+      output = JSON.generate(listings < 3 ? [{ 'class' => 'com.microsoft.VSCode', 'address' => '0x1' }] : [])
     else
       equal ['dispatch', 'hl.dsp.window.close({ window = "address:0x1" })'], arguments
       output = 'ok'
@@ -334,7 +333,7 @@ test('stop waits for windows to disappear and does not force termination on a sh
 
   stuck = lambda do |command, arguments|
     equal 'hyprctl', command
-    output = arguments == %w[-j clients] ? '[{"class":"Code","address":"0x1"}]' : 'ok'
+    output = arguments == %w[-j clients] ? '[{"class":"com.microsoft.VSCode","address":"0x1"}]' : 'ok'
     { stdout: output, stderr: '', status: 0 }
   end
   raises(/did not finish closing/) { VSC.stop_windows(run: stuck, timeout: 0) }

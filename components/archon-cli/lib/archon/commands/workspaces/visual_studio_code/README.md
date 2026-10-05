@@ -1,8 +1,8 @@
 # Visual Studio Code
 
-Requires Ruby, an interactive terminal, a running Hyprland session with Lua
-configuration (as used by current Omarchy), and `code` and `hyprctl` on `PATH`.
-Supports VS Code windows running through native Wayland or XWayland.
+Requires Ruby, current VS Code, an interactive terminal, a running Hyprland
+session with Lua configuration (as used by current Omarchy), and `code` and
+`hyprctl` on `PATH`.
 
 ## Start
 
