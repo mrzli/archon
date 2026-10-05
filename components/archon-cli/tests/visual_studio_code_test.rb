@@ -47,7 +47,7 @@ def vsc_terminal(home)
   end
 end
 
-def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil)
+def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, window_class: 'Code')
   calls = []
   clients = [{ 'address' => '0xmanual', 'class' => 'Code', 'grouped' => [], 'workspace' => { 'id' => 3 }, 'at' => [0, 0] }]
   workspace, focused, count = 3, nil, 0
@@ -60,7 +60,7 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil)
       if count == launch_failure
         status = 1
       else
-        client = { 'address' => "0x#{count}", 'class' => 'Code', 'grouped' => [], 'workspace' => { 'id' => workspace }, 'at' => [100, 0] }
+        client = { 'address' => "0x#{count}", 'class' => window_class, 'grouped' => [], 'workspace' => { 'id' => workspace }, 'at' => [100, 0] }
         target = clients.find { |window| window['address'] == focused }
         if automatic && target && !target['grouped'].empty?
           group = target['grouped'] + [client['address']]
@@ -232,11 +232,11 @@ test('empty selection is saved and stale projects are not reopened') do
   end
 end
 
-[true, false].each do |automatic|
-  test("launch groups new windows in order and preserves existing windows, automatic grouping: #{automatic}") do
-    backend = vsc_hyprland(automatic: automatic)
+[[true, 'Code'], [false, 'Code'], [true, 'com.microsoft.VSCode']].each do |automatic, window_class|
+  test("launch groups #{window_class} windows and preserves existing windows, automatic grouping: #{automatic}") do
+    backend = vsc_hyprland(automatic: automatic, window_class: window_class)
     projects = ['/fixture/one space', '/fixture/two', '/fixture/three']
-    VSC.launch_projects(projects, 10, run: backend[:run])
+    VSC.launch_projects(projects, 10, run: backend[:run], timeout: 0)
     equal projects.map { |path| ['code', ['--new-window', path]] }, backend[:calls].select { |command, _| command == 'code' }
     backend[:clients].drop(1).each do |client|
       equal %w[0x1 0x2 0x3], client['grouped']
@@ -281,6 +281,7 @@ test('stop requests normal closure of every Code window, preserves other apps, a
   fixture do |fixture|
     state_path = File.join(fixture[:home], 'clients.json')
     windows = [{ 'class' => 'Code', 'address' => '0x1' }, { 'class' => 'code', 'address' => '0x2' },
+               { 'class' => 'com.microsoft.VSCode', 'address' => '0x5' },
                { 'class' => 'code-helper', 'address' => '0x3' }, { 'class' => 'terminal', 'address' => '0x4' }]
     File.write(state_path, JSON.generate(windows))
     write_executable(File.join(fixture[:bin], 'hyprctl'), <<~'RUBY')
@@ -303,9 +304,9 @@ test('stop requests normal closure of every Code window, preserves other apps, a
     result = run_archon(%w[w vsc stop])
     equal 0, result[:status]
     assert result[:stdout].include?('Closed all VS Code windows.')
-    equal windows.drop(2), JSON.parse(File.read(state_path))
+    equal windows.drop(3), JSON.parse(File.read(state_path))
     calls = File.readlines(File.join(fixture[:home], 'hyprctl-calls')).map { |line| JSON.parse(line) }
-    equal [%w[-j clients], ['dispatch', 'hl.dsp.window.close({ window = "address:0x1" })'], ['dispatch', 'hl.dsp.window.close({ window = "address:0x2" })'], %w[-j clients]], calls
+    equal [%w[-j clients], ['dispatch', 'hl.dsp.window.close({ window = "address:0x1" })'], ['dispatch', 'hl.dsp.window.close({ window = "address:0x2" })'], ['dispatch', 'hl.dsp.window.close({ window = "address:0x5" })'], %w[-j clients]], calls
     result = run_archon(%w[w vsc stop])
     equal 0, result[:status]
     assert result[:stdout].include?('No VS Code windows running.')

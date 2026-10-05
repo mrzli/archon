@@ -21,8 +21,12 @@ module Archon
       JSON.parse(checked_process(run, 'hyprctl', %w[-j clients]))
     end
 
+    def code_window?(client)
+      %w[code com.microsoft.vscode].include?(client.fetch('class').downcase)
+    end
+
     def stop_windows(run:, timeout: 30)
-      addresses = hypr_clients(run).select { |client| client.fetch('class').downcase == 'code' }
+      addresses = hypr_clients(run).select { |client| code_window?(client) }
                                   .map { |client| client.fetch('address') }
       return 0 if addresses.empty?
 
@@ -52,7 +56,7 @@ module Archon
           loop do
             clients = hypr_clients(run)
             client = clients.find do |candidate|
-              candidate.fetch('class').downcase == 'code' && !before.include?(candidate.fetch('address'))
+              code_window?(candidate) && !before.include?(candidate.fetch('address'))
             end
             if client
               opened << client.fetch('address')
