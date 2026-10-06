@@ -15,6 +15,13 @@ if [ "$#" -gt 0 ]; then
   shift
 fi
 
+# Real tmux shuts down asynchronously after its last session closes; meanwhile it reports this.
+if [ -e "$state_dir/exiting" ]; then
+  rm -f -- "$state_dir/exiting"
+  echo "server exited unexpectedly" >&2
+  exit 1
+fi
+
 if [ "${TMW_TMUX_FAIL_COMMAND:-}" = "$command" ]; then
   echo "forced tmux failure: $command" >&2
   exit 1
@@ -111,6 +118,9 @@ case "$command" in
     fi
     [ -d "$sessions_dir/$session" ] || exit 1
     rm -rf -- "$sessions_dir/$session"
+    if [ -n "${TMW_TMUX_EXIT_RACE:-}" ] && [ -z "$(ls -A "$sessions_dir")" ]; then
+      touch "$state_dir/exiting"
+    fi
     ;;
   set-option | show-options)
     option_file=""

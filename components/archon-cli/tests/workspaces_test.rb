@@ -88,3 +88,18 @@ test('VS Code remembers its workspace and selection in its own state file') do
     assert !File.exist?(File.join(fixture[:home], '.local/state/archon/workspaces'))
   end
 end
+
+test('the Claude tab command continues only when the project has a saved conversation') do
+  fixture do |fixture|
+    project = File.join(fixture[:root], 'my.project dir')
+    FileUtils.mkdir_p(project)
+    write_executable(File.join(fixture[:bin], 'claude'), "#!/bin/sh\nprintf 'claude %s\\n' \"$*\"\n")
+    run = -> { Open3.capture2('bash', '-c', Archon::Workspaces::CLAUDE_COMMAND, chdir: project).first }
+    equal "claude \n", run.call
+    # Claude names project folders after the path with every non-alphanumeric character replaced by '-'.
+    conversations = File.join(fixture[:home], '.claude/projects', project.gsub(/[^[:alnum:]]/, '-'))
+    FileUtils.mkdir_p(conversations)
+    File.write(File.join(conversations, 'session.jsonl'), "{}\n")
+    equal "claude --continue\n", run.call
+  end
+end

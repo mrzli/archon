@@ -248,6 +248,33 @@ check('CLI installation copies Ruby directly without Bun or build tooling', :cli
   assert !File.exist?("#{home}/.local/lib/archon/commands/projects/libs/README.md")
 end
 
+check('managed deletion rejects entries that resolve to home or outside it', :files) do |repo, home, _bin, env|
+  File.write("#{repo}/outside-keep", 'safe')
+  ['.', '..', '../outside', '.config/../..', './'].each do |entry|
+    File.write("#{repo}/data/home-replace-directories.txt", "#{entry}\n")
+    _, error, status = run_operation(repo, env, 'install_home_files(repo, home)')
+    assert status.exitstatus == 1, "#{entry} was accepted"
+    assert error.include?('Invalid managed home directory'), error
+    assert File.read("#{home}/personal-file") == "preserve\n"
+  end
+  assert File.read("#{repo}/outside-keep") == 'safe'
+end
+
+check('managed deletion confines absolute entries to home and removes files and dangling links', :files) do |repo, home, _bin, env|
+  FileUtils.mkdir_p(["#{home}/.config/managed", "#{home}/.config/hypr"])
+  File.write("#{home}/.config/managed/obsolete", 'obsolete')
+  File.write("#{home}/.config/managed-file", 'obsolete')
+  File.symlink("#{home}/missing-target", "#{home}/.config/dangling")
+  File.write("#{repo}/data/home-replace-directories.txt", "/.config/managed\n.config/managed-file\n.config/dangling\n")
+  2.times do
+    _, error, status = run_operation(repo, env, 'install_home_files(repo, home)')
+    assert status.success?, error
+  end
+  assert !File.exist?("#{home}/.config/managed") && !File.exist?("#{home}/.config/managed-file")
+  assert !File.symlink?("#{home}/.config/dangling")
+  assert File.read("#{home}/.config/hypr/hyprland.lua") == "-- existing user configuration\n"
+end
+
 check('managed deletion rejects symlinks outside home', :files) do |repo, home, _bin, env|
   outside = "#{repo}/outside"
   FileUtils.mkdir_p([outside, "#{home}/.config"])

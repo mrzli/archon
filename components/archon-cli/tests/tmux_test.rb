@@ -164,6 +164,11 @@ test('stop removes tagged sessions after project deletion and preserves untagged
     FileUtils.rm_rf(File.join(fixture[:home], 'projects'))
     2.times { equal 0, Tmux.run_workspaces_tmux(['stop'], **context) }
     equal ['archon-unmanaged'], Dir.children(root)
+    # Stopping right after the last session closed meets a server that is still shutting down.
+    ENV['TMW_TMUX_EXIT_RACE'] = '1'
+    system('tmux', 'kill-session', '-t', '=archon-unmanaged', exception: true)
+    equal 0, Tmux.run_workspaces_tmux(['stop'], **context)
+    assert !File.exist?(File.join(ENV['TMW_TMUX_STATE'], 'exiting'))
   end
 end
 

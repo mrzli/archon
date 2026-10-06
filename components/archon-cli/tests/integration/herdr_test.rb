@@ -37,6 +37,19 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
       wait_for_tools.call(projects.first, 4)
       equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **inside)
       equal before, invoke.call('archon', %w[workspace list]).fetch('workspaces').map { |item| item['workspace_id'] }
+      # The saved ID finds a workspace renamed by hand and restores its folder label.
+      invoke.call('archon', ['workspace', 'rename', before.first, 'renamed by hand'])
+      equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **inside)
+      equal ['old'], invoke.call('archon', %w[workspace list]).fetch('workspaces').map { |item| item['label'] }
+      tabs = invoke.call('archon', ['tab', 'list', '--workspace', before.first]).fetch('tabs')
+      panes = invoke.call('archon', ['pane', 'list', '--workspace', before.first]).fetch('panes')
+      process_info = lambda do |label|
+        tab = tabs.find { |item| item['label'] == label }
+        pane = panes.find { |item| item['tab_id'] == tab['tab_id'] }
+        invoke.call('archon', ['pane', 'process-info', '--pane', pane['pane_id']]).fetch('process_info')
+      end
+      Timeout.timeout(10) { sleep 0.05 until Archon::Herdr.idle_shell?(process_info.call('shell')) }
+      assert !Archon::Herdr.idle_shell?(process_info.call('nvim'))
       %w[default outside].each do |session|
         output = File.open(File.join(fixture[:root], "#{session}.log"), 'a')
         pid = Process.spawn('/usr/bin/herdr', '--session', session, 'server', in: File::NULL, out: output, err: output)
