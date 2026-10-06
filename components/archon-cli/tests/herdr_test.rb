@@ -146,18 +146,19 @@ test('Herdr uses exact folder labels and remembers distinct IDs for same-named p
   end
 end
 
-test('Herdr shortens existing Archon labels and preserves manually created same-named workspaces') do
+test('Herdr renames a remembered workspace to its folder and preserves manually created same-named workspaces') do
   herdr_fixture do |fixture, path|
     project = workspace_directory(fixture)
-    legacy = Archon::Workspaces.project_definitions([project]).first[:session]
-    seed_herdr_workspaces(path, [legacy, File.basename(project)])
+    seed_herdr_workspaces(path, ['renamed by hand', File.basename(project)])
+    selection_path = Archon::WorkspaceProjects.selection_path('herdr', home: fixture[:home], state_home: ENV['XDG_STATE_HOME'])
+    Archon::WorkspaceProjects.save_selection(selection_path, { 'projects' => [project], 'workspace_ids' => { project => 'w7' } })
     before = herdr_state(path)['workspaces'].map { |workspace| workspace['workspace_id'] }
     context = { home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: true }
     2.times { equal 0, Herdr.run_workspaces_herdr(['start'], **context) }
     state = herdr_state(path)
     equal before, state['workspaces'].map { |workspace| workspace['workspace_id'] }
     equal [File.basename(project)] * 2, state['workspaces'].map { |workspace| workspace['label'] }
-    equal before.first, state['focused']
+    equal 'w7', state['focused']
     equal 1, state['calls'].count { |call| call.first(2) == %w[workspace rename] }
     assert state['calls'].none? { |call| call.first(2) == %w[workspace create] }
   end
@@ -219,20 +220,6 @@ test('failed Herdr server startup produces a private log and creates no workspac
     log = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-server.log')
     assert File.read(log).include?('injected Herdr failure')
     equal 0o600, File.stat(log).mode & 0o777
-  end
-end
-
-test('ambiguous Herdr workspace labels are refused without creating resources') do
-  herdr_fixture do |fixture, path|
-    project = workspace_directory(fixture)
-    label = Archon::Workspaces.project_definitions([project]).first[:session]
-    seed_herdr_workspaces(path, [label, label])
-    status, _, error = capture do
-      Herdr.run_workspaces_herdr(['start'], home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: false)
-    end
-    equal 1, status
-    assert error.include?('More than one Herdr workspace is named')
-    assert herdr_state(path)['calls'].none? { |call| call.first(2) == %w[workspace create] }
   end
 end
 

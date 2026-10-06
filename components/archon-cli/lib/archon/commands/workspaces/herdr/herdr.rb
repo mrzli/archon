@@ -115,17 +115,9 @@ module Archon
         definition = by_name.fetch(name)
         id = workspace_ids[definition[:directory]]
         workspace = workspaces.find { |item| item.fetch('workspace_id') == id }
-        # Adopt the previous Archon label once, then identify projects by ID.
-        matches = workspaces.select { |item| item.fetch('label') == name } unless workspace
-        matches ||= []
-        raise "More than one Herdr workspace is named #{name}; rename duplicates before continuing." if matches.length > 1
-        workspace ||= matches.first
-        if workspace
-          if workspace.fetch('label') != definition[:label]
-            request.call(['workspace', 'rename', workspace.fetch('workspace_id'), definition[:label]])
-            workspace['label'] = definition[:label]
-          end
-          remember_workspace.call(definition, workspace) unless id == workspace.fetch('workspace_id')
+        if workspace && workspace.fetch('label') != definition[:label]
+          request.call(['workspace', 'rename', workspace.fetch('workspace_id'), definition[:label]])
+          workspace['label'] = definition[:label]
         end
         workspace
       end
