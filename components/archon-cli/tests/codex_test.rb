@@ -6,8 +6,8 @@ def codex_terminals(count: 2, stuck: false)
   end
   panes = states.each_index.map { |index| { backend: :herdr, server: 'test', id: index } }
   terminals = Object.new
-  terminals.define_singleton_method(:discover) { |run:| [panes, []] }
-  terminals.define_singleton_method(:process_info) do |pane, run:|
+  terminals.define_singleton_method(:discover) { |_program, run:| [panes, []] }
+  terminals.define_singleton_method(:process_info) do |pane, _program, run:|
     state = states.fetch(pane[:id])
     state[:shell] ? { shell: true } :
       { pid: state[:pid], argv: ['codex', 'resume', '--last', '--model', 'test-model', '-c', 'test="a b"'],
@@ -63,7 +63,7 @@ end
 
 test('a Codex pane without an underlying shell is left running') do
   terminals, states = codex_terminals(count: 1)
-  terminals.define_singleton_method(:process_info) do |pane, run:|
+  terminals.define_singleton_method(:process_info) do |pane, _program, run:|
     { pid: 123, argv: ['codex'], cwd: '/project', no_shell: true }
   end
   status, _, error = restart_codex(terminals)
@@ -75,8 +75,8 @@ end
 test('an explicit working directory is not overridden by the process directory') do
   terminals, states = codex_terminals(count: 1)
   original_info = terminals.method(:process_info)
-  terminals.define_singleton_method(:process_info) do |pane, run:|
-    info = original_info.call(pane, run: run)
+  terminals.define_singleton_method(:process_info) do |pane, _program, run:|
+    info = original_info.call(pane, 'codex', run: run)
     info[:argv] += ['--cd', '/different project'] if info[:argv]
     info
   end
@@ -108,7 +108,7 @@ test('discovery reports broken Herdr sessions and continues with the others') do
         { status: 0, stdout: JSON.generate(result: { agents: [{ agent: 'codex', pane_id: 'w1:p2' }] }) }
       end
     end
-    panes, errors = Archon::Codex::Terminals.discover(run: run, env: { 'TMUX_TMPDIR' => fixture[:root] })
+    panes, errors = Archon::AgentTerminals.discover('codex', run: run, env: { 'TMUX_TMPDIR' => fixture[:root] })
     equal ['ok'], panes.map { |pane| pane[:server] }
     equal 1, errors.length
     assert errors.first.include?('connection failed')
@@ -135,7 +135,7 @@ test('Codex discovery ignores stopped tmux servers but reports real discovery er
           { status: 1, stdout: message, stderr: '' }
         end
       end
-      panes, errors = Archon::Codex::Terminals.discover(run: run,
+      panes, errors = Archon::AgentTerminals.discover('codex', run: run,
         env: { 'TMUX_TMPDIR' => fixture[:root], 'TMUX' => "#{socket},123,0" })
       equal [], panes
       if message.include?('Permission denied') || message == 'server exited unexpectedly'
@@ -177,12 +177,12 @@ test('Herdr adapter discovers all running sessions and uses explicit pane target
       end
       { status: 0, stderr: '', stdout: response ? JSON.generate(response) : 'Session: plain text' }
     end
-    panes, errors = Archon::Codex::Terminals.discover(run: run, env: { 'TMUX_TMPDIR' => fixture[:root] })
+    panes, errors = Archon::AgentTerminals.discover('codex', run: run, env: { 'TMUX_TMPDIR' => fixture[:root] })
     equal [], errors
     equal %w[one two], panes.map { |pane| pane[:server] }
     pane = panes.first
-    equal 2, Archon::Codex::Terminals.process_info(pane, run: run)[:pid]
-    Archon::Codex::Terminals.submit(pane, 'codex resume --last', run: run)
+    equal 2, Archon::AgentTerminals.process_info(pane, 'codex', run: run)[:pid]
+    Archon::AgentTerminals.submit(pane, 'codex resume --last', run: run)
     equal ['herdr', ['--session', 'one', 'pane', 'run', 'w1:p2', 'codex resume --last']], calls.last
   end
 end

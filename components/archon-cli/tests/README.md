@@ -39,8 +39,8 @@ and the util-linux `setsid` utility.
 Default Herdr checks use a fake executable and temporary state. They do not
 require Herdr or start real editors, agents, or development servers.
 
-Run real Herdr and tmux integration tests when changing workspace shutdown or Codex
-restart behavior, and before releases:
+Run real Herdr and tmux integration tests when changing workspace shutdown or Claude
+or Codex restart behavior, and before releases:
 
 ```bash
 bash components/archon-cli/tests/run-integration.sh
@@ -48,7 +48,7 @@ bash components/archon-cli/tests/run-integration.sh
 
 These checks require Herdr at `/usr/bin/herdr`, tmux at `/usr/bin/tmux`, and
 permission to create Unix sockets. They use isolated temporary servers and
-fake Codex processes, and preserve live sessions. The default suite and timing
+fake Claude and Codex processes, and preserve live sessions. The default suite and timing
 command exclude them.
 
 Run the optional twelve-pane Codex restart stress check separately:
