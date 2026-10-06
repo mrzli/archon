@@ -1,10 +1,12 @@
 require_relative 'help'
 require_relative 'github_inventory'
+require_relative 'libs/libs'
 require_relative '../../shared/repository_commands'
 
 module Archon
   module Projects
     def run_projects(arguments, home: Dir.home, root: nil)
+      return Libraries.run_libraries(arguments.drop(1), home: home) if arguments.first == 'libs'
       required_root = File.expand_path('projects/personal', home)
       Shared.run_repository_command(arguments, self, File.expand_path(root || required_root), required_root)
     rescue StandardError => error

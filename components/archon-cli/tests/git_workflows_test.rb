@@ -4,29 +4,27 @@ Shared = Archon::Shared
 
 test('status reports changes, stashes, unpushed commits, inspection errors, and fetch warnings') do
   fixture do |fixture|
-    %w[projects libs].each do |domain|
-      root = File.join(fixture[:home], 'projects/personal', domain == 'libs' ? 'mrzli-jslib' : 'owner')
-      changed = initialize_repository(File.join(root, 'changed'))[:path]
-      clean = initialize_repository(File.join(root, 'clean'))[:path]
-      File.write(File.join(changed, 'tracked.txt'), "stashed\n", mode: 'a')
-      git(changed, 'stash', 'push', '-qm', 'test-stash')
-      File.write(File.join(changed, 'tracked.txt'), "unstaged\n", mode: 'a')
-      File.write(File.join(changed, 'staged.txt'), 'staged')
-      File.write(File.join(changed, 'untracked.txt'), 'untracked')
-      git(changed, 'add', 'staged.txt')
-      FileUtils.mkdir_p(File.join(root, 'broken'))
-      File.write(File.join(root, 'broken/.git'), 'broken')
-      git(clean, 'remote', 'add', 'origin', File.join(fixture[:root], 'missing'))
-      result = run_archon([domain, 'status'])
-      equal 1, result[:status]
-      assert result[:stdout].include?('staged: 1, unstaged: 1, untracked: 1')
-      assert result[:stdout].include?('stash: 1')
-      assert result[:stdout].include?('main=1 (no upstream)')
-      assert result[:stdout].match?(/broken +ERROR:/)
-      result = run_archon([domain, 'status', '--fetch'])
-      equal 1, result[:status]
-      assert result[:stdout].include?('warnings: fetch failed:')
-    end
+    root = File.join(fixture[:home], 'projects/personal/owner')
+    changed = initialize_repository(File.join(root, 'changed'))[:path]
+    clean = initialize_repository(File.join(root, 'clean'))[:path]
+    File.write(File.join(changed, 'tracked.txt'), "stashed\n", mode: 'a')
+    git(changed, 'stash', 'push', '-qm', 'test-stash')
+    File.write(File.join(changed, 'tracked.txt'), "unstaged\n", mode: 'a')
+    File.write(File.join(changed, 'staged.txt'), 'staged')
+    File.write(File.join(changed, 'untracked.txt'), 'untracked')
+    git(changed, 'add', 'staged.txt')
+    FileUtils.mkdir_p(File.join(root, 'broken'))
+    File.write(File.join(root, 'broken/.git'), 'broken')
+    git(clean, 'remote', 'add', 'origin', File.join(fixture[:root], 'missing'))
+    result = run_archon(%w[projects status])
+    equal 1, result[:status]
+    assert result[:stdout].include?('staged: 1, unstaged: 1, untracked: 1')
+    assert result[:stdout].include?('stash: 1')
+    assert result[:stdout].include?('main=1 (no upstream)')
+    assert result[:stdout].match?(/broken +ERROR:/)
+    result = run_archon(%w[projects status --fetch])
+    equal 1, result[:status]
+    assert result[:stdout].include?('warnings: fetch failed:')
   end
 end
 

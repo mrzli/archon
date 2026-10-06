@@ -1,3 +1,5 @@
+require_relative 'libs/help'
+
 module Archon
   module Projects
     HELP = {
@@ -10,6 +12,7 @@ module Archon
           -n, --dry-run  List repositories without deleting them
           -h, --help     Show help for this command
       TEXT
+      'libs' => Libraries::HELP.fetch('global'),
       'prune' => <<~TEXT.chomp,
         Usage: archon projects prune [options]
 
@@ -54,6 +57,7 @@ module Archon
 
         Commands:
           delete  Delete all local repositories inside personal
+          libs    Build or graph local @mrzli-jslib/* packages
           prune   Delete local repositories that no longer exist remotely
           remote  List included repositories owned by the GitHub user
           status  Show concise local Git status for every repository

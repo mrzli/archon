@@ -5,7 +5,7 @@ def run_cli(arguments)
   { status: status, stdout: output, stderr: error }
 end
 
-usage_cases = [%w[h extra], %w[p s], %w[l b], %w[w s], %w[wt s], [], ['unknown'], %w[help extra],
+usage_cases = [%w[h extra], %w[p s], %w[l b], %w[libs graph], %w[w s], %w[wt s], [], ['unknown'], %w[help extra],
                ['visual-studio-code'], ['vsc'], ['workspace'], ['workspaces'], ['workspaces-herdr'], ['workspaces-tmux'], ['wh'],
                %w[workspaces start], %w[workspaces stop], %w[workspaces kill],
                %w[workspaces unknown], %w[workspaces help extra]]
@@ -15,11 +15,11 @@ usage_cases = [%w[h extra], %w[p s], %w[l b], %w[w s], %w[wt s], [], ['unknown']
                       ['workspaces', backend, 'kill', 'extra'], ['workspaces', backend, 'kill', '-g', 'general'],
                       ['workspaces', backend, 'start', '--group']])
 end
-%w[projects libs].each do |domain|
-  usage_cases.concat([[domain], [domain, 'unknown'], [domain, 'global'], [domain, 'help', 'unknown'], [domain, 'help', 'status', 'extra']])
-  commands = %w[delete prune remote status sync] + (domain == 'libs' ? %w[build graph] : [])
-  commands.each { |command| usage_cases << [domain, command, '--invalid'] }
-end
+usage_cases.concat([%w[projects], %w[projects unknown], %w[projects global], %w[projects help unknown],
+                    %w[projects help status extra]])
+%w[delete prune remote status sync].each { |command| usage_cases << ['projects', command, '--invalid'] }
+usage_cases.concat([%w[projects libs], %w[projects libs unknown], %w[projects libs status], %w[projects libs help unknown],
+                    %w[projects libs help build extra], %w[projects libs build --invalid], %w[projects libs graph extra]])
 usage_cases.each do |arguments|
   test("usage error: #{arguments.join(' ')}") do
     fixture do
@@ -35,13 +35,14 @@ test('help, aliases, and nested command help work without external commands') do
     %w[git gh bun tmux herdr].each do |name|
       write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
     end
-    [['h', 'help', []], ['l', 'libs', %w[help build]], ['p', 'projects', %w[help status]], ['w', 'workspaces', ['--help']]].each do |short, full, options|
+    [['h', 'help', []], ['p', 'projects', %w[help status]], ['p', 'projects', %w[libs help build]],
+     ['w', 'workspaces', ['--help']]].each do |short, full, options|
       result = run_cli([short, *options])
       equal 0, result[:status]
       equal result, run_cli([full, *options])
       assert result[:stdout].start_with?("Usage: archon #{full} ") if full.start_with?('workspace')
     end
-    [[], ['projects'], ['libs'], ['workspaces']].each do |prefix|
+    [[], ['projects'], %w[projects libs], ['workspaces']].each do |prefix|
       %w[-h --help].each { |help| equal 0, run_cli([*prefix, help])[:status] }
     end
     { 'h' => 'herdr', 't' => 'tmux', 'vsc' => 'visual-studio-code' }.each do |short, full|
@@ -53,13 +54,12 @@ test('help, aliases, and nested command help work without external commands') do
       end
       equal result, run_cli(['w', short, '--help'])
     end
-    %w[projects libs].each do |domain|
-      commands = %w[delete prune remote status sync help] + (domain == 'libs' ? %w[build graph] : [])
+    [['projects', %w[delete libs prune remote status sync help]], [%w[projects libs], %w[build graph help]]].each do |domain, commands|
       commands.each do |command|
-        result = run_cli([domain, 'help', command])
+        result = run_cli([*domain, 'help', command])
         equal 0, result[:status]
         assert result[:stdout].start_with?('Usage: archon ')
-        equal result, run_cli([domain, command, '--help'])
+        equal result, run_cli([*domain, command, '--help'])
       end
     end
     assert !File.exist?(File.join(fixture[:home], 'unexpected-command'))
@@ -68,8 +68,8 @@ end
 
 test('the executable preserves CLI output and exit codes for errors, help, and aliases') do
   fixture do
-    [[], ['unknown'], %w[w h start --group invalid], %w[libs status --invalid],
-     ['--help'], %w[w t --help], %w[l help build], %w[p help status]].each do |arguments|
+    [[], ['unknown'], %w[w h start --group invalid], %w[p libs status],
+     ['--help'], %w[w t --help], %w[p libs help build], %w[p help status]].each do |arguments|
       result = run_archon(arguments)
       equal nil, result[:signal]
       equal run_cli(arguments), result.slice(:status, :stdout, :stderr)
@@ -77,41 +77,38 @@ test('the executable preserves CLI output and exit codes for errors, help, and a
   end
 end
 
-%w[projects libs].each do |domain|
-  commands = %w[status delete prune] + (domain == 'libs' ? %w[graph build] : [])
-  commands.each do |command|
-    test("#{domain} #{command} treats a missing root as empty") do
-      fixture do |fixture|
-        result = run_archon([domain, command])
-        equal 0, result[:status]
-        assert result[:stdout].include?(command == 'prune' ? 'No obsolete' : 'No local Git repositories')
-        assert !File.exist?(File.join(fixture[:home], 'projects'))
-      end
-    end
-  end
-  test("#{domain} sync help has no filesystem effects and sync creates the root") do
+[%w[projects status], %w[projects delete], %w[projects prune], %w[projects libs graph],
+ %w[projects libs build]].each do |arguments|
+  test("#{arguments.join(' ')} treats a missing root as empty") do
     fixture do |fixture|
-      equal 0, run_archon([domain, 'sync', '--help'])[:status]
-      assert !File.exist?(File.join(fixture[:home], 'projects'))
-      fake_github(fixture)
-      if domain == 'libs'
-        ENV['TEST_LIB_REPOS'] = JSON.generate([{ name: 'new', nameWithOwner: 'mrzli-jslib/new' }])
-        destination = File.join(fixture[:home], 'projects/personal/mrzli-jslib/new')
-      else
-        ENV['TEST_USER_REPOS'] = "1\ttest-user/new\tunused\tfalse\tpublic"
-        write_executable(File.join(fixture[:bin], 'git'), "#!/bin/sh\n[ \"$1\" = clone ] || exit 99\nmkdir -p \"$3/.git\"\n")
-        destination = File.join(fixture[:home], 'projects/personal/test-user/new')
-      end
-      result = run_archon([domain, 'sync'])
+      result = run_archon(arguments)
       equal 0, result[:status]
-      assert result[:stdout].include?('cloned')
-      assert File.directory?(File.join(destination, '.git'))
+      assert result[:stdout].include?(arguments.last == 'prune' ? 'No obsolete' : 'No local Git repositories')
+      assert !File.exist?(File.join(fixture[:home], 'projects'))
     end
   end
+end
+
+test('projects sync help has no filesystem effects and sync creates the root') do
+  fixture do |fixture|
+    equal 0, run_archon(%w[projects sync --help])[:status]
+    assert !File.exist?(File.join(fixture[:home], 'projects'))
+    fake_github(fixture)
+    ENV['TEST_USER_REPOS'] = "1\ttest-user/new\tunused\tfalse\tpublic"
+    write_executable(File.join(fixture[:bin], 'git'), "#!/bin/sh\n[ \"$1\" = clone ] || exit 99\nmkdir -p \"$3/.git\"\n")
+    result = run_archon(%w[projects sync])
+    equal 0, result[:status]
+    assert result[:stdout].include?('cloned')
+    assert File.directory?(File.join(fixture[:home], 'projects/personal/test-user/new/.git'))
+  end
+end
+
+[[%w[projects status], [], 'Unexpected error:'],
+ [%w[projects libs graph], ['mrzli-jslib'], 'Could not generate dependency graph:']].each do |arguments, relative_root, message|
   %w[file unreadable].each do |kind|
-    test("#{domain} rejects a #{kind} operation root") do
+    test("#{arguments.join(' ')} rejects a #{kind} operation root") do
       fixture do |fixture|
-        root = File.join(fixture[:home], 'projects/personal', *(domain == 'libs' ? ['mrzli-jslib'] : []))
+        root = File.join(fixture[:home], 'projects/personal', *relative_root)
         FileUtils.mkdir_p(File.dirname(root))
         if kind == 'file'
           File.write(root, 'preserve')
@@ -120,9 +117,9 @@ end
           File.chmod(0, root)
         end
         begin
-          result = run_archon([domain, 'status'])
+          result = run_archon(arguments)
           equal 1, result[:status]
-          assert result[:stderr].include?('Unexpected error:')
+          assert result[:stderr].include?(message), result[:stderr]
         ensure
           File.chmod(0o700, root) if kind == 'unreadable'
         end
@@ -137,12 +134,9 @@ test('sequential command invocations keep distinct roots and refuse unsafe delet
     %w[first second].each do |name|
       root = File.join(fixture[:root], name)
       FileUtils.mkdir_p(root)
-      result, output, = capture { Archon::Libraries.run_libraries(['status'], home: home, root: root) }
+      result, output, = capture { Archon::Projects.run_projects(['status'], home: home, root: root) }
       equal 0, result
       assert output.include?(root)
-      result, _, error = capture { Archon::Libraries.run_libraries(%w[delete -n], home: home, root: root) }
-      equal 1, result
-      assert error.include?('Refusing to delete: unexpected operation root:')
       result, _, error = capture { Archon::Projects.run_projects(%w[prune -n], home: home, root: root) }
       equal 1, result
       assert error.include?('Refusing to delete: unexpected operation root:')

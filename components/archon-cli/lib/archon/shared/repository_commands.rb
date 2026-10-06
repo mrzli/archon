@@ -10,7 +10,7 @@ module Archon
         return repository_help(options, help)
       end
       unless help.key?(command) && command != 'global'
-        warn(command ? "Unknown command: #{command}" : "Missing #{domain.name.end_with?('::Libraries') ? 'libraries' : 'projects'} command.")
+        warn(command ? "Unknown command: #{command}" : 'Missing command.')
         puts help.fetch('global')
         return 2
       end
@@ -49,8 +49,6 @@ module Archon
           local: local, remote: ->(refresh) { domain.remote_repositories(command == 'prune' && !refresh) },
           prunable: ->(remote) { domain.prunable_repositories(remote, root) }, key: key,
           get_name: get_name, empty_message: domain.empty_message(root))
-      when 'build', 'graph'
-        domain.run_packages(command, root)
       end
     end
 

@@ -28,8 +28,8 @@ archon admin github ssh <create|test>
 archon admin voice <start|stop>
 archon claude restart
 archon codex restart
-archon libs <command> [options]
 archon projects <command> [options]
+archon projects libs <build|graph>
 archon workspaces herdr <start|stop|kill> [options]
 archon workspaces list
 archon workspaces tmux <start|stop|kill> [options]
@@ -39,13 +39,13 @@ archon workspaces visual-studio-code <start|stop>
 `arc` is an exact alias for `archon`, so `arc projects status` and
 `archon projects status` are equivalent.
 
-Direct subcommands also have short aliases: `a` for `admin`, `h` for `help`, `l` for
-`libs`, `p` for `projects`, and `w` for `workspaces`. These work with both `archon` and `arc`, for example:
+Direct subcommands also have short aliases: `a` for `admin`, `h` for `help`,
+`p` for `projects`, and `w` for `workspaces`. These work with both `archon` and `arc`, for example:
 
 ```bash
 arc a voice stop
 arc p status
-arc l build
+arc p libs build
 arc w vsc start
 arc w vsc stop
 arc w h start
@@ -68,6 +68,6 @@ Detailed behavior is documented with each command collection:
 
 - [Administration](./lib/archon/commands/admin/README.md)
 - [Codex](./lib/archon/commands/codex/README.md)
-- [Libraries](./lib/archon/commands/libs/README.md)
-- [Projects](./lib/archon/commands/projects/README.md)
+- [Projects](./lib/archon/commands/projects/README.md), including
+  [libraries](./lib/archon/commands/projects/libs/README.md)
 - [Workspaces](./lib/archon/commands/workspaces/README.md)

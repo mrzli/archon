@@ -13,6 +13,8 @@ Other files and directories under `~/projects/personal` are ignored.
 
 - `delete`: permanently delete every managed local repository after listing
   the targets and requiring confirmation. Use `--dry-run` to inspect them.
+- `libs`: build or graph the `@mrzli-jslib/*` packages in
+  `~/projects/personal/mrzli-jslib`. See [libraries](./libs/README.md).
 - `prune`: delete repositories absent from the filtered GitHub inventory, with
   inventory revalidation and the same confirmation safeguards. Use `--dry-run`
   to inspect them.

@@ -27,7 +27,7 @@ fails before CLI installation leaves the previous CLI working. Tests and contrib
 installed. The installed commands need Ruby on `PATH` and the external tools
 used by their operations. They do not depend on the source checkout.
 
-Bun remains an external tool for `archon libs build`. CLI installation and
+Bun remains an external tool for `archon projects libs build`. CLI installation and
 tests do not require Bun.
 
 Installation removes files under `~/.local/lib/archon` that are no longer in

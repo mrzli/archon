@@ -1,4 +1,4 @@
-require_relative '../../shared/process'
+require_relative '../../../shared/process'
 
 module Archon
   module Libraries

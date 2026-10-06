@@ -224,7 +224,7 @@ check('CLI installation copies Ruby directly without build tooling', :cli) do |r
   assert status.success?, error
   assert commands(env).none? { |args| args.first == 'bun' || args[0, 3] == %w[mise exec bun] }
   assert File.exist?("#{home}/.local/lib/archon/cli.rb")
-  assert !File.exist?("#{home}/.local/lib/archon/commands/libs/README.md")
+  assert !File.exist?("#{home}/.local/lib/archon/commands/projects/libs/README.md")
 end
 
 check('managed deletion rejects symlinks outside home', :files) do |repo, home, _bin, env|

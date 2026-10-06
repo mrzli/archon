@@ -115,8 +115,6 @@ def fake_github(fixture)
       *'user/memberships/orgs?state=active&per_page=100'*) printf '%s\n' "$TEST_ORGS" ;;
       *'user/repos?affiliation=owner&visibility=all&per_page=100'*) printf '%s\n' "${TEST_USER_REPOS:-}" ;;
       *'orgs/AlphaOrg/repos?type=all&per_page=100'*) printf '%s\n' "${TEST_ORG_REPOS:-}" ;;
-      'repo list mrzli-jslib --limit 1000 --json name,nameWithOwner,isPrivate,isArchived') printf '%s\n' "${TEST_LIB_REPOS:-[]}" ;;
-      'repo clone '*) mkdir -p "$4/.git" ;;
       *) exit 99 ;;
     esac
   SH

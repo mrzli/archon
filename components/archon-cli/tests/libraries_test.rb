@@ -13,7 +13,7 @@ test('library graph discovers immediate repositories and all dependency fields')
     library(fixture, '.hidden', { name: '@mrzli-jslib/hidden' })
     library(fixture, 'ignored', { name: '@mrzli-jslib/ignored' }, git: false)
     library(fixture, 'ignored/nested', { name: '@mrzli-jslib/nested' })
-    result = run_archon(%w[libs graph])
+    result = run_archon(%w[projects libs graph])
     equal 0, result[:status]
     assert result[:stdout].include?("@mrzli-jslib/hidden\n")
     4.times { |index| assert result[:stdout].include?("  -> @mrzli-jslib/dep-#{index}\n") }
@@ -87,7 +87,7 @@ end
         printf '%s\t%s\n' "$PWD" "$*" >> "$HOME/bun-calls"
         [ "${TEST_BUN_FAIL:-}" != "$*" ] || exit 7
       SH
-      result = run_archon(%w[libs build], 'TEST_BUN_FAIL' => failure)
+      result = run_archon(%w[projects libs build], 'TEST_BUN_FAIL' => failure)
       equal failure ? 1 : 0, result[:status]
       calls = File.readlines(File.join(fixture[:home], 'bun-calls'), chomp: true)
       root = File.join(fixture[:home], 'projects/personal/mrzli-jslib')
@@ -102,30 +102,5 @@ end
         equal "[1/2] @mrzli-jslib/zeta\n[2/2] @mrzli-jslib/alpha\nBuilt 2 packages.\n", result[:stdout]
       end
     end
-  end
-end
-
-test('library remote inventory validates JSON and required name fields') do
-  ['bad json', '{}', '[null]', '[1]', '[{}]', '[{"name":1,"nameWithOwner":"org/repo"}]'].each do |input|
-    raises(/Could not read GitHub CLI output:/) { Libraries.parse_repositories(input) }
-  end
-  equal [{ name: 'a', name_with_owner: 'org/a', private: nil, archived: nil }], Libraries.parse_repositories('[{"name":"a","nameWithOwner":"org/a"}]')
-end
-
-test('library remotes preserve formatting, command arguments, and truncation protection') do
-  fixture do |fixture|
-    fake_github(fixture)
-    ENV['TEST_LIB_REPOS'] = JSON.generate([
-      { name: 'alpha', nameWithOwner: 'mrzli-jslib/alpha', isPrivate: false, isArchived: false },
-      { name: 'beta', nameWithOwner: 'mrzli-jslib/beta', isPrivate: true, isArchived: true }
-    ])
-    result = run_archon(%w[libs remote])
-    equal 0, result[:status]
-    equal "mrzli-jslib/alpha\nmrzli-jslib/beta  (private, archived)\n", result[:stdout]
-    equal "repo list mrzli-jslib --limit 1000 --json name,nameWithOwner,isPrivate,isArchived\n", File.read(File.join(fixture[:home], 'gh-calls'))
-    ENV['TEST_LIB_REPOS'] = JSON.generate(Array.new(1000) { |index| { name: index.to_s, nameWithOwner: "mrzli-jslib/#{index}" } })
-    result = run_archon(%w[libs prune -n])
-    equal 1, result[:status]
-    assert result[:stderr].include?('may be truncated at 1000 entries')
   end
 end

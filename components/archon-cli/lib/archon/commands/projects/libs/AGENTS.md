@@ -7,5 +7,4 @@
 - Keep dependency installation reproducible and avoid unintended lifecycle
   execution or duplicate builds.
 - Separate validation and dependency policy from filesystem and process effects.
-- Preserve destructive-operation previews, cleanliness checks, confirmations,
-  and remote-state revalidation.
+- Leave repository management (sync, status, deletion) to the projects command.
