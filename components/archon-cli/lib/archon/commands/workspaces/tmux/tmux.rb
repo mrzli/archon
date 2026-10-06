@@ -15,16 +15,16 @@ module Archon
       definitions
     end
 
-    def create_tmux(definitions:, run: Workspaces.method(:run_command), capture: Workspaces.method(:capture_command), ai: Workspaces::DEFAULT_AI)
-      directories = definitions.to_h { |definition| definition.values_at(:session, :directory) }
-      has_session = lambda do |session|
+    def create_tmux(run: Workspaces.method(:run_command), capture: Workspaces.method(:capture_command), ai: Workspaces::DEFAULT_AI)
+      has_session = lambda do |definition|
+        session = definition[:session]
         next false unless run.call('tmux', ['has-session', '-t', "=#{session}"], stdio: :ignore) == 0
         marker = capture.call('tmux', ['show-options', '-qv', '-t', "=#{session}:", '@archon-managed'])
         unless marker[:status] == 0 && marker[:output].strip == '1'
           raise "Refusing to use a session not managed by Archon: #{session}"
         end
         project = capture.call('tmux', ['show-options', '-qv', '-t', "=#{session}:", '@archon-project'])
-        unless project[:status] == 0 && project[:output] == directories.fetch(session)
+        unless project[:status] == 0 && project[:output] == definition[:directory]
           raise "tmux session #{session.inspect} belongs to another project; stop it or rename it before continuing."
         end
         true
@@ -33,7 +33,7 @@ module Archon
         resource_label: 'tmux session',
         has_session: has_session,
         create_editor_session: ->(definition) { create_editor_session(run, definition, ai: ai) },
-        attach_session: ->(session) { run.call('tmux', ['attach-session', '-t', "=#{session}"]) }
+        attach_session: ->(definition) { run.call('tmux', ['attach-session', '-t', "=#{definition[:session]}"]) }
       }
     end
 

@@ -75,11 +75,11 @@ test('start continues after failures, reports failed cleanup, skips vanished dir
   fixture do |fixture|
     projects = ['cloned/one', 'cloned/two', 'cloned/missing'].map { |path| File.join(fixture[:home], 'projects', path) }
     projects.first(2).each { |path| FileUtils.mkdir_p(path) }
-    definitions = Workspaces.project_definitions(projects)
+    definitions = Tmux.project_definitions(projects)
     sessions = Set.new
     fail_start = true
     backend = {
-      resource_label: 'tmux session', has_session: ->(name) { sessions.include?(name) },
+      resource_label: 'tmux session', has_session: ->(definition) { sessions.include?(definition[:session]) },
       create_editor_session: ->(definition) {
         if definition == definitions.first && fail_start
           { status: 1, cleanup_status: 1 }
@@ -107,11 +107,11 @@ test('validated stop inside tmux delegates once and propagates failure') do
 end
 
 test('attachment focuses the first selected existing project and propagates failure') do
-  definitions = Workspaces.project_definitions(['/one', '/two'])
+  definitions = Tmux.project_definitions(['/one', '/two'])
   calls = []
-  backend = { has_session: ->(name) { name == definitions.last[:session] }, attach_session: ->(name) { calls << name; 7 } }
+  backend = { has_session: ->(definition) { definition == definitions.last }, attach_session: ->(definition) { calls << definition; 7 } }
   equal 7, Workspaces.attach_after_start(definitions, backend)
-  equal [definitions.last[:session]], calls
+  equal [definitions.last], calls
   backend[:has_session] = ->(_) { false }
   equal 0, Workspaces.attach_after_start(definitions, backend)
 end
@@ -151,14 +151,14 @@ end
 test('starting refuses an untagged name collision and preserves the existing session') do
   calls = []
   run = ->(command, arguments, **_) { calls << [command, arguments]; 0 }
-  definitions = [{ session: 'archon-name', directory: '/project' }]
-  backend = Tmux.create_tmux(definitions: definitions, run: run, capture: ->(*_) { { status: 0, output: '' } })
-  raises(/not managed by Archon/) { backend[:has_session].call('archon-name') }
+  definition = { session: 'archon-name', directory: '/project' }
+  backend = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 0, output: '' } })
+  raises(/not managed by Archon/) { backend[:has_session].call(definition) }
   equal [['tmux', %w[has-session -t =archon-name]]], calls
-  backend = Tmux.create_tmux(definitions: definitions, run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/project' } })
-  equal true, backend[:has_session].call('archon-name')
-  backend = Tmux.create_tmux(definitions: definitions, run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/other/project' } })
-  raises(/belongs to another project/) { backend[:has_session].call('archon-name') }
+  backend = Tmux.create_tmux(run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/project' } })
+  equal true, backend[:has_session].call(definition)
+  backend = Tmux.create_tmux(run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/other/project' } })
+  raises(/belongs to another project/) { backend[:has_session].call(definition) }
 end
 
 test('stop removes tagged sessions after project deletion and preserves untagged lookalikes') do

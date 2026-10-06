@@ -1,3 +1,4 @@
+require 'digest'
 require_relative '../shared'
 require_relative '../../../shared/herdr'
 
@@ -63,29 +64,28 @@ module Archon
       end
     end
 
-    def create_herdr(definitions:, state_path:, running:, capture:, run:, start_server:, ai: Workspaces::DEFAULT_AI)
+    # session is an internal key; Herdr labels workspaces by folder name and Archon finds them by saved ID.
+    def project_definitions(projects)
+      projects.map do |directory|
+        name = File.basename(directory).gsub(/[^a-zA-Z0-9_-]/, '-')
+        { session: "archon-#{name}-#{Digest::SHA256.hexdigest(directory)[0, 12]}", directory: directory, label: File.basename(directory) }
+      end
+    end
+
+    def create_herdr(state_path:, capture:, run:, ai: Workspaces::DEFAULT_AI)
       request = ->(arguments) { Herdr.request(SESSION, arguments, capture) }
       selection = WorkspaceProjects.load_selection(state_path)
       workspace_ids = selection.fetch('workspace_ids', {})
       unless workspace_ids.is_a?(Hash) && workspace_ids.all? { |path, id| path.is_a?(String) && id.is_a?(String) }
         raise "Invalid saved Herdr workspace IDs: #{state_path}"
       end
-      by_name = definitions.to_h { |definition| [definition[:session], definition] }
       remember_workspace = lambda do |definition, workspace|
         ids = workspace_ids.merge(definition[:directory] => workspace.fetch('workspace_id'))
         WorkspaceProjects.save_selection(state_path, selection.merge('workspace_ids' => ids))
         workspace_ids.replace(ids)
       end
-      workspaces = running ? request.call(%w[workspace list]).fetch('workspaces') : []
-      ensure_server = lambda do
-        unless running
-          start_server.call(capture)
-          running = true
-          workspaces.replace(request.call(%w[workspace list]).fetch('workspaces'))
-        end
-      end
-      find_workspace = lambda do |name|
-        definition = by_name.fetch(name)
+      workspaces = request.call(%w[workspace list]).fetch('workspaces')
+      find_workspace = lambda do |definition|
         id = workspace_ids[definition[:directory]]
         workspace = workspaces.find { |item| item.fetch('workspace_id') == id }
         if workspace && workspace.fetch('label') != definition[:label]
@@ -96,9 +96,9 @@ module Archon
       end
       {
         resource_label: 'Herdr workspace',
-        has_session: ->(name) { ensure_server.call; !find_workspace.call(name).nil? },
+        has_session: ->(definition) { !find_workspace.call(definition).nil? },
         start_existing_session: ->(definition) {
-          start_existing_tools(find_workspace.call(definition[:session]).fetch('workspace_id'), request)
+          start_existing_tools(find_workspace.call(definition).fetch('workspace_id'), request)
         },
         create_editor_session: ->(definition) {
           result = create_workspace(definition, Workspaces.editor_tabs(ai: ai), request) do |workspace|
@@ -107,8 +107,8 @@ module Archon
           workspaces << result[:workspace] if result[:workspace]
           result
         },
-        attach_session: ->(name) {
-          workspace = find_workspace.call(name)
+        attach_session: ->(definition) {
+          workspace = find_workspace.call(definition)
           request.call(['workspace', 'focus', workspace.fetch('workspace_id')])
           run.call('herdr', ['--session', SESSION])
         }

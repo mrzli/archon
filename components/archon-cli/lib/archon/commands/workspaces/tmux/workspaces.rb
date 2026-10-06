@@ -19,7 +19,7 @@ module Archon
       projects = Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker)
       return 0 if projects.nil? || projects.empty?
       definitions = project_definitions(projects)
-      backend = create_tmux(definitions: definitions, run: run, capture: capture, ai: parsed[:ai])
+      backend = create_tmux(run: run, capture: capture, ai: parsed[:ai])
       status = Workspaces.start_projects(definitions, backend)
       return status if status != 0 || inside_tmux || !tty
       Workspaces.attach_after_start(definitions, backend)

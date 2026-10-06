@@ -1,4 +1,3 @@
-require 'digest'
 require 'rbconfig'
 require_relative 'help'
 require_relative 'layout'
@@ -51,13 +50,6 @@ module Archon
       { action: action, ai: options.empty? ? DEFAULT_AI : options.last }
     end
 
-    def project_definitions(projects)
-      projects.map do |directory|
-        name = File.basename(directory).gsub(/[^a-zA-Z0-9_-]/, '-')
-        { session: "archon-#{name}-#{Digest::SHA256.hexdigest(directory)[0, 12]}", directory: directory, label: File.basename(directory) }
-      end
-    end
-
     def select_projects(backend, home:, state_home:, picker:)
       projects = WorkspaceProjects.discover_projects(home)
       if projects.empty?
@@ -83,7 +75,7 @@ module Archon
           warn "Skipping #{definition[:session]}: directory does not exist: #{definition[:directory]}"
           next
         end
-        if backend.fetch(:has_session).call(definition[:session])
+        if backend.fetch(:has_session).call(definition)
           next unless backend[:start_existing_session]
           result = backend.fetch(:start_existing_session).call(definition)
         else
@@ -98,8 +90,8 @@ module Archon
     end
 
     def attach_after_start(definitions, backend)
-      session = definitions.find { |definition| backend.fetch(:has_session).call(definition[:session]) }
-      session ? backend.fetch(:attach_session).call(session[:session]) : 0
+      definition = definitions.find { |candidate| backend.fetch(:has_session).call(candidate) }
+      definition ? backend.fetch(:attach_session).call(definition) : 0
     end
 
     def run_detached_stop(arguments, module_path:, entry_point:, log:)

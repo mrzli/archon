@@ -22,10 +22,9 @@ module Archon
       end
       projects = Workspaces.select_projects('herdr', home: home, state_home: state_home, picker: picker)
       return 0 if projects.nil? || projects.empty?
-      definitions = Workspaces.project_definitions(projects)
-      running = session_running?(capture)
-      backend = create_herdr(definitions: definitions, state_path: state_path, running: running, capture: capture, run: run,
-        start_server: ->(server_capture) { start_server.call(server_capture, state_directory) }, ai: parsed[:ai])
+      definitions = project_definitions(projects)
+      start_server.call(capture, state_directory) unless session_running?(capture)
+      backend = create_herdr(state_path: state_path, capture: capture, run: run, ai: parsed[:ai])
       status = Workspaces.start_projects(definitions, backend)
       return status if status != 0 || inside_herdr || !tty
       Workspaces.attach_after_start(definitions, backend)

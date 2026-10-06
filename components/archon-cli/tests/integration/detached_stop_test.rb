@@ -10,7 +10,7 @@ test('workspace stop survives closing its calling pane and preserves unrelated s
       output.strip
     end
     projects = %w[cloned/one personal/owner/two personal/owner/three].map { |relative| workspace_directory(fixture, relative) }
-    names = Archon::Workspaces.project_definitions(projects).map { |definition| definition[:session] }
+    names = Archon::WorkspacesTmux.project_definitions(projects).map { |definition| definition[:session] }
     begin
       [*names, 'unrelated'].each { |name| tmux.call('new-session', '-d', '-s', name, 'sleep', '60') }
       names.each { |name| tmux.call('set-option', '-t', "=#{name}:", '@archon-managed', '1') }
