@@ -29,6 +29,9 @@ when 'pacman'
     exit(File.exist?("#{state}/#{ARGV.last}") ? 0 : 1)
   end
 when 'omarchy'
+  if ARGV[0, 2] == %w[webapp remove]
+    File.write("#{state}/webapp-notify", ENV.fetch('OMARCHY_REMOVE_NOTIFY', 'unset'))
+  end
   if ARGV[0, 2] == %w[install dev-env]
     tools = JSON.parse(File.read("#{state}/mise-tools.json"))
     names = ARGV.last == 'zig' ? %w[zig zls] : [ARGV.last]

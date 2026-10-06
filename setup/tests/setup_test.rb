@@ -28,6 +28,16 @@ check('mise requires installed versions and rejects system passthrough', :tools)
                       *%w[pnpm codex claude shellcheck].map { |tool| %W[mise use --global #{tool}] }]
 end
 
+check('web app removal skips absent apps and suppresses removal notifications', :applications) do |repo, home, _bin, env|
+  launcher = "#{home}/.local/share/applications/nested/HEY.desktop"
+  FileUtils.mkdir_p(File.dirname(launcher))
+  File.write(launcher, "[Desktop Entry]\n")
+  _, error, status = run_operation(repo, env, 'remove_unwanted_webapps(home)')
+  assert status.success?, error
+  assert commands(env).select { |args| args[0, 2] == %w[omarchy webapp] } == [%w[omarchy webapp remove HEY]]
+  assert File.read("#{env.fetch('SYSTEM_FIXTURE')}/webapp-notify") == 'false'
+end
+
 check('help and invalid arguments do not provision', :none) do |repo, _home, _bin, env|
   assert run_setup(repo, env, '--help').last.success?
   assert run_setup(repo, env, '--unknown').last.exitstatus == 2

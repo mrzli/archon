@@ -12,7 +12,7 @@ def setup
   home = ENV.fetch('HOME')
 
   remove_unwanted_packages
-  remove_unwanted_webapps
+  remove_unwanted_webapps(home)
   install_applications
   install_voice_ai
   install_packages
@@ -40,9 +40,17 @@ def remove_unwanted_packages
   run 'omarchy', 'pkg', 'drop', 'aether', 'obsidian'
 end
 
-def remove_unwanted_webapps
+def remove_unwanted_webapps(home)
   log_step 'Removing unwanted web apps'
-  %w[Basecamp Fizzy HEY].each { |webapp| run 'omarchy', 'webapp', 'remove', webapp }
+  applications = File.join(home, '.local/share/applications')
+  %w[Basecamp Fizzy HEY].each do |webapp|
+    if Dir.glob("**/#{webapp}.desktop", base: applications).empty?
+      log_info "#{webapp} is not installed; skipping"
+    else
+      # Setup logs the removal; skip Omarchy's desktop notification.
+      run({ 'OMARCHY_REMOVE_NOTIFY' => 'false' }, 'omarchy', 'webapp', 'remove', webapp)
+    end
+  end
 end
 
 def install_applications
