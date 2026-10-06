@@ -1,5 +1,6 @@
 require_relative 'help'
 require_relative 'build'
+require_relative '../git'
 
 module Archon
   module Libraries
@@ -48,7 +49,7 @@ module Archon
     end
 
     def local_repositories(root)
-      Shared.child_repositories(root).sort_by { |repository| repository.fetch(:name) }
+      Projects.child_repositories(root).sort_by { |repository| repository.fetch(:name) }
     rescue Errno::ENOENT
       []
     end

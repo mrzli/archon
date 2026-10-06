@@ -1,4 +1,4 @@
-require_relative '../../shared/process'
+require_relative 'git'
 
 module Archon
   module Projects
@@ -92,7 +92,7 @@ module Archon
     end
 
     def github_api(arguments)
-      Shared.github_output(['api', '--hostname', 'github.com', *arguments])
+      github_output(['api', '--hostname', 'github.com', *arguments])
     end
 
     def remote_repositories(progress = false)

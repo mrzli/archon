@@ -1,6 +1,6 @@
 require_relative 'test_helpers'
 
-Shared = Archon::Shared
+Projects = Archon::Projects
 
 test('status reports changes, stashes, unpushed commits, inspection errors, and fetch warnings') do
   fixture do |fixture|
@@ -32,10 +32,10 @@ test('rename paths do not inflate working tree counts and detached HEAD has a us
   fixture do |fixture|
     repository = initialize_repository(File.join(fixture[:root], 'repo'))
     git(repository[:path], 'mv', 'tracked.txt', 'renamed.txt')
-    equal({ staged: 1, unstaged: 0, untracked: 0 }, Shared.working_tree_changes(repository))
+    equal({ staged: 1, unstaged: 0, untracked: 0 }, Projects.working_tree_changes(repository))
     git(repository[:path], 'commit', '-qm', 'rename')
     git(repository[:path], 'checkout', '--detach')
-    status = Shared.inspect_repositories([repository], false, ->(repo) { repo[:name] }).first
+    status = Projects.inspect_repositories([repository], false, ->(repo) { repo[:name] }).first
     assert status[:branch].start_with?('detached@')
   end
 end
@@ -55,28 +55,28 @@ test('deletion treats commits only on a detached HEAD or tags and ignored files 
     git(path, 'tag', 'pushed-commit')
     FileUtils.mkdir_p(File.join(path, 'node_modules/package'))
     File.write(File.join(path, 'node_modules/package/index.js'), 'generated')
-    inspect = -> { Shared.inspect_repositories([repository], false, ->(repo) { repo[:name] }).first }
-    assert !Shared.unclean?(inspect.call), 'pushed commits, tags and ignored directories are clean'
+    inspect = -> { Projects.inspect_repositories([repository], false, ->(repo) { repo[:name] }).first }
+    assert !Projects.unclean?(inspect.call), 'pushed commits, tags and ignored directories are clean'
 
     git(path, 'checkout', '-q', '--detach')
     git(path, 'commit', '-q', '--allow-empty', '-m', 'detached work')
     status = inspect.call
-    assert Shared.unclean?(status)
+    assert Projects.unclean?(status)
     equal ['detached HEAD or tags=1 (not on any branch or remote)'], status[:ahead]
 
     git(path, 'tag', 'local-only')
     git(path, 'checkout', '-q', 'main')
     status = inspect.call
-    assert Shared.unclean?(status)
+    assert Projects.unclean?(status)
     equal ['tags=1 (not on any branch or remote)'], status[:ahead]
     git(path, 'tag', '-d', 'local-only')
 
     File.write(File.join(path, '.env'), 'SECRET=1')
     status = inspect.call
     equal 1, status[:ignored_files]
-    assert Shared.unclean?(status)
+    assert Projects.unclean?(status)
     output = StringIO.new
-    Shared.print_unclean_reasons([status], output)
+    Projects.print_unclean_reasons([status], output)
     assert output.string.include?('ignored files: 1'), output.string
   end
 end
@@ -85,7 +85,7 @@ test('sync plans sort clone and update operations and continue after failures') 
   get_name = ->(repo) { repo[:name] }
   operations = []
   status, output, = capture do
-    Shared.sync_repositories(remote: -> { [{ name: 'alpha' }, { name: 'beta' }, { name: 'gamma' }] },
+    Projects.sync_repositories(remote: -> { [{ name: 'alpha' }, { name: 'beta' }, { name: 'gamma' }] },
       local: -> { [{ name: 'beta' }] }, key: get_name, get_name: get_name,
       update: ->(repo, _) { operations << "update #{repo[:name]}"; raise 'injected update failure' },
       clone: ->(repo) { operations << "clone #{repo[:name]}"; { succeeded: true, message: 'cloned' } })
@@ -100,7 +100,7 @@ test('sync still updates local repositories when the remote listing fails') do
   get_name = ->(repo) { repo[:name] }
   operations = []
   status, output, error = capture do
-    Shared.sync_repositories(remote: -> { raise 'GitHub unavailable' }, local: -> { [{ name: 'beta' }] },
+    Projects.sync_repositories(remote: -> { raise 'GitHub unavailable' }, local: -> { [{ name: 'beta' }] },
       key: get_name, get_name: get_name,
       update: ->(repo, _) { operations << "update #{repo[:name]}"; { succeeded: true, message: 'up to date' } },
       clone: ->(_) { raise 'must not clone without a remote listing' })
@@ -123,7 +123,7 @@ test('sync fetches and fast-forwards while refusing dirty, detached, diverged, a
     git(fixture[:root], 'clone', '--branch', 'main', remote, local)
     repository = { name: 'local', path: local }
     get_name = ->(repo) { repo[:name] }
-    update = -> { Shared.update_repository(repository, get_name) }
+    update = -> { Projects.update_repository(repository, get_name) }
     assert update.call[:message].include?('up to date')
     File.write(File.join(seed, 'remote.txt'), 'new')
     git(seed, 'add', '.')
@@ -159,7 +159,7 @@ test('prune excludes blacklisted projects and refuses restoration or failed reva
       calls = []
       removed = []
       result, _, error = capture do
-        Shared.destructive_workflow('prune', dry_run: false, root: root, required_root: root,
+        Projects.destructive_workflow('prune', dry_run: false, root: root, required_root: root,
           local: -> { [repository] }, remote: ->(refresh) {
             calls << refresh
             raise 'inventory unavailable' if refresh && scenario == :failed
@@ -188,7 +188,7 @@ test('deletion stops when a clean repository gains local work during confirmatio
     [[true, 1, []], [false, 0, [clean, dirty]]].each do |edit_during_prompt, expected, expected_removed|
       removed = []
       result, _, error = capture do
-        Shared.destructive_workflow('delete', dry_run: false, root: root, required_root: root,
+        Projects.destructive_workflow('delete', dry_run: false, root: root, required_root: root,
           local: -> { [clean, dirty] }, remote: ->(_) { [] }, prunable: ->(_) { [] }, key: ->(repo) { repo[:name] },
           get_name: ->(repo) { repo[:name] }, empty_message: 'empty',
           confirm: lambda { |statuses|
@@ -216,12 +216,12 @@ test('confirmation requires terminal input and exact confirmation, including a s
     input, output, error = StringIO.new(answers), StringIO.new, StringIO.new
     input.define_singleton_method(:tty?) { true }
     output.define_singleton_method(:tty?) { true }
-    equal expected, Shared.confirm_deletion(statuses, input: input, output: output, error: error)
+    equal expected, Projects.confirm_deletion(statuses, input: input, output: output, error: error)
     equal prompts, output.string.scan('Type "delete"').length
     assert output.string.include?('Unclean repositories:') if prompts == 2
   end
   error = StringIO.new
-  assert !Shared.confirm_deletion([], input: StringIO.new('delete'), output: StringIO.new, error: error)
+  assert !Projects.confirm_deletion([], input: StringIO.new('delete'), output: StringIO.new, error: error)
   assert error.string.include?('requires an interactive terminal')
 end
 
@@ -235,7 +235,7 @@ test('delete refuses piped confirmation, dry run is harmless, and removal contin
     assert result[:stderr].include?('requires an interactive terminal')
     paths = []
     result, output, error = capture do
-      Shared.remove_repositories([{ path: '/fixture/first' }, { path: '/fixture/second' }], remove: ->(path) {
+      Projects.remove_repositories([{ path: '/fixture/first' }, { path: '/fixture/second' }], remove: ->(path) {
         paths << path
         raise 'injected failure' if path.end_with?('first')
       })

@@ -1,8 +1,8 @@
 require_relative 'help'
 require_relative 'github_inventory'
 require_relative 'libs/libs'
-require_relative '../../shared/sync_workflow'
-require_relative '../../shared/destructive_workflows'
+require_relative 'sync_workflow'
+require_relative 'destructive_workflows'
 
 module Archon
   module Projects
@@ -45,15 +45,15 @@ module Archon
           puts empty_message(root)
           return 0
         end
-        statuses = Shared.inspect_repositories(repositories, !options.empty?, get_name)
-        Shared.print_statuses(statuses)
+        statuses = inspect_repositories(repositories, !options.empty?, get_name)
+        print_statuses(statuses)
         statuses.any? { |status| status[:error] || !status[:warnings].empty? } ? 1 : 0
       when 'sync'
         FileUtils.mkdir_p(root)
-        Shared.sync_repositories(remote: method(:remote_repositories), local: local, key: method(:repository_key),
+        sync_repositories(remote: method(:remote_repositories), local: local, key: method(:repository_key),
           get_name: get_name, clone: ->(repository) { clone_repository(repository, root) })
       when 'delete', 'prune'
-        Shared.destructive_workflow(command, dry_run: !options.empty?, root: root, required_root: required_root,
+        destructive_workflow(command, dry_run: !options.empty?, root: root, required_root: required_root,
           local: local, remote: ->(refresh) { remote_repositories(command == 'prune' && !refresh) },
           prunable: ->(remote) { prunable_repositories(remote, root) }, key: method(:repository_key),
           get_name: get_name, empty_message: empty_message(root))
@@ -86,7 +86,7 @@ module Archon
         return []
       end
       owners.select { |owner| owner != '.git' && File.lstat(File.join(root, owner)).directory? }.flat_map do |owner|
-        Shared.child_repositories(File.join(root, owner)).map do |repository|
+        child_repositories(File.join(root, owner)).map do |repository|
           repository.merge(owner: owner, name_with_owner: "#{owner}/#{repository[:name]}")
         end
       end.sort_by { |repository| repository_key(repository) }
@@ -121,15 +121,15 @@ module Archon
       owner_path = File.join(root, repository[:owner])
       destination = File.join(owner_path, repository[:name])
       if Shared.path_exists?(destination)
-        return Shared.sync_failure(repository, "destination already exists and is not a repository: #{destination}", method(:repository_name))
+        return sync_failure(repository, "destination already exists and is not a repository: #{destination}", method(:repository_name))
       end
       begin
         FileUtils.mkdir_p(owner_path)
       rescue StandardError => error
-        return Shared.sync_failure(repository, "could not create owner directory: #{error.message}", method(:repository_name))
+        return sync_failure(repository, "could not create owner directory: #{error.message}", method(:repository_name))
       end
       result = Shared.run_process('git', ['clone', repository[:ssh_url], destination])
-      Shared.clone_result(repository, result, method(:repository_name), program: 'Git', fallback: 'git clone failed')
+      clone_result(repository, result, method(:repository_name), program: 'Git', fallback: 'git clone failed')
     end
   end
 end

@@ -1,7 +1,7 @@
 require_relative 'repository_inspection'
 
 module Archon
-  module Shared
+  module Projects
     def destructive_workflow(command, dry_run:, root:, required_root:, local:, remote:, prunable:, key:, get_name:, empty_message:,
                              confirm: method(:confirm_deletion), remove: method(:remove_repositories))
       unless File.expand_path(root) == required_root
@@ -103,7 +103,7 @@ module Archon
           reasons << "ignored files: #{status[:ignored_files]}" if status[:ignored_files] > 0
         end
         reasons.concat(status[:warnings].map { |warning| "warning: #{warning}" })
-        reasons << "inspection error: #{single_line(status[:error])}" if status[:error]
+        reasons << "inspection error: #{Shared.single_line(status[:error])}" if status[:error]
         output.puts "  #{status[:name]}"
         reasons.each { |reason| output.puts "    - #{reason}" }
       end

@@ -1,9 +1,9 @@
 require_relative 'repository_inspection'
 
 module Archon
-  module Shared
+  module Projects
     def sync_failure(repository, message, get_name)
-      { name: get_name.call(repository), succeeded: false, message: "ERROR: #{single_line(message)}" }
+      { name: get_name.call(repository), succeeded: false, message: "ERROR: #{Shared.single_line(message)}" }
     end
 
     def update_repository(repository, get_name)
@@ -65,7 +65,7 @@ module Archon
                 elsif result[:signal]
                   "#{program} was terminated by signal #{result[:signal]}"
                 elsif result[:status] != 0
-                  single_line(result[:stderr]).empty? ? fallback : single_line(result[:stderr])
+                  Shared.single_line(result[:stderr]).empty? ? fallback : Shared.single_line(result[:stderr])
                 end
       return sync_failure(repository, message, get_name) if message
       { name: get_name.call(repository), succeeded: true, message: 'cloned' }

@@ -1,7 +1,7 @@
-require_relative 'process'
+require_relative 'git'
 
 module Archon
-  module Shared
+  module Projects
     def format_changes(changes)
       parts = changes.filter_map { |key, count| "#{key}: #{count}" if count > 0 }
       parts.empty? ? 'clean' : parts.join(', ')
@@ -97,10 +97,10 @@ module Archon
       statuses.each do |status|
         name = status[:name].ljust(name_width)
         if status[:error]
-          puts "#{name}  ERROR: #{single_line(status[:error])}"
+          puts "#{name}  ERROR: #{Shared.single_line(status[:error])}"
           next
         end
-        warnings = status[:warnings].empty? ? '' : "  warnings: #{status[:warnings].map { |warning| single_line(warning) }.join(', ')}"
+        warnings = status[:warnings].empty? ? '' : "  warnings: #{status[:warnings].map { |warning| Shared.single_line(warning) }.join(', ')}"
         ahead = status[:ahead].empty? ? 'none' : status[:ahead].join(', ')
         puts "#{name}  [#{status[:branch].ljust(branch_width)}]  #{format_changes(status[:changes]).ljust(changes_width)}  stash: #{status[:stash_count]}  ahead: #{ahead}#{warnings}"
       end
