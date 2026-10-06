@@ -21,7 +21,9 @@ Other files and directories under `~/projects/personal` are ignored.
 - `remote`: list repositories owned by the authenticated GitHub user and owned
   organizations after configured exclusions.
 - `status`: show branch state, working-tree changes, stashes, and commits ahead.
-  Add `--fetch` to refresh remote-tracking information first.
+  Add `--fetch` to refresh remote-tracking information first. Exits with `1`
+  when a repository cannot be inspected or has a warning, such as a missing
+  upstream branch or a failed fetch; local changes alone do not affect it.
 - `sync`: fetch and fast-forward clean repositories and clone missing
   repositories over SSH. Failures do not prevent remaining repositories from
   being processed.
