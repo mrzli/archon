@@ -3,6 +3,9 @@ require_relative 'agent_terminals'
 module Archon
   module AgentRestart
     extend self
+    # Agents get time to save state and restore the terminal; KILL is only a fallback.
+    # The wait ends as soon as every process has exited.
+    TERM_GRACE = 3
 
     # Restarts every discovered agent pane: prepare all launch commands, stop the whole
     # batch, then send each command to its pane's shell.

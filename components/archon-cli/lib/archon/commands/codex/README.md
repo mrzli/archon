@@ -13,8 +13,8 @@ Run from a separate shell after leaving Codex idle. Unsent drafts are discarded.
 Other panes and applications stay running. Ctrl+C cancels the restart command
 cleanly. The command returns after sending the launch commands, without waiting for
 Codex to load or checking startup success. Any startup errors appear in the
-individual panes. Slow-to-exit Codex processes are forcibly killed after a short
-shared grace period.
+individual panes. Codex gets a few seconds to exit cleanly; processes still running
+after that are forcibly killed.
 
 Requires Codex launched from a shell in Herdr or tmux. Bare `arc codex` shows
 usage. Original model, profile, directory and sandbox flags are retained;

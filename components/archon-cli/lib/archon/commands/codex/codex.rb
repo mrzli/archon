@@ -22,7 +22,7 @@ module Archon
                          unarchive cloud exec-server features help].freeze
 
     def run_codex(arguments, terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
-                  wait: -> { sleep 0.1 })
+                  wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
       if [%w[help], %w[-h], %w[--help], %w[restart --help], %w[restart -h]].include?(arguments)
         puts HELP
         return 0
@@ -32,7 +32,7 @@ module Archon
         return 2
       end
       AgentRestart.restart_agents(label: 'Codex', program: 'codex', terminals: terminals, run: run, wait: wait,
-                                  term_grace: 0,
+                                  term_grace: term_grace,
                                   prepare: ->(pane) { prepare(pane, terminals: terminals, run: run) })
     end
 

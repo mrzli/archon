@@ -23,7 +23,7 @@ module Archon
                   respawn rm setup-token stop ultrareview update upgrade].freeze
 
     def run_claude(arguments, home: Dir.home, terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
-                   wait: -> { sleep 0.1 })
+                   wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
       if [%w[help], %w[-h], %w[--help], %w[restart --help], %w[restart -h]].include?(arguments)
         puts HELP
         return 0
@@ -32,9 +32,8 @@ module Archon
         warn HELP
         return 2
       end
-      # Claude takes about half a second to exit on TERM; KILL is only a fallback.
       AgentRestart.restart_agents(label: 'Claude', program: 'claude', terminals: terminals, run: run, wait: wait,
-                                  term_grace: 3,
+                                  term_grace: term_grace,
                                   prepare: ->(pane) { prepare(pane, home: home, terminals: terminals, run: run) })
     end
 

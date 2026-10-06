@@ -1,8 +1,8 @@
 require_relative 'test_helpers'
 
-def codex_terminals(count: 2, stuck: false)
+def codex_terminals(count: 2, stuck: false, exit_after: 0)
   states = count.times.map do |index|
-    { pid: index + 100, shell: false, screen: 'Ready', calls: [] }
+    { pid: index + 100, shell: false, screen: 'Ready', calls: [], polls: 0 }
   end
   panes = states.each_index.map { |index| { backend: :herdr, server: 'test', id: index } }
   terminals = Object.new
@@ -17,10 +17,15 @@ def codex_terminals(count: 2, stuck: false)
   terminals.define_singleton_method(:terminate) do |info, signal|
     state = states.find { |item| item[:pid] == info[:pid] }
     state[:calls] << signal
-    state[:shell] = true unless stuck && signal == 'TERM'
+    state[:shell] = true unless (stuck || exit_after > 0) && signal == 'TERM'
   end
   terminals.define_singleton_method(:running?) do |info|
-    states.any? { |state| state[:pid] == info[:pid] && !state[:shell] }
+    state = states.find { |item| item[:pid] == info[:pid] }
+    if state && !state[:shell] && exit_after > 0 && state[:calls].include?('TERM')
+      state[:polls] += 1
+      state[:shell] = state[:polls] > exit_after
+    end
+    states.any? { |item| item[:pid] == info[:pid] && !item[:shell] }
   end
   terminals.define_singleton_method(:submit) do |pane, text, run:|
     state = states.fetch(pane[:id])
@@ -32,11 +37,21 @@ def codex_terminals(count: 2, stuck: false)
   [terminals, states]
 end
 
-def restart_codex(terminals)
+def restart_codex(terminals, term_grace: 0)
   capture do
     Archon::Codex.run_codex(['restart'], terminals: terminals, run: ->(*) { raise 'unexpected external command' },
-                           wait: -> {})
+                           wait: -> {}, term_grace: term_grace)
   end
+end
+
+test('Codex gets a grace period after TERM before KILL is used') do
+  terminals, states = codex_terminals(count: 1, exit_after: 5)
+  status, = capture do
+    Archon::Codex.run_codex(['restart'], terminals: terminals, run: ->(*) { raise 'unexpected external command' }, wait: -> {})
+  end
+  equal 0, status
+  assert !states.first[:calls].include?('KILL')
+  assert states.first[:calls].last.include?('codex resume --last')
 end
 
 test('Codex restarts every pane using latest conversation and preserves launch options') do
