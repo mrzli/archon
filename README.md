@@ -75,7 +75,7 @@ git \
 Run the setup script to apply the managed system configuration:
 
 ```bash
-~/.local/share/archon/setup.sh
+"${XDG_DATA_HOME:-$HOME/.local/share}/archon/setup.sh"
 ```
 
 ## Manual Steps
