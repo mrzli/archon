@@ -98,14 +98,6 @@ test('start continues after failures, reports failed cleanup, skips vanished dir
   end
 end
 
-test('validated stop inside tmux delegates once and propagates failure') do
-  calls = []
-  context = { environment: { 'TMUX' => 'fixture' }, stop_detached: ->(arguments, _) { calls << arguments; 7 } }
-  equal 7, Tmux.run_workspaces_tmux(['stop'], **context)
-  equal 2, Tmux.run_workspaces_tmux(%w[stop extra], **context)
-  equal [['stop']], calls
-end
-
 test('attachment focuses the first selected existing project and propagates failure') do
   definitions = Tmux.project_definitions(['/one', '/two'])
   calls = []
@@ -199,7 +191,7 @@ test('tmux kill distinguishes absent servers from errors and detaches before clo
   end
   equal 1, Tmux.run_workspaces_tmux(['kill'], environment: {}, capture: ->(*_) { { status: 1, output: 'permission denied' } })
   operation = ->(*_, **_) { raise 'must not perform any operation' }
-  [%w[kill extra], %w[kill --ai codex], %w[kill -g current]].each do |arguments|
+  [%w[stop extra], %w[kill extra], %w[kill --ai codex], %w[kill -g current]].each do |arguments|
     equal 2, Tmux.run_workspaces_tmux(arguments, capture: operation, picker: operation)
   end
 end

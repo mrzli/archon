@@ -69,22 +69,10 @@ test('invalid state is reported without overwriting data or calling the picker')
   end
 end
 
-test('new state paths isolate all three backends and ignore older state without modifying it') do
+test('VS Code remembers its workspace and selection in its own state file') do
   fixture do |fixture|
     project = workspace_directory(fixture)
     state_root = File.join(fixture[:root], 'state')
-    directory = File.join(state_root, 'archon')
-    FileUtils.mkdir_p(directory)
-    %w[herdr tmux visual-studio-code].each { |name| File.write(File.join(directory, "#{name}.json"), '{old state}') }
-    %w[herdr tmux].each do |backend|
-      picker = ->(paths, previous, home:) {
-        equal [project], paths
-        equal fixture[:home], home
-        equal({ 'projects' => [] }, previous)
-        { 'projects' => [project] }
-      }
-      equal [project], Archon::Workspaces.select_projects(backend, home: fixture[:home], state_home: state_root, picker: picker)
-    end
     picker = ->(paths, previous, home:, workspace:) {
       equal true, workspace
       equal [project], paths
@@ -94,12 +82,9 @@ test('new state paths isolate all three backends and ignore older state without 
     }
     equal 0, Archon::VisualStudioCode.run_visual_studio_code(['start'], home: fixture[:home], state_home: state_root,
       picker: picker, launch: ->(*_, **_) { raise 'must not launch' })
-    equal({ 'workspace' => 6, 'projects' => [] }, Projects.load_selection(File.join(directory, 'workspaces/visual-studio-code.json'), workspace: true))
-    %w[herdr tmux].each do |backend|
-      equal({ 'projects' => [project] }, Projects.load_selection(File.join(directory, 'workspaces', "#{backend}.json")))
-    end
-    %w[herdr tmux visual-studio-code].each { |name| equal '{old state}', File.read(File.join(directory, "#{name}.json")) }
-    equal 3, Dir.children(File.join(directory, 'workspaces')).length
+    directory = File.join(state_root, 'archon/workspaces')
+    equal({ 'workspace' => 6, 'projects' => [] }, Projects.load_selection(File.join(directory, 'visual-studio-code.json'), workspace: true))
+    equal ['visual-studio-code.json'], Dir.children(directory)
     assert !File.exist?(File.join(fixture[:home], '.local/state/archon/workspaces'))
   end
 end

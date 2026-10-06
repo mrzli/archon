@@ -55,6 +55,10 @@ test('every failed Herdr creation step rolls back only its newly returned worksp
   end
   request = ->(arguments) { raise 'injected failure' unless arguments.first(2) == %w[workspace create]; created }
   equal 1, Herdr.create_workspace(definition, tabs, request)[:cleanup_status]
+  calls = []
+  result = Herdr.create_workspace(definition, tabs, ->(arguments) { calls << arguments; created }) { raise 'cannot save IDs' }
+  equal({ status: 1, cleanup_status: 0 }, result)
+  equal %w[workspace close w401], calls.last
 end
 
 test('Herdr JSON capture separates successful stdout from diagnostic stderr') do
@@ -165,17 +169,6 @@ test('Herdr renames a remembered workspace to its folder and preserves manually 
   end
 end
 
-test('Herdr rolls back a new workspace if remembering its ID fails') do
-  definition = { session: 'example', directory: '/fixture/project', label: 'project' }
-  created = { 'workspace' => { 'workspace_id' => 'w401', 'label' => 'project' },
-              'tab' => { 'tab_id' => 'w401:t709' }, 'root_pane' => { 'pane_id' => 'w401:p901' } }
-  calls = []
-  request = ->(arguments) { calls << arguments; created }
-  result = Herdr.create_workspace(definition, Archon::Workspaces.editor_tabs, request) { raise 'cannot save IDs' }
-  equal({ status: 1, cleanup_status: 0 }, result)
-  equal %w[workspace close w401], calls.last
-end
-
 test('Herdr picker cancellation, empty discovery and empty selections do not start a server') do
   herdr_fixture do |fixture, path|
     operation = ->(*_, **_) { raise 'must not operate on backend' }
@@ -227,17 +220,10 @@ test('failed Herdr server startup produces a private log and creates no workspac
   end
 end
 
-test('Herdr stop tolerates a stopped session and stops an empty dedicated session') do
-  herdr_fixture do |_, path|
-    2.times { equal 0, run_archon(%w[w h stop])[:status] }
-    update_herdr_state(path) { |state| state['running'] = true }
-    equal 0, run_archon(%w[w h stop])[:status]
-    assert !herdr_state(path)['running']
-  end
-end
-
-test('Herdr stop shuts down its entire dedicated session, including extras, with no project or state requirements') do
+test('Herdr stop tolerates a stopped session and shuts down the entire dedicated session without project or state requirements') do
   herdr_fixture do |fixture, path|
+    2.times { equal 0, run_archon(%w[w h stop])[:status] }
+    assert herdr_state(path)['calls'].none? { |call| call.first(2) == %w[session stop] }
     seed_herdr_workspaces(path, %w[project extra ~])
     update_herdr_state(path) { |state| state['client_attached'] = true }
     2.times { equal 0, run_archon(%w[w h stop])[:status] }

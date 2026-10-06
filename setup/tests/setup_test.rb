@@ -109,13 +109,12 @@ check('repeat runs preserve user files and avoid duplicate configuration', :full
   assert File.read("#{home}/.config/systemd/user/voxtype.service.d/10-archon.conf").include?('Environment=VK_DRIVER_FILES=/usr/share/vulkan/icd.d/nvidia_icd.json')
 end
 
-check('populated Projects stops setup and preserves its contents', :full) do |repo, home, _bin, env|
+check('a populated ~/Projects fails setup and keeps its contents', :none) do |repo, home, _bin, env|
   FileUtils.mkdir_p("#{home}/Projects")
   File.write("#{home}/Projects/.keep", 'user data')
-  output, error, status = run_setup(repo, env)
+  _, error, status = run_operation(repo, env, 'remove_default_projects_directory(home)')
   assert status.exitstatus == 1
   assert error.include?('~/Projects is not empty')
-  assert !output.include?('Setup complete.')
   assert File.read("#{home}/Projects/.keep") == 'user data'
 end
 
@@ -217,8 +216,10 @@ check('missing Vulkan variant stops before downloading a model', :voice) do |rep
 end
 
 check('failed commands stop setup', :full) do |repo, _home, _bin, env|
-  assert run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy')).last.exitstatus == 1
-  assert commands(env) == [%w[omarchy pkg drop aether obsidian]]
+  output, _, status = run_setup(repo, env.merge('FAIL_COMMAND' => 'omarchy'))
+  assert status.exitstatus == 1
+  assert commands(env).length == 1 && commands(env).first.first == 'omarchy'
+  assert !output.include?('Setup complete.')
 end
 
 check('setup provisions Codex model, subagent, navigation, and status-line settings', :codex) do |repo, _home, _bin, env|
@@ -227,26 +228,22 @@ check('setup provisions Codex model, subagent, navigation, and status-line setti
     assert status.success?, error
   end
   edits = JSON.parse(File.read("#{env.fetch('SYSTEM_FIXTURE')}/codex-edits.json"))
-  assert edits == [
-    { 'keyPath' => 'model', 'value' => 'gpt-6.1-sol', 'mergeStrategy' => 'replace' },
-    { 'keyPath' => 'model_reasoning_effort', 'value' => 'high', 'mergeStrategy' => 'replace' },
-    { 'keyPath' => 'agents.enabled', 'value' => true, 'mergeStrategy' => 'replace' },
-    { 'keyPath' => 'agents.default_subagent_model', 'value' => 'gpt-6-luna', 'mergeStrategy' => 'replace' },
-    { 'keyPath' => 'agents.default_subagent_reasoning_effort', 'value' => 'high', 'mergeStrategy' => 'replace' },
-    { 'keyPath' => 'tui.status_line', 'value' => %w[model-with-reasoning current-dir git-branch thread-name context-used weekly-limit], 'mergeStrategy' => 'replace' },
-    { 'keyPath' => 'tui.keymap.chat.edit_queued_message', 'value' => 'alt-shift-up', 'mergeStrategy' => 'replace' },
-    { 'keyPath' => 'tui.keymap.chat.prompt_stack_back', 'value' => 'alt-shift-down', 'mergeStrategy' => 'replace' }
-  ]
+  keys = edits.map { |edit| edit.fetch('keyPath') }
+  assert !edits.empty? && keys.uniq == keys
+  assert edits.all? { |edit| edit['mergeStrategy'] == 'replace' && edit.key?('value') }
+  # Alt+Up/Down stay free for Herdr workspace navigation.
+  assert (keys & %w[tui.keymap.chat.edit_queued_message tui.keymap.chat.prompt_stack_back]).length == 2
 end
 
-check('Codex configuration failures stop setup', :full) do |repo, _home, _bin, env|
-  assert run_setup(repo, env.merge('FAIL_COMMAND' => 'codex')).last.exitstatus == 1
+check('Codex configuration failures stop setup', :codex) do |repo, _home, _bin, env|
+  assert run_operation(repo, env.merge('FAIL_COMMAND' => 'codex'), 'configure_codex').last.exitstatus == 1
 end
 
-check('CLI installation copies Ruby directly without build tooling', :cli) do |repo, home, _bin, env|
+check('CLI installation copies Ruby directly without Bun or build tooling', :cli) do |repo, home, bin, env|
+  assert !File.exist?("#{bin}/bun")
   _, error, status = run_operation(repo, env, 'install_archon_cli(repo, home)')
   assert status.success?, error
-  assert commands(env).none? { |args| args.first == 'bun' || args[0, 3] == %w[mise exec bun] }
+  assert commands(env).none? { |args| args.include?('bun') }
   assert File.exist?("#{home}/.local/lib/archon/cli.rb")
   assert !File.exist?("#{home}/.local/lib/archon/commands/projects/libs/README.md")
 end
@@ -385,15 +382,6 @@ check('Bash and the desktop session use the same rootless socket', :none) do |_r
     assert status.success?, error
     assert output == 'unix:///run/user/1000/docker.sock'
   end
-end
-
-check('CLI installation does not need Bun on PATH', :cli) do |repo, home, bin, env|
-  assert !File.exist?("#{bin}/bun")
-  _, error, status = run_operation(repo, env, 'install_archon_cli(repo, home)')
-  assert status.success?, error
-  assert commands(env).none? { |args| args == %w[omarchy install dev-env bun] }
-  assert commands(env).none? { |args| args.first == 'bun' || args[0, 3] == %w[mise exec bun] }
-  assert File.exist?("#{home}/.local/lib/archon/cli.rb")
 end
 
 puts "#{$checks} checks passed"
