@@ -20,19 +20,19 @@ Modules do not execute commands when required. The same relative paths work
 in the repository and after installation.
 
 `setup.sh` delegates to the Ruby setup code. CLI installation copies `bin/`
-into `~/.local/bin/` and `lib/` into `~/.local/lib/` using `rsync -a`, excluding
-Markdown from the library copy. Tests and contributor documentation are not
+into `~/.local/bin/` using `rsync -a`, and mirrors `lib/archon/` into
+`~/.local/lib/archon/` using `rsync -a --delete`, excluding Markdown.
+Home-file installation does not touch the CLI directories, so a setup step that
+fails before CLI installation leaves the previous CLI working. Tests and contributor documentation are not
 installed. The installed commands need Ruby on `PATH` and the external tools
 used by their operations. They do not depend on the source checkout.
 
 Bun remains an external tool for `archon libs build`. CLI installation and
 tests do not require Bun.
 
-Installation updates managed CLI files and preserves unrelated destination
-files. Repeated installation converges without generating artifacts. Setup
-contains no one-time cleanup of files from previous installations. Old
-JavaScript modules in an existing home directory are not loaded by Ruby and
-are not deleted by the overlay.
+Installation removes files under `~/.local/lib/archon` that are no longer in
+the source and preserves unrelated files in `~/.local/bin` and `~/.local/lib`.
+Repeated installation converges without generating artifacts.
 
 ## Verification
 

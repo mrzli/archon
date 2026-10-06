@@ -9,9 +9,9 @@ components/archon-cli/bin/archon --help
 Setup installs the CLI automatically. To install it separately:
 
 ```bash
-mkdir -p "$HOME/.local/bin" "$HOME/.local/lib"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/lib/archon"
 rsync -a components/archon-cli/bin/ "$HOME/.local/bin/"
-rsync -a --exclude='*.md' components/archon-cli/lib/ "$HOME/.local/lib/"
+rsync -a --delete --exclude='*.md' components/archon-cli/lib/archon/ "$HOME/.local/lib/archon/"
 ```
 
 This updates managed CLI files in `~/.local/bin` and `~/.local/lib/archon`.

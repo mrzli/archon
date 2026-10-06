@@ -5,8 +5,6 @@ set -u
 test_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$test_dir/../../.." && pwd)"
 archon_cli_source="$repo_root/components/archon-cli"
-home_source="$repo_root/data/home"
-home_copy_ignore="$repo_root/data/home-copy-ignore.txt"
 temporary_root="$(mktemp -d)"
 
 cleanup() {
@@ -37,7 +35,7 @@ assert_equals() {
 copy_home_overlay() {
   local home="$1"
 
-  rsync -a --exclude-from="$home_copy_ignore" "$home_source"/ "$home"/
+  ruby -r "$repo_root/setup/setup.rb" -e 'install_home_files(*ARGV)' "$repo_root" "$home"
 }
 
 copy_archon_cli() {
@@ -58,11 +56,14 @@ test_repeated_overlay_copy() {
   local archon_output alias_output tree_after_first tree_after_second
   mkdir -p "$home"
 
-  mkdir -p "$home/.local/lib/archon/commands/workspaces/tests" "$home/.local/lib/unrelated"
-  printf '%s' 'user note' > "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt"
+  mkdir -p "$home/.local/lib/archon/commands/retired" "$home/.local/lib/unrelated"
+  printf '%s' 'retired module' > "$home/.local/lib/archon/commands/retired/retired.rb"
   printf '%s' 'unrelated data' > "$home/.local/lib/unrelated/keep"
 
   install_home "$home" || return
+  # Home files are installed before later setup steps that can fail; they must not remove the CLI.
+  copy_home_overlay "$home" || return
+  assert_exists "$home/.local/lib/archon/cli.rb" || return
   tree_after_first="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
   install_home "$home" || return
   tree_after_second="$(find "$home" -printf '%P\t%y\t%l\n' | sort)"
@@ -96,8 +97,7 @@ test_repeated_overlay_copy() {
 
   local expected_files installed_files path
   expected_files="$(cd "$archon_cli_source/lib" && find . -type f -name '*.rb' -printf '%P\n' | sort)" || return
-  installed_files="$(cd "$home/.local/lib" && find archon -type f \
-    ! -path archon/commands/workspaces/tests/user-note.txt -print | sort)" || return
+  installed_files="$(cd "$home/.local/lib" && find archon -type f -print | sort)" || return
   assert_equals "$expected_files" "$installed_files" || return
   while IFS= read -r path; do
     cmp -- "$archon_cli_source/lib/$path" "$home/.local/lib/$path" || return
@@ -105,7 +105,6 @@ test_repeated_overlay_copy() {
 
   assert_absent "$home/.local/AGENTS.md" || return
   assert_absent "$home/.local/tests" || return
-  assert_equals 'user note' "$(cat "$home/.local/lib/archon/commands/workspaces/tests/user-note.txt")" || return
   assert_equals 'unrelated data' "$(cat "$home/.local/lib/unrelated/keep")"
 }
 

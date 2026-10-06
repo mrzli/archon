@@ -217,9 +217,10 @@ def install_archon_cli(repo_root, home)
   archon_cli_source = File.join(repo_root, 'components/archon-cli')
 
   log_step 'Installing Archon CLI'
-  FileUtils.mkdir_p(["#{home}/.local/bin", "#{home}/.local/lib"])
+  FileUtils.mkdir_p(["#{home}/.local/bin", "#{home}/.local/lib/archon"])
   run 'rsync', '-a', "#{archon_cli_source}/bin/", "#{home}/.local/bin/"
-  run 'rsync', '-a', '--exclude=*.md', "#{archon_cli_source}/lib/", "#{home}/.local/lib/"
+  # Replace the library in one step so earlier setup failures never leave the CLI without it.
+  run 'rsync', '-a', '--delete', '--exclude=*.md', "#{archon_cli_source}/lib/archon/", "#{home}/.local/lib/archon/"
 end
 
 def install_user_skills(home)
