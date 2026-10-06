@@ -49,8 +49,9 @@ module Archon
       }
     end
 
+    # A server whose last session just closed reports "server exited unexpectedly" while shutting down.
     def absent_server?(output)
-      output.match?(/no server running|no sessions|error connecting .*No such file or directory/)
+      output.match?(/no server running|no sessions|server exited unexpectedly|error connecting .*No such file or directory/)
     end
 
     def kill_server(capture)

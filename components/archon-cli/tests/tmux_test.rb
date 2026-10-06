@@ -136,7 +136,8 @@ test('stop closes only tagged sessions, ignores saved state and discovery, conti
     equal 1, Tmux.run_workspaces_tmux(['stop'], **context, capture: capture)
     equal [['tmux', %w[kill-session -t =first]], ['tmux', %w[kill-session -t =last]]], calls
     calls.clear
-    ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)'].each do |message|
+    ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)',
+     'server exited unexpectedly'].each do |message|
       equal 0, Tmux.run_workspaces_tmux(['stop'], **context, capture: ->(*_) { { status: 1, output: message } })
     end
     ['permission denied', 'error connecting to /fixture (Operation not permitted)', ''].each do |message|
@@ -192,7 +193,8 @@ test('tmux kill distinguishes absent servers from errors and detaches before clo
     equal 7, Tmux.run_workspaces_tmux([action], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args) { calls << args; 7 })
   end
   equal [%w[stop], %w[kill]], calls
-  ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)'].each do |message|
+  ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)',
+   'server exited unexpectedly'].each do |message|
     equal 0, Tmux.run_workspaces_tmux(['kill'], environment: {}, capture: ->(_, args) { equal ['kill-server'], args; { status: 1, output: message } })
   end
   equal 1, Tmux.run_workspaces_tmux(['kill'], environment: {}, capture: ->(*_) { { status: 1, output: 'permission denied' } })
