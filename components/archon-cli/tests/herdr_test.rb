@@ -121,7 +121,10 @@ test('Herdr creates selected uniform workspaces, repeats safely and attaches onl
     equal 0, Herdr.run_workspaces_herdr(['start'], **context.merge(tty: true, environment: { 'HERDR_ENV' => '1' }))
     equal 1, herdr_state(path)['attachments']
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => [], 'remaining' => 1 } }
-    equal 1, Herdr.run_workspaces_herdr(['start'], **context.merge(tty: true))
+    # A failed attach is reported; its terminal output is discarded to keep test output clean.
+    quiet = ->(command, arguments, **_) { Archon::Workspaces.run_command(command, arguments, stdio: :ignore) }
+    equal 1, Herdr.run_workspaces_herdr(['start'], **context.merge(tty: true, run: quiet))
+    equal 1, herdr_state(path)['attachments']
   end
 end
 
