@@ -1,17 +1,78 @@
 require_relative 'help'
 require_relative 'github_inventory'
 require_relative 'libs/libs'
-require_relative '../../shared/repository_commands'
+require_relative '../../shared/sync_workflow'
+require_relative '../../shared/destructive_workflows'
 
 module Archon
   module Projects
     def run_projects(arguments, home: Dir.home, root: nil)
       return Libraries.run_libraries(arguments.drop(1), home: home) if arguments.first == 'libs'
+      command, *options = arguments
+      return project_help(options) if %w[help --help -h].include?(command)
+      unless HELP.key?(command) && command != 'global'
+        warn(command ? "Unknown command: #{command}" : 'Missing command.')
+        warn HELP.fetch('global')
+        return 2
+      end
+      if options.length == 1 && %w[-h --help].include?(options.first)
+        puts HELP.fetch(command)
+        return 0
+      end
+      valid = options.empty? || (command == 'status' && options == ['--fetch']) ||
+              (%w[delete prune].include?(command) && options.length == 1 && %w[-n --dry-run].include?(options.first))
+      unless valid
+        warn "Unexpected #{command} option: #{options.first}"
+        warn HELP.fetch(command)
+        return 2
+      end
       required_root = File.expand_path('projects/personal', home)
-      Shared.run_repository_command(arguments, self, File.expand_path(root || required_root), required_root)
+      run_project_command(command, options, File.expand_path(root || required_root), required_root)
     rescue StandardError => error
       warn "Unexpected error: #{error.message}"
       1
+    end
+
+    def run_project_command(command, options, root, required_root)
+      local = -> { local_repositories(root) }
+      get_name = method(:repository_name)
+      case command
+      when 'remote'
+        list_remote
+      when 'status'
+        repositories = local.call
+        if repositories.empty?
+          puts empty_message(root)
+          return 0
+        end
+        statuses = Shared.inspect_repositories(repositories, !options.empty?, get_name)
+        Shared.print_statuses(statuses)
+        statuses.any? { |status| status[:error] || !status[:warnings].empty? } ? 1 : 0
+      when 'sync'
+        FileUtils.mkdir_p(root)
+        Shared.sync_repositories(remote: method(:remote_repositories), local: local, key: method(:repository_key),
+          get_name: get_name, clone: ->(repository) { clone_repository(repository, root) })
+      when 'delete', 'prune'
+        Shared.destructive_workflow(command, dry_run: !options.empty?, root: root, required_root: required_root,
+          local: local, remote: ->(refresh) { remote_repositories(command == 'prune' && !refresh) },
+          prunable: ->(remote) { prunable_repositories(remote, root) }, key: method(:repository_key),
+          get_name: get_name, empty_message: empty_message(root))
+      end
+    end
+
+    def project_help(options)
+      if options.empty?
+        puts HELP.fetch('global')
+      elsif options.length == 1 && %w[-h --help].include?(options.first)
+        puts HELP.fetch('help')
+      elsif options.length == 1 && HELP.key?(options.first) && options.first != 'global'
+        puts HELP.fetch(options.first)
+      else
+        warn(options.length > 1 ? "Unexpected help argument: #{options[1]}" : "Unknown command: #{options.first}")
+        warn HELP.fetch('help')
+        return 2
+      end
+      0
     end
 
     def empty_message(root)
@@ -28,7 +89,7 @@ module Archon
         Shared.child_repositories(File.join(root, owner)).map do |repository|
           repository.merge(owner: owner, name_with_owner: "#{owner}/#{repository[:name]}")
         end
-      end.sort_by { |repository| sort_key(repository) }
+      end.sort_by { |repository| repository_key(repository) }
     end
 
     def prunable_repositories(remote, root)

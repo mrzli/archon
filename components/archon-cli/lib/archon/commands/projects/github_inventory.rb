@@ -27,10 +27,6 @@ module Archon
       repository_name(repository).downcase
     end
 
-    def sort_key(repository)
-      repository_key(repository)
-    end
-
     def blacklisted?(repository, organizations = ORGANIZATION_BLACKLIST, repositories = REPOSITORY_BLACKLIST)
       organizations.any? { |owner| owner.downcase == repository[:owner].downcase } ||
         repositories.any? { |name| name.downcase == repository_key(repository) }
@@ -129,7 +125,7 @@ module Archon
         end
       end
       excluded_repositories.each { |key| repositories.delete(key) }
-      repositories.values.sort_by { |repository| sort_key(repository) }
+      repositories.values.sort_by { |repository| repository_key(repository) }
     end
   end
 end

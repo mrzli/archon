@@ -86,7 +86,7 @@ test('sync plans sort clone and update operations and continue after failures') 
   operations = []
   status, output, = capture do
     Shared.sync_repositories(remote: -> { [{ name: 'alpha' }, { name: 'beta' }, { name: 'gamma' }] },
-      local: -> { [{ name: 'beta' }] }, key: get_name, get_name: get_name, sort_key: get_name,
+      local: -> { [{ name: 'beta' }] }, key: get_name, get_name: get_name,
       update: ->(repo, _) { operations << "update #{repo[:name]}"; raise 'injected update failure' },
       clone: ->(repo) { operations << "clone #{repo[:name]}"; { succeeded: true, message: 'cloned' } })
   end
@@ -101,7 +101,7 @@ test('sync still updates local repositories when the remote listing fails') do
   operations = []
   status, output, error = capture do
     Shared.sync_repositories(remote: -> { raise 'GitHub unavailable' }, local: -> { [{ name: 'beta' }] },
-      key: get_name, get_name: get_name, sort_key: get_name,
+      key: get_name, get_name: get_name,
       update: ->(repo, _) { operations << "update #{repo[:name]}"; { succeeded: true, message: 'up to date' } },
       clone: ->(_) { raise 'must not clone without a remote listing' })
   end

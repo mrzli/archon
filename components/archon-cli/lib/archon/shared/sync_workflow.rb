@@ -25,7 +25,7 @@ module Archon
       sync_failure(repository, error.message, get_name)
     end
 
-    def sync_repositories(remote:, local:, key:, get_name:, clone:, sort_key:, update: method(:update_repository))
+    def sync_repositories(remote:, local:, key:, get_name:, clone:, update: method(:update_repository))
       failed = false
       begin
         remote_repositories = remote.call
@@ -39,7 +39,7 @@ module Archon
       operations = local_repositories.map { |repository| [repository, -> { update.call(repository, get_name) }] }
       operations.concat(remote_repositories.reject { |repository| names.include?(key.call(repository)) }
         .map { |repository| [repository, -> { clone.call(repository) }] })
-      operations.sort_by! { |repository, _| sort_key.call(repository) }
+      operations.sort_by! { |repository, _| key.call(repository) }
       if operations.empty?
         puts 'No local or remote Git repositories found.'
         return failed ? 1 : 0

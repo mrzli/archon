@@ -55,12 +55,12 @@ test('help, aliases, and nested command help work without external commands') do
       end
       equal result, run_cli(['w', short, '--help'])
     end
-    [['projects', %w[delete libs prune remote status sync help]], [%w[projects libs], %w[build graph help]]].each do |domain, commands|
+    [['projects', %w[delete libs prune remote status sync help]], [%w[projects libs], %w[build graph help]]].each do |prefix, commands|
       commands.each do |command|
-        result = run_cli([*domain, 'help', command])
+        result = run_cli([*prefix, 'help', command])
         equal 0, result[:status]
         assert result[:stdout].start_with?('Usage: archon ')
-        equal result, run_cli([*domain, command, '--help'])
+        equal result, run_cli([*prefix, command, '--help'])
       end
     end
     assert !File.exist?(File.join(fixture[:home], 'unexpected-command'))
