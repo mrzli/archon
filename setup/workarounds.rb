@@ -33,9 +33,8 @@ module IntelVideoWorkaround
     check_override(override_path)
     runner.call('omarchy', 'pkg', 'add', 'intel-media-driver')
     File.write(override_path, OVERRIDE) unless File.exist?(override_path)
+    # remove deletes this line again, so no backup of the user's configuration is needed.
     unless config.lines.map(&:chomp).include?(LOAD_LINE)
-      backup = "#{config_path}.before-archon-intel-video"
-      FileUtils.cp(config_path, backup) unless File.exist?(backup)
       File.write(config_path, config + (config.end_with?("\n") ? '' : "\n") + LOAD_LINE + "\n")
     end
     log_info 'Intel video decoding configured. Log out/in before testing existing applications.'
@@ -52,6 +51,8 @@ module IntelVideoWorkaround
       File.write(config_path, updated) unless updated == config
     end
     FileUtils.rm_f(override_path)
+    # Earlier versions of apply left this backup behind.
+    FileUtils.rm_f("#{config_path}.before-archon-intel-video")
     log_info 'Intel video override removed; driver retained. Log out/in to clear the old environment.'
   end
 

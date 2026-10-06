@@ -42,14 +42,17 @@ Dir.mktmpdir('archon-video-') do |root|
   2.times { IntelVideoWorkaround.apply(home, drm_root: drm, runner: runner) }
   assert(calls == Array.new(2) { %w[omarchy pkg add intel-media-driver] })
   assert(File.read(config_path) == original + IntelVideoWorkaround::LOAD_LINE + "\n")
-  assert(File.read("#{config_path}.before-archon-intel-video") == original)
+  backup_path = "#{config_path}.before-archon-intel-video"
+  assert(!File.exist?(backup_path))
   # Execute the generated Lua with a fake Hyprland API; only video decoding changes.
   system('lua', '-e', 'hl = {env = function(k,v) assert(k == "LIBVA_DRIVER_NAME" and v == "iHD") end}',
          override_path, exception: true)
   File.open(config_path, 'a') { |file| file.puts('-- later user edit') }
+  # Earlier versions left a backup; retiring the workaround removes it.
+  File.write(backup_path, original)
   2.times { IntelVideoWorkaround.remove(home) }
   assert(File.read(config_path) == original + "-- later user edit\n")
-  assert(!File.exist?(override_path) && calls.length == 2)
+  assert(!File.exist?(override_path) && !File.exist?(backup_path) && calls.length == 2)
 
   File.write(override_path, '-- unrelated user file')
   %i[apply remove].each do |action|
