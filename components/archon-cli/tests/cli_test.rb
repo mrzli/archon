@@ -26,6 +26,7 @@ usage_cases.each do |arguments|
       result = run_cli(arguments)
       equal 2, result[:status]
       assert !result[:stderr].empty?
+      equal '', result[:stdout]
     end
   end
 end

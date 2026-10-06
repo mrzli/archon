@@ -11,7 +11,7 @@ module Archon
       end
       unless help.key?(command) && command != 'global'
         warn(command ? "Unknown command: #{command}" : 'Missing command.')
-        puts help.fetch('global')
+        warn help.fetch('global')
         return 2
       end
       if options.length == 1 && %w[-h --help].include?(options.first)
@@ -22,7 +22,7 @@ module Archon
               (%w[delete prune].include?(command) && options.length == 1 && %w[-n --dry-run].include?(options.first))
       unless valid
         warn "Unexpected #{command} option: #{options.first}"
-        puts help.fetch(command)
+        warn help.fetch(command)
         return 2
       end
       local = -> { domain.local_repositories(root) }
@@ -61,7 +61,7 @@ module Archon
         puts help.fetch(options.first)
       else
         warn(options.length > 1 ? "Unexpected help argument: #{options[1]}" : "Unknown command: #{options.first}")
-        puts help.fetch('help')
+        warn help.fetch('help')
         return 2
       end
       0
