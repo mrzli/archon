@@ -52,6 +52,19 @@ module Archon
       end
     end
 
+    # Commits reachable only from a detached HEAD or from tags are lost with the repository.
+    def unreferenced_commits(repository, detached)
+      count = git_output(repository, ['rev-list', '--count', *(detached ? ['HEAD'] : []), '--tags',
+                                      '--not', '--branches', '--remotes']).strip.to_i
+      "#{detached ? 'detached HEAD or tags' : 'tags'}=#{count} (not on any branch or remote)" if count > 0
+    end
+
+    # Ignored directories are usually generated output; ignored files can hold local data such as .env.
+    def ignored_files(repository)
+      entries = git_output(repository, ['status', '--porcelain=v1', '-z', '--ignored', '--untracked-files=normal']).split("\0")
+      entries.count { |entry| entry.start_with?('!! ') && !entry.end_with?('/') }
+    end
+
     def inspect_repositories(repositories, fetch, get_name)
       repositories.map do |repository|
         warnings = []
@@ -63,10 +76,13 @@ module Archon
           end
         end
         begin
-          branch = symbolic_branch(repository) || "detached@#{git_output(repository, %w[rev-parse --short HEAD]).strip}"
+          symbolic = symbolic_branch(repository)
+          branch = symbolic || "detached@#{git_output(repository, %w[rev-parse --short HEAD]).strip}"
+          ahead = ahead_branches(repository, warnings)
+          ahead << unreferenced_commits(repository, symbolic.nil?)
           { name: get_name.call(repository), branch: branch, changes: working_tree_changes(repository),
             stash_count: git_output(repository, %w[stash list --format=%gd]).lines.length,
-            ahead: ahead_branches(repository, warnings), warnings: warnings }
+            ahead: ahead.compact, ignored_files: ignored_files(repository), warnings: warnings }
         rescue StandardError => error
           { name: get_name.call(repository), error: error.message, warnings: warnings }
         end

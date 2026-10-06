@@ -57,7 +57,7 @@ module Archon
 
     def unclean?(status)
       status[:error] || !status[:warnings].empty? || status[:changes].values.any?(&:positive?) ||
-        status[:stash_count] > 0 || !status[:ahead].empty?
+        status[:stash_count] > 0 || !status[:ahead].empty? || status[:ignored_files] > 0
     end
 
     def confirm_deletion(statuses, input: $stdin, output: $stdout, error: $stderr)
@@ -91,6 +91,7 @@ module Archon
           count = status[:stash_count]
           reasons << "#{count} #{count == 1 ? 'stash' : 'stashes'}" if count > 0
           reasons << "unpushed commits: #{status[:ahead].join(', ')}" unless status[:ahead].empty?
+          reasons << "ignored files: #{status[:ignored_files]}" if status[:ignored_files] > 0
         end
         reasons.concat(status[:warnings].map { |warning| "warning: #{warning}" })
         reasons << "inspection error: #{single_line(status[:error])}" if status[:error]

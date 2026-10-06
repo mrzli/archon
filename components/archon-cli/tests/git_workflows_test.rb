@@ -42,6 +42,47 @@ test('rename paths do not inflate working tree counts and detached HEAD has a us
   end
 end
 
+test('deletion treats commits only on a detached HEAD or tags and ignored files as unclean') do
+  fixture do |fixture|
+    remote = File.join(fixture[:root], 'remote.git')
+    Open3.capture3('git', 'init', '-q', '--bare', remote)
+    repository = initialize_repository(File.join(fixture[:root], 'repo'))
+    path = repository[:path]
+    git(path, 'remote', 'add', 'origin', remote)
+    git(path, 'push', '-qu', 'origin', 'main')
+    File.write(File.join(path, '.gitignore'), "node_modules/\n.env\n")
+    git(path, 'add', '.gitignore')
+    git(path, 'commit', '-qm', 'ignore')
+    git(path, 'push', '-q')
+    git(path, 'tag', 'pushed-commit')
+    FileUtils.mkdir_p(File.join(path, 'node_modules/package'))
+    File.write(File.join(path, 'node_modules/package/index.js'), 'generated')
+    inspect = -> { Shared.inspect_repositories([repository], false, ->(repo) { repo[:name] }).first }
+    assert !Shared.unclean?(inspect.call), 'pushed commits, tags and ignored directories are clean'
+
+    git(path, 'checkout', '-q', '--detach')
+    git(path, 'commit', '-q', '--allow-empty', '-m', 'detached work')
+    status = inspect.call
+    assert Shared.unclean?(status)
+    equal ['detached HEAD or tags=1 (not on any branch or remote)'], status[:ahead]
+
+    git(path, 'tag', 'local-only')
+    git(path, 'checkout', '-q', 'main')
+    status = inspect.call
+    assert Shared.unclean?(status)
+    equal ['tags=1 (not on any branch or remote)'], status[:ahead]
+    git(path, 'tag', '-d', 'local-only')
+
+    File.write(File.join(path, '.env'), 'SECRET=1')
+    status = inspect.call
+    equal 1, status[:ignored_files]
+    assert Shared.unclean?(status)
+    output = StringIO.new
+    Shared.print_unclean_reasons([status], output)
+    assert output.string.include?('ignored files: 1'), output.string
+  end
+end
+
 test('sync plans sort clone and update operations and continue after failures') do
   get_name = ->(repo) { repo[:name] }
   operations = []
@@ -122,7 +163,7 @@ end
 
 test('confirmation requires terminal input and exact confirmation, including a second prompt for unclean repos') do
   unclean = { name: 'repo', branch: 'main', changes: { staged: 1, unstaged: 0, untracked: 0 },
-              stash_count: 1, ahead: ['main=1'], warnings: [] }
+              stash_count: 1, ahead: ['main=1'], ignored_files: 0, warnings: [] }
   [[[], "delete\n", true, 1], [[unclean], "delete\ndelete\n", true, 2],
    [[unclean], "delete\nno\n", false, 2], [[], "delete \n", false, 1], [[], '', false, 1]].each do |statuses, answers, expected, prompts|
     input, output, error = StringIO.new(answers), StringIO.new, StringIO.new
