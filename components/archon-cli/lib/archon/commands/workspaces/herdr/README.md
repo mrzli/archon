@@ -4,51 +4,42 @@
 archon workspaces herdr start
 archon workspaces herdr start --ai codex
 archon workspaces herdr stop
+archon workspaces herdr kill
 archon workspaces herdr --help
 ```
 
-Start chooses projects using the [shared project checklist](../README.md).
-Each project has Neovim, an AI tool, and a shell. `--ai claude` is the default
-and runs `claude --continue`, or `claude` when the project has no saved
-conversation; `--ai codex` runs `codex resume --last`.
-The tool must be on `PATH`. The option affects newly created workspaces.
-Repeated starts preserve existing workspaces and relaunch Neovim or the AI tool
-in their existing, single-pane tabs when only a shell is running. Running
-programs and native agent restores are left alone. This also applies after
-stop/start and when starting from inside Herdr. Failed creations roll back
-their new resources and later projects are still attempted.
-
-Workspace labels are just the project folder name. Same-named projects have
-separate workspaces. Start also shortens selected workspaces' labels created by
-earlier Archon versions. Workspace IDs are remembered alongside the project selection in
+Start chooses projects using the [shared project checklist](../README.md) and
+gives each one a workspace labelled with the project folder name. Same-named
+projects get separate workspaces. Workspace IDs are remembered in
 `${XDG_STATE_HOME:-~/.local/state}/archon/workspaces/herdr.json`; keep this file
-to reuse the correct workspaces on later starts.
+so later starts reuse the same workspaces. A workspace you renamed gets its
+folder name back.
+
+Repeated starts preserve existing workspaces and relaunch Neovim or the AI tool
+in their single-pane tabs when only a bash prompt is running there. Running
+programs and native agent restores are left alone. Failed creations roll back
+their new resources, and later projects are still attempted.
 
 Interactive starts outside Herdr attach in the current terminal and focus the
 first selected project. Inside Herdr, the current view is preserved.
-Stop never attaches or prompts.
 
-Stop from a Herdr pane runs independently so closing that pane does not
-interrupt the remaining work. Shutdown diagnostics are saved in
-`${XDG_STATE_HOME:-~/.local/state}/archon/workspaces-herdr-stop.log`.
+Everything runs in the dedicated Herdr session `archon`; start launches its
+server when needed. Other Herdr sessions are unaffected.
 
-Uses the dedicated Herdr session `archon`. Start launches its background server
-when needed. Stop shuts down this entire session, including extra workspaces
-you added there, and preserves its saved layout. Other Herdr sessions are
-unaffected. Stopping an already stopped session succeeds. Server diagnostics
-are saved in `archon/workspaces-herdr-server.log` under the state directory.
+## Stop
+
+Stop shuts down the entire `archon` session, including workspaces you added
+there, and keeps its saved layout. Stopping a stopped session succeeds. From a
+Herdr pane it runs independently, so closing that pane does not interrupt it.
+
+Logs are saved under `${XDG_STATE_HOME:-~/.local/state}/archon/`:
+`workspaces-herdr-server.log` for the server and `workspaces-herdr-stop.log`
+for stop and kill.
 
 ## Kill
 
-```bash
-arc w h kill
-```
-
 Stops **all Herdr sessions**, including sessions outside Archon, and clears
 saved layouts for running and stopped sessions. The next start creates fresh
-workspaces for the selected projects and launches their tools. Project files,
-shared Herdr configuration, and the saved project checklist are preserved.
-Later sessions are still attempted if one fails. Repeated kills succeed.
-
-Takes no options or project filters. From a multiplexer pane it runs
-independently, using the same shutdown log as `stop`.
+workspaces for the selected projects. Project files, shared Herdr
+configuration, and the project checklist are preserved. Later sessions are
+still attempted if one fails, and repeated kills succeed.

@@ -1,7 +1,6 @@
 # Administration
 
-Use `archon admin --help` for help. Exit statuses are `0` for success, `1` for
-operation failures, and `2` for invalid arguments.
+Use `archon admin --help` for help.
 
 ## Battery
 
@@ -53,9 +52,9 @@ It adds the key to the agent, adds the GitHub host configuration to
 public key with GitHub remains a manual step.
 
 Repeating `create` reuses the key pair and avoids duplicate host entries. It
-preserves unrelated SSH configuration and accepts the configuration produced
-by the former root script. A different existing `Host github.com` block or an
-incomplete key pair causes an error rather than overwriting existing files.
+preserves unrelated SSH configuration. A different existing `Host github.com`
+block or an incomplete key pair causes an error rather than overwriting
+existing files.
 The config file is set to mode `600`.
 
 `test` requires `ssh`. It runs `ssh -T git@github.com` and displays GitHub's

@@ -22,27 +22,19 @@ Use `arc w vsc --help` for help. The controls are shown in both prompts:
 - Escape cancels the entire selection without opening windows or saving changes.
 - Ctrl+C cancels and restores the terminal.
 
-Every direct directory under `~/projects/cloned` is a project. Under
-`~/projects/personal`, the first directory level is an owner or organization;
-each directory directly under an owner is a project. Discovery uses these exact
-levels, does not require Git, and does not follow directory symlinks. Missing
-roots are treated as empty. Paths relative to `~/projects` are shown alphabetically.
-
-The workspace and selected paths are saved in
-`${XDG_STATE_HOME:-~/.local/state}/archon/workspaces/visual-studio-code.json` when you accept
-the project checklist. The next start restores those choices; removed projects
-are omitted and new projects start unchecked. Accepting an empty selection
-saves it and opens nothing.
+Projects and saved choices work as described in the
+[shared project checklist](../README.md); the chosen workspace is remembered
+with them.
 
 Each selected project opens in a new VS Code window, using your existing
 settings and extensions. Windows open in checklist order and form one Hyprland
 tabbed group on the chosen workspace. The first project is focused when done.
 Existing VS Code windows are preserved. Starting again opens a new group.
 
-The command briefly uses a temporary named workspace while assembling the
-group. If opening or grouping fails, windows already opened are moved to the
-chosen workspace and the command reports the failure. Group locks or window
-rules that prevent grouping must be resolved before retrying.
+While assembling the group, windows briefly appear on a temporary named
+workspace. If opening or grouping fails, windows already opened are moved to
+the chosen workspace and the failure is reported. Group locks or window rules
+that prevent grouping must be resolved before retrying.
 
 ## Stop
 

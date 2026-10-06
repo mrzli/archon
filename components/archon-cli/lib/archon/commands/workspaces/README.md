@@ -23,9 +23,13 @@ Selections are remembered independently under
 Each backend starts with no projects selected when its file does not exist.
 Removed projects are omitted and new ones start unchecked. An accepted empty
 selection is saved and opens nothing. For terminal backends, existing sessions
-survive a later start with a different selection. Each terminal project has
-Neovim, the selected AI tool
-(Claude by default, or Codex), and a shell. Development servers are not started.
+survive a later start with a different selection.
+
+Each terminal project has tabs for Neovim, an AI tool, and a shell. `--ai
+claude` is the default and runs `claude --continue`, or `claude` when the
+project has no saved conversation; `--ai codex` runs `codex resume --last`. The
+tool must be on `PATH`, and the option applies to newly created workspaces.
+Development servers are not started.
 
 ## Herdr
 

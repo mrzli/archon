@@ -4,25 +4,21 @@
 arc codex restart
 ```
 
-Stops all detected Codex CLI processes together and sends `codex resume --last` in the
-same project directory and terminal pane. No selection or confirmation.
-The latest conversation for each directory is selected, which may differ from
-the conversation previously open there.
+Stops every Codex CLI session running in a Herdr or tmux pane and runs
+`codex resume --last` in the same pane and directory. This resumes the latest
+conversation in each directory, which may differ from the one previously open
+there. There is no selection or confirmation.
 
-Run from a separate shell after leaving Codex idle. Unsent drafts are discarded.
-Other panes and applications stay running. Ctrl+C cancels the restart command
-cleanly. The command returns after sending the launch commands, without waiting for
-Codex to load or checking startup success. Any startup errors appear in the
-individual panes. Codex gets a few seconds to exit cleanly; processes still running
-after that are forcibly killed.
+Run it from a separate shell with the sessions idle; unsent drafts are lost.
+Model, profile, directory and sandbox options are kept; prompts, images and
+one-off environment overrides are not. If any session uses an unsupported
+option, such as `--worktree`, nothing is stopped. The shared Codex daemon keeps
+running.
 
-Requires Codex launched from a shell in Herdr or tmux. Bare `arc codex` shows
-usage. Original model, profile, directory and sandbox flags are retained;
-prompts and images are not replayed. Unsupported flags, including `--worktree`,
-cause a failure before closing that instance. One-off environment overrides
-are not reproduced. The shared Codex daemon stays running.
+Each session gets a few seconds to exit cleanly before it is killed. The
+command returns once the launch commands are sent; startup errors appear in the
+panes. Ctrl+C cancels it cleanly.
 
-Discovery covers running named Herdr sessions and tmux sockets under
-`${TMUX_TMPDIR:-/tmp}/tmux-$UID`, plus the calling shell's `TMUX` socket.
-Sockets left behind by stopped tmux servers are ignored.
-Standalone terminals and other custom tmux socket locations are not supported.
+Discovery covers running Herdr sessions and tmux servers under
+`${TMUX_TMPDIR:-/tmp}/tmux-$UID`, plus the calling shell's tmux server.
+Standalone terminals and other tmux socket locations are not supported.

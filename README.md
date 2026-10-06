@@ -114,6 +114,7 @@ Run the setup script to apply the managed system configuration:
 - VS Code:
   - Sign into VS Code Copilot.
   - Sign into Codex.
+- Claude Code: run `claude` once and log in.
 - Log into Steam.
 
 ### GitHub SSH Key

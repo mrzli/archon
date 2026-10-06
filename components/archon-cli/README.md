@@ -67,6 +67,7 @@ Commands use these exit statuses:
 Detailed behavior is documented with each command collection:
 
 - [Administration](./lib/archon/commands/admin/README.md)
+- [Claude](./lib/archon/commands/claude/README.md)
 - [Codex](./lib/archon/commands/codex/README.md)
 - [Projects](./lib/archon/commands/projects/README.md), including
   [libraries](./lib/archon/commands/projects/libs/README.md)
