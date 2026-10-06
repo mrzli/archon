@@ -52,6 +52,15 @@ module Archon
           return 1
         end
       end
+      # The prompt only listed repositories that were unclean when it opened.
+      shown = statuses.map { |status| status[:name] }
+      changed = inspect_repositories(repositories, false, get_name)
+                .select { |status| unclean?(status) && !shown.include?(status[:name]) }
+      unless changed.empty?
+        warn "Local repository state changed during confirmation: #{changed.map { |status| status[:name] }.join(', ')}"
+        warn 'Nothing was deleted.'
+        return 1
+      end
       remove.call(repositories)
     end
 

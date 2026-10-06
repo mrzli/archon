@@ -159,6 +159,39 @@ test('prune excludes blacklisted projects and refuses restoration or failed reva
   end
 end
 
+test('deletion stops when a clean repository gains local work during confirmation') do
+  fixture do |fixture|
+    root = File.join(fixture[:home], 'projects/personal')
+    clean = initialize_repository(File.join(root, 'owner/clean'))
+    remote = File.join(fixture[:root], 'clean.git')
+    Open3.capture3('git', 'init', '-q', '--bare', remote)
+    git(clean[:path], 'remote', 'add', 'origin', remote)
+    git(clean[:path], 'push', '-qu', 'origin', 'main')
+    dirty = initialize_repository(File.join(root, 'owner/dirty'))
+    File.write(File.join(dirty[:path], 'untracked.txt'), 'shown before confirmation')
+    [[true, 1, []], [false, 0, [clean, dirty]]].each do |edit_during_prompt, expected, expected_removed|
+      removed = []
+      result, _, error = capture do
+        Shared.destructive_workflow('delete', dry_run: false, root: root, required_root: root,
+          local: -> { [clean, dirty] }, remote: ->(_) { [] }, prunable: ->(_) { [] }, key: ->(repo) { repo[:name] },
+          get_name: ->(repo) { repo[:name] }, empty_message: 'empty',
+          confirm: lambda { |statuses|
+            equal ['dirty'], statuses.map { |status| status[:name] }
+            File.write(File.join(clean[:path], 'new-work.txt'), 'written while the prompt was open') if edit_during_prompt
+            true
+          }, remove: ->(repos) { removed.concat(repos); 0 })
+      end
+      equal expected, result
+      equal expected_removed, removed
+      if edit_during_prompt
+        assert error.include?('changed during confirmation: clean'), error
+        assert error.include?('Nothing was deleted.')
+        File.delete(File.join(clean[:path], 'new-work.txt'))
+      end
+    end
+  end
+end
+
 test('confirmation requires terminal input and exact confirmation, including a second prompt for unclean repos') do
   unclean = { name: 'repo', branch: 'main', changes: { staged: 1, unstaged: 0, untracked: 0 },
               stash_count: 1, ahead: ['main=1'], ignored_files: 0, warnings: [] }
