@@ -249,6 +249,8 @@ check('rootless setup needs no sudo or dependency installation on a second run',
   assert second_run.none? { |args| args.first == 'sudo' }
   assert second_run.none? { |args| args[0, 3] == %w[omarchy pkg add] && (args & %w[rootlesskit slirp4netns]).any? }
   assert second_run.any? { |args| args.first == 'docker' && args.include?('info') }
+  assert commands(env).take(first_run_count).include?(%w[systemctl --user start docker.service])
+  assert second_run.none? { |args| args[0, 2] == ['systemctl', '--user'] && %w[start restart].include?(args[2]) }
   %w[subuid subgid].each do |file|
     assert File.read("#{env['SYSTEM_FIXTURE']}/#{file}") == "other:100000:65536\ndeveloper:165536:65536\n"
   end
@@ -292,6 +294,34 @@ check('rootless setup repairs changed state on later runs', :docker) do |repo, h
     %w[sudo systemctl disable --now docker.service docker.socket],
     %w[sudo gpasswd -d developer docker]
   ]
+end
+
+check('rootless Docker restarts only when its launcher, subordinate IDs or unit file changed', :docker) do |repo, home, _bin, env|
+  restarts = -> { commands(env).count { |args| args == %w[systemctl --user restart docker.service] } }
+  _, error, status = run_operation(repo, env.merge('DOCKER_START_TIME' => '1000'), 'configure_rootless_docker(home)')
+  assert status.success?, error
+  expect_restarts = ->(expected) { assert restarts.call == expected, "expected #{expected} restarts, got #{restarts.call}" }
+  expect_restarts.call(0)
+  _, error, status = run_operation(repo, env.merge('DOCKER_VERSION' => '30.0.0', 'DOCKER_START_TIME' => '2000'),
+                                   'configure_rootless_docker(home)')
+  assert status.success?, error
+  expect_restarts.call(1)
+  File.write("#{env.fetch('SYSTEM_FIXTURE')}/subuid", "other:100000:65536\ndeveloper:165536:1000\n")
+  _, error, status = run_operation(repo, env.merge('DOCKER_VERSION' => '30.0.0', 'DOCKER_START_TIME' => '3000'),
+                                   'configure_rootless_docker(home)')
+  assert status.success?, error
+  expect_restarts.call(2)
+  unit = "#{home}/.config/systemd/user/docker.service"
+  FileUtils.mkdir_p(File.dirname(unit))
+  File.write(unit, "[Service]\n")
+  File.utime(2500, 2500, unit)
+  _, error, status = run_operation(repo, env.merge('DOCKER_VERSION' => '30.0.0'), 'configure_rootless_docker(home)')
+  assert status.success?, error
+  expect_restarts.call(2)
+  File.utime(4000, 4000, unit)
+  _, error, status = run_operation(repo, env.merge('DOCKER_VERSION' => '30.0.0'), 'configure_rootless_docker(home)')
+  assert status.success?, error
+  expect_restarts.call(3)
 end
 
 check('launcher follows Docker upgrades without script edits', :docker) do |repo, home, _bin, env|

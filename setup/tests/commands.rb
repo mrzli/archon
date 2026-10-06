@@ -81,6 +81,13 @@ when 'systemctl'
   if %w[is-enabled is-active].include?(ARGV.first)
     exit(File.read("#{state}/#{ARGV.first}").strip == 'yes' ? 0 : 1)
   end
+  started = "#{state}/user-docker-started"
+  if ARGV[0, 3] == %w[--user show docker.service]
+    puts(File.exist?(started) ? "ActiveState=active\nActiveEnterTimestamp=@#{File.read(started).strip}" :
+                                "ActiveState=inactive\nActiveEnterTimestamp=")
+  elsif [%w[--user start docker.service], %w[--user restart docker.service]].include?(ARGV)
+    File.write(started, ENV.fetch('DOCKER_START_TIME', Time.now.to_i.to_s))
+  end
 when 'sudo'
   if ARGV[0, 3] == %w[voxtype setup variant]
     File.write("#{state}/voice-variant", 'whisper-vulkan')
