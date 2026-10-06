@@ -17,14 +17,19 @@ done
 printf '\n%s\n' 'Archon CLI verification'
 bash "$repo_root/components/archon-cli/tests/run.sh"
 
-bash_check_paths=("$repo_root/tests/"*.sh "$repo_root/components/wow-setup/"*.sh)
+mapfile -t home_shell_paths < <(find "$repo_root/data/home" -type f -name '*.sh' -print | sort)
+bash_check_paths=("$repo_root/tests/"*.sh "$repo_root/components/wow-setup/"*.sh "$repo_root/migrations/"*.sh
+  "${home_shell_paths[@]}")
 printf '\n%s\n' 'Additional Bash syntax checks'
 for path in "${bash_check_paths[@]}"; do
   bash -n "$path"
 done
 
+printf '\n%s\n' 'Additional ShellCheck'
 if command -v shellcheck >/dev/null 2>&1; then
   shellcheck "${bash_check_paths[@]}"
+else
+  printf '%s\n' 'SKIP: ShellCheck is not available.'
 fi
 
 printf '\n%s\n' 'Archon verification passed.'
