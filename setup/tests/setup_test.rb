@@ -263,13 +263,15 @@ check('managed deletion rejects symlinks outside home', :files) do |repo, home, 
 end
 
 check('rootless setup needs no sudo or dependency installation on a second run', :docker) do |repo, home, _bin, env|
-  _, error, status = run_operation(repo, env, 'configure_rootless_docker(home)')
+  first_output, error, status = run_operation(repo, env, 'configure_rootless_docker(home)')
   assert status.success?, error
   first_run_count = commands(env).length
-  _, error, status = run_operation(repo, env, 'configure_rootless_docker(home)')
+  second_output, error, status = run_operation(repo, env, 'configure_rootless_docker(home)')
   assert status.success?, error
   second_run = commands(env).drop(first_run_count)
   assert second_run.none? { |args| args.first == 'sudo' }
+  assert first_output.include?('Existing rootful Docker data is preserved')
+  assert !second_output.include?('rootful') && !second_output.include?('Log out'), second_output
   assert second_run.none? { |args| args[0, 3] == %w[omarchy pkg add] && (args & %w[rootlesskit slirp4netns]).any? }
   assert second_run.any? { |args| args.first == 'docker' && args.include?('info') }
   assert commands(env).take(first_run_count).include?(%w[systemctl --user start docker.service])

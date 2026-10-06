@@ -26,13 +26,16 @@ def configure_rootless_docker(home)
 
   rootful_enabled = system('systemctl', 'is-enabled', '--quiet', 'docker.service', 'docker.socket')
   rootful_active = system('systemctl', 'is-active', '--quiet', 'docker.service', 'docker.socket')
-  if rootful_enabled || rootful_active
-    run 'sudo', 'systemctl', 'disable', '--now', 'docker.service', 'docker.socket'
-  end
+  moved_from_rootful = rootful_enabled || rootful_active
+  run 'sudo', 'systemctl', 'disable', '--now', 'docker.service', 'docker.socket' if moved_from_rootful
   if capture('id', '-nG', user).split.include?('docker')
     run 'sudo', 'gpasswd', '-d', user, 'docker'
+    moved_from_rootful = true
   end
-  log_info 'Rootless Docker is ready. Log out and back in so desktop apps and agents inherit its socket.'
+  log_info 'Rootless Docker is ready.'
+  return unless moved_from_rootful
+
+  log_info 'Log out and back in so desktop apps and agents inherit its socket.'
   log_info 'Existing rootful Docker data is preserved; recreate or migrate databases separately.'
 end
 
