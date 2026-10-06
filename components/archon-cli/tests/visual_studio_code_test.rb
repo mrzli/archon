@@ -260,6 +260,18 @@ test('launch and grouping failures move opened windows to the target workspace')
   equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ workspace = "3" })']], backend[:calls].last
 end
 
+test('a failed window cleanup is reported without hiding the launch failure') do
+  run = lambda do |_, arguments|
+    output = arguments == %w[-j clients] ? '[]' : (arguments == %w[-j activeworkspace] ? '{"id":2}' : 'ok')
+    output = 'Invalid dispatcher' if arguments.last == 'hl.dsp.focus({ workspace = "2" })'
+    { stdout: output, stderr: '', status: 0 }
+  end
+  _, _, error = capture do
+    raises(/Timed out waiting for VS Code/) { VSC.launch_projects(['/one'], 8, run: run, timeout: 0) }
+  end
+  assert error.include?('Could not restore VS Code windows: Hyprland focus: Invalid dispatcher'), error
+end
+
 test('launch timeout and Hyprland dispatcher rejection are reported') do
   calls = []
   run = lambda do |command, arguments|

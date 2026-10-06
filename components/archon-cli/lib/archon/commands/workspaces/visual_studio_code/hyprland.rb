@@ -46,6 +46,12 @@ module Archon
       original = JSON.parse(checked_process(run, 'hyprctl', %w[-j activeworkspace])).fetch('id')
       staging = "name:archon-vsc-#{Process.pid}"
       opened = []
+      restore = lambda do
+        opened.each do |address|
+          hypr_dispatch(run, 'window.move', workspace: workspace.to_s, window: "address:#{address}", follow: false)
+        end
+        hypr_dispatch(run, 'focus', workspace: opened.empty? ? original.to_s : workspace.to_s)
+      end
       begin
         projects.each do |project|
           before = hypr_clients(run).map { |client| client.fetch('address') }
@@ -69,12 +75,16 @@ module Archon
             sleep 0.1
           end
         end
-      ensure
-        opened.each do |address|
-          hypr_dispatch(run, 'window.move', workspace: workspace.to_s, window: "address:#{address}", follow: false)
+      rescue StandardError, Interrupt => error
+        # Report a failed cleanup without hiding the error that interrupted the launch.
+        begin
+          restore.call
+        rescue StandardError => cleanup_error
+          warn "Could not restore VS Code windows: #{cleanup_error.message}"
         end
-        hypr_dispatch(run, 'focus', workspace: opened.empty? ? original.to_s : workspace.to_s)
+        raise error
       end
+      restore.call
       hypr_dispatch(run, 'focus', window: "address:#{opened.first}")
     end
 
