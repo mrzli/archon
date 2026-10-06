@@ -1,4 +1,3 @@
-require 'shellwords'
 require_relative '../../shared/agent_restart'
 
 module Archon
@@ -23,17 +22,8 @@ module Archon
 
     def run_codex(arguments, terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
                   wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
-      if [%w[help], %w[-h], %w[--help], %w[restart --help], %w[restart -h]].include?(arguments)
-        puts HELP
-        return 0
-      end
-      unless arguments == ['restart']
-        warn HELP
-        return 2
-      end
-      AgentRestart.restart_agents(label: 'Codex', program: 'codex', terminals: terminals, run: run, wait: wait,
-                                  term_grace: term_grace,
-                                  prepare: ->(pane) { prepare(pane, terminals: terminals, run: run) })
+      AgentRestart.run_restart_command(arguments, help: HELP, label: 'Codex', program: 'codex', relaunch: method(:relaunch_command),
+                                       terminals: terminals, run: run, wait: wait, term_grace: term_grace)
     end
 
     def resume_options(argv)
@@ -64,15 +54,10 @@ module Archon
       options
     end
 
-    def prepare(pane, terminals:, run:)
-      info = terminals.process_info(pane, 'codex', run: run)
-      raise 'No foreground Codex process; session left running.' unless info && info[:argv]
-      raise 'Codex has no underlying shell to restart in; session left running.' if info[:no_shell]
+    def relaunch_command(info)
       options = resume_options(info.fetch(:argv))
       options.concat(['-C', info.fetch(:cwd)]) unless options.any? { |option| %w[-C --cd].include?(option) }
-      command = "cd -- #{Shellwords.escape(info.fetch(:cwd))} && " +
-                Shellwords.join([info.fetch(:argv).first, 'resume', '--last', *options])
-      { pane: pane, info: info, command: command }
+      [info.fetch(:argv).first, 'resume', '--last', *options]
     end
   end
 end

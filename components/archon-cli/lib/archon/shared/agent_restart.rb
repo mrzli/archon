@@ -1,3 +1,4 @@
+require 'shellwords'
 require_relative 'agent_terminals'
 
 module Archon
@@ -6,6 +7,27 @@ module Archon
     # Agents get time to save state and restore the terminal; KILL is only a fallback.
     # The wait ends as soon as every process has exited.
     TERM_GRACE = 3
+
+    # Runs `<agent> restart`. relaunch returns the command words that resume one agent process.
+    def run_restart_command(arguments, help:, label:, program:, relaunch:, terminals:, run:, wait:, term_grace:)
+      if [%w[help], %w[-h], %w[--help], %w[restart --help], %w[restart -h]].include?(arguments)
+        puts help
+        return 0
+      end
+      unless arguments == ['restart']
+        warn help
+        return 2
+      end
+      prepare = lambda do |pane|
+        info = terminals.process_info(pane, program, run: run)
+        raise "No foreground #{label} process; session left running." unless info && info[:argv]
+        raise "#{label} has no underlying shell to restart in; session left running." if info[:no_shell]
+        command = "cd -- #{Shellwords.escape(info.fetch(:cwd))} && #{Shellwords.join(relaunch.call(info))}"
+        { pane: pane, info: info, command: command }
+      end
+      restart_agents(label: label, program: program, prepare: prepare, terminals: terminals, run: run, wait: wait,
+                     term_grace: term_grace)
+    end
 
     # Restarts every discovered agent pane: prepare all launch commands, stop the whole
     # batch, then send each command to its pane's shell.

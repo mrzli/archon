@@ -1,5 +1,4 @@
 require 'json'
-require 'shellwords'
 require_relative '../../shared/agent_restart'
 
 module Archon
@@ -24,17 +23,9 @@ module Archon
 
     def run_claude(arguments, home: Dir.home, terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
                    wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
-      if [%w[help], %w[-h], %w[--help], %w[restart --help], %w[restart -h]].include?(arguments)
-        puts HELP
-        return 0
-      end
-      unless arguments == ['restart']
-        warn HELP
-        return 2
-      end
-      AgentRestart.restart_agents(label: 'Claude', program: 'claude', terminals: terminals, run: run, wait: wait,
-                                  term_grace: term_grace,
-                                  prepare: ->(pane) { prepare(pane, home: home, terminals: terminals, run: run) })
+      AgentRestart.run_restart_command(arguments, help: HELP, label: 'Claude', program: 'claude',
+                                       relaunch: ->(info) { relaunch_command(info, home) },
+                                       terminals: terminals, run: run, wait: wait, term_grace: term_grace)
     end
 
     def launch_options(argv)
@@ -72,17 +63,12 @@ module Archon
       options
     end
 
-    def prepare(pane, home:, terminals:, run:)
-      info = terminals.process_info(pane, 'claude', run: run)
-      raise 'No foreground Claude process; session left running.' unless info && info[:argv]
-      raise 'Claude has no underlying shell to restart in; session left running.' if info[:no_shell]
+    def relaunch_command(info, home)
       options = launch_options(info.fetch(:argv))
       session_id = session_id(home, info.fetch(:pid))
       # A session without a transcript has no conversation to resume.
       transcript = Dir.glob(File.join(home, '.claude', 'projects', '*', "#{session_id}.jsonl")).any?
-      command = "cd -- #{Shellwords.escape(info.fetch(:cwd))} && " +
-                Shellwords.join([info.fetch(:argv).first, *(transcript ? ['--resume', session_id] : []), *options])
-      { pane: pane, info: info, command: command }
+      [info.fetch(:argv).first, *(transcript ? ['--resume', session_id] : []), *options]
     end
 
     def session_id(home, pid)
