@@ -3,4 +3,12 @@
 require_relative '../lib/archon/cli'
 
 $stdout.sync = true
-exit Archon.main(ARGV)
+# Open3 reader threads report closed pipes when Ctrl+C interrupts a command.
+# Archon starts no threads of its own, and joined threads still raise.
+Thread.report_on_exception = false
+begin
+  exit Archon.main(ARGV)
+rescue Interrupt
+  # Exit like an interrupted shell command, without a backtrace.
+  exit 130
+end

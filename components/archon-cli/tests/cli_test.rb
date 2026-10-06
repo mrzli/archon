@@ -143,3 +143,32 @@ test('sequential command invocations keep distinct roots and refuse unsafe delet
     end
   end
 end
+
+test('Ctrl+C during a projects command exits with status 130 without a backtrace') do
+  fixture do |fixture|
+    marker = File.join(fixture[:root], 'gh-started')
+    write_executable(File.join(fixture[:bin], 'gh'), "#!/bin/sh\ntouch #{Shellwords.escape(marker)}\nexec sleep 20\n")
+    Open3.popen3(RbConfig.ruby, ARCHON, 'projects', 'remote', pgroup: true) do |input, output, error, child|
+      input.close
+      begin
+        100.times do
+          break if File.exist?(marker)
+          sleep 0.01
+        end
+        assert File.exist?(marker)
+        # A terminal delivers Ctrl+C to the whole foreground process group.
+        Process.kill('INT', -child.pid)
+        assert child.join(3), 'cancellation did not finish promptly'
+        equal 130, child.value.exitstatus
+        equal '', output.read
+        stderr = error.read
+        assert !stderr.include?('Interrupt') && !stderr.match?(/^\s+from /), stderr
+      ensure
+        if child.alive?
+          Process.kill('KILL', -child.pid)
+          child.join
+        end
+      end
+    end
+  end
+end
