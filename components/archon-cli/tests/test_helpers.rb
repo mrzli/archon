@@ -9,6 +9,7 @@ require_relative '../lib/archon/cli'
 ARCHON = File.expand_path('../bin/archon', __dir__)
 TEST_BIN = File.expand_path('bin', __dir__)
 $checks = 0
+$failures = 0
 
 def assert(condition, message = 'assertion failed')
   raise message unless condition
@@ -37,7 +38,9 @@ ensure
   $stdout, $stderr = previous_output, previous_error
 end
 
+# TEST_NAME runs only tests whose names include it. Failures are reported and later tests still run.
 def test(name)
+  return if ENV['TEST_NAME'] && !name.include?(ENV['TEST_NAME'])
   capture do
     yield
   rescue StandardError => error
@@ -47,8 +50,8 @@ def test(name)
   $checks += 1
   puts "PASS #{name}"
 rescue StandardError => error
+  $failures += 1
   warn "FAIL #{name}: #{error.message}\n#{error.backtrace.first(5).join("\n")}"
-  exit 1
 end
 
 def captured_output(output, error)
@@ -57,7 +60,14 @@ def captured_output(output, error)
   end.join("\n")
 end
 
-at_exit { puts "#{$checks} checks passed" if $!.nil? }
+at_exit do
+  next unless $!.nil?
+  puts "#{$checks} checks passed"
+  if $failures > 0
+    warn "#{$failures} checks failed"
+    exit 1
+  end
+end
 
 def fixture
   Dir.mktmpdir('archon-cli-') do |root|

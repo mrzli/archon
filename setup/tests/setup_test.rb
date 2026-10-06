@@ -411,4 +411,4 @@ check('Bash and the desktop session use the same rootless socket', :none) do |_r
   end
 end
 
-puts "#{$checks} checks passed"
+report_checks

@@ -17,15 +17,28 @@ FIXTURE_COMMANDS = {
   voice: %w[omarchy voxtype sudo systemctl]
 }.freeze
 $checks = 0
+$failures = 0
 
 def assert(condition, message = 'assertion failed')
   raise message unless condition
 end
 
+# TEST_NAME runs only checks whose names include it. Failures are reported and later checks still run.
 def check(name, area, &block)
+  return if ENV['TEST_NAME'] && !name.include?(ENV['TEST_NAME'])
   fixture(area, &block)
   $checks += 1
   puts "PASS #{name}"
+rescue StandardError => error
+  $failures += 1
+  warn "FAIL #{name}: #{error.message}\n#{error.backtrace.first(5).join("\n")}"
+end
+
+def report_checks
+  puts "#{$checks} checks passed"
+  return if $failures.zero?
+  warn "#{$failures} checks failed"
+  exit 1
 end
 
 def fixture(area)

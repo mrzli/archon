@@ -19,6 +19,17 @@ The default suite does not require Unix socket access. ShellCheck runs when
 installed and is reported as unavailable otherwise. No build or dependency
 installation is required.
 
+Run one test file directly, optionally only the tests whose names contain some
+text:
+
+```bash
+ruby components/archon-cli/tests/tmux_test.rb
+TEST_NAME='stop removes' ruby components/archon-cli/tests/tmux_test.rb
+```
+
+The same `TEST_NAME` filter works for `setup/tests/setup_test.rb`. A failing
+test is reported with its captured output, and the remaining tests still run.
+
 Run all Archon checks, including setup and WoW setup, from the repository root:
 
 ```bash
