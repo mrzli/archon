@@ -38,12 +38,23 @@ ensure
 end
 
 def test(name)
-  capture { yield }
+  capture do
+    yield
+  rescue StandardError => error
+    # Keep what the test printed; it usually explains the failure.
+    raise error.exception("#{error.message}\n#{captured_output($stdout.string, $stderr.string)}")
+  end
   $checks += 1
   puts "PASS #{name}"
 rescue StandardError => error
   warn "FAIL #{name}: #{error.message}\n#{error.backtrace.first(5).join("\n")}"
   exit 1
+end
+
+def captured_output(output, error)
+  [['stdout', output], ['stderr', error]].filter_map do |label, text|
+    "--- captured #{label} ---\n#{text.chomp}" unless text.empty?
+  end.join("\n")
 end
 
 at_exit { puts "#{$checks} checks passed" if $!.nil? }
