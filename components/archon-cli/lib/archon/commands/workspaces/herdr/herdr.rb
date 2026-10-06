@@ -151,13 +151,12 @@ module Archon
     end
 
     def start_existing_tools(workspace_id, request)
-      commands = Workspaces.editor_tabs.to_h { |tab| [tab[:name], tab[:command]] }.merge(Workspaces::AI_COMMANDS)
       tabs = request.call(['tab', 'list', '--workspace', workspace_id]).fetch('tabs')
       panes = request.call(['pane', 'list', '--workspace', workspace_id]).fetch('panes')
       panes.each do |pane|
         tab = tabs.find { |item| item.fetch('tab_id') == pane.fetch('tab_id') }
         next unless tab && tab.fetch('pane_count') == 1
-        command = commands[tab.fetch('label')]
+        command = Workspaces::TAB_COMMANDS[tab.fetch('label')]
         # Native agent restores can be pending before a client attaches.
         next unless command && !pane['agent']
         pane_id = pane.fetch('pane_id')
