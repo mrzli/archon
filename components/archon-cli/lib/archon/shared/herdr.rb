@@ -1,4 +1,5 @@
 require 'json'
+require_relative 'process'
 
 module Archon
   module Herdr
@@ -16,6 +17,14 @@ module Archon
       response.fetch('result', response)
     rescue JSON::ParserError => error
       raise "Could not read Herdr #{arguments.first(2).join(' ')} output: #{error.message}"
+    end
+
+    # Whether a pane process-info result shows its shell idle at a prompt.
+    def idle_shell?(info)
+      shell_pid = info['shell_pid']
+      return false unless shell_pid && info['foreground_process_group_id'] == shell_pid
+      shell = info.fetch('foreground_processes', []).find { |process| process['pid'] == shell_pid }
+      !shell.nil? && shell['name'] == Shared::PANE_SHELL
     end
   end
 end

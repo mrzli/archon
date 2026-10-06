@@ -77,7 +77,8 @@ test('Herdr existing tool recovery only submits commands to a single idle shell 
     ['codex', 1, 'codex', 100, 'bash', nil],
     ['shell', 1, nil, 100, 'bash', nil],
     ['codex', 2, nil, 100, 'bash', nil],
-    ['nvim', 1, nil, 100, 'nvim', nil]
+    ['nvim', 1, nil, 100, 'nvim', nil],
+    ['codex', 1, nil, 100, 'zsh', nil]
   ].each do |label, count, agent, foreground, process_name, expected|
     submitted = []
     request = lambda do |args|

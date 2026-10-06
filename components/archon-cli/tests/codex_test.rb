@@ -176,6 +176,17 @@ test('Codex usage never invokes terminal discovery') do
   end
 end
 
+test('restart treats only an idle bash prompt as the pane shell') do
+  [['bash', 100, { shell: true }], ['zsh', 100, nil], ['bash', 200, nil]].each do |name, foreground, expected|
+    run = lambda do |_, arguments|
+      raise "Unexpected command: #{arguments.inspect}" unless arguments.include?('process-info')
+      { status: 0, stderr: '', stdout: JSON.generate(result: { process_info: { shell_pid: 100, foreground_process_group_id: foreground,
+        foreground_processes: [{ pid: foreground, name: foreground == 100 ? name : 'vim', argv: [foreground == 100 ? name : 'vim'] }] } }) }
+    end
+    equal expected, Archon::AgentTerminals.process_info({ backend: :herdr, server: 'test', id: 'w1:p1' }, 'codex', run: run)
+  end
+end
+
 test('Herdr adapter discovers all running sessions and uses explicit pane targets') do
   fixture do |fixture|
     calls = []

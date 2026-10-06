@@ -100,8 +100,7 @@ module Archon
         processes = info.fetch('foreground_processes')
         agent = processes.find { |process| File.basename(process.fetch('argv').first.to_s) == program }
         return agent.transform_keys(&:to_sym).merge(no_shell: agent['pid'] == info['shell_pid']) if agent
-        return { shell: true } if info['foreground_process_group_id'] == info['shell_pid']
-        return nil
+        return Herdr.idle_shell?(info) ? { shell: true } : nil
       end
       shell_pid = output(run, 'tmux', ['-S', pane[:server], 'display-message', '-p', '-t', pane[:id], '#{pane_pid}']).strip
       # /proc/stat fields after the parenthesized command: state, ppid, pgrp, session, tty, tpgid.
@@ -109,7 +108,8 @@ module Archon
       return nil unless foreground_pid.positive?
       argv = File.binread("/proc/#{foreground_pid}/cmdline").split("\0")
       if foreground_pid == shell_pid.to_i && File.basename(argv.first.to_s) != program
-        return { shell: true }
+        # Login shells prefix their name with '-'.
+        return File.basename(argv.first.to_s).delete_prefix('-') == Shared::PANE_SHELL ? { shell: true } : nil
       end
       return nil unless File.basename(argv.first.to_s) == program
       { pid: foreground_pid, argv: argv, cwd: File.readlink("/proc/#{foreground_pid}/cwd"),

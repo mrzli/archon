@@ -6,6 +6,8 @@ require 'set'
 module Archon
   module Shared
     extend self
+    # Commands typed into panes, such as the Claude launch command, assume a bash prompt.
+    PANE_SHELL = 'bash'
 
     def run_process(command, arguments, cwd: nil, stdio: :capture)
       options = cwd ? { chdir: cwd } : {}

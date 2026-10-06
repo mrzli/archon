@@ -127,9 +127,7 @@ module Archon
         next unless command && !pane['agent']
         pane_id = pane.fetch('pane_id')
         info = request.call(['pane', 'process-info', '--pane', pane_id]).fetch('process_info')
-        next unless info['shell_pid'] && info['foreground_process_group_id'] == info['shell_pid']
-        shell = info.fetch('foreground_processes', []).find { |process| process['pid'] == info['shell_pid'] }
-        next unless shell && %w[bash sh zsh fish dash ksh nu].include?(shell['name'])
+        next unless Herdr.idle_shell?(info)
         request.call(['pane', 'run', pane_id, command])
       end
       { status: 0 }
