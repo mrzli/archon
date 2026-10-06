@@ -26,11 +26,13 @@ module Archon
     end
 
     def sync_repositories(remote:, local:, key:, get_name:, clone:, sort_key:, update: method(:update_repository))
+      failed = false
       begin
         remote_repositories = remote.call
       rescue StandardError => error
-        warn "Could not list remote repositories: #{error.message}"
-        return 1
+        warn "Could not list remote repositories: #{error.message}; updating local repositories only."
+        remote_repositories = []
+        failed = true
       end
       local_repositories = local.call
       names = local_repositories.map(&key).to_set
@@ -40,11 +42,10 @@ module Archon
       operations.sort_by! { |repository, _| sort_key.call(repository) }
       if operations.empty?
         puts 'No local or remote Git repositories found.'
-        return 0
+        return failed ? 1 : 0
       end
       puts "Synchronizing #{operations.length} repositories..."
       width = operations.map { |repository, _| get_name.call(repository).length }.max
-      failed = false
       operations.each_with_index do |(repository, operation), index|
         print "[#{(index + 1).to_s.rjust(operations.length.to_s.length)}/#{operations.length}] #{get_name.call(repository).ljust(width)}  "
         begin

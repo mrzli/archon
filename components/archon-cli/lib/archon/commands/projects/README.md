@@ -26,7 +26,9 @@ Other files and directories under `~/projects/personal` are ignored.
   upstream branch or a failed fetch; local changes alone do not affect it.
 - `sync`: fetch and fast-forward clean repositories and clone missing
   repositories over SSH. Failures do not prevent remaining repositories from
-  being processed.
+  being processed. If the GitHub inventory cannot be listed, existing
+  repositories are still updated, nothing is cloned, and the command exits
+  with `1`.
 - `help`: show global help or detailed help for one command.
 
 ```sh

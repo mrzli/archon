@@ -96,6 +96,22 @@ test('sync plans sort clone and update operations and continue after failures') 
   assert output.include?('[3/3]')
 end
 
+test('sync still updates local repositories when the remote listing fails') do
+  get_name = ->(repo) { repo[:name] }
+  operations = []
+  status, output, error = capture do
+    Shared.sync_repositories(remote: -> { raise 'GitHub unavailable' }, local: -> { [{ name: 'beta' }] },
+      key: get_name, get_name: get_name, sort_key: get_name,
+      update: ->(repo, _) { operations << "update #{repo[:name]}"; { succeeded: true, message: 'up to date' } },
+      clone: ->(_) { raise 'must not clone without a remote listing' })
+  end
+  equal 1, status
+  equal ['update beta'], operations
+  assert error.include?('Could not list remote repositories: GitHub unavailable'), error
+  assert error.include?('updating local repositories only'), error
+  assert output.include?('up to date')
+end
+
 test('sync fetches and fast-forwards while refusing dirty, detached, diverged, and untracked branches') do
   fixture do |fixture|
     remote = File.join(fixture[:root], 'remote.git')
