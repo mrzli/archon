@@ -120,7 +120,7 @@ test('signaled subprocesses become operational failures for execution and captur
   fixture do |fixture|
     write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nkill -TERM \"$$\"\n")
     equal 1, Workspaces.run_command('tmux', [])
-    equal 1, Tmux.capture_command('tmux', [])[:status]
+    equal 1, Workspaces.capture_command('tmux', [])[:status]
   end
 end
 

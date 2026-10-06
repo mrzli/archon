@@ -6,7 +6,7 @@ module Archon
       "\n\nStop closes all Archon-managed sessions on the current tmux server; unrelated sessions are preserved.\nKill stops the ENTIRE current tmux server, including unrelated sessions.").freeze
 
     def run_workspaces_tmux(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?,
-                            capture: method(:capture_command), run: Workspaces.method(:run_command),
+                            capture: Workspaces.method(:capture_command), run: Workspaces.method(:run_command),
                             picker: WorkspaceProjects.method(:pick_projects), stop_detached: method(:run_detached_stop))
       parsed = Workspaces.parse_arguments(arguments, help: HELP)
       return parsed[:status] if parsed.key?(:status)

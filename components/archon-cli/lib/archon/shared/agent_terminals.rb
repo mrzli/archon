@@ -1,4 +1,5 @@
 require_relative 'process'
+require_relative 'herdr'
 
 module Archon
   # Interactive agent CLI processes in Herdr and tmux panes.
@@ -39,8 +40,15 @@ module Archon
     end
 
     def herdr(run, session, *arguments)
-      text = output(run, 'herdr', ['--session', session, *arguments])
-      JSON.parse(text).fetch('result')
+      capture = lambda do |command, command_arguments|
+        result = run.call(command, command_arguments)
+        output = if result[:error] then result[:error].message
+                 elsif result[:status] == 0 then result[:stdout]
+                 else "#{result[:stderr]}#{result[:stdout]}".strip
+                 end
+        { status: result[:status], output: output }
+      end
+      Herdr.request(session, arguments, capture)
     end
 
     def discover(program, run:, env: ENV)
@@ -110,7 +118,7 @@ module Archon
 
     def submit(pane, text, run:)
       if pane[:backend] == :herdr
-        output(run, 'herdr', ['--session', pane[:server], 'pane', 'run', pane[:id], text])
+        herdr(run, pane[:server], 'pane', 'run', pane[:id], text)
       else
         output(run, 'tmux', ['-S', pane[:server], 'send-keys', '-t', pane[:id], '-l', '--', text])
         output(run, 'tmux', ['-S', pane[:server], 'send-keys', '-t', pane[:id], 'Enter'])

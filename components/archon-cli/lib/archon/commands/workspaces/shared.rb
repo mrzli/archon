@@ -15,6 +15,21 @@ module Archon
       result[:status] || 1
     end
 
+    # Captures a backend command's output; failures carry stderr and stdout for diagnostics.
+    def capture_command(command, arguments)
+      result = Shared.run_process(command, arguments)
+      output = if result[:error]
+                 result[:error].message
+               elsif result[:signal]
+                 "#{command} was terminated by signal #{result[:signal]}"
+               elsif result[:status] == 0
+                 result[:stdout].rstrip
+               else
+                 "#{result[:stderr]}#{result[:stdout]}".strip
+               end
+      { status: result[:status] || 1, output: output }
+    end
+
     def parse_arguments(arguments, help:)
       if arguments.length == 1 && %w[help -h --help].include?(arguments.first)
         puts help

@@ -6,7 +6,7 @@ module Archon
       "\n\nUses the dedicated Herdr session 'archon'. Stop shuts down that entire session.\nKill stops ALL Herdr sessions and clears their saved layouts.").freeze
 
     def run_workspaces_herdr(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'], environment: ENV, tty: $stdin.tty?,
-                             capture: method(:capture_command), run: Workspaces.method(:run_command),
+                             capture: Workspaces.method(:capture_command), run: Workspaces.method(:run_command),
                              start_server: method(:start_server), picker: WorkspaceProjects.method(:pick_projects), stop_detached: method(:run_detached_stop))
       parsed = Workspaces.parse_arguments(arguments, help: HELP)
       return parsed[:status] if parsed.key?(:status)
@@ -18,7 +18,7 @@ module Archon
         return kill_all_sessions(capture, state_path: state_path)
       end
       if action == 'stop'
-        command_response(['session', 'stop', SESSION, '--json'], capture) if session_running?(capture)
+        Herdr.request(SESSION, ['session', 'stop', SESSION, '--json'], capture) if session_running?(capture)
         return 0
       end
       projects = Workspaces.select_projects('herdr', home: home, state_home: state_home, picker: picker)

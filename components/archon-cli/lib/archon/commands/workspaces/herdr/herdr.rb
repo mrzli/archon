@@ -1,45 +1,19 @@
 require_relative '../shared'
+require_relative '../../../shared/herdr'
 
 module Archon
   module WorkspacesHerdr
     extend self
     SESSION = 'archon'
 
-    def capture_command(command, arguments)
-      result = Shared.run_process(command, arguments)
-      output = if result[:error]
-                 result[:error].message
-               elsif result[:signal]
-                 "Herdr was terminated by signal #{result[:signal]}"
-               elsif result[:status] == 0
-                 result[:stdout]
-               else
-                 "#{result[:stderr]}#{result[:stdout]}".strip
-               end
-      { status: result[:status] || 1, output: output }
-    end
-
-    def command_response(arguments, capture, session: SESSION)
-      result = capture.call('herdr', ['--session', session, *arguments])
-      raise "Herdr #{arguments.first(2).join(' ')} failed: #{result[:output]}" unless result[:status] == 0
-      # pane run reports success through its exit status and prints no JSON.
-      return nil if arguments.first(2) == %w[pane run]
-      response = JSON.parse(result[:output])
-      raise 'Herdr returned a non-object response.' unless response.is_a?(Hash)
-      raise "Herdr: #{response.fetch('error')}" if response.key?('error')
-      response.fetch('result', response)
-    rescue JSON::ParserError => error
-      raise "Could not read Herdr #{arguments.first(2).join(' ')} output: #{error.message}"
-    end
-
     def kill_all_sessions(capture, state_path:)
-      sessions = command_response(%w[session list --json], capture).fetch('sessions')
+      sessions = Herdr.request(SESSION, %w[session list --json], capture).fetch('sessions')
       status = 0
       reset_ids = sessions.none? { |session| session.fetch('name') == SESSION }
       sessions.each do |session|
         name = session.fetch('name')
         begin
-          command_response(['session', 'stop', name, '--json'], capture, session: name) if session.fetch('running')
+          Herdr.request(name, ['session', 'stop', name, '--json'], capture) if session.fetch('running')
           if session.fetch('default')
             # Herdr cannot delete the default session: it shares the config directory.
             %w[session.json session-history.json].each do |file|
@@ -48,7 +22,7 @@ module Archon
               next
             end
           else
-            command_response(['session', 'delete', name, '--json'], capture, session: name)
+            Herdr.request(name, ['session', 'delete', name, '--json'], capture)
           end
           reset_ids = true if name == SESSION
         rescue StandardError => error
@@ -65,7 +39,7 @@ module Archon
     end
 
     def session_running?(capture)
-      sessions = command_response(%w[session list --json], capture).fetch('sessions')
+      sessions = Herdr.request(SESSION, %w[session list --json], capture).fetch('sessions')
       sessions.any? { |session| session.fetch('name') == SESSION && session.fetch('running') }
     end
 
@@ -91,7 +65,7 @@ module Archon
     end
 
     def create_herdr(definitions:, state_path:, running:, capture:, run:, start_server:, ai: Workspaces::DEFAULT_AI)
-      request = ->(arguments) { command_response(arguments, capture) }
+      request = ->(arguments) { Herdr.request(SESSION, arguments, capture) }
       selection = WorkspaceProjects.load_selection(state_path)
       workspace_ids = selection.fetch('workspace_ids', {})
       unless workspace_ids.is_a?(Hash) && workspace_ids.all? { |path, id| path.is_a?(String) && id.is_a?(String) }

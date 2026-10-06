@@ -4,18 +4,6 @@ module Archon
   module WorkspacesTmux
     extend self
 
-    def capture_command(command, arguments)
-      result = Shared.run_process(command, arguments)
-      output = if result[:error]
-                 result[:error].message
-               elsif result[:signal]
-                 ''
-               else
-                 "#{result[:stdout]}#{result[:stderr]}".rstrip
-               end
-      { status: result[:status] || 1, output: output }
-    end
-
     def project_definitions(projects)
       definitions = projects.map do |directory|
         { session: File.basename(directory).tr('.:', '--'), directory: directory }
@@ -27,7 +15,7 @@ module Archon
       definitions
     end
 
-    def create_tmux(definitions:, run: Workspaces.method(:run_command), capture: method(:capture_command), ai: Workspaces::DEFAULT_AI)
+    def create_tmux(definitions:, run: Workspaces.method(:run_command), capture: Workspaces.method(:capture_command), ai: Workspaces::DEFAULT_AI)
       directories = definitions.to_h { |definition| definition.values_at(:session, :directory) }
       has_session = lambda do |session|
         next false unless run.call('tmux', ['has-session', '-t', "=#{session}"], stdio: :ignore) == 0

@@ -17,7 +17,7 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
     end
     projects = %w[cloned/old cloned/new].map { |relative| workspace_directory(fixture, relative) }
     context = { home: fixture[:home], environment: {}, tty: false }
-    invoke = ->(session, arguments) { Archon::WorkspacesHerdr.command_response(arguments, Archon::WorkspacesHerdr.method(:capture_command), session: session) }
+    invoke = ->(session, arguments) { Archon::Herdr.request(session, arguments, Archon::Workspaces.method(:capture_command)) }
     wait_for_tools = lambda do |project, count = 2|
       Timeout.timeout(10) do
         path = File.join(project, 'tool-starts')
@@ -61,7 +61,7 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
       equal 4, File.readlines(File.join(projects.first, 'tool-starts')).length
     ensure
       %w[archon default outside].each do |session|
-        Archon::WorkspacesHerdr.capture_command('herdr', ['--session', session, 'session', 'stop', session, '--json'])
+        Archon::Workspaces.capture_command('herdr', ['--session', session, 'session', 'stop', session, '--json'])
       end
     end
   end
