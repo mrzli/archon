@@ -52,7 +52,8 @@ check('bootstrap supports existing Ruby and installation through mise', :tools) 
 end
 
 check('repeat runs preserve user files and avoid duplicate configuration', :full) do |repo, home, _bin, env|
-  FileUtils.mkdir_p("#{home}/Projects")
+  FileUtils.mkdir_p(["#{home}/Projects", "#{home}/.claude"])
+  File.write("#{home}/.claude/settings.json", '{"theme": "dark"}')
   2.times do
     _, error, status = run_setup(repo, env)
     assert status.success?, error
@@ -65,6 +66,9 @@ check('repeat runs preserve user files and avoid duplicate configuration', :full
   assert output.include?('Usage: archon')
   assert File.symlink?("#{home}/.local/bin/arc")
   assert JSON.parse(File.read("#{home}/.config/nvim/lazyvim.json"))['extras'] == ['lazyvim.plugins.extras.util.rest']
+  claude_settings = JSON.parse(File.read("#{home}/.claude/settings.json"))
+  assert claude_settings['theme'] == 'dark'
+  assert claude_settings['statusLine'] == { 'type' => 'command', 'command' => 'bash ~/.claude/statusline-command.sh' }
   assert File.read("#{home}/.bashrc").scan('source ').length == 1
   assert commands(env).none? { |args| args.include?('existing.extension') }
   assert commands(env).count { |args| args.include?('clone') } == 1

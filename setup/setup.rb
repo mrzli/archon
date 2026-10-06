@@ -26,6 +26,7 @@ def setup
   install_archon_cli(repo_root, home)
   install_user_skills(home)
   configure_codex
+  configure_claude_status_line(home)
   configure_lazyvim(home)
   configure_bash(home)
   reload_hyprland
@@ -288,6 +289,22 @@ def sync_user_skill_links(source, home)
       path = File.join(directory, name)
       File.symlink(target, path) unless File.symlink?(path)
     end
+  end
+end
+
+def configure_claude_status_line(home)
+  log_step 'Configuring Claude Code status line'
+  settings_file = "#{home}/.claude/settings.json"
+  status_line = { 'type' => 'command', 'command' => 'bash ~/.claude/statusline-command.sh' }
+  FileUtils.mkdir_p(File.dirname(settings_file))
+  # Claude Code also writes this file, so only the status line key is managed.
+  settings = File.exist?(settings_file) ? JSON.parse(File.read(settings_file)) : {}
+  if settings['statusLine'] == status_line
+    log_info 'Claude Code status line is already configured; skipping'
+  else
+    settings['statusLine'] = status_line
+    File.write(settings_file, "#{JSON.pretty_generate(settings)}\n")
+    log_info 'Configured Claude Code status line'
   end
 end
 
