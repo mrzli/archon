@@ -136,6 +136,21 @@ When adding setup operations:
 - Do not generate new credentials, keys, tokens, or other identities on every run.
 - Document any intentionally non-repeatable operation and obtain user approval before adding it.
 
+When installing software, choose the first matching method:
+
+1. `omarchy install <group> <app>` when Omarchy provides an installer for the
+   application, because it also handles configuration, drivers, or runtime setup.
+2. `omarchy install dev-env <language>` for language runtimes Omarchy supports.
+3. `omarchy pkg add` for packages in the official or Omarchy repositories:
+   desktop applications, libraries, services, and system tools.
+4. `mise use --global` for developer command-line tools that should track
+   upstream releases independently of the system, or whose repository package
+   would pull in a large dependency tree.
+5. `omarchy pkg aur add` only when no earlier method provides the software.
+
+Do not call `pacman` or `yay` directly to install software in setup; the
+Omarchy wrappers already skip installed packages and verify the result.
+
 ## Managed Home Files
 
 Treat `data/home/` as an overlay, not a complete home-directory replacement.

@@ -140,8 +140,9 @@ end
 
 def install_development_environments
   log_step 'Installing development environments'
-  %w[ruby python node bun zig].each do |environment|
-    installed = mise_tool_installed?(environment)
+  %w[ruby python node bun go rust zig].each do |environment|
+    # Omarchy installs Rust with rustup rather than mise.
+    installed = environment == 'rust' ? rustup_installed? : mise_tool_installed?(environment)
     installed &&= command_available?('rails') if environment == 'ruby'
     installed &&= command_available?('uv') if environment == 'python'
     installed &&= mise_tool_installed?('zls') if environment == 'zig'
@@ -154,9 +155,14 @@ def install_development_environments
   end
 end
 
+def rustup_installed?
+  cargo_home = ENV.fetch('CARGO_HOME', File.join(ENV.fetch('HOME'), '.cargo'))
+  File.executable?(File.join(cargo_home, 'bin/rustup'))
+end
+
 def install_mise_tools
   log_step 'Installing mise tools'
-  %w[pnpm go rust codex claude].each do |tool|
+  %w[pnpm codex claude shellcheck].each do |tool|
     if mise_tool_installed?(tool)
       log_info "#{tool} is already installed via mise; skipping"
     else

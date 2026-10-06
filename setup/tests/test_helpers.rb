@@ -48,7 +48,7 @@ def fixture(area)
     env = { 'HOME' => home, 'XDG_DATA_HOME' => "#{home}/.local/share", 'PATH' => bin,
             'XDG_CONFIG_HOME' => "#{home}/.config", 'XDG_STATE_HOME' => "#{home}/.local/state",
             'XDG_RUNTIME_DIR' => "#{root}/run", 'COMMAND_LOG' => "#{root}/commands.jsonl",
-            'SYSTEM_FIXTURE' => root, 'OMARCHY_PATH' => "#{root}/omarchy" }
+            'SYSTEM_FIXTURE' => root, 'OMARCHY_PATH' => "#{root}/omarchy", 'CARGO_HOME' => nil }
     yield repo, home, bin, env
   end
 end

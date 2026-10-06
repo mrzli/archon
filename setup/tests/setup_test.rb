@@ -9,8 +9,8 @@ check('mise installs tools despite system executables and skips repeat installat
     assert status.success?, error
   end
   installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
-  assert installs == %w[ruby python node bun zig].map { |tool| %W[omarchy install dev-env #{tool}] } +
-                     %w[pnpm go rust codex claude].map { |tool| %W[mise use --global #{tool}] }
+  assert installs == %w[ruby python node bun go rust zig].map { |tool| %W[omarchy install dev-env #{tool}] } +
+                     %w[pnpm codex claude shellcheck].map { |tool| %W[mise use --global #{tool}] }
 end
 
 check('mise requires installed versions and rejects system passthrough', :tools) do |repo, _home, _bin, env|
@@ -24,7 +24,8 @@ check('mise requires installed versions and rejects system passthrough', :tools)
                                   '-e', 'install_development_environments; install_mise_tools')
   assert status.success?, error
   installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
-  assert installs == [%w[omarchy install dev-env zig], *%w[pnpm go rust codex claude].map { |tool| %W[mise use --global #{tool}] }]
+  assert installs == [*%w[go rust zig].map { |tool| %W[omarchy install dev-env #{tool}] },
+                      *%w[pnpm codex claude shellcheck].map { |tool| %W[mise use --global #{tool}] }]
 end
 
 check('help and invalid arguments do not provision', :none) do |repo, _home, _bin, env|

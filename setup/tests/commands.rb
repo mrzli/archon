@@ -32,8 +32,15 @@ when 'omarchy'
   if ARGV[0, 2] == %w[install dev-env]
     tools = JSON.parse(File.read("#{state}/mise-tools.json"))
     names = ARGV.last == 'zig' ? %w[zig zls] : [ARGV.last]
-    names.each { |tool| tools[tool] = [{ 'version' => '1.0', 'installed' => true }] }
-    File.write("#{state}/mise-tools.json", JSON.generate(tools))
+    if ARGV.last == 'rust'
+      rustup = File.join(ENV.fetch('HOME'), '.cargo/bin/rustup')
+      FileUtils.mkdir_p(File.dirname(rustup))
+      File.write(rustup, "#!/bin/sh\n")
+      File.chmod(0o755, rustup)
+    else
+      names.each { |tool| tools[tool] = [{ 'version' => '1.0', 'installed' => true }] }
+      File.write("#{state}/mise-tools.json", JSON.generate(tools))
+    end
   end
   if ARGV == %w[install gaming battlenet]
     launcher = File.join(ENV.fetch('HOME'), 'Games/battlenet/drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe')
