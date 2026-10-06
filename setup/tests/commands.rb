@@ -117,6 +117,8 @@ when 'docker'
     exit 0
   end
   puts JSON.generate(ENV['ROOTFUL_DOCKER'] ? ['name=seccomp'] : ['name=seccomp', 'name=rootless'])
+when 'hyprctl'
+  puts ENV.fetch('HYPRLAND_ERRORS', '[""]') if ARGV == %w[-j configerrors]
 when 'code'
   puts 'EXISTING.extension' if ARGV.first == '--list-extensions'
 when 'git'

@@ -29,8 +29,8 @@ def setup
   configure_claude_status_line(home)
   configure_lazyvim(home)
   configure_bash(home)
-  reload_hyprland
   remove_default_projects_directory(home)
+  reload_hyprland
 
   puts "\nSetup complete. Open a new terminal or run: source ~/.bashrc"
 end
@@ -351,8 +351,13 @@ end
 
 def reload_hyprland
   log_step 'Reloading Hyprland configuration'
+  if ENV['HYPRLAND_INSTANCE_SIGNATURE'].to_s.empty?
+    log_info 'Hyprland is not running; it loads the new configuration when it starts'
+    return
+  end
   run 'hyprctl', 'reload'
-  run 'hyprctl', 'configerrors'
+  errors = JSON.parse(capture('hyprctl', '-j', 'configerrors')).reject(&:empty?)
+  raise "Hyprland configuration errors:\n#{errors.join("\n")}" unless errors.empty?
 end
 
 def remove_default_projects_directory(home)

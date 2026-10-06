@@ -11,6 +11,7 @@ FIXTURE_COMMANDS = {
   codex: %w[codex],
   docker: %w[omarchy pacman id cat test sudo curl docker systemctl loginctl],
   files: %w[rsync],
+  hyprland: %w[hyprctl],
   skills: %w[git],
   tools: %w[omarchy mise rails uv node bun zls pnpm go],
   voice: %w[omarchy voxtype sudo systemctl]
@@ -39,7 +40,7 @@ def fixture(area)
     (areas & %i[cli docker files tools voice]).each { |name| send("prepare_#{name}", repo, home, root) }
     stub = "#!#{RbConfig.ruby}\n#{File.read(File.join(__dir__, 'commands.rb'))}"
     commands = areas.flat_map { |name| FIXTURE_COMMANDS.fetch(name) }.uniq
-    commands.concat(%w[code hyprctl]) if area == :full
+    commands << 'code' if area == :full
     commands.each do |command|
       File.write("#{bin}/#{command}", stub)
       File.chmod(0o755, "#{bin}/#{command}")
@@ -48,7 +49,8 @@ def fixture(area)
     env = { 'HOME' => home, 'XDG_DATA_HOME' => "#{home}/.local/share", 'PATH' => bin,
             'XDG_CONFIG_HOME' => "#{home}/.config", 'XDG_STATE_HOME' => "#{home}/.local/state",
             'XDG_RUNTIME_DIR' => "#{root}/run", 'COMMAND_LOG' => "#{root}/commands.jsonl",
-            'SYSTEM_FIXTURE' => root, 'OMARCHY_PATH' => "#{root}/omarchy", 'CARGO_HOME' => nil }
+            'SYSTEM_FIXTURE' => root, 'OMARCHY_PATH' => "#{root}/omarchy", 'CARGO_HOME' => nil,
+            'HYPRLAND_INSTANCE_SIGNATURE' => 'fixture' }
     yield repo, home, bin, env
   end
 end

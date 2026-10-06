@@ -38,6 +38,19 @@ check('web app removal skips absent apps and suppresses removal notifications', 
   assert File.read("#{env.fetch('SYSTEM_FIXTURE')}/webapp-notify") == 'false'
 end
 
+check('Hyprland reload fails on configuration errors and is skipped outside a session', :hyprland) do |repo, _home, _bin, env|
+  _, error, status = run_operation(repo, env, 'reload_hyprland')
+  assert status.success?, error
+  assert commands(env) == [%w[hyprctl reload], %w[hyprctl -j configerrors]]
+  _, error, status = run_operation(repo, env.merge('HYPRLAND_ERRORS' => '["line 3: bad keyword"]'), 'reload_hyprland')
+  assert status.exitstatus == 1
+  assert error.include?('line 3: bad keyword'), error
+  calls = commands(env).length
+  _, error, status = run_operation(repo, env.merge('HYPRLAND_INSTANCE_SIGNATURE' => nil), 'reload_hyprland')
+  assert status.success?, error
+  assert commands(env).length == calls
+end
+
 check('help and invalid arguments do not provision', :none) do |repo, _home, _bin, env|
   assert run_setup(repo, env, '--help').last.success?
   assert run_setup(repo, env, '--unknown').last.exitstatus == 2
