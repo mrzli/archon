@@ -10,8 +10,8 @@ test('uniform editor layout rolls back each failed creation operation') do
     ['set-option', '-t', '=editor:', '@archon-managed', '1'],
     ['set-option', '-t', '=editor:', '@archon-project', definition[:directory]],
     ['send-keys', '-t', '=editor:nvim', 'nvim .', 'Enter'],
-    ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'codex'],
-    ['send-keys', '-t', '=editor:codex', 'codex resume --last', 'Enter']
+    ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'claude'],
+    ['send-keys', '-t', '=editor:claude', Workspaces::CLAUDE_COMMAND, 'Enter']
   ]
   expected.concat([['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'shell'],
                    ['select-window', '-t', '=editor:nvim']])
@@ -33,8 +33,8 @@ end
 
 
 test('AI options and removed group options are validated before any operation') do
-  equal({ action: 'start', ai: 'codex' }, Workspaces.parse_arguments(['start'], help: Tmux::HELP))
-  equal({ action: 'start', ai: 'claude' }, Workspaces.parse_arguments(%w[start --ai claude], help: Tmux::HELP))
+  equal({ action: 'start', ai: 'claude' }, Workspaces.parse_arguments(['start'], help: Tmux::HELP))
+  equal({ action: 'start', ai: 'codex' }, Workspaces.parse_arguments(%w[start --ai codex], help: Tmux::HELP))
   [%w[start --ai], %w[start --ai unknown], %w[start --ai claude --ai codex],
    %w[start -g current], %w[stop --ai codex], %w[stop -g projects]].each do |arguments|
     operation = ->(*_, **_) { raise 'must not perform operations' }
@@ -62,7 +62,7 @@ test('tmux selects projects, creates uniform Claude windows and preserves them o
     definitions.each do |definition|
       directory = File.join(ENV['TMW_TMUX_STATE'], 'sessions', definition[:session])
       equal %w[nvim claude shell], File.readlines(File.join(directory, 'windows')).map { |line| line.split("\t").first }
-      assert File.read(File.join(directory, 'commands')).include?('claude --continue')
+      assert File.read(File.join(directory, 'commands')).include?(Workspaces::CLAUDE_COMMAND)
       equal definition[:directory], File.read(File.join(directory, 'root')).strip
     end
     calls = File.read(File.join(ENV['TMW_TMUX_STATE'], 'calls'))

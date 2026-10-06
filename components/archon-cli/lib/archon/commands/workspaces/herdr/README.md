@@ -2,14 +2,15 @@
 
 ```bash
 archon workspaces herdr start
-archon workspaces herdr start --ai claude
+archon workspaces herdr start --ai codex
 archon workspaces herdr stop
 archon workspaces herdr --help
 ```
 
 Start chooses projects using the [shared project checklist](../README.md).
-Each project has Neovim, an AI tool, and a shell. `--ai codex` is the default
-and runs `codex resume --last`; `--ai claude` runs `claude --continue`.
+Each project has Neovim, an AI tool, and a shell. `--ai claude` is the default
+and runs `claude --continue`, or `claude` when the project has no saved
+conversation; `--ai codex` runs `codex resume --last`.
 The tool must be on `PATH`. The option affects newly created workspaces.
 Repeated starts preserve existing workspaces and relaunch Neovim or the AI tool
 in their existing, single-pane tabs when only a shell is running. Running

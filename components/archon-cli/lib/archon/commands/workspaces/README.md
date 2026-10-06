@@ -25,7 +25,7 @@ Removed projects are omitted and new ones start unchecked. An accepted empty
 selection is saved and opens nothing. For terminal backends, existing sessions
 survive a later start with a different selection. Each terminal project has
 Neovim, the selected AI tool
-(Codex by default, or Claude), and a shell. Development servers are not started.
+(Claude by default, or Codex), and a shell. Development servers are not started.
 
 ## Herdr
 
@@ -33,7 +33,7 @@ Requires Herdr, Neovim and the selected AI tool on `PATH`.
 
 ```bash
 arc w h start
-arc w h start --ai claude
+arc w h start --ai codex
 arc w h stop
 arc w h kill
 arc w h --help
@@ -58,7 +58,7 @@ Requires tmux, Neovim and the selected AI tool on `PATH`.
 
 ```bash
 arc w t start
-arc w t start --ai claude
+arc w t start --ai codex
 arc w t stop
 arc w t kill
 arc w t --help

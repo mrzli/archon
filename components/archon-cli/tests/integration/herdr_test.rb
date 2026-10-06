@@ -8,7 +8,7 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
     config = File.join(ENV.fetch('XDG_CONFIG_HOME'), 'herdr')
     FileUtils.mkdir_p(config)
     File.write(File.join(config, 'config.toml'), "onboarding = false\n[terminal]\ndefault_shell = '/bin/bash'\n")
-    %w[codex nvim].each do |tool|
+    %w[claude nvim].each do |tool|
       write_executable(File.join(fixture[:bin], tool), <<~'SH')
         #!/bin/sh
         printf '%s\n' "$0 $*" >> tool-starts
@@ -22,7 +22,7 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
       Timeout.timeout(10) do
         path = File.join(project, 'tool-starts')
         sleep 0.05 until File.exist?(path) && File.readlines(path).length == count
-        assert File.read(path).include?('codex resume --last')
+        assert File.read(path).match?(%r{/claude $})
         assert File.read(path).include?('nvim .')
       end
     end
