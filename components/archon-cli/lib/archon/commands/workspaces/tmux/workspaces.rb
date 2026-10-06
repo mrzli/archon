@@ -12,7 +12,8 @@ module Archon
       return parsed[:status] if parsed.key?(:status)
       action = parsed[:action]
       inside_tmux = !environment['TMUX'].to_s.empty?
-      return stop_detached.call(arguments) if %w[stop kill].include?(action) && inside_tmux
+      state_directory = WorkspaceProjects.state_directory(home: home, state_home: state_home)
+      return stop_detached.call(arguments, state_directory) if %w[stop kill].include?(action) && inside_tmux
       return kill_server(capture) if action == 'kill'
       return stop_managed_sessions(run: run, capture: capture) if action == 'stop'
       projects = Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker)
@@ -30,9 +31,9 @@ module Archon
       1
     end
 
-    def run_detached_stop(arguments)
-      Workspaces.run_detached_stop(arguments, module_path: __FILE__,
-        entry_point: 'Archon::WorkspacesTmux.run_workspaces_tmux', log_name: 'workspaces-tmux-stop.log')
+    def run_detached_stop(arguments, state_directory)
+      Workspaces.run_detached_stop(arguments, module_path: __FILE__, entry_point: 'Archon::WorkspacesTmux.run_workspaces_tmux',
+        log: File.join(state_directory, 'workspaces-tmux-stop.log'))
     end
   end
 end

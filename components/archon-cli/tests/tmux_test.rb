@@ -100,7 +100,7 @@ end
 
 test('validated stop inside tmux delegates once and propagates failure') do
   calls = []
-  context = { environment: { 'TMUX' => 'fixture' }, stop_detached: ->(arguments) { calls << arguments; 7 } }
+  context = { environment: { 'TMUX' => 'fixture' }, stop_detached: ->(arguments, _) { calls << arguments; 7 } }
   equal 7, Tmux.run_workspaces_tmux(['stop'], **context)
   equal 2, Tmux.run_workspaces_tmux(%w[stop extra], **context)
   equal [['stop']], calls
@@ -190,7 +190,7 @@ end
 test('tmux kill distinguishes absent servers from errors and detaches before closing its calling pane') do
   calls = []
   %w[stop kill].each do |action|
-    equal 7, Tmux.run_workspaces_tmux([action], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args) { calls << args; 7 })
+    equal 7, Tmux.run_workspaces_tmux([action], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args, _) { calls << args; 7 })
   end
   equal [%w[stop], %w[kill]], calls
   ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)',

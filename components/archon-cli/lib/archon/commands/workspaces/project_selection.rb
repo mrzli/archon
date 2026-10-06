@@ -19,9 +19,12 @@ module Archon
          .select { |path| File.directory?(path) && !File.symlink?(path) }
     end
 
+    def state_directory(home:, state_home:)
+      File.join(state_home.to_s.empty? ? File.join(home, '.local/state') : state_home, 'archon')
+    end
+
     def selection_path(backend, home:, state_home:)
-      state_root = state_home.to_s.empty? ? File.join(home, '.local/state') : state_home
-      File.join(state_root, 'archon/workspaces', "#{backend}.json")
+      File.join(state_directory(home: home, state_home: state_home), 'workspaces', "#{backend}.json")
     end
 
     def load_selection(path, workspace: false)

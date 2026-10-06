@@ -12,11 +12,10 @@ module Archon
       return parsed[:status] if parsed.key?(:status)
       action = parsed[:action]
       inside_herdr = environment['HERDR_ENV'] == '1'
-      return stop_detached.call(arguments) if %w[stop kill].include?(action) && inside_herdr
-      if action == 'kill'
-        state_path = WorkspaceProjects.selection_path('herdr', home: home, state_home: state_home)
-        return kill_all_sessions(capture, state_path: state_path)
-      end
+      state_directory = WorkspaceProjects.state_directory(home: home, state_home: state_home)
+      state_path = WorkspaceProjects.selection_path('herdr', home: home, state_home: state_home)
+      return stop_detached.call(arguments, state_directory) if %w[stop kill].include?(action) && inside_herdr
+      return kill_all_sessions(capture, state_path: state_path) if action == 'kill'
       if action == 'stop'
         Herdr.request(SESSION, ['session', 'stop', SESSION, '--json'], capture) if session_running?(capture)
         return 0
@@ -25,9 +24,8 @@ module Archon
       return 0 if projects.nil? || projects.empty?
       definitions = Workspaces.project_definitions(projects)
       running = session_running?(capture)
-      state_path = WorkspaceProjects.selection_path('herdr', home: home, state_home: state_home)
-      backend = create_herdr(definitions: definitions, state_path: state_path, running: running,
-        capture: capture, run: run, start_server: start_server, ai: parsed[:ai])
+      backend = create_herdr(definitions: definitions, state_path: state_path, running: running, capture: capture, run: run,
+        start_server: ->(server_capture) { start_server.call(server_capture, state_directory) }, ai: parsed[:ai])
       status = Workspaces.start_projects(definitions, backend)
       return status if status != 0 || inside_herdr || !tty
       Workspaces.attach_after_start(definitions, backend)
@@ -39,9 +37,9 @@ module Archon
       1
     end
 
-    def run_detached_stop(arguments)
-      Workspaces.run_detached_stop(arguments, module_path: __FILE__,
-        entry_point: 'Archon::WorkspacesHerdr.run_workspaces_herdr', log_name: 'workspaces-herdr-stop.log')
+    def run_detached_stop(arguments, state_directory)
+      Workspaces.run_detached_stop(arguments, module_path: __FILE__, entry_point: 'Archon::WorkspacesHerdr.run_workspaces_herdr',
+        log: File.join(state_directory, 'workspaces-herdr-stop.log'))
     end
   end
 end

@@ -43,10 +43,9 @@ module Archon
       sessions.any? { |session| session.fetch('name') == SESSION && session.fetch('running') }
     end
 
-    def start_server(capture)
-      directory = File.join(ENV.fetch('XDG_STATE_HOME', File.join(Dir.home, '.local/state')), 'archon')
-      FileUtils.mkdir_p(directory)
-      log = File.join(directory, 'workspaces-herdr-server.log')
+    def start_server(capture, state_directory)
+      FileUtils.mkdir_p(state_directory)
+      log = File.join(state_directory, 'workspaces-herdr-server.log')
       File.open(log, File::WRONLY | File::CREAT | File::APPEND, 0o600) do |output|
         environment = %w[HERDR_ENV HERDR_SOCKET_PATH HERDR_WORKSPACE_ID HERDR_TAB_ID HERDR_PANE_ID]
           .to_h { |key| [key, nil] }

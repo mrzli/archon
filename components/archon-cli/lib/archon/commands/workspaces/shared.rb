@@ -102,10 +102,8 @@ module Archon
       session ? backend.fetch(:attach_session).call(session[:session]) : 0
     end
 
-    def run_detached_stop(arguments, module_path:, entry_point:, log_name:)
-      directory = File.join(ENV.fetch('XDG_STATE_HOME', File.join(Dir.home, '.local/state')), 'archon')
-      FileUtils.mkdir_p(directory)
-      log = File.join(directory, log_name)
+    def run_detached_stop(arguments, module_path:, entry_point:, log:)
+      FileUtils.mkdir_p(File.dirname(log))
       File.open(log, File::WRONLY | File::CREAT | File::APPEND, 0o600) do |output|
         puts "Stopping workspaces independently; output: #{log}"
         $stdout.flush

@@ -206,7 +206,7 @@ test('Herdr errors and malformed responses fail without creating resources') do
     project = workspace_directory(fixture)
     ['', 'invalid JSON', '[]', '{"error":{"message":"denied"}}', '{"result":{}}'].each do |output|
       equal 1, Herdr.run_workspaces_herdr(['start'], home: fixture[:home], picker: workspace_picker([project]),
-        capture: ->(*_) { { status: 0, output: output } }, start_server: ->(_) { raise 'must not start server' })
+        capture: ->(*_) { { status: 0, output: output } }, start_server: ->(*) { raise 'must not start server' })
     end
     equal 1, Herdr.run_workspaces_herdr(['stop'], capture: ->(*_) { { status: 1, output: 'not found' } })
   end
@@ -216,9 +216,12 @@ test('failed Herdr server startup produces a private log and creates no workspac
   herdr_fixture do |fixture, path|
     project = workspace_directory(fixture)
     update_herdr_state(path) { |state| state['failure'] = { 'prefix' => ['server'], 'remaining' => 1 } }
-    equal 1, Herdr.run_workspaces_herdr(['start'], home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: false)
+    state_home = File.join(fixture[:root], 'separate state')
+    equal 1, Herdr.run_workspaces_herdr(['start'], home: fixture[:home], state_home: state_home, picker: workspace_picker([project]),
+                                        environment: {}, tty: false)
     equal [], herdr_state(path)['workspaces']
-    log = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-server.log')
+    log = File.join(state_home, 'archon/workspaces-herdr-server.log')
+    assert !File.exist?(File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-server.log'))
     assert File.read(log).include?('injected Herdr failure')
     equal 0o600, File.stat(log).mode & 0o777
   end
@@ -266,7 +269,7 @@ end
 
 test('Herdr validates shutdown options before delegating') do
   calls = []
-  context = { environment: { 'HERDR_ENV' => '1' }, stop_detached: ->(arguments) { calls << arguments; 7 } }
+  context = { environment: { 'HERDR_ENV' => '1' }, stop_detached: ->(arguments, _) { calls << arguments; 7 } }
   equal 7, Herdr.run_workspaces_herdr(['stop'], **context)
   equal 7, Herdr.run_workspaces_herdr(['kill'], **context)
   [%w[stop -g current], %w[kill --ai codex], %w[stop extra]].each do |arguments|
