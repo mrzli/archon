@@ -132,11 +132,12 @@ def install_packages
   end
 
   repository_packages = [
-    'tokei',       # Source code statistics
-    'foliate',     # E-book reader
-    'qbittorrent', # BitTorrent client
-    'dbeaver',     # Database client
-    'img2pdf',     # Convert images to PDF
+    'tokei',            # Source code statistics
+    'foliate',          # E-book reader
+    'qbittorrent',      # BitTorrent client
+    'dbeaver',          # Database client
+    'img2pdf',          # Convert images to PDF
+    'xorg-server-xvfb', # Virtual X server for headless GUI tests
     # LaTeX-to-PDF compilation, recommended fonts, and latexmk build automation
     'texlive-latexrecommended', 'texlive-fontsrecommended', 'texlive-binextra',
     # Scanner support, network scanner discovery, and graphical scanning application
@@ -170,7 +171,12 @@ end
 
 def install_mise_tools
   log_step 'Installing mise tools'
-  %w[pnpm codex claude shellcheck].each do |tool|
+  [
+    'pnpm',      # Node.js package manager
+    'codex',     # OpenAI Codex CLI
+    'claude',    # Claude Code CLI
+    'shellcheck' # Shell script linter
+  ].each do |tool|
     if mise_tool_installed?(tool)
       log_info "#{tool} is already installed via mise; skipping"
     else
