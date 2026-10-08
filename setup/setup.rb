@@ -132,12 +132,13 @@ def install_packages
   end
 
   repository_packages = [
-    'tokei',            # Source code statistics
-    'foliate',          # E-book reader
-    'qbittorrent',      # BitTorrent client
-    'dbeaver',          # Database client
-    'img2pdf',          # Convert images to PDF
-    'xorg-server-xvfb', # Virtual X server for headless GUI tests
+    'tokei',       # Source code statistics
+    'foliate',     # E-book reader
+    'qbittorrent', # BitTorrent client
+    'dbeaver',     # Database client
+    'img2pdf',     # Convert images to PDF
+    # Headless GUI tests: virtual X server, single-app Wayland compositor, and output configuration
+    'xorg-server-xvfb', 'cage', 'wlr-randr',
     # LaTeX-to-PDF compilation, recommended fonts, and latexmk build automation
     'texlive-latexrecommended', 'texlive-fontsrecommended', 'texlive-binextra',
     # Scanner support, network scanner discovery, and graphical scanning application
