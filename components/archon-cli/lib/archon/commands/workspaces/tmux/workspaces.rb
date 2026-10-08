@@ -13,16 +13,36 @@ module Archon
       action = parsed[:action]
       inside_tmux = !environment['TMUX'].to_s.empty?
       state_directory = WorkspaceProjects.state_directory(home: home, state_home: state_home)
-      return stop_detached.call(arguments, state_directory) if %w[stop kill].include?(action) && inside_tmux
+      return stop_detached.call(arguments, state_directory) if %w[kill restart stop].include?(action) && inside_tmux
       return kill_server(capture) if action == 'kill'
-      return stop_managed_sessions(run: run, capture: capture) if action == 'stop'
-      projects = Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker)
-      return 0 if projects.nil? || projects.empty?
-      definitions = project_definitions(projects)
-      backend = create_tmux(run: run, capture: capture, ai: parsed[:ai])
-      status = Workspaces.start_projects(definitions, backend)
+      marker = Workspaces.restart_marker(state_directory, 'tmux')
+      restart_started = Time.now.to_f
+      Workspaces.mark_restart(marker, started_at: restart_started, finished: false) if action == 'restart'
+      begin
+        if %w[restart stop].include?(action)
+          status = stop_managed_sessions(run: run, capture: capture)
+          return status if action == 'stop' || status != 0
+        end
+        projects = if action == 'restart'
+                     Workspaces.saved_projects('tmux', home: home, state_home: state_home)
+                   else
+                     Workspaces.select_projects('tmux', home: home, state_home: state_home, picker: picker)
+                   end
+        return 0 if projects.nil? || projects.empty?
+        definitions = project_definitions(projects)
+        wait_for_server_exit(capture)
+        backend = create_tmux(run: run, capture: capture, ai: parsed[:ai])
+        status = Workspaces.start_projects(definitions, backend)
+      ensure
+        Workspaces.mark_restart(marker, started_at: restart_started, finished: true) if action == 'restart'
+      end
       return status if status != 0 || inside_tmux || !tty
-      Workspaces.attach_after_start(definitions, backend)
+      loop do
+        attached_at = Time.now.to_f
+        status = Workspaces.attach_after_start(definitions, backend)
+        # A restart from inside tmux closes this client; reattach once it has finished.
+        return status unless Workspaces.wait_for_restart(marker, since: attached_at)
+      end
     rescue Interrupt
       puts 'Cancelled.'
       130

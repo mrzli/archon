@@ -14,20 +14,37 @@ module Archon
       inside_herdr = environment['HERDR_ENV'] == '1'
       state_directory = WorkspaceProjects.state_directory(home: home, state_home: state_home)
       state_path = WorkspaceProjects.selection_path('herdr', home: home, state_home: state_home)
-      return stop_detached.call(arguments, state_directory) if %w[stop kill].include?(action) && inside_herdr
+      return stop_detached.call(arguments, state_directory) if %w[kill restart stop].include?(action) && inside_herdr
       return kill_all_sessions(capture, state_path: state_path) if action == 'kill'
-      if action == 'stop'
-        Herdr.request(SESSION, ['session', 'stop', SESSION, '--json'], capture) if session_running?(capture)
-        return 0
+      marker = Workspaces.restart_marker(state_directory, 'herdr')
+      restart_started = Time.now.to_f
+      Workspaces.mark_restart(marker, started_at: restart_started, finished: false) if action == 'restart'
+      begin
+        if %w[restart stop].include?(action)
+          stop_session(capture)
+          return 0 if action == 'stop'
+        end
+        projects = if action == 'restart'
+                     Workspaces.saved_projects('herdr', home: home, state_home: state_home)
+                   else
+                     Workspaces.select_projects('herdr', home: home, state_home: state_home, picker: picker)
+                   end
+        return 0 if projects.nil? || projects.empty?
+        definitions = project_definitions(projects)
+        ensure_server(capture, state_directory, start_server)
+        backend = create_herdr(state_path: state_path, capture: capture, run: run, ai: parsed[:ai])
+        status = Workspaces.start_projects(definitions, backend)
+      ensure
+        Workspaces.mark_restart(marker, started_at: restart_started, finished: true) if action == 'restart'
       end
-      projects = Workspaces.select_projects('herdr', home: home, state_home: state_home, picker: picker)
-      return 0 if projects.nil? || projects.empty?
-      definitions = project_definitions(projects)
-      start_server.call(capture, state_directory) unless session_running?(capture)
-      backend = create_herdr(state_path: state_path, capture: capture, run: run, ai: parsed[:ai])
-      status = Workspaces.start_projects(definitions, backend)
       return status if status != 0 || inside_herdr || !tty
-      Workspaces.attach_after_start(definitions, backend)
+      loop do
+        attached_at = Time.now.to_f
+        status = Workspaces.attach_after_start(definitions, backend)
+        # A restart from inside Herdr closes this client; reattach once it has finished.
+        return status unless Workspaces.wait_for_restart(marker, since: attached_at) && session_running?(capture)
+        backend = create_herdr(state_path: state_path, capture: capture, run: run, ai: parsed[:ai])
+      end
     rescue Interrupt
       puts 'Cancelled.'
       130

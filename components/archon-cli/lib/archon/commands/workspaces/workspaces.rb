@@ -6,7 +6,7 @@ module Archon
   module Workspaces
     HELP = <<~TEXT.chomp.freeze
       Usage: archon workspaces list
-             archon workspaces <backend> <start|stop|kill> [options]
+             archon workspaces <backend> <start|stop|restart|kill> [options]
 
       Commands:
         herdr (h)                Manage Herdr workspaces

@@ -4,6 +4,8 @@
 archon workspaces tmux start
 archon workspaces tmux start --ai codex
 archon workspaces tmux stop
+archon workspaces tmux restart
+archon workspaces tmux restart --ai codex
 archon workspaces tmux kill
 archon workspaces tmux --help
 ```
@@ -25,6 +27,16 @@ projects no longer selected or present on disk. Other sessions are preserved,
 even when their names look like Archon's. Stopping an absent server succeeds.
 From a tmux pane it runs independently, so closing that pane does not interrupt
 it. Its log is `${XDG_STATE_HOME:-~/.local/state}/archon/workspaces-tmux-stop.log`.
+
+## Restart
+
+Restart stops Archon-managed sessions like stop, then starts the remembered
+project selection without showing the checklist. If closing the last session
+left the tmux server shutting down, it waits up to 10 seconds for it to exit.
+Outside tmux it attaches afterwards. From a tmux pane it runs independently
+and uses the stop log: your view closes, and a terminal attached by
+`arc w t start` reattaches once the restart finishes. Otherwise, reattach with
+`tmux attach`. With no remembered projects, it only stops the sessions.
 
 ## Kill
 

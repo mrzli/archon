@@ -35,12 +35,12 @@ module Archon
         return { status: 0 }
       end
       action, *options = arguments
-      unless %w[start stop kill].include?(action)
+      unless %w[start stop restart kill].include?(action)
         warn(action ? "Unknown workspace action: #{action}" : 'Missing workspace action.')
         warn "\n#{help}"
         return { status: 2 }
       end
-      valid = options.empty? || (action == 'start' && options.length == 2 &&
+      valid = options.empty? || (%w[restart start].include?(action) && options.length == 2 &&
                                  options.first == '--ai' && AI_COMMANDS.key?(options.last))
       unless valid
         warn "Invalid workspace options: #{options.join(' ')}"
@@ -68,6 +68,14 @@ module Archon
       selection.fetch('projects')
     end
 
+    # Restart reuses the remembered selection instead of showing the checklist.
+    def saved_projects(backend, home:, state_home:)
+      state_path = WorkspaceProjects.selection_path(backend, home: home, state_home: state_home)
+      projects = WorkspaceProjects.load_selection(state_path).fetch('projects')
+      puts 'No projects selected.' if projects.empty?
+      projects
+    end
+
     def start_projects(definitions, backend)
       status = 0
       definitions.each do |definition|
@@ -89,6 +97,43 @@ module Archon
       status
     end
 
+    def restart_marker(state_directory, backend)
+      File.join(state_directory, "workspaces-#{backend}-restart.json")
+    end
+
+    # Records restart progress so clients that a restart closes know to reattach.
+    def mark_restart(path, started_at:, finished:)
+      FileUtils.mkdir_p(File.dirname(path))
+      Tempfile.create(['restart', '.json'], File.dirname(path)) do |file|
+        file.write(JSON.generate(pid: Process.pid, started_at: started_at, finished: finished))
+        file.close
+        File.rename(file.path, path)
+      end
+    end
+
+    # Whether a restart began since the given time and has now finished.
+    def wait_for_restart(path, since:, timeout: 60)
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+      loop do
+        marker = JSON.parse(File.read(path))
+        return false unless marker['started_at'] >= since
+        return true if marker['finished'] || !process_alive?(marker['pid'])
+        return false if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+        sleep 0.1
+      end
+    rescue Errno::ENOENT, JSON::ParserError
+      false
+    end
+
+    def process_alive?(pid)
+      Process.kill(0, pid)
+      true
+    rescue Errno::ESRCH
+      false
+    rescue Errno::EPERM
+      true
+    end
+
     def attach_after_start(definitions, backend)
       definition = definitions.find { |candidate| backend.fetch(:has_session).call(candidate) }
       definition ? backend.fetch(:attach_session).call(definition) : 0
@@ -97,7 +142,8 @@ module Archon
     def run_detached_stop(arguments, module_path:, entry_point:, log:)
       FileUtils.mkdir_p(File.dirname(log))
       File.open(log, File::WRONLY | File::CREAT | File::APPEND, 0o600) do |output|
-        puts "Stopping workspaces independently; output: #{log}"
+        restart = arguments.first == 'restart'
+        puts "#{restart ? 'Restarting' : 'Stopping'} workspaces independently; output: #{log}"
         $stdout.flush
         # Preserve the calling server environment, but clear the routing context
         # to prevent recursive detachment.
@@ -106,7 +152,7 @@ module Archon
                             in: File::NULL, out: output, err: output)
         _, result = Process.wait2(pid)
         status = result.exitstatus || 1
-        warn "Workspace shutdown failed; see #{log}" unless status == 0
+        warn "Workspace #{restart ? 'restart' : 'shutdown'} failed; see #{log}" unless status == 0
         status
       end
     rescue SystemCallError => error

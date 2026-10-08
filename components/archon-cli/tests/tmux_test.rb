@@ -35,6 +35,7 @@ end
 test('AI options and removed group options are validated before any operation') do
   equal({ action: 'start', ai: 'claude' }, Workspaces.parse_arguments(['start'], help: Tmux::HELP))
   equal({ action: 'start', ai: 'codex' }, Workspaces.parse_arguments(%w[start --ai codex], help: Tmux::HELP))
+  equal({ action: 'restart', ai: 'codex' }, Workspaces.parse_arguments(%w[restart --ai codex], help: Tmux::HELP))
   [%w[start --ai], %w[start --ai unknown], %w[start --ai claude --ai codex],
    %w[start -g current], %w[stop --ai codex], %w[stop -g projects]].each do |arguments|
     operation = ->(*_, **_) { raise 'must not perform operations' }
@@ -186,17 +187,74 @@ end
 
 test('tmux kill distinguishes absent servers from errors and detaches before closing its calling pane') do
   calls = []
-  %w[stop kill].each do |action|
+  %w[stop kill restart].each do |action|
     equal 7, Tmux.run_workspaces_tmux([action], environment: { 'TMUX' => 'fixture' }, stop_detached: ->(args, _) { calls << args; 7 })
   end
-  equal [%w[stop], %w[kill]], calls
+  equal [%w[stop], %w[kill], %w[restart]], calls
   ['no server running', 'no sessions', 'error connecting to /fixture (No such file or directory)',
    'server exited unexpectedly'].each do |message|
     equal 0, Tmux.run_workspaces_tmux(['kill'], environment: {}, capture: ->(_, args) { equal ['kill-server'], args; { status: 1, output: message } })
   end
   equal 1, Tmux.run_workspaces_tmux(['kill'], environment: {}, capture: ->(*_) { { status: 1, output: 'permission denied' } })
   operation = ->(*_, **_) { raise 'must not perform any operation' }
-  [%w[stop extra], %w[kill extra], %w[kill --ai codex], %w[kill -g current]].each do |arguments|
+  [%w[stop extra], %w[kill extra], %w[kill --ai codex], %w[kill -g current], %w[restart extra]].each do |arguments|
     equal 2, Tmux.run_workspaces_tmux(arguments, capture: operation, picker: operation)
+  end
+end
+
+test('tmux restart stops managed sessions, waits for an exiting server and restarts the saved selection without the checklist') do
+  fixture do |fixture|
+    projects = %w[cloned/one cloned/two].map { |relative| workspace_directory(fixture, relative) }
+    ENV['TMW_TMUX_STATE'] = File.join(fixture[:root], 'tmux')
+    context = { home: fixture[:home], environment: {}, tty: false }
+    equal 0, Tmux.run_workspaces_tmux(['start'], **context, picker: workspace_picker(projects))
+    root = File.join(ENV['TMW_TMUX_STATE'], 'sessions')
+    File.write(File.join(root, 'one', 'marker'), 'old session')
+    # Closing the last session leaves a server that is still shutting down.
+    ENV['TMW_TMUX_EXIT_RACE'] = '1'
+    no_picker = ->(*_, **_) { raise 'restart must not show the checklist' }
+    2.times { equal 0, Tmux.run_workspaces_tmux(%w[restart --ai codex], **context, picker: no_picker) }
+    equal %w[one two], Dir.children(root).sort
+    assert !File.exist?(File.join(root, 'one', 'marker'))
+    assert File.read(File.join(root, 'one', 'commands')).include?('codex resume --last')
+    calls = File.read(File.join(ENV['TMW_TMUX_STATE'], 'calls'))
+    equal 6, calls.scan(' new-session ').length
+    equal 4, calls.scan(' kill-session ').length
+    run = ->(command, arguments, **_) { arguments.first == 'kill-session' ? 1 : Workspaces.run_command(command, arguments) }
+    equal 1, Tmux.run_workspaces_tmux(['restart'], **context, picker: no_picker, run: run)
+    equal 6, File.read(File.join(ENV['TMW_TMUX_STATE'], 'calls')).scan(' new-session ').length
+  end
+end
+
+test('tmux restart runs independently inside tmux and reports its own failure message') do
+  fixture do |fixture|
+    project = workspace_directory(fixture)
+    ENV['TMW_TMUX_STATE'] = File.join(fixture[:root], 'tmux')
+    selection_path = Archon::WorkspaceProjects.selection_path('tmux', home: fixture[:home], state_home: ENV['XDG_STATE_HOME'])
+    Archon::WorkspaceProjects.save_selection(selection_path, { 'projects' => [project] })
+    result = run_archon(%w[w t restart], 'TMUX' => 'fixture-server')
+    equal 0, result[:status]
+    assert result[:stdout].include?('Restarting workspaces independently')
+    assert File.directory?(File.join(ENV['TMW_TMUX_STATE'], 'sessions', 'project'))
+    result = run_archon(%w[w t restart], 'TMUX' => 'fixture-server', 'TMW_TMUX_FAIL_COMMAND' => 'kill-session')
+    equal 1, result[:status]
+    assert result[:stderr].include?('Workspace restart failed; see')
+  end
+end
+
+test('tmux reattaches after a restart closes the attached client') do
+  fixture do |fixture|
+    project = workspace_directory(fixture)
+    ENV['TMW_TMUX_STATE'] = File.join(fixture[:root], 'tmux')
+    marker = File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces-tmux-restart.json')
+    attaches = 0
+    run = lambda do |command, arguments, **options|
+      return Workspaces.run_command(command, arguments, **options) unless arguments.first == 'attach-session'
+      attaches += 1
+      Archon::Workspaces.mark_restart(marker, started_at: Time.now.to_f, finished: true) if attaches == 1
+      0
+    end
+    equal 0, Tmux.run_workspaces_tmux(['start'], home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: true, run: run)
+    equal 2, attaches
   end
 end

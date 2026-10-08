@@ -39,6 +39,7 @@ Requires Herdr, Neovim and the selected AI tool on `PATH`.
 arc w h start
 arc w h start --ai codex
 arc w h stop
+arc w h restart
 arc w h kill
 arc w h --help
 ```
@@ -64,6 +65,7 @@ Requires tmux, Neovim and the selected AI tool on `PATH`.
 arc w t start
 arc w t start --ai codex
 arc w t stop
+arc w t restart
 arc w t kill
 arc w t --help
 ```

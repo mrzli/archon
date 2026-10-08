@@ -40,3 +40,33 @@ test('real tmux project layouts are tagged, repeat safely, and stop preserves un
     end
   end
 end
+
+test('real tmux restart from inside a session reattaches the terminal that started the workspaces') do
+  fixture do |fixture|
+    socket_dir = File.join(fixture[:root], 'tmux')
+    FileUtils.mkdir_p(socket_dir, mode: 0o700)
+    write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nexec /usr/bin/tmux -f /dev/null \"$@\"\n")
+    %w[claude nvim].each { |tool| write_executable(File.join(fixture[:bin], tool), "#!/bin/sh\nexec sleep 60\n") }
+    workspace_directory(fixture, 'cloned/project')
+    environment = { 'TMUX_TMPDIR' => socket_dir }
+    tmux = ->(*arguments) { Open3.capture3(environment, File.join(fixture[:bin], 'tmux'), *arguments).first.strip }
+    marker = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-tmux-restart.json')
+    begin
+      workspace_terminal(%w[w t start], environment: environment) do |terminal, wait, _|
+        wait.call('Choose projects')
+        terminal.write(" \r")
+        Timeout.timeout(10) { sleep 0.05 until tmux.call('list-clients', '-F', '#S') == 'project' }
+        tmux.call('set-option', '-t', '=project:', '@before-restart', '1')
+        tmux.call('send-keys', '-t', '=project:shell', "#{RbConfig.ruby} #{ARCHON} w t restart", 'Enter')
+        Timeout.timeout(30) do
+          sleep 0.05 until File.exist?(marker) && JSON.parse(File.read(marker))['finished'] &&
+                           tmux.call('list-clients', '-F', '#S') == 'project'
+        end
+        equal '', tmux.call('show-options', '-qv', '-t', '=project:', '@before-restart')
+        tmux.call('kill-server')
+      end
+    ensure
+      tmux.call('kill-server')
+    end
+  end
+end

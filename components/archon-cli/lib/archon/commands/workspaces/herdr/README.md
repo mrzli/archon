@@ -4,6 +4,8 @@
 archon workspaces herdr start
 archon workspaces herdr start --ai codex
 archon workspaces herdr stop
+archon workspaces herdr restart
+archon workspaces herdr restart --ai codex
 archon workspaces herdr kill
 archon workspaces herdr --help
 ```
@@ -24,7 +26,8 @@ Interactive starts outside Herdr attach in the current terminal and focus the
 first selected project. Inside Herdr, the current view is preserved.
 
 Everything runs in the dedicated Herdr session `archon`; start launches its
-server when needed. Other Herdr sessions are unaffected.
+server when needed, first waiting up to 10 seconds for a session that is still
+shutting down. Other Herdr sessions are unaffected.
 
 ## Stop
 
@@ -32,9 +35,19 @@ Stop shuts down the entire `archon` session, including workspaces you added
 there, and keeps its saved layout. Stopping a stopped session succeeds. From a
 Herdr pane it runs independently, so closing that pane does not interrupt it.
 
+## Restart
+
+Restart stops the `archon` session, waits until it has exited, then starts the
+remembered project selection without showing the checklist. Saved layouts are
+kept, as with stop and start. Outside Herdr it attaches afterwards. From a Herdr
+pane it runs independently: your Herdr view closes, and a terminal attached by
+`arc w h start` reattaches once the restart finishes. Otherwise, reattach with
+`herdr --session archon`. With no remembered projects, it only stops the
+session.
+
 Logs are saved under `${XDG_STATE_HOME:-~/.local/state}/archon/`:
 `workspaces-herdr-server.log` for the server and `workspaces-herdr-stop.log`
-for stop and kill.
+for stop, restart and kill.
 
 ## Kill
 

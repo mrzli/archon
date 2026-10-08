@@ -42,6 +42,17 @@ module Archon
       output.match?(/no server running|no sessions|server exited unexpectedly|error connecting .*No such file or directory/)
     end
 
+    # Starting while that server exits would fail, so wait until it is gone.
+    def wait_for_server_exit(capture, timeout: 10)
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+      loop do
+        result = capture.call('tmux', ['list-sessions', '-F', '#{session_name}'])
+        return unless result[:status] != 0 && result[:output].include?('server exited unexpectedly')
+        raise 'tmux server is still shutting down; try again shortly' if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+        sleep 0.05
+      end
+    end
+
     def kill_server(capture)
       result = capture.call('tmux', ['kill-server'])
       return 0 if result[:status] == 0 || absent_server?(result[:output])

@@ -79,3 +79,74 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
     end
   end
 end
+
+test('real Herdr start waits for a shutting-down session and restart brings the saved selection back') do
+  fixture do |fixture|
+    File.symlink('/usr/bin/herdr', File.join(fixture[:bin], 'herdr'))
+    ENV['XDG_RUNTIME_DIR'] = File.join(fixture[:root], 'runtime')
+    FileUtils.mkdir_p(ENV['XDG_RUNTIME_DIR'])
+    config = File.join(ENV.fetch('XDG_CONFIG_HOME'), 'herdr')
+    FileUtils.mkdir_p(config)
+    File.write(File.join(config, 'config.toml'), "onboarding = false\n[terminal]\ndefault_shell = '/bin/bash'\n")
+    # Tools that ignore hangups keep the server shutting down long enough to observe.
+    %w[claude nvim].each do |tool|
+      write_executable(File.join(fixture[:bin], tool), "#!/bin/sh\ntrap '' HUP TERM\nexec sleep 60\n")
+    end
+    project = workspace_directory(fixture, 'cloned/project')
+    context = { home: fixture[:home], environment: {}, tty: false }
+    capture = Archon::Workspaces.method(:capture_command)
+    begin
+      equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **context, picker: workspace_picker([project]))
+      sleep 0.5
+      stopper = Process.spawn('herdr', '--session', 'archon', 'session', 'stop', 'archon', '--json', out: File::NULL, err: File::NULL)
+      Timeout.timeout(5) { sleep 0.01 until Archon::WorkspacesHerdr.shutting_down?(capture) }
+      equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **context, picker: workspace_picker([project]))
+      Process.wait(stopper)
+      equal ['project'], Archon::Herdr.request('archon', %w[workspace list], capture).fetch('workspaces').map { |item| item['label'] }
+      no_picker = ->(*_, **_) { raise 'restart must not show the checklist' }
+      equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['restart'], **context, picker: no_picker)
+      assert Archon::WorkspacesHerdr.session_running?(capture)
+      equal ['project'], Archon::Herdr.request('archon', %w[workspace list], capture).fetch('workspaces').map { |item| item['label'] }
+    ensure
+      capture.call('herdr', ['--session', 'archon', 'session', 'stop', 'archon', '--json'])
+    end
+  end
+end
+
+test('real Herdr restart from inside a pane reattaches the terminal that started the workspaces') do
+  fixture do |fixture|
+    File.symlink('/usr/bin/herdr', File.join(fixture[:bin], 'herdr'))
+    ENV['XDG_RUNTIME_DIR'] = File.join(fixture[:root], 'runtime')
+    FileUtils.mkdir_p(ENV['XDG_RUNTIME_DIR'])
+    config = File.join(ENV.fetch('XDG_CONFIG_HOME'), 'herdr')
+    FileUtils.mkdir_p(config)
+    File.write(File.join(config, 'config.toml'), "onboarding = false\n[terminal]\ndefault_shell = '/bin/bash'\n")
+    %w[claude nvim].each { |tool| write_executable(File.join(fixture[:bin], tool), "#!/bin/sh\nexec sleep 60\n") }
+    workspace_directory(fixture, 'cloned/project')
+    capture = Archon::Workspaces.method(:capture_command)
+    server_log = File.join(config, 'sessions/archon/herdr-server.log')
+    clients = -> { File.exist?(server_log) ? File.read(server_log).scan('client connected').length : 0 }
+    marker = File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-restart.json')
+    begin
+      workspace_terminal(%w[w h start]) do |terminal, wait, _|
+        wait.call('Choose projects')
+        terminal.write(" \r")
+        Timeout.timeout(10) { sleep 0.05 until clients.call == 1 }
+        workspace = Archon::Herdr.request('archon', %w[workspace list], capture).fetch('workspaces').first
+        tabs = Archon::Herdr.request('archon', ['tab', 'list', '--workspace', workspace['workspace_id']], capture).fetch('tabs')
+        panes = Archon::Herdr.request('archon', ['pane', 'list', '--workspace', workspace['workspace_id']], capture).fetch('panes')
+        shell = panes.find { |pane| pane['tab_id'] == tabs.find { |tab| tab['label'] == 'shell' }['tab_id'] }
+        Archon::Herdr.request('archon', ['pane', 'run', shell['pane_id'], "#{RbConfig.ruby} #{ARCHON} w h restart"], capture)
+        Timeout.timeout(30) do
+          sleep 0.05 until File.exist?(marker) && JSON.parse(File.read(marker))['finished'] && clients.call == 2
+        end
+        assert Archon::WorkspacesHerdr.session_running?(capture)
+        capture.call('herdr', ['--session', 'archon', 'session', 'stop', 'archon', '--json'])
+      end
+      # Stopping the session at the end closes the reattached client without another reattach.
+      equal 2, clients.call
+    ensure
+      capture.call('herdr', ['--session', 'archon', 'session', 'stop', 'archon', '--json'])
+    end
+  end
+end

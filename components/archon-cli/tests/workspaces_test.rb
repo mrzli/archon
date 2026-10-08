@@ -103,3 +103,22 @@ test('the Claude tab command continues only when the project has a saved convers
     equal "claude --continue\n", run.call
   end
 end
+
+test('a client reattaches only after a restart that began while it was attached has finished') do
+  fixture do |fixture|
+    marker = File.join(fixture[:root], 'restart.json')
+    since = Time.now.to_f
+    equal false, Archon::Workspaces.wait_for_restart(marker, since: since)
+    Archon::Workspaces.mark_restart(marker, started_at: since - 1, finished: true)
+    equal false, Archon::Workspaces.wait_for_restart(marker, since: since)
+    Archon::Workspaces.mark_restart(marker, started_at: since + 1, finished: true)
+    equal true, Archon::Workspaces.wait_for_restart(marker, since: since)
+    # An unfinished restart whose process is gone counts as finished; a live one is waited for.
+    File.write(marker, JSON.generate(pid: 2**22 + 12_345, started_at: since + 1, finished: false))
+    equal true, Archon::Workspaces.wait_for_restart(marker, since: since)
+    Archon::Workspaces.mark_restart(marker, started_at: since + 1, finished: false)
+    equal false, Archon::Workspaces.wait_for_restart(marker, since: since, timeout: 0.2)
+    File.write(marker, '{broken')
+    equal false, Archon::Workspaces.wait_for_restart(marker, since: since)
+  end
+end

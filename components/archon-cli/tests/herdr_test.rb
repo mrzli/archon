@@ -261,10 +261,11 @@ test('Herdr validates shutdown options before delegating') do
   context = { environment: { 'HERDR_ENV' => '1' }, stop_detached: ->(arguments, _) { calls << arguments; 7 } }
   equal 7, Herdr.run_workspaces_herdr(['stop'], **context)
   equal 7, Herdr.run_workspaces_herdr(['kill'], **context)
-  [%w[stop -g current], %w[kill --ai codex], %w[stop extra]].each do |arguments|
+  equal 7, Herdr.run_workspaces_herdr(%w[restart --ai codex], **context)
+  [%w[stop -g current], %w[kill --ai codex], %w[stop extra], %w[restart extra], %w[restart --ai unknown]].each do |arguments|
     equal 2, Herdr.run_workspaces_herdr(arguments, **context)
   end
-  equal [['stop'], ['kill']], calls
+  equal [['stop'], ['kill'], %w[restart --ai codex]], calls
 end
 
 test('Herdr kill clears running and stopped sessions and default layouts, preserving configuration and projects') do
@@ -353,5 +354,82 @@ test('Herdr kill reports layout cleanup and session deletion failures, continues
     FileUtils.rmdir(layout)
     equal 0, run_archon(%w[w h kill])[:status]
     equal [], herdr_state(path)['workspaces']
+  end
+end
+
+test('Herdr start waits for a shutting-down session to exit, then starts a new server') do
+  herdr_fixture do |fixture, path|
+    project = workspace_directory(fixture)
+    context = { home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: false }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    update_herdr_state(path) { |state| state['shutting_down'] = 4 }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    state = herdr_state(path)
+    assert state['running']
+    equal 2, state['calls'].count { |call| call == ['server'] }
+    equal 1, state['workspaces'].length
+    raises(/still shutting down/) do
+      Herdr.wait_for_shutdown(->(*_) { { status: 0, output: '{"sessions":[{"name":"archon","running":true}]}' } }, timeout: 0.1)
+    end
+  end
+end
+
+test('Herdr restart stops the session, waits for it to exit and restarts the saved selection without the checklist') do
+  herdr_fixture do |fixture, path|
+    projects = %w[cloned/one cloned/two].map { |relative| workspace_directory(fixture, relative) }
+    context = { home: fixture[:home], environment: {}, tty: false }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context, picker: workspace_picker(projects))
+    ids = herdr_state(path)['workspaces'].map { |workspace| workspace['workspace_id'] }
+    no_picker = ->(*_, **_) { raise 'restart must not show the checklist' }
+    2.times { equal 0, Herdr.run_workspaces_herdr(%w[restart --ai codex], **context, picker: no_picker) }
+    state = herdr_state(path)
+    assert state['running']
+    equal 2, state['calls'].count { |call| call == %w[session stop archon --json] }
+    equal 3, state['calls'].count { |call| call == ['server'] }
+    equal ids, state['workspaces'].map { |workspace| workspace['workspace_id'] }
+    # A session already shutting down is waited for rather than stopped again.
+    update_herdr_state(path) { |value| value['shutting_down'] = 3 }
+    equal 0, Herdr.run_workspaces_herdr(['restart'], **context, picker: no_picker)
+    equal 2, herdr_state(path)['calls'].count { |call| call == %w[session stop archon --json] }
+    equal 4, herdr_state(path)['calls'].count { |call| call == ['server'] }
+    equal 0, Herdr.run_workspaces_herdr(['restart'], **context.merge(tty: true), picker: no_picker)
+    equal 1, herdr_state(path)['attachments']
+  end
+end
+
+test('Herdr restart with no saved projects only stops the session') do
+  herdr_fixture do |fixture, path|
+    seed_herdr_workspaces(path, ['project'])
+    status, output, = capture { Herdr.run_workspaces_herdr(['restart'], home: fixture[:home], environment: {}, tty: false) }
+    equal 0, status
+    assert output.include?('No projects selected.')
+    assert !herdr_state(path)['running']
+    assert herdr_state(path)['calls'].none? { |call| call == ['server'] }
+  end
+end
+
+test('Herdr reattaches after a restart closes the attached client and records restart progress') do
+  herdr_fixture do |fixture, path|
+    project = workspace_directory(fixture)
+    marker = File.join(ENV['XDG_STATE_HOME'], 'archon/workspaces-herdr-restart.json')
+    attaches = 0
+    run = lambda do |_, arguments, **_|
+      equal %w[--session archon], arguments
+      attaches += 1
+      # Simulate a restart started from inside this client; it ends the client when it stops the server.
+      Archon::Workspaces.mark_restart(marker, started_at: Time.now.to_f, finished: true) if attaches == 1
+      attaches == 1 ? 1 : 0
+    end
+    context = { home: fixture[:home], picker: workspace_picker([project]), environment: {}, tty: true, run: run }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    equal 2, attaches
+    attaches = 5
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    equal 6, attaches
+    equal 0, Herdr.run_workspaces_herdr(['restart'], home: fixture[:home], environment: {}, tty: false)
+    assert JSON.parse(File.read(marker))['finished']
+    update_herdr_state(path) { |state| state['failure'] = { 'prefix' => %w[session stop], 'remaining' => 1 } }
+    equal 1, Herdr.run_workspaces_herdr(['restart'], home: fixture[:home], environment: {}, tty: false)
+    assert JSON.parse(File.read(marker))['finished']
   end
 end

@@ -15,6 +15,18 @@ File.open(ENV.fetch('HERDR_TEST_STATE'), 'r+') do |file|
     raise 'workspace operations require the archon session'
   end
   state['calls'] << arguments
+  # Real Herdr keeps listing a stopping session as running but refuses its requests until it exits.
+  if session == 'archon' && state['shutting_down'].to_i > 0
+    state['shutting_down'] -= 1
+    state['running'] = state['shutting_down'] > 0
+    unless arguments.first(2) == %w[session list]
+      file.rewind
+      file.write(JSON.generate(state))
+      file.truncate(file.pos)
+      puts JSON.generate(error: { code: 'server_unavailable', message: 'server is shutting down' }, id: 'cli:test')
+      exit 1
+    end
+  end
   failure = state['failure']
   failed = failure && failure['remaining'] > 0 && (failure['prefix'].empty? ? arguments.empty? : arguments.first(failure['prefix'].length) == failure['prefix'])
   response = nil

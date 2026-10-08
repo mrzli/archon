@@ -44,6 +44,31 @@ module Archon
       sessions.any? { |session| session.fetch('name') == SESSION && session.fetch('running') }
     end
 
+    # A stopping server still lists its session as running but refuses requests until it exits.
+    def shutting_down?(capture)
+      result = capture.call('herdr', ['--session', SESSION, 'workspace', 'list'])
+      result[:status] != 0 && result[:output].include?('"server_unavailable"')
+    end
+
+    def wait_for_shutdown(capture, timeout: 10)
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+      while session_running?(capture)
+        raise "Herdr session #{SESSION} is still shutting down; try again shortly" if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+        sleep 0.05
+      end
+    end
+
+    def stop_session(capture)
+      return unless session_running?(capture)
+      Herdr.request(SESSION, ['session', 'stop', SESSION, '--json'], capture) unless shutting_down?(capture)
+      wait_for_shutdown(capture)
+    end
+
+    def ensure_server(capture, state_directory, start_server)
+      wait_for_shutdown(capture) if session_running?(capture) && shutting_down?(capture)
+      start_server.call(capture, state_directory) unless session_running?(capture)
+    end
+
     def start_server(capture, state_directory)
       FileUtils.mkdir_p(state_directory)
       log = File.join(state_directory, 'workspaces-herdr-server.log')
