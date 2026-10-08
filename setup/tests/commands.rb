@@ -136,7 +136,26 @@ when 'mise'
     tools[ARGV.last] = [{ 'version' => '1.0', 'installed' => true }]
     File.write("#{state}/mise-tools.json", JSON.generate(tools))
   end
-  if ARGV[0, 3] == %w[exec ruby --]
+  if ARGV[0, 4] == %w[exec ruby -- gem]
+    gems = File.exist?("#{state}/gems.json") ? JSON.parse(File.read("#{state}/gems.json")) : []
+    exit(gems.include?(ARGV.last) ? 0 : 1) if ARGV[4] == 'list'
+    File.write("#{state}/gems.json", JSON.generate(gems | [ARGV.last])) if ARGV[4] == 'install'
+  elsif ARGV[0, 3] == %w[exec ruby --]
     exec RbConfig.ruby, *ARGV.drop(4)
   end
+when 'claude'
+  plugins = File.exist?("#{state}/claude-plugins.json") ? JSON.parse(File.read("#{state}/claude-plugins.json")) : {}
+  marketplaces = plugins.fetch('marketplaces', [])
+  installed = plugins.fetch('installed', [])
+  if ARGV[0, 3] == %w[plugin marketplace list]
+    puts JSON.generate(marketplaces.map { |name| { 'name' => name } })
+  elsif ARGV[0, 3] == %w[plugin marketplace add]
+    marketplaces |= [ARGV.last.split('/').last]
+  elsif ARGV[0, 2] == %w[plugin list]
+    puts JSON.generate(installed.map { |id| { 'id' => id } })
+  elsif ARGV[0, 2] == %w[plugin install]
+    exit 1 unless marketplaces.include?(ARGV[2].split('@').last)
+    installed |= [ARGV[2]]
+  end
+  File.write("#{state}/claude-plugins.json", JSON.generate('marketplaces' => marketplaces, 'installed' => installed))
 end

@@ -28,6 +28,19 @@ check('mise requires installed versions and rejects system passthrough', :tools)
                       *%w[pnpm codex claude shellcheck].map { |tool| %W[mise use --global #{tool}] }]
 end
 
+check('Ruby LSP and Claude Code plugins install once on a fresh Claude Code', :tools) do |repo, _home, _bin, env|
+  2.times do
+    _, error, status = Open3.capture3(env, RbConfig.ruby, '-r', "#{repo}/setup/setup.rb",
+                                    '-e', 'install_ruby_gems; install_claude_plugins')
+    assert status.success?, error
+  end
+  installs = commands(env).reject { |args| args.include?('list') }
+  assert installs == [%w[mise exec ruby -- gem install ruby-lsp],
+                      %w[claude plugin marketplace add anthropics/claude-plugins-official],
+                      %w[claude plugin install clangd-lsp@claude-plugins-official --scope user],
+                      %w[claude plugin install ruby-lsp@claude-plugins-official --scope user]]
+end
+
 check('web app removal skips absent apps and suppresses removal notifications', :applications) do |repo, home, _bin, env|
   launcher = "#{home}/.local/share/applications/nested/HEY.desktop"
   FileUtils.mkdir_p(File.dirname(launcher))

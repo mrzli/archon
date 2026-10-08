@@ -13,7 +13,7 @@ FIXTURE_COMMANDS = {
   files: %w[rsync],
   hyprland: %w[hyprctl],
   skills: %w[git],
-  tools: %w[omarchy mise rails uv node bun zls pnpm go],
+  tools: %w[omarchy mise rails uv node bun zls pnpm go claude],
   voice: %w[omarchy voxtype sudo systemctl]
 }.freeze
 $checks = 0

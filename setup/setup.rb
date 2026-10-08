@@ -18,6 +18,8 @@ def setup
   install_packages
   install_development_environments
   install_mise_tools
+  install_ruby_gems
+  install_claude_plugins
   install_vscode_extensions(repo_root)
   install_home_files(repo_root, home)
   IntelVideoWorkaround.apply(home)
@@ -190,6 +192,43 @@ end
 def mise_tool_installed?(tool)
   JSON.parse(capture('mise', 'ls', '--global', '--installed', '--json', tool)).any? do |version|
     version['installed'] && version['version'] != 'system'
+  end
+end
+
+def install_ruby_gems
+  log_step 'Installing Ruby gems'
+  [
+    'ruby-lsp' # Ruby language server, used by the Claude Code ruby-lsp plugin
+  ].each do |gem|
+    if system('mise', 'exec', 'ruby', '--', 'gem', 'list', '--installed', '--exact', gem, out: File::NULL)
+      log_info "#{gem} is already installed; skipping"
+    else
+      log_info "Installing #{gem}"
+      run 'mise', 'exec', 'ruby', '--', 'gem', 'install', gem
+    end
+  end
+end
+
+def install_claude_plugins
+  log_step 'Installing Claude Code plugins'
+  marketplace = 'claude-plugins-official'
+  # A fresh Claude Code install does not know this marketplace yet.
+  if JSON.parse(capture('claude', 'plugin', 'marketplace', 'list', '--json')).any? { |entry| entry['name'] == marketplace }
+    log_info "#{marketplace} marketplace is already added; skipping"
+  else
+    run 'claude', 'plugin', 'marketplace', 'add', "anthropics/#{marketplace}"
+  end
+  installed = JSON.parse(capture('claude', 'plugin', 'list', '--json')).map { |plugin| plugin['id'] }
+  [
+    'clangd-lsp', # C/C++ code intelligence; clangd comes from Omarchy's clang package
+    'ruby-lsp'    # Ruby code intelligence; uses the ruby-lsp gem
+  ].each do |name|
+    plugin = "#{name}@#{marketplace}"
+    if installed.include?(plugin)
+      log_info "#{plugin} is already installed; skipping"
+    else
+      run 'claude', 'plugin', 'install', plugin, '--scope', 'user'
+    end
   end
 end
 
