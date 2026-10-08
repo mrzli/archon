@@ -28,7 +28,7 @@ def setup
   install_archon_cli(repo_root, home)
   install_user_skills(home)
   configure_codex
-  configure_claude_status_line(home)
+  configure_claude_settings(home)
   configure_lazyvim(home)
   configure_bash(home)
   remove_default_projects_directory(home)
@@ -352,19 +352,22 @@ def sync_user_skill_links(source, home)
   end
 end
 
-def configure_claude_status_line(home)
-  log_step 'Configuring Claude Code status line'
+def configure_claude_settings(home)
+  log_step 'Configuring Claude Code settings'
   settings_file = "#{home}/.claude/settings.json"
-  status_line = { 'type' => 'command', 'command' => 'bash ~/.claude/statusline-command.sh' }
+  managed = {
+    'statusLine' => { 'type' => 'command', 'command' => 'bash ~/.claude/statusline-command.sh' },
+    'cleanupPeriodDays' => 365 # Keep transcripts for a year instead of the default 30 days.
+  }
   FileUtils.mkdir_p(File.dirname(settings_file))
-  # Claude Code also writes this file, so only the status line key is managed.
+  # Claude Code also writes this file, so only the managed keys are changed.
   settings = File.exist?(settings_file) ? JSON.parse(File.read(settings_file)) : {}
-  if settings['statusLine'] == status_line
-    log_info 'Claude Code status line is already configured; skipping'
+  if settings.slice(*managed.keys) == managed
+    log_info 'Claude Code settings are already configured; skipping'
   else
-    settings['statusLine'] = status_line
+    settings.merge!(managed)
     File.write(settings_file, "#{JSON.pretty_generate(settings)}\n")
-    log_info 'Configured Claude Code status line'
+    log_info 'Configured Claude Code settings'
   end
 end
 

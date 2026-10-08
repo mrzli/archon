@@ -106,6 +106,7 @@ check('repeat runs preserve user files and avoid duplicate configuration', :full
   claude_settings = JSON.parse(File.read("#{home}/.claude/settings.json"))
   assert claude_settings['theme'] == 'dark'
   assert claude_settings['statusLine'] == { 'type' => 'command', 'command' => 'bash ~/.claude/statusline-command.sh' }
+  assert claude_settings['cleanupPeriodDays'] == 365
   assert File.read("#{home}/.bashrc").scan('source ').length == 1
   assert commands(env).none? { |args| args.include?('existing.extension') }
   assert commands(env).count { |args| args.include?('clone') } == 1
