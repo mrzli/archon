@@ -2,24 +2,30 @@
 source "${XDG_CONFIG_HOME:-$HOME/.config}/archon/docker-env"
 
 # Custom aliases and functions
+#
+# `shortcuts` lists them. `#@ Name` starts a section, and a `## description`
+# line directly above an alias or function describes it. Aliases without a
+# description show their command; functions without one are not listed.
 
-# Directory navigation
+#@ Navigation
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 
-# Listing
+#@ Listing
 alias ll='ls -lah'
 alias la='ls -A'
 alias l='ls -CF'
 
-# Git - Start
+#@ Git
 alias gst='git status'
 alias gb='git branch'
 alias gfa='git fetch --all'
 alias gaa='git add --all'
+## Show the commit graph
 alias glod='git log --graph --pretty="%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset"'
 alias gp='git push'
+## Push the current branch and set its upstream to origin
 alias gpsup='git push --set-upstream origin $(git_current_branch)'
 alias gl='git pull'
 alias gco='git checkout'
@@ -48,10 +54,12 @@ git_current_branch() {
   git symbolic-ref --quiet --short HEAD 2>/dev/null
 }
 
+## Commit with a message (default: update)
 gcmsg() {
   git commit -m "${*:-update}"
 }
 
+## Add all, commit with a message (default: update), and push
 gu() {
   local msg="${*:-update}"
 
@@ -59,15 +67,48 @@ gu() {
   git commit -m "$msg" &&
   git push
 }
-# Git - End
 
-# Rails
+# Fast-forward master to the current branch without checking it out.
+_git_ff_master() {
+  local branch
+  branch=$(git_current_branch)
+
+  if [[ -z "$branch" || "$branch" == master ]]; then
+    echo "Error: check out a branch other than master first" >&2
+    return 1
+  fi
+
+  if ! git fetch --quiet . "$branch:master"; then
+    echo "Error: cannot fast-forward master to $branch" >&2
+    return 1
+  fi
+
+  echo "Fast-forwarded master to $branch"
+}
+
+## Fast-forward master to this branch, switch to master, delete the branch
+gffm() {
+  local branch
+  branch=$(git_current_branch)
+
+  _git_ff_master &&
+  git checkout master &&
+  git branch -d "$branch"
+}
+
+## Fast-forward master to this branch and stay on the branch
+gffmb() {
+  _git_ff_master
+}
+
+#@ Rails
+## Recreate the database from migrations
 alias railsrefresh='rm -f db/schema.rb && bin/rails db:drop db:create db:migrate'
 
-# Misc
+#@ Misc
 alias grep='grep --color=auto'
 
-# Kill process at port
+## Kill the processes listening on a port: killport <port>
 killport() {
   if [ -z "$1" ]; then
     echo "Error: Port number required"
@@ -87,6 +128,34 @@ killport() {
   echo "Killed process(es) on port $port: $pids"
 }
 
+## List these shortcuts, optionally for one section: shortcuts [section]
+shortcuts() {
+  awk -v filter="${1,,}" '
+    function show(name, text) {
+      if (filter != "" && tolower(section) != filter) return
+      if (section != printed) {
+        printf "%s%s\n", (printed == "" ? "" : "\n"), section
+        printed = section
+      }
+      printf "  %-20s %s\n", name, text
+    }
+    /^#@ / { section = substr($0, 4); desc = ""; next }
+    /^## / { desc = substr($0, 4); next }
+    /^alias / {
+      name = $0; sub(/^alias /, "", name); sub(/=.*/, "", name)
+      cmd = $0; sub(/^[^=]*=/, "", cmd); gsub(/^\047|\047$/, "", cmd)
+      show(name, desc != "" ? desc : cmd)
+    }
+    /^[A-Za-z_][A-Za-z0-9_]*\(\)/ && desc != "" {
+      name = $0; sub(/\(\).*/, "", name)
+      show(name, desc)
+    }
+    { desc = "" }
+  ' "${BASH_SOURCE[0]}"
+}
+
+#@ Jslib
+## Unlink all mrzli-jslib packages
 mrzli_jslib_unlink() {
   local repos_dir="$HOME/projects/personal/mrzli-jslib"
   local repo_dir
@@ -97,6 +166,7 @@ mrzli_jslib_unlink() {
   done
 }
 
+## Link all mrzli-jslib packages
 mrzli_jslib_link() {
   local repos_dir="$HOME/projects/personal/mrzli-jslib"
   local repo_dir
@@ -108,11 +178,13 @@ mrzli_jslib_link() {
   done
 }
 
+## Unlink and relink all mrzli-jslib packages
 mrzli_jslib_relink() {
   mrzli_jslib_unlink
   mrzli_jslib_link
 }
 
+## Build all mrzli-jslib packages in parallel
 mrzli_jslib_build() {
   local repos_dir="$HOME/projects/personal/mrzli-jslib"
   local repo_dir
