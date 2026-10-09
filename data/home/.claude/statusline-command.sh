@@ -69,12 +69,10 @@ else
 fi
 
 # Each value is absent until Claude Code reports it; rate limits need a subscription.
-# Rate limits keep one decimal so small weekly changes stay visible.
 usage=$(printf '%s' "$input" | jq -r '
-  def tenths: (. * 10 | round) as $t | "\($t / 10 | floor).\($t % 10)";
   [["ctx", (.context_window.used_percentage | values | round)],
-   ["5h", (.rate_limits.five_hour.used_percentage | values | tenths)],
-   ["7d", (.rate_limits.seven_day.used_percentage | values | tenths)]]
+   ["5h", (.rate_limits.five_hour.used_percentage | values | round)],
+   ["7d", (.rate_limits.seven_day.used_percentage | values | round)]]
   | map(select(length == 2) | "\(.[0]) \(.[1])%") | join(" · ")')
 # The git segment already ends with a space.
 if [ -n "$usage" ]; then
