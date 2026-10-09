@@ -139,6 +139,7 @@ def install_packages
     'qbittorrent', # BitTorrent client
     'dbeaver',     # Database client
     'img2pdf',     # Convert images to PDF
+    'perf',        # Linux kernel performance profiler
     # Headless GUI tests: virtual X server, single-app Wayland compositor, and output configuration
     'xorg-server-xvfb', 'cage', 'wlr-randr',
     # LaTeX-to-PDF compilation, recommended fonts, and latexmk build automation
