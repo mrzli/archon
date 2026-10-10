@@ -1,6 +1,7 @@
 require_relative 'help'
 require_relative 'github_inventory'
 require_relative 'libs/libs'
+require_relative 'secrets/secrets'
 require_relative 'sync_workflow'
 require_relative 'destructive_workflows'
 
@@ -8,6 +9,7 @@ module Archon
   module Projects
     def run_projects(arguments, home: Dir.home, root: nil)
       return Libraries.run_libraries(arguments.drop(1), home: home) if arguments.first == 'libs'
+      return Secrets.run_secrets(arguments.drop(1), home: home) if arguments.first == 'secrets'
       command, *options = arguments
       return project_help(options) if %w[help --help -h].include?(command)
       unless HELP.key?(command) && command != 'global'

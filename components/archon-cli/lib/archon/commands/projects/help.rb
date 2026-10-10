@@ -1,4 +1,5 @@
 require_relative 'libs/help'
+require_relative 'secrets/help'
 
 module Archon
   module Projects
@@ -30,6 +31,7 @@ module Archon
         Options:
           -h, --help  Show help for this command
       TEXT
+      'secrets' => Secrets::HELP.fetch('global'),
       'status' => <<~TEXT.chomp,
         Usage: archon projects status [options]
 
@@ -56,13 +58,14 @@ module Archon
         Usage: archon projects <command>
 
         Commands:
-          delete  Delete all local repositories inside personal
-          libs    Build or graph local @mrzli-jslib/* packages
-          prune   Delete local repositories that no longer exist remotely
-          remote  List included repositories owned by the GitHub user
-          status  Show concise local Git status for every repository
-          sync    Update existing repositories and clone missing repositories
-          help    Show global or command-specific help
+          delete   Delete all local repositories inside personal
+          libs     Build or graph local @mrzli-jslib/* packages
+          prune    Delete local repositories that no longer exist remotely
+          remote   List included repositories owned by the GitHub user
+          secrets  Generate .env files from a central secrets store
+          status   Show concise local Git status for every repository
+          sync     Update existing repositories and clone missing repositories
+          help     Show global or command-specific help
 
         Run "archon projects help <command>" for detailed command help.
       TEXT
