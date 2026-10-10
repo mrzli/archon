@@ -41,7 +41,7 @@ Format: one `NAME=value` entry per line. Blank lines and lines starting with `#`
 are ignored. The value is everything after the first `=`, taken literally with
 no quoting, escaping, or trimming. Values cannot span lines.
 
-Allowed names are hard-coded in the CLI. The initial list is `GITHUB_TOKEN`.
+Allowed names are hard-coded in the CLI: `GITHUB_TOKEN` and `EODHD_API_TOKEN`.
 The user adds names in code as needed.
 
 ## `archon projects secrets init`

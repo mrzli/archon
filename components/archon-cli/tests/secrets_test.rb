@@ -31,7 +31,7 @@ test('secrets init creates a private store with every name') do
     equal 0, result[:status]
     path = store_path(fixture)
     assert result[:stdout].include?("Created #{path}")
-    equal "GITHUB_TOKEN=\n", File.read(path)
+    equal "GITHUB_TOKEN=\nEODHD_API_TOKEN=\n", File.read(path)
     equal 0o600, mode(path)
     equal 0o700, mode(File.dirname(path))
   end
@@ -39,22 +39,22 @@ end
 
 test('secrets init appends only missing names and preserves existing values') do
   fixture do |fixture|
-    path = write_store(fixture, "# mine\nOTHER=keep")
+    path = write_store(fixture, "# mine\nOTHER=keep\nGITHUB_TOKEN=x")
     result = run_archon(%w[projects secrets init])
     equal 0, result[:status]
-    assert result[:stdout].include?("Added GITHUB_TOKEN to #{path}")
-    equal "# mine\nOTHER=keep\nGITHUB_TOKEN=\n", File.read(path)
+    assert result[:stdout].include?("Added EODHD_API_TOKEN to #{path}")
+    equal "# mine\nOTHER=keep\nGITHUB_TOKEN=x\nEODHD_API_TOKEN=\n", File.read(path)
   end
 end
 
 test('secrets init leaves a complete store untouched') do
   fixture do |fixture|
-    path = write_store(fixture, "GITHUB_TOKEN=secret\n")
+    path = write_store(fixture, "GITHUB_TOKEN=secret\nEODHD_API_TOKEN=key\n")
     File.utime(Time.at(0), Time.at(0), path)
     result = run_archon(%w[projects secrets init])
     equal 0, result[:status]
     assert result[:stdout].include?('Nothing to do')
-    equal "GITHUB_TOKEN=secret\n", File.read(path)
+    equal "GITHUB_TOKEN=secret\nEODHD_API_TOKEN=key\n", File.read(path)
     equal Time.at(0), File.mtime(path)
   end
 end

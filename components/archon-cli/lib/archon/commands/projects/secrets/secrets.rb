@@ -5,7 +5,7 @@ module Archon
   module Secrets
     extend self
     # Names a store may define and a template may reference. Add names here as projects need them.
-    NAMES = %w[GITHUB_TOKEN].freeze
+    NAMES = %w[GITHUB_TOKEN EODHD_API_TOKEN].freeze
     # Matches .env.template and variants such as .env.local.template; each renders to its name without .template.
     TEMPLATE = /\A\.env(\.[^.]+)*\.template\z/
     PLACEHOLDER = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/

@@ -10,7 +10,8 @@ archon projects secrets <command>
 The store is `${XDG_DATA_HOME:-~/.local/share}/archon/secrets/secrets.env`. It
 holds one `NAME=value` entry per line. Blank lines and lines starting with `#`
 are ignored, and values are used literally, without quoting or trimming. Only
-names known to the CLI are allowed, currently `GITHUB_TOKEN`.
+names known to the CLI are allowed, currently `GITHUB_TOKEN` and
+`EODHD_API_TOKEN`.
 
 ## init
 
