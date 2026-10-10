@@ -20,7 +20,7 @@ Other files and directories under `~/projects/personal` are ignored.
   to inspect them.
 - `remote`: list repositories owned by the authenticated GitHub user and owned
   organizations after configured exclusions.
-- `secrets`: generate `.env` files from `.env.template` files and a central
+- `secrets`: generate `.env` files from `.env*.template` files and a central
   secrets store. See [secrets](./secrets/README.md).
 - `status`: show branch state, working-tree changes, stashes, and commits ahead.
   Add `--fetch` to refresh remote-tracking information first. Exits with `1`

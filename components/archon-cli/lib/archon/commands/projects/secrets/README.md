@@ -24,11 +24,13 @@ archon projects secrets init
 
 ## sync
 
-For every repository in `~/projects/personal/<owner>/<repository>` that has a
-`.env.template` at its root, write `.env` with each `${NAME}` placeholder
-replaced by the store value. Other `$` text is kept as written. The generated
-file starts with a comment saying it is generated, has mode `600`, and is
-overwritten whenever its content differs. Edit the template, not `.env`.
+For every `.env.template` or variant such as `.env.local.template` at the root
+of a repository in `~/projects/personal/<owner>/<repository>`, write the file
+named without `.template`, such as `.env` or `.env.local`. Each `${NAME}`
+placeholder is replaced by the store value, and other `$` text is kept as
+written. The generated file starts with a comment saying it is generated, has
+mode `600`, and is overwritten whenever its content differs. Edit the template,
+not the generated file.
 
 ```sh
 archon projects secrets sync
@@ -36,16 +38,17 @@ archon projects secrets sync
 
 ```text
 created    mrzli/foo/.env
+created    mrzli/foo/.env.local
 updated    mrzli/bar/.env
 unchanged  mrzli/baz/.env
 skipped    mrzli/qux/.env  (empty value: GITHUB_TOKEN)
 ```
 
-A repository is skipped, leaving any existing `.env` as is, when its template
-uses an unknown name or an empty value, or when `.env` is not ignored by Git.
+A file is skipped, leaving any existing version as is, when its template uses
+an unknown name or an empty value, or when the file is not ignored by Git.
 Unknown names in the store produce a warning. `sync` refuses to run when the
-store is missing or accessible by group or others, and exits with `1` when any repository
-was skipped.
+store is missing or accessible by group or others, and exits with `1` when any
+file was skipped.
 
 Example template:
 

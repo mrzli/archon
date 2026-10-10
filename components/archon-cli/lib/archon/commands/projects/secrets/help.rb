@@ -14,7 +14,7 @@ module Archon
       'sync' => <<~TEXT.chomp,
         Usage: archon projects secrets sync [options]
 
-        Render each repository's .env.template into a gitignored .env file.
+        Render each repository's .env*.template files into gitignored .env* files.
 
         Options:
           -h, --help  Show help for this command
@@ -29,7 +29,7 @@ module Archon
 
         Commands:
           init    Create the secrets store or add missing secret names
-          sync    Render .env.template files into .env files
+          sync    Render .env*.template files into .env* files
           help    Show secrets help or command-specific help
 
         The store is ${XDG_DATA_HOME:-~/.local/share}/archon/secrets/secrets.env.

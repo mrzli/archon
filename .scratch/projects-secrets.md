@@ -71,8 +71,14 @@ The user adds names in code as needed.
 
 Repositories are the ones `archon projects` already manages under
 `~/projects/personal/<owner>/<repository>`. Only repositories with a
-`.env.template` at their root are processed. Repositories without one are not
+template at their root are processed. Repositories without one are not
 reported.
+
+Variants are rendered the same way: every root file named `.env.template` or
+`.env.<variant>.template`, such as `.env.local.template`, renders to its name
+without `.template`, such as `.env.local`. Each generated file is checked,
+written, and reported separately. In the rules below, `.env` stands for the
+generated file, and the header names its own template.
 
 Rendering a template:
 
