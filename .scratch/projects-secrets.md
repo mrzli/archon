@@ -1,6 +1,6 @@
 # Spec: `archon projects secrets`
 
-Status: ready for implementation.
+Status: implemented on branch `projects-secrets`.
 
 ## Purpose and scope
 
