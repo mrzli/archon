@@ -288,7 +288,7 @@ end
 def install_user_skills(home)
   log_step 'Installing user skills from mrzli/skills'
   data_home = ENV['XDG_DATA_HOME'].to_s.empty? ? "#{home}/.local/share" : ENV['XDG_DATA_HOME']
-  skills_repo = File.join(data_home, 'archon-skills')
+  skills_repo = File.join(data_home, 'archon', 'skills')
   github_git = ['git', '-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential']
   FileUtils.mkdir_p(File.dirname(skills_repo))
   if File.directory?("#{skills_repo}/.git")

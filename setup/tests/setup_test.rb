@@ -113,7 +113,7 @@ check('repeat runs preserve user files and avoid duplicate configuration', :full
   assert commands(env).count { |args| args.include?('pull') } == 1
   %w[.agents .claude].each do |directory|
     path = "#{home}/#{directory}/skills/example"
-    assert File.readlink(path) == "#{env.fetch('XDG_DATA_HOME')}/archon-skills/skills/productivity/example"
+    assert File.readlink(path) == "#{env.fetch('XDG_DATA_HOME')}/archon/skills/skills/productivity/example"
     assert File.read("#{path}/SKILL.md") == 'example skill'
   end
   %w[voxtype.service.d/10-archon.conf docker.service].each do |service|
@@ -135,7 +135,7 @@ end
 check('failed skills updates preserve installed skills and links', :skills) do |repo, home, _bin, env|
   _, error, status = run_operation(repo, env, 'install_user_skills(home)')
   assert status.success?, error
-  source = "#{env.fetch('XDG_DATA_HOME')}/archon-skills/skills/productivity/example"
+  source = "#{env.fetch('XDG_DATA_HOME')}/archon/skills/skills/productivity/example"
   _, error, status = run_operation(repo, env.merge('FAIL_COMMAND' => 'git'), 'install_user_skills(home)')
   assert !status.success?, error
   %w[.agents .claude].each do |directory|
@@ -145,7 +145,7 @@ check('failed skills updates preserve installed skills and links', :skills) do |
   _, error, status = run_operation(repo, env, 'install_user_skills(home)')
   assert status.success?, error
   assert Dir.empty?(File.dirname(File.dirname(source)))
-  assert !File.exist?("#{env.fetch('XDG_DATA_HOME')}/archon/skills")
+  assert !File.exist?("#{env.fetch('XDG_DATA_HOME')}/archon-skills")
   %w[.agents .claude].each do |directory|
     assert !File.symlink?("#{home}/#{directory}/skills/example")
   end
