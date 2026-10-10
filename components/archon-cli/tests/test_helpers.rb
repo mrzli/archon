@@ -76,7 +76,8 @@ def fixture
     previous = ENV.to_h
     env = previous.reject { |key, _| key.start_with?('GIT_', 'HERDR_') }.merge(
       'HOME' => home, 'PATH' => "#{bin}:#{TEST_BIN}:#{previous.fetch('PATH')}",
-      'XDG_CONFIG_HOME' => "#{home}/.config", 'XDG_STATE_HOME' => "#{home}/.local/state",
+      'XDG_CONFIG_HOME' => "#{home}/.config", 'XDG_DATA_HOME' => "#{home}/.local/share",
+      'XDG_STATE_HOME' => "#{home}/.local/state",
       'TMUX' => '', 'TMUX_PANE' => '', 'GIT_CONFIG_NOSYSTEM' => '1',
       'GIT_CONFIG_SYSTEM' => '/dev/null', 'GIT_CONFIG_GLOBAL' => '/dev/null', 'GIT_TERMINAL_PROMPT' => '0',
       'GIT_CONFIG_COUNT' => '4', 'GIT_CONFIG_KEY_0' => 'core.hooksPath', 'GIT_CONFIG_VALUE_0' => '/dev/null',
