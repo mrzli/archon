@@ -32,7 +32,7 @@ module Archon
           sync    Render .env.template files into .env files
           help    Show secrets help or command-specific help
 
-        The store is ${XDG_DATA_HOME:-~/.local/share}/archon-secrets/secrets.env.
+        The store is ${XDG_DATA_HOME:-~/.local/share}/archon/secrets/secrets.env.
       TEXT
     }.freeze
   end

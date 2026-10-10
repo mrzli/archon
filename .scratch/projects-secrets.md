@@ -28,13 +28,14 @@ Out of scope:
 
 ## Central store
 
-Path: `${XDG_DATA_HOME:-~/.local/share}/archon-secrets/secrets.env`. This
-mirrors how setup resolves `archon-skills` in `setup/setup.rb`.
+Path: `${XDG_DATA_HOME:-~/.local/share}/archon/secrets/secrets.env`. Archon's
+data directory holds one subdirectory each for the bootstrap clone (`repo`),
+the skills checkout (`skills`), and secrets (`secrets`).
 
-Do not use `~/.local/share/archon/`. The README bootstrap clones the archon
-repository there, so a secrets file would sit inside a git working tree. Do not
-use `~/.config/archon/` either: setup deletes and recreates that directory on
-every run, because it is listed in `data/home-replace-directories.txt`.
+Do not put the store inside `archon/repo` or `archon/skills`, which are git
+working trees. Do not use `~/.config/archon/` either: setup deletes and
+recreates that directory on every run, because it is listed in
+`data/home-replace-directories.txt`.
 
 Format: one `NAME=value` entry per line. Blank lines and lines starting with `#`
 are ignored. The value is everything after the first `=`, taken literally with

@@ -1,7 +1,7 @@
 require_relative 'test_helpers'
 
 def store_path(fixture)
-  File.join(fixture[:home], '.local/share/archon-secrets/secrets.env')
+  File.join(fixture[:home], '.local/share/archon/secrets/secrets.env')
 end
 
 def write_store(fixture, content, mode: 0o600)
@@ -187,7 +187,7 @@ test('the secrets store follows XDG_DATA_HOME') do
   fixture do |fixture|
     data_home = File.join(fixture[:root], 'data')
     equal 0, run_archon(%w[projects secrets init], 'XDG_DATA_HOME' => data_home)[:status]
-    assert File.exist?(File.join(data_home, 'archon-secrets/secrets.env'))
+    assert File.exist?(File.join(data_home, 'archon/secrets/secrets.env'))
     assert !File.exist?(store_path(fixture))
     equal 0, run_archon(%w[projects secrets init], 'XDG_DATA_HOME' => '')[:status]
     assert File.exist?(store_path(fixture))

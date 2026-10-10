@@ -51,7 +51,7 @@ module Archon
 
     def store_path(home, data_home)
       base = data_home.to_s.empty? ? File.join(home, '.local/share') : data_home
-      File.join(base, 'archon-secrets', 'secrets.env')
+      File.join(base, 'archon', 'secrets', 'secrets.env')
     end
 
     def init_store(store)
