@@ -64,7 +64,7 @@ gh auth login \
 Clone the repo locally:
 
 ```bash
-archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon"
+archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
 mkdir -p "$(dirname "$archon_dir")"
 git \
   -c credential.helper= \
@@ -75,7 +75,7 @@ git \
 Run the setup script to apply the managed system configuration:
 
 ```bash
-"${XDG_DATA_HOME:-$HOME/.local/share}/archon/setup.sh"
+"${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo/setup.sh"
 ```
 
 ## Manual Steps
@@ -144,12 +144,12 @@ archon admin github ssh test
 Now that the SSH key is set up, change the `archon` repo to use SSH instead of HTTPS:
 
 ```bash
-git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon" remote set-url origin git@github.com:mrzli/archon.git
+git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo" remote set-url origin git@github.com:mrzli/archon.git
 ```
 
 ## Update Archon Repo
 
 ```bash
-archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon"
+archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
 git -C "$archon_dir" pull --ff-only
 ```
