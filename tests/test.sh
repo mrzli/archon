@@ -31,7 +31,8 @@ cat "$setup_log"
 (( setup_status == 0 ))
 
 mapfile -t home_shell_paths < <(find "$repo_root/data/home" -type f -name '*.sh' -print | sort)
-bash_check_paths=("$repo_root/tests/"*.sh "$repo_root/components/wow-setup/"*.sh "$repo_root/migrations/"*.sh
+mapfile -t migration_paths < <(find "$repo_root/migrations" -type f -name '*.sh' -print | sort)
+bash_check_paths=("$repo_root/tests/"*.sh "$repo_root/components/wow-setup/"*.sh "${migration_paths[@]}"
   "${home_shell_paths[@]}")
 printf '\n%s\n' 'Additional Bash syntax checks'
 for path in "${bash_check_paths[@]}"; do
