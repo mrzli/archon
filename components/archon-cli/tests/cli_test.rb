@@ -36,7 +36,7 @@ test('help, aliases, and nested command help work without external commands') do
     %w[git gh bun tmux herdr].each do |name|
       write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
     end
-    [['h', 'help', []], ['p', 'projects', %w[help status]], ['p', 'projects', %w[libs help build]],
+    [['d', 'drives', ['--help']], ['h', 'help', []], ['p', 'projects', %w[help status]], ['p', 'projects', %w[libs help build]],
      ['w', 'workspaces', ['--help']]].each do |short, full, options|
       result = run_cli([short, *options])
       equal 0, result[:status]

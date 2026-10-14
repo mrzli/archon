@@ -1,6 +1,7 @@
 require_relative 'commands/admin/admin'
 require_relative 'commands/claude/claude'
 require_relative 'commands/codex/codex'
+require_relative 'commands/drives/drives'
 require_relative 'commands/projects/projects'
 require_relative 'commands/workspaces/workspaces'
 
@@ -14,6 +15,7 @@ module Archon
       admin (a)                 Manage workstation services
       claude                    Restart Claude Code sessions
       codex                     Restart Codex CLI sessions
+      drives (d)                List or eject removable drives
       help (h)                  Show this help
       projects (p)              Manage personal project repositories
       workspaces (w)            Manage Herdr, tmux, or VS Code workspaces
@@ -21,11 +23,12 @@ module Archon
 
   def main(arguments)
     command, *options = arguments
-    command = { 'a' => 'admin', 'h' => 'help', 'p' => 'projects', 'w' => 'workspaces' }.fetch(command, command)
+    command = { 'a' => 'admin', 'd' => 'drives', 'h' => 'help', 'p' => 'projects', 'w' => 'workspaces' }.fetch(command, command)
     case command
     when 'admin' then return Admin.run_admin(options)
     when 'claude' then return Claude.run_claude(options)
     when 'codex' then return Codex.run_codex(options)
+    when 'drives' then return Drives.run_drives(options)
     when 'projects' then return Projects.run_projects(options)
     when 'workspaces' then return Workspaces.run_workspaces(options)
     when 'help', '-h', '--help'
