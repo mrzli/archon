@@ -240,6 +240,7 @@ check('setup provisions Codex model, subagent, navigation, and status-line setti
   2.times do
     _, error, status = run_operation(repo, env, 'configure_codex')
     assert status.success?, error
+    assert !error.include?('codex startup log'), 'Codex log was shown after success'
   end
   edits = JSON.parse(File.read("#{env.fetch('SYSTEM_FIXTURE')}/codex-edits.json"))
   keys = edits.map { |edit| edit.fetch('keyPath') }
@@ -251,6 +252,9 @@ end
 
 check('Codex configuration failures stop setup', :codex) do |repo, _home, _bin, env|
   assert run_operation(repo, env.merge('FAIL_COMMAND' => 'codex'), 'configure_codex').last.exitstatus == 1
+  _, error, status = run_operation(repo, env.merge('CODEX_CRASH' => '1'), 'configure_codex')
+  assert status.exitstatus == 1
+  assert error.include?('codex startup log') && error.include?('exited before replying'), error
 end
 
 check('CLI installation copies Ruby directly without Bun or build tooling', :cli) do |repo, home, bin, env|

@@ -7,6 +7,8 @@ exit 1 if ENV['FAIL_COMMAND'] == name
 state = ENV.fetch('SYSTEM_FIXTURE')
 case name
 when 'codex'
+  warn 'codex startup log'
+  exit 1 if ENV['CODEX_CRASH']
   STDIN.each_line do |line|
     request = JSON.parse(line)
     next unless request.key?('id')

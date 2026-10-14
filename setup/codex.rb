@@ -1,4 +1,5 @@
 require 'json'
+require 'tempfile'
 require_relative 'helpers'
 
 def configure_codex
@@ -13,30 +14,37 @@ def configure_codex
     'tui.keymap.chat.edit_queued_message' => 'alt-shift-up',
     'tui.keymap.chat.prompt_stack_back' => 'alt-shift-down'
   }
-  # Codex's writer preserves unrelated TOML settings and comments.
-  IO.popen(['codex', 'app-server', '--stdio'], 'r+') do |server|
-    requests = [
-      ['initialize', { clientInfo: { name: 'archon', version: '1' } }],
-      ['config/batchWrite', { edits: settings.map do |key_path, value|
-        { keyPath: key_path, value: value, mergeStrategy: 'replace' }
-      end }]
-    ]
-    requests.each_with_index do |(method, params), id|
-      server.puts JSON.generate({ id: id, method: method, params: params })
-      server.flush
-      loop do
-        line = server.gets
-        raise 'Codex configuration writer exited before replying' unless line
+  # Codex's writer preserves unrelated TOML settings and comments. Its log is shown only on failure
+  # because startup logs errors such as a revoked login, which writing settings does not need.
+  Tempfile.create('archon-codex-log') do |log|
+    IO.popen(['codex', 'app-server', '--stdio'], 'r+', err: log) do |server|
+      requests = [
+        ['initialize', { clientInfo: { name: 'archon', version: '1' } }],
+        ['config/batchWrite', { edits: settings.map do |key_path, value|
+          { keyPath: key_path, value: value, mergeStrategy: 'replace' }
+        end }]
+      ]
+      requests.each_with_index do |(method, params), id|
+        server.puts JSON.generate({ id: id, method: method, params: params })
+        server.flush
+        loop do
+          line = server.gets
+          raise 'Codex configuration writer exited before replying' unless line
 
-        response = JSON.parse(line)
-        next unless response['id'] == id
-        raise response.fetch('error').fetch('message') if response['error']
+          response = JSON.parse(line)
+          next unless response['id'] == id
+          raise response.fetch('error').fetch('message') if response['error']
 
-        break
+          break
+        end
+        server.puts JSON.generate({ method: 'initialized' }) if id.zero?
       end
-      server.puts JSON.generate({ method: 'initialized' }) if id.zero?
+      server.close_write
     end
-    server.close_write
+  rescue StandardError
+    log.rewind
+    $stderr.write(log.read)
+    raise
   end
   log_info 'Codex settings configured. Restart Codex to load them.'
 end
