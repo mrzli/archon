@@ -33,7 +33,8 @@ module Archon
         height = [[rows - 5, 1].max, labels.length].min
         width = [columns - 1, 20].max
         offset = [[cursor - height / 2, 0].max, labels.length - height].min
-        controls = multiple ? 'Space: toggle' : '1-9 / 0: choose (0 = 10)'
+        digits = labels.length >= 10 ? '1-9 / 0: choose (0 = 10)' : "1-#{labels.length}: choose"
+        controls = multiple ? 'Space: toggle' : digits
         lines = [title, "j/k or Up/Down: move | #{controls}", 'Enter: accept | Esc / Ctrl+C: cancel', '']
         labels.slice(offset, height).each_with_index do |label, index|
           position = offset + index
@@ -52,7 +53,10 @@ module Archon
         when :escape, nil then return nil
         when "\u0003" then raise Interrupt
         else
-          cursor = key == '0' ? 9 : key.to_i - 1 if !multiple && key.is_a?(String) && key.match?(/\A[0-9]\z/)
+          if !multiple && key.is_a?(String) && key.match?(/\A[0-9]\z/)
+            position = key == '0' ? 9 : key.to_i - 1
+            cursor = position if position < labels.length
+          end
         end
       end
     end
