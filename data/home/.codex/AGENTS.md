@@ -6,4 +6,4 @@ For a group of changes, work on a separate branch. Give each self-contained chan
 
 When a request may have been misheard or mistranscribed, as can happen with voice dictation, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
 
-Put rules that apply to a project in that project's `AGENTS.md`, not in an agent's private memory, so other people and agents that use the project see them.
+Keep project knowledge, such as rules, conventions, decisions, and design notes, in the project's `AGENTS.md` or documentation, not in an agent's private memory, so other people and agents that use the project see it. Use private memory only for the user's personal preferences.
