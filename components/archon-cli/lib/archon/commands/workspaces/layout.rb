@@ -6,10 +6,10 @@ module Archon
                      'then claude --continue; else claude; fi'
     AI_COMMANDS = { 'claude' => CLAUDE_COMMAND, 'codex' => 'codex resume --last' }.freeze
     # Commands that run in tabs with these names, for new and existing workspaces.
-    TAB_COMMANDS = { 'nvim' => 'nvim .' }.merge(AI_COMMANDS).freeze
+    TAB_COMMANDS = { 'nvim' => 'nvim .', 'lazygit' => 'lazygit' }.merge(AI_COMMANDS).freeze
 
     def editor_tabs(ai: DEFAULT_AI)
-      %W[nvim #{ai} shell].map { |name| { name: name, command: TAB_COMMANDS[name] }.compact }
+      %W[nvim lazygit #{ai} shell].map { |name| { name: name, command: TAB_COMMANDS[name] }.compact }
     end
   end
 end

@@ -71,7 +71,7 @@ test('Herdr uses the same checklist and actual terminal attachment rules') do
     equal 1, state['attachments']
     equal 1, state['workspaces'].length
     equal project, state['workspaces'].first['cwd']
-    equal %w[nvim claude shell], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
+    equal %w[nvim lazygit claude shell], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
   end
 end
 

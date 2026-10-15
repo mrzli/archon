@@ -10,6 +10,8 @@ test('uniform editor layout rolls back each failed creation operation') do
     ['set-option', '-t', '=editor:', '@archon-managed', '1'],
     ['set-option', '-t', '=editor:', '@archon-project', definition[:directory]],
     ['send-keys', '-t', '=editor:nvim', 'nvim .', 'Enter'],
+    ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'lazygit'],
+    ['send-keys', '-t', '=editor:lazygit', 'lazygit', 'Enter'],
     ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'claude'],
     ['send-keys', '-t', '=editor:claude', Workspaces::CLAUDE_COMMAND, 'Enter']
   ]
@@ -62,7 +64,7 @@ test('tmux selects projects, creates uniform Claude windows and preserves them o
     definitions = Tmux.project_definitions([first, second])
     definitions.each do |definition|
       directory = File.join(ENV['TMW_TMUX_STATE'], 'sessions', definition[:session])
-      equal %w[nvim claude shell], File.readlines(File.join(directory, 'windows')).map { |line| line.split("\t").first }
+      equal %w[nvim lazygit claude shell], File.readlines(File.join(directory, 'windows')).map { |line| line.split("\t").first }
       assert File.read(File.join(directory, 'commands')).include?(Workspaces::CLAUDE_COMMAND)
       equal definition[:directory], File.read(File.join(directory, 'root')).strip
     end
