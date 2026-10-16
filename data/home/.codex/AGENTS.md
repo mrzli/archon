@@ -2,6 +2,8 @@ Before starting a task, check the available skills. When one matches the task, u
 
 Use US English spelling and vocabulary everywhere you write, including code, comments, documentation, commit messages and responses.
 
+The first time you use a project term the user has not used, define it in a few words where it appears, so they do not have to look it up. After that, use it normally.
+
 For a group of changes, work on a separate branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
 
 Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the user's branch by fast-forwarding. If the user's branch has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way, and only when the user asks. Never create a merge commit. Ask before rebasing commits that were already pushed. Resolve mechanical rebase conflicts, such as a rename meeting an edited line, and report them. Ask about any other conflict. If integrating would touch files with uncommitted changes, report the files and ask before committing, stashing, or discarding anything.
