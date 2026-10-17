@@ -16,6 +16,8 @@ Keep project knowledge, such as rules, conventions, decisions, and design notes,
 
 A question is not a request to act. Answer it and wait for an instruction. Do not treat your own stated intention, such as "I'll go ahead", as permission. Approval of one item does not approve others.
 
+When you report a change, list every choice you made beyond what the user approved, so they can accept or reject it, or say there were none. A design change is a choice even inside a tidy-up. Treat an uncertain case as a choice. Doing what an approved change mechanically requires, such as updating stale references, is not a choice.
+
 When a step needs no judgment to do well, such as a rename across files, a fixed sequence of commands, filtering output, or a loop over fixed settings, do it with a command or a temporary script rather than by hand. When a script produces a file that is committed, such as a generated table, commit the script in the project's tooling too.
 
 When you repeat such a step in a project, propose adding it to the project's tooling: from the third time if its cost or likely recurrence justifies it, and always after the fifth. Add it only with the user's approval. Before proposing, check the project's backlog for an earlier answer. Record a "not now" or "don't ask again" there, with the date and how often the step had happened as far as you can tell, such as from this session or a transcript scan. Remove the record once the proposal is accepted. After a "not now", propose it again on the same thresholds, counting from that answer. After "don't ask again", do not propose it unless the user raises it.
