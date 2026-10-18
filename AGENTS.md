@@ -155,6 +155,11 @@ Omarchy wrappers already skip installed packages and verify the result.
 
 Treat `data/home/` as an overlay, not a complete home-directory replacement.
 
+When asked to change a file that `data/home/` manages, such as
+`~/.codex/AGENTS.md`, edit the copy under `data/home/`, not the installed file
+in the home directory. The user installs it by running `setup.sh`. Edit the
+installed file only when the user asks.
+
 - Preserve its directory structure when adding files.
 - Do not add secrets, machine-specific credentials, or private keys.
 - Prefer declarative configuration files over imperative setup logic.
