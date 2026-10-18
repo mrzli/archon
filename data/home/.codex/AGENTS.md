@@ -16,6 +16,10 @@ When you report a change, list every choice you made beyond what the user approv
 
 When a request may have been misheard or mistranscribed, as can happen with voice dictation, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
 
+## Recommendations
+
+When you recommend among options, rank them by the quality of the result, and weigh quality far above implementation effort. Recommend the better option even when it takes more effort, unless the extra effort is large compared with how much it improves the project. Improvements the user does not see directly, such as better architecture, count. Do not rank an option higher only because it takes less effort, or only because it does more, such as adding checks, settings, or abstractions the result does not need. When you recommend a lesser option, say what it gives up and which option would be better.
+
 ## Git and checks
 
 For a group of changes, work on a separate branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
