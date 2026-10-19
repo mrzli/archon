@@ -155,6 +155,22 @@ test('Herdr uses exact folder labels and remembers distinct IDs for same-named p
   end
 end
 
+test('Herdr drops a stale remembered ID that a new workspace for another project reuses') do
+  herdr_fixture do |fixture, path|
+    created, stale = %w[cloned/created cloned/stale].map { |relative| workspace_directory(fixture, relative) }
+    selection_path = Archon::WorkspaceProjects.selection_path('herdr', home: fixture[:home], state_home: ENV['XDG_STATE_HOME'])
+    # A fresh session numbers workspaces from the start, so the first new workspace gets the stale ID.
+    Archon::WorkspaceProjects.save_selection(selection_path, { 'projects' => [created, stale], 'workspace_ids' => { stale => 'w7' } })
+    context = { home: fixture[:home], picker: workspace_picker([created, stale]), environment: {}, tty: false }
+    equal 0, Herdr.run_workspaces_herdr(['start'], **context)
+    state = herdr_state(path)
+    equal [created, stale], state['workspaces'].map { |workspace| workspace['cwd'] }
+    equal %w[created stale], state['workspaces'].map { |workspace| workspace['label'] }
+    ids = state['workspaces'].map { |workspace| workspace['workspace_id'] }
+    equal({ created => ids.first, stale => ids.last }, JSON.parse(File.read(selection_path))['workspace_ids'])
+  end
+end
+
 test('Herdr renames a remembered workspace to its folder and preserves manually created same-named workspaces') do
   herdr_fixture do |fixture, path|
     project = workspace_directory(fixture)

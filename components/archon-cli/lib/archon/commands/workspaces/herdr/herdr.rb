@@ -105,7 +105,9 @@ module Archon
         raise "Invalid saved Herdr workspace IDs: #{state_path}"
       end
       remember_workspace = lambda do |definition, workspace|
-        ids = workspace_ids.merge(definition[:directory] => workspace.fetch('workspace_id'))
+        id = workspace.fetch('workspace_id')
+        # A fresh session reuses IDs, so another project's entry for this ID is stale.
+        ids = workspace_ids.reject { |_, saved_id| saved_id == id }.merge(definition[:directory] => id)
         WorkspaceProjects.save_selection(state_path, selection.merge('workspace_ids' => ids))
         workspace_ids.replace(ids)
       end
