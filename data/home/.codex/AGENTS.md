@@ -16,6 +16,12 @@ When you report a change, list every choice you made beyond what the user approv
 
 When a request may have been misheard or mistranscribed, as can happen with voice dictation, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
 
+## Other repositories
+
+When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it with the `handoff` skill without being asked, and give its path with the recommendation. The handoff is an offer, and the user decides whether to use it. Do not write one for a passing idea or an undecided change.
+
+Make a change to a file that another repository manages in that repository. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`, so a change to one of them is a handoff to `archon`, not an edit in place.
+
 ## Recommendations
 
 When you recommend among options, rank them by the quality of the result, and weigh quality far above implementation effort. Recommend the better option even when it takes more effort, unless the extra effort is large compared with how much it improves the project. Improvements the user does not see directly, such as better architecture, count. Do not rank an option higher only because it takes less effort, or only because it does more, such as adding checks, settings, or abstractions the result does not need. When you recommend a lesser option, say what it gives up and which option would be better.
