@@ -12,11 +12,11 @@ test('uniform editor layout rolls back each failed creation operation') do
     ['send-keys', '-t', '=editor:nvim', 'nvim .', 'Enter'],
     ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'lazygit'],
     ['send-keys', '-t', '=editor:lazygit', 'lazygit', 'Enter'],
+    ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'shell'],
     ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'claude'],
     ['send-keys', '-t', '=editor:claude', Workspaces::CLAUDE_COMMAND, 'Enter']
   ]
-  expected.concat([['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'shell'],
-                   ['select-window', '-t', '=editor:nvim']])
+  expected.concat([['select-window', '-t', '=editor:nvim']])
   calls = []
   result = Tmux.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
   equal({ status: 0 }, result)
@@ -64,7 +64,7 @@ test('tmux selects projects, creates uniform Claude windows and preserves them o
     definitions = Tmux.project_definitions([first, second])
     definitions.each do |definition|
       directory = File.join(ENV['TMW_TMUX_STATE'], 'sessions', definition[:session])
-      equal %w[nvim lazygit claude shell], File.readlines(File.join(directory, 'windows')).map { |line| line.split("\t").first }
+      equal %w[nvim lazygit shell claude], File.readlines(File.join(directory, 'windows')).map { |line| line.split("\t").first }
       assert File.read(File.join(directory, 'commands')).include?(Workspaces::CLAUDE_COMMAND)
       equal definition[:directory], File.read(File.join(directory, 'root')).strip
     end

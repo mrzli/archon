@@ -11,7 +11,7 @@ module Archon
 
       Start chooses projects in an interactive checklist. Selections are remembered.
       Restart stops, then starts the remembered selection without the checklist.
-      Each project has Neovim, lazygit, the selected AI tool, and a shell.
+      Each project has Neovim, lazygit, a shell, and the selected AI tool.
     TEXT
   end
 end

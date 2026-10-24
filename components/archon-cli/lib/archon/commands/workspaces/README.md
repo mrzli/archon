@@ -25,7 +25,7 @@ Removed projects are omitted and new ones start unchecked. An accepted empty
 selection is saved and opens nothing. For terminal backends, existing sessions
 survive a later start with a different selection.
 
-Each terminal project has tabs for Neovim, lazygit, an AI tool, and a shell.
+Each terminal project has tabs for Neovim, lazygit, a shell, and an AI tool.
 `--ai claude` is the default and runs `claude --continue`, or `claude` when the
 project has no saved conversation; `--ai codex` runs `codex resume --last`. The
 tool must be on `PATH`, and the option applies to newly created workspaces.

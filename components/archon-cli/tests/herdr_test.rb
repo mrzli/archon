@@ -111,7 +111,7 @@ test('Herdr creates selected uniform workspaces, repeats safely and attaches onl
     state = herdr_state(path)
     equal 1, state['workspaces'].length
     equal File.basename(project), state['workspaces'].first['label']
-    equal %w[nvim lazygit claude shell], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
+    equal %w[nvim lazygit shell claude], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
     equal ['nvim .', 'lazygit', Archon::Workspaces::CLAUDE_COMMAND], state['workspaces'].first['tabs'].flat_map { |tab| tab['commands'] }
     equal project, state['workspaces'].first['cwd']
     equal 0, state['attachments']
@@ -346,7 +346,7 @@ test('Herdr kill then start creates only newly selected projects and launches th
     workspaces = herdr_state(path)['workspaces']
     equal selected, workspaces.map { |workspace| workspace['cwd'] }
     workspaces.each do |workspace|
-      equal %w[nvim lazygit claude shell], workspace['tabs'].map { |tab| tab['label'] }
+      equal %w[nvim lazygit shell claude], workspace['tabs'].map { |tab| tab['label'] }
       equal ['nvim .', 'lazygit', Archon::Workspaces::CLAUDE_COMMAND], workspace['tabs'].flat_map { |tab| tab['commands'] }
     end
   end

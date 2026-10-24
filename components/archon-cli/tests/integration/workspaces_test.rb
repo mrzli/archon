@@ -24,7 +24,7 @@ test('real tmux project layouts are tagged, repeat safely, and stop preserves un
       definitions.each do |definition|
         result = invoke.call(['list-windows', '-t', "=#{definition[:session]}", '-F', '#{window_name}'])
         equal 0, result[:status]
-        equal %w[nvim lazygit claude shell], result[:stdout].lines.map(&:strip)
+        equal %w[nvim lazygit shell claude], result[:stdout].lines.map(&:strip)
         result = invoke.call(['show-options', '-qv', '-t', "=#{definition[:session]}:", '@archon-managed'])
         equal 0, result[:status]
         equal '1', result[:stdout].strip

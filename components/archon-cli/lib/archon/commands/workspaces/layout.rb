@@ -9,7 +9,7 @@ module Archon
     TAB_COMMANDS = { 'nvim' => 'nvim .', 'lazygit' => 'lazygit' }.merge(AI_COMMANDS).freeze
 
     def editor_tabs(ai: DEFAULT_AI)
-      %W[nvim lazygit #{ai} shell].map { |name| { name: name, command: TAB_COMMANDS[name] }.compact }
+      %W[nvim lazygit shell #{ai}].map { |name| { name: name, command: TAB_COMMANDS[name] }.compact }
     end
   end
 end
