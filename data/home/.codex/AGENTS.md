@@ -47,3 +47,5 @@ When you repeat such a step in a project, propose adding it to the project's too
 ## Project knowledge
 
 Keep project knowledge, such as rules, conventions, decisions, and design notes, in the project's `AGENTS.md` or documentation, not in an agent's private memory, so other people and agents that use the project see it. Use private memory only for the user's personal preferences.
+
+Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Put transient, generated, or machine-specific files in `.scratch/temp/`, which the project's `.gitignore` excludes.
