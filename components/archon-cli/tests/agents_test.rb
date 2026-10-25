@@ -30,12 +30,13 @@ test('agents reload restarts agents in a new process only after setup succeeds')
       calls << [command, arguments, stdio]
       { status: restart_status }
     end
-    status, _, error = capture do
+    status, output, error = capture do
       Archon::Agents.run_agents(['reload'], setup: setup, run: run, restart: -> { raise 'restart must run in a new process' })
     end
     equal expected, status
     restart = [['archon', %w[agents restart], :inherit]]
     equal [[:setup, []], *(setup_status == 0 ? restart : [])], calls
+    equal setup_status == 0 ? "\n" : '', output
     equal setup_status != 0, error.include?('Agent sessions were not restarted.')
   end
 end

@@ -49,6 +49,8 @@ module Archon
         warn 'Agent sessions were not restarted.'
         return status
       end
+      # Separates the restart output from setup's.
+      puts
       # A new process loads the CLI files that setup just installed.
       result = run.call('archon', %w[agents restart], stdio: :inherit)
       if result[:error]
