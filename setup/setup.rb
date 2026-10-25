@@ -213,13 +213,15 @@ end
 def install_claude_plugins
   log_step 'Installing Claude Code plugins'
   marketplace = 'claude-plugins-official'
+  # Outside the terminal's foreground, Herdr does not flag this pane as a Claude session.
+  claude = %w[setsid -w claude]
   # A fresh Claude Code install does not know this marketplace yet.
-  if JSON.parse(capture('claude', 'plugin', 'marketplace', 'list', '--json')).any? { |entry| entry['name'] == marketplace }
+  if JSON.parse(capture(*claude, 'plugin', 'marketplace', 'list', '--json')).any? { |entry| entry['name'] == marketplace }
     log_info "#{marketplace} marketplace is already added; skipping"
   else
-    run 'claude', 'plugin', 'marketplace', 'add', "anthropics/#{marketplace}"
+    run(*claude, 'plugin', 'marketplace', 'add', "anthropics/#{marketplace}")
   end
-  installed = JSON.parse(capture('claude', 'plugin', 'list', '--json')).map { |plugin| plugin['id'] }
+  installed = JSON.parse(capture(*claude, 'plugin', 'list', '--json')).map { |plugin| plugin['id'] }
   [
     'clangd-lsp', # C/C++ code intelligence; clangd comes from Omarchy's clang package
     'ruby-lsp'    # Ruby code intelligence; uses the ruby-lsp gem
@@ -228,7 +230,7 @@ def install_claude_plugins
     if installed.include?(plugin)
       log_info "#{plugin} is already installed; skipping"
     else
-      run 'claude', 'plugin', 'install', plugin, '--scope', 'user'
+      run(*claude, 'plugin', 'install', plugin, '--scope', 'user')
     end
   end
 end

@@ -20,6 +20,8 @@ when 'codex'
     puts JSON.generate({ id: request['id'], result: {} })
     STDOUT.flush
   end
+when 'setsid'
+  exec(*ARGV.drop_while { |argument| argument.start_with?('-') })
 when 'id'
   puts(ARGV.first == '-un' ? 'developer' : ARGV.first == '-u' ? '1000' : File.read("#{state}/groups"))
 when 'cat'

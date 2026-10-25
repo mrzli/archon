@@ -35,10 +35,11 @@ check('Ruby LSP and Claude Code plugins install once on a fresh Claude Code', :t
     assert status.success?, error
   end
   installs = commands(env).reject { |args| args.include?('list') }
+  claude = [%w[plugin marketplace add anthropics/claude-plugins-official],
+            %w[plugin install clangd-lsp@claude-plugins-official --scope user],
+            %w[plugin install ruby-lsp@claude-plugins-official --scope user]]
   assert installs == [%w[mise exec ruby -- gem install ruby-lsp],
-                      %w[claude plugin marketplace add anthropics/claude-plugins-official],
-                      %w[claude plugin install clangd-lsp@claude-plugins-official --scope user],
-                      %w[claude plugin install ruby-lsp@claude-plugins-official --scope user]]
+                      *claude.flat_map { |arguments| [%w[setsid -w claude] + arguments, ['claude', *arguments]] }]
 end
 
 check('web app removal skips absent apps and suppresses removal notifications', :applications) do |repo, home, _bin, env|
