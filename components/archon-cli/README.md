@@ -26,7 +26,7 @@ archon admin battery status
 archon admin battery conservation <on|off>
 archon admin github ssh <create|test>
 archon admin voice <start|stop>
-archon agents restart
+archon agents <reload|restart>
 archon drives <eject|list>
 archon projects <command> [options]
 archon projects libs <build|graph>
@@ -45,7 +45,7 @@ Direct subcommands also have short aliases: `a` for `admin`, `d` for `drives`, `
 
 ```bash
 arc a voice stop
-arc g restart
+arc g reload
 arc d eject
 arc p status
 arc p libs build
@@ -61,7 +61,8 @@ Workspace lifecycle commands require a backend: `herdr` (alias `h`), `tmux`
 `workspaces list` shows discovered project directories without a backend. Other nested commands keep their full names.
 
 `archon setup` runs `setup.sh` from the Archon checkout at
-`~/projects/personal/mrzli/archon`, from any directory.
+`~/projects/personal/mrzli/archon`, from any directory. To restart running agent
+sessions afterwards as well, use `archon agents reload`.
 
 Commands use these exit statuses:
 

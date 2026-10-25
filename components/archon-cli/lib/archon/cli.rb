@@ -13,7 +13,7 @@ module Archon
 
     Commands:
       admin (a)                 Manage workstation services
-      agents (g)                Restart Claude Code and Codex CLI sessions
+      agents (g)                Restart agent sessions, optionally after setup
       drives (d)                List or eject removable drives
       help (h)                  Show this help
       projects (p)              Manage personal project repositories

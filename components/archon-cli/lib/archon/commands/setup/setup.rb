@@ -10,6 +10,7 @@ module Archon
       Usage: archon setup
 
       Run Archon setup from ~/#{REPOSITORY}. Works from any directory.
+      Running agent sessions keep their configuration; use archon agents reload to restart them as well.
     TEXT
 
     def run_setup(arguments, home: Dir.home, run: Shared.method(:run_process))

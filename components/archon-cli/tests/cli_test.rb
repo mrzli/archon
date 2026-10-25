@@ -37,14 +37,14 @@ test('help, aliases, and nested command help work without external commands') do
     %w[git gh bun tmux herdr].each do |name|
       write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
     end
-    [['d', 'drives', ['--help']], ['g', 'agents', ['--help']], ['g', 'agents', %w[help restart]], ['h', 'help', []], ['p', 'projects', %w[help status]], ['p', 'projects', %w[libs help build]],
+    [['d', 'drives', ['--help']], ['g', 'agents', ['--help']], ['g', 'agents', %w[help reload]], ['h', 'help', []], ['p', 'projects', %w[help status]], ['p', 'projects', %w[libs help build]],
      ['w', 'workspaces', ['--help']]].each do |short, full, options|
       result = run_cli([short, *options])
       equal 0, result[:status]
       equal result, run_cli([full, *options])
       assert result[:stdout].start_with?("Usage: archon #{full} ") if full.start_with?('workspace')
     end
-    [[], ['agents'], %w[agents restart], ['projects'], %w[projects libs], ['setup'], ['workspaces']].each do |prefix|
+    [[], ['agents'], %w[agents restart], %w[agents reload], ['projects'], %w[projects libs], ['setup'], ['workspaces']].each do |prefix|
       %w[-h --help].each { |help| equal 0, run_cli([*prefix, help])[:status] }
     end
     { 'h' => 'herdr', 't' => 'tmux', 'vsc' => 'visual-studio-code' }.each do |short, full|

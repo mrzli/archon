@@ -2,15 +2,22 @@
 
 ```bash
 arc agents restart
+arc agents reload
 
 # Short form
 arc g restart
+arc g reload
 ```
 
 `restart` restarts every Claude Code session and then every Codex CLI session
 running in a Herdr or tmux pane. Both agents are always handled; an agent with
 no running sessions just reports that. A failed Claude restart does not prevent
 the Codex restart, but the command then exits with status `1`.
+
+`reload` runs `archon setup`, then `archon agents restart` in a new process so
+the restart uses the CLI that setup just installed. Use it after changing
+Archon or the skills repository, so running sessions pick up the new skills,
+agent instructions, and settings. If setup fails, no session is restarted.
 
 There is no selection or confirmation. Run it from a separate shell with the
 sessions idle; unsent drafts are lost. Each session gets a few seconds to exit
