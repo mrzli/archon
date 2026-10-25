@@ -30,6 +30,7 @@ archon agents restart
 archon drives <eject|list>
 archon projects <command> [options]
 archon projects libs <build|graph>
+archon setup
 archon workspaces herdr <start|stop|kill> [options]
 archon workspaces list
 archon workspaces tmux <start|stop|kill> [options]
@@ -58,6 +59,9 @@ arc h
 Workspace lifecycle commands require a backend: `herdr` (alias `h`), `tmux`
 (alias `t`), or `visual-studio-code` (alias `vsc`). There is no default backend.
 `workspaces list` shows discovered project directories without a backend. Other nested commands keep their full names.
+
+`archon setup` runs `setup.sh` from the Archon checkout at
+`~/projects/personal/mrzli/archon`, from any directory.
 
 Commands use these exit statuses:
 

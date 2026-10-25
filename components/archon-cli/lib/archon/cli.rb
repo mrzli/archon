@@ -2,6 +2,7 @@ require_relative 'commands/admin/admin'
 require_relative 'commands/agents/agents'
 require_relative 'commands/drives/drives'
 require_relative 'commands/projects/projects'
+require_relative 'commands/setup/setup'
 require_relative 'commands/workspaces/workspaces'
 
 module Archon
@@ -16,6 +17,7 @@ module Archon
       drives (d)                List or eject removable drives
       help (h)                  Show this help
       projects (p)              Manage personal project repositories
+      setup                     Run Archon setup from any directory
       workspaces (w)            Manage Herdr, tmux, or VS Code workspaces
   TEXT
 
@@ -27,6 +29,7 @@ module Archon
     when 'agents' then return Agents.run_agents(options)
     when 'drives' then return Drives.run_drives(options)
     when 'projects' then return Projects.run_projects(options)
+    when 'setup' then return Setup.run_setup(options)
     when 'workspaces' then return Workspaces.run_workspaces(options)
     when 'help', '-h', '--help'
       if options.empty?

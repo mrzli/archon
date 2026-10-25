@@ -9,7 +9,7 @@ usage_cases = [%w[h extra], %w[p s], %w[l b], %w[libs graph], %w[w s], %w[wt s],
                ['visual-studio-code'], ['vsc'], ['workspace'], ['workspaces'], ['workspaces-herdr'], ['workspaces-tmux'], ['wh'],
                %w[workspaces start], %w[workspaces stop], %w[workspaces kill],
                %w[workspaces unknown], %w[workspaces help extra], %w[agents], %w[agents unknown],
-               %w[agents restart extra], %w[agents help extra], %w[claude restart], %w[codex restart]]
+               %w[agents restart extra], %w[agents help extra], %w[setup extra], %w[claude restart], %w[codex restart]]
 %w[herdr tmux].each do |backend|
   usage_cases.concat([['workspaces', backend], ['workspaces', backend, 'launch'],
                       ['workspaces', backend, 'start', '--group', 'hubs'],
@@ -44,7 +44,7 @@ test('help, aliases, and nested command help work without external commands') do
       equal result, run_cli([full, *options])
       assert result[:stdout].start_with?("Usage: archon #{full} ") if full.start_with?('workspace')
     end
-    [[], ['agents'], %w[agents restart], ['projects'], %w[projects libs], ['workspaces']].each do |prefix|
+    [[], ['agents'], %w[agents restart], ['projects'], %w[projects libs], ['setup'], ['workspaces']].each do |prefix|
       %w[-h --help].each { |help| equal 0, run_cli([*prefix, help])[:status] }
     end
     { 'h' => 'herdr', 't' => 'tmux', 'vsc' => 'visual-studio-code' }.each do |short, full|
