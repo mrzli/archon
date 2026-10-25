@@ -63,7 +63,10 @@ module Archon
             begin
               herdr(run, name, 'agent', 'list').fetch('agents').each do |agent|
                 next unless agent['agent'] == program
-                panes << { backend: :herdr, server: name, id: agent.fetch('pane_id') }
+                pane = { backend: :herdr, server: name, id: agent.fetch('pane_id') }
+                # Herdr keeps the flag until the pane returns to its shell, for example while
+                # setup continues after running `claude plugin`.
+                panes << pane if process_info(pane, program, run: run)&.key?(:argv)
               end
             rescue StandardError => error
               errors << "Herdr #{name}: #{error.message}"

@@ -119,6 +119,9 @@ test('discovery reports broken Herdr sessions and continues with the others') do
         { status: 0, stdout: JSON.generate(sessions: [{ name: 'broken', running: true }, { name: 'ok', running: true }]) }
       elsif arguments[1] == 'broken'
         { status: 1, stdout: '', stderr: 'connection failed' }
+      elsif arguments.include?('process-info')
+        { status: 0, stdout: JSON.generate(result: { process_info: { shell_pid: 1, foreground_process_group_id: 2,
+          foreground_processes: [{ pid: 2, argv: %w[codex], cwd: '/project' }] } }) }
       else
         { status: 0, stdout: JSON.generate(result: { agents: [{ agent: 'codex', pane_id: 'w1:p2' }] }) }
       end
@@ -197,6 +200,26 @@ test('Herdr adapter discovers all running sessions and uses explicit pane target
     equal 2, Archon::AgentTerminals.process_info(pane, 'codex', run: run)[:pid]
     Archon::AgentTerminals.submit(pane, 'codex resume --last', run: run)
     equal ['herdr', ['--session', 'one', 'pane', 'run', 'w1:p2', 'codex resume --last']], calls.last
+  end
+end
+
+test('Herdr discovery skips a flagged pane whose foreground process is not the agent') do
+  fixture do |fixture|
+    run = lambda do |_, arguments|
+      response = if arguments == %w[session list --json]
+        { sessions: [{ name: 'one', running: true }] }
+      elsif arguments.last(2) == %w[agent list]
+        { result: { agents: [{ agent: 'claude', pane_id: 'w1:p1' }, { agent: 'claude', pane_id: 'w1:p2' }] } }
+      else
+        argv = arguments.last == 'w1:p1' ? %w[claude --resume id] : %w[ruby /home/user/.local/bin/archon agents reload]
+        { result: { process_info: { shell_pid: 1, foreground_process_group_id: 2,
+                    foreground_processes: [{ pid: 2, argv: argv, cwd: '/project' }] } } }
+      end
+      { status: 0, stderr: '', stdout: JSON.generate(response) }
+    end
+    panes, errors = Archon::AgentTerminals.discover('claude', run: run, env: { 'TMUX_TMPDIR' => fixture[:root] })
+    equal [], errors
+    equal %w[w1:p1], panes.map { |pane| pane[:id] }
   end
 end
 
