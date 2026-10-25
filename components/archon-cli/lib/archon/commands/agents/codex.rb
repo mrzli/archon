@@ -4,13 +4,6 @@ module Archon
   module Codex
     extend self
 
-    HELP = <<~TEXT.chomp.freeze
-      Usage: archon codex restart
-
-      Restart all Codex CLI sessions in running Herdr and tmux sessions.
-      Run from a separate shell with Codex sessions idle and input boxes empty.
-      The latest conversation in each directory resumes in its existing pane. No selection or confirmation.
-    TEXT
     VALUE_OPTIONS = %w[-c --config --enable --disable --remote --remote-auth-token-env
                        -m --model --local-provider -p --profile -s --sandbox --add-dir
                        -a --ask-for-approval].freeze
@@ -20,10 +13,10 @@ module Archon
                          update doctor sandbox debug apply a queue archive delete migrate-rollouts
                          unarchive cloud exec-server features help].freeze
 
-    def run_codex(arguments, terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
-                  wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
-      AgentRestart.run_restart_command(arguments, help: HELP, label: 'Codex', program: 'codex', relaunch: method(:relaunch_command),
-                                       terminals: terminals, run: run, wait: wait, term_grace: term_grace)
+    def restart(terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
+                wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
+      AgentRestart.restart(label: 'Codex', program: 'codex', relaunch: method(:relaunch_command),
+                           terminals: terminals, run: run, wait: wait, term_grace: term_grace)
     end
 
     def resume_options(argv)

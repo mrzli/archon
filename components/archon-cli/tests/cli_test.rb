@@ -8,7 +8,8 @@ end
 usage_cases = [%w[h extra], %w[p s], %w[l b], %w[libs graph], %w[w s], %w[wt s], [], ['unknown'], %w[help extra],
                ['visual-studio-code'], ['vsc'], ['workspace'], ['workspaces'], ['workspaces-herdr'], ['workspaces-tmux'], ['wh'],
                %w[workspaces start], %w[workspaces stop], %w[workspaces kill],
-               %w[workspaces unknown], %w[workspaces help extra]]
+               %w[workspaces unknown], %w[workspaces help extra], %w[agents], %w[agents unknown],
+               %w[agents restart extra], %w[agents help extra], %w[claude restart], %w[codex restart]]
 %w[herdr tmux].each do |backend|
   usage_cases.concat([['workspaces', backend], ['workspaces', backend, 'launch'],
                       ['workspaces', backend, 'start', '--group', 'hubs'],
@@ -36,14 +37,14 @@ test('help, aliases, and nested command help work without external commands') do
     %w[git gh bun tmux herdr].each do |name|
       write_executable(File.join(fixture[:bin], name), "#!/bin/sh\necho unexpected >> \"$HOME/unexpected-command\"\nexit 99\n")
     end
-    [['d', 'drives', ['--help']], ['h', 'help', []], ['p', 'projects', %w[help status]], ['p', 'projects', %w[libs help build]],
+    [['d', 'drives', ['--help']], ['g', 'agents', ['--help']], ['g', 'agents', %w[help restart]], ['h', 'help', []], ['p', 'projects', %w[help status]], ['p', 'projects', %w[libs help build]],
      ['w', 'workspaces', ['--help']]].each do |short, full, options|
       result = run_cli([short, *options])
       equal 0, result[:status]
       equal result, run_cli([full, *options])
       assert result[:stdout].start_with?("Usage: archon #{full} ") if full.start_with?('workspace')
     end
-    [[], ['projects'], %w[projects libs], ['workspaces']].each do |prefix|
+    [[], ['agents'], %w[agents restart], ['projects'], %w[projects libs], ['workspaces']].each do |prefix|
       %w[-h --help].each { |help| equal 0, run_cli([*prefix, help])[:status] }
     end
     { 'h' => 'herdr', 't' => 'tmux', 'vsc' => 'visual-studio-code' }.each do |short, full|

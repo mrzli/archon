@@ -8,16 +8,8 @@ module Archon
     # The wait ends as soon as every process has exited.
     TERM_GRACE = 3
 
-    # Runs `<agent> restart`. relaunch returns the command words that resume one agent process.
-    def run_restart_command(arguments, help:, label:, program:, relaunch:, terminals:, run:, wait:, term_grace:)
-      if [%w[help], %w[-h], %w[--help], %w[restart --help], %w[restart -h]].include?(arguments)
-        puts help
-        return 0
-      end
-      unless arguments == ['restart']
-        warn help
-        return 2
-      end
+    # Restarts one agent's sessions. relaunch returns the command words that resume one agent process.
+    def restart(label:, program:, relaunch:, terminals:, run:, wait:, term_grace:)
       prepare = lambda do |pane|
         info = terminals.process_info(pane, program, run: run)
         raise "No foreground #{label} process; session left running." unless info && info[:argv]

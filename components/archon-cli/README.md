@@ -26,8 +26,7 @@ archon admin battery status
 archon admin battery conservation <on|off>
 archon admin github ssh <create|test>
 archon admin voice <start|stop>
-archon claude restart
-archon codex restart
+archon agents restart
 archon drives <eject|list>
 archon projects <command> [options]
 archon projects libs <build|graph>
@@ -40,11 +39,12 @@ archon workspaces visual-studio-code <start|stop>
 `arc` is an exact alias for `archon`, so `arc projects status` and
 `archon projects status` are equivalent.
 
-Direct subcommands also have short aliases: `a` for `admin`, `d` for `drives`, `h` for `help`,
+Direct subcommands also have short aliases: `a` for `admin`, `d` for `drives`, `g` for `agents`, `h` for `help`,
 `p` for `projects`, and `w` for `workspaces`. These work with both `archon` and `arc`, for example:
 
 ```bash
 arc a voice stop
+arc g restart
 arc d eject
 arc p status
 arc p libs build
@@ -69,8 +69,7 @@ Commands use these exit statuses:
 Detailed behavior is documented with each command collection:
 
 - [Administration](./lib/archon/commands/admin/README.md)
-- [Claude](./lib/archon/commands/claude/README.md)
-- [Codex](./lib/archon/commands/codex/README.md)
+- [Agents](./lib/archon/commands/agents/README.md)
 - [Drives](./lib/archon/commands/drives/README.md)
 - [Projects](./lib/archon/commands/projects/README.md), including
   [libraries](./lib/archon/commands/projects/libs/README.md)

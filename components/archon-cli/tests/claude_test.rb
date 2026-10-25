@@ -45,8 +45,7 @@ end
 
 def restart_claude(home, terminals, wait: -> {})
   capture do
-    Archon::Claude.run_claude(['restart'], home: home, terminals: terminals,
-                              run: ->(*) { raise 'unexpected external command' }, wait: wait)
+    Archon::Claude.restart(home: home, terminals: terminals, run: ->(*) { raise 'unexpected external command' }, wait: wait)
   end
 end
 
@@ -106,17 +105,4 @@ test('Claude launch options drop selectors and prompts and refuse unsupported la
   raises(/Unsupported launch option/) { Archon::Claude.launch_options(%w[claude --worktree]) }
   raises(/Unsupported launch option/) { Archon::Claude.launch_options(%w[claude -p hello]) }
   raises(/Unsupported Claude command/) { Archon::Claude.launch_options(%w[claude mcp list]) }
-end
-
-test('Claude usage never invokes terminal discovery') do
-  fixture do
-    [[], ['unknown'], ['restart', 'extra']].each do |arguments|
-      result = run_archon(['claude', *arguments])
-      equal 2, result[:status]
-      assert result[:stderr].include?('Usage: archon claude restart')
-    end
-    [%w[--help], %w[help], %w[restart --help]].each do |arguments|
-      equal 0, run_archon(['claude', *arguments])[:status]
-    end
-  end
 end

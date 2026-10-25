@@ -58,7 +58,7 @@ test('tmux restart resumes the recorded Claude session after a clean exit in the
       tmux.call('send-keys', '-t', pane, '-l', "#{environment}; claude --model opus 'first prompt'")
       tmux.call('send-keys', '-t', pane, 'Enter')
       equal 1, wait_for.call(1).length
-      result = run_archon(%w[claude restart], 'TMUX' => "#{socket},1,0", 'TMUX_TMPDIR' => fixture[:root])
+      result = run_archon(%w[agents restart], 'TMUX' => "#{socket},1,0", 'TMUX_TMPDIR' => fixture[:root])
       equal 0, result[:status]
       assert result[:stdout].include?('Sent restart commands to 1/1 Claude panes.'), result.inspect
       first, exit_event, second = wait_for.call(3)

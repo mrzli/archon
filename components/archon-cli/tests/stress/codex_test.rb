@@ -17,7 +17,7 @@ test('twelve-pane restart returns before delayed Codex startup completes') do
     end
     equal 12, File.readlines(log).length
     started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    result = run_archon(%w[codex restart], 'TMUX' => "#{fixture[:root]}/codex.sock,1,0", 'TMUX_TMPDIR' => fixture[:root])
+    result = run_archon(%w[agents restart], 'TMUX' => "#{fixture[:root]}/codex.sock,1,0", 'TMUX_TMPDIR' => fixture[:root])
     elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
     equal 0, result[:status]
     assert result[:stdout].include?('Sent restart commands to 12/12'), result.inspect

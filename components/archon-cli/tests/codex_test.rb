@@ -39,15 +39,15 @@ end
 
 def restart_codex(terminals, term_grace: 0)
   capture do
-    Archon::Codex.run_codex(['restart'], terminals: terminals, run: ->(*) { raise 'unexpected external command' },
-                           wait: -> {}, term_grace: term_grace)
+    Archon::Codex.restart(terminals: terminals, run: ->(*) { raise 'unexpected external command' },
+                         wait: -> {}, term_grace: term_grace)
   end
 end
 
 test('Codex gets a grace period after TERM before KILL is used') do
   terminals, states = codex_terminals(count: 1, exit_after: 5)
   status, = capture do
-    Archon::Codex.run_codex(['restart'], terminals: terminals, run: ->(*) { raise 'unexpected external command' }, wait: -> {})
+    Archon::Codex.restart(terminals: terminals, run: ->(*) { raise 'unexpected external command' }, wait: -> {})
   end
   equal 0, status
   assert !states.first[:calls].include?('KILL')
@@ -163,19 +163,6 @@ test('Codex discovery ignores stopped tmux servers but reports real discovery er
   end
 end
 
-test('Codex usage never invokes terminal discovery') do
-  fixture do
-    [[], ['unknown'], ['restart', 'extra']].each do |arguments|
-      result = run_archon(['codex', *arguments])
-      equal 2, result[:status]
-      assert result[:stderr].include?('Usage: archon codex restart')
-    end
-    [%w[--help], %w[help], %w[restart --help]].each do |arguments|
-      equal 0, run_archon(['codex', *arguments])[:status]
-    end
-  end
-end
-
 test('restart treats only an idle bash prompt as the pane shell') do
   [['bash', 100, { shell: true }], ['zsh', 100, nil], ['bash', 200, nil]].each do |name, foreground, expected|
     run = lambda do |_, arguments|
@@ -224,8 +211,8 @@ test('the entire batch is stopped before any launch, with one shared wait') do
   end
   waits = 0
   status, = capture do
-    Archon::Codex.run_codex(['restart'], terminals: terminals, run: ->(*) { raise 'unexpected command' },
-                           wait: -> { waits += 1 })
+    Archon::Codex.restart(terminals: terminals, run: ->(*) { raise 'unexpected command' },
+                         wait: -> { waits += 1 })
   end
   equal 0, status
   equal 20, submissions
@@ -249,7 +236,7 @@ test('Ctrl+C during terminal discovery exits quietly with status 130') do
   fixture do |fixture|
     marker = File.join(fixture[:root], 'discovery-started')
     write_executable(File.join(fixture[:bin], 'herdr'), "#!/bin/sh\ntouch #{Shellwords.escape(marker)}\nexec sleep 20\n")
-    Open3.popen3(RbConfig.ruby, ARCHON, 'codex', 'restart', pgroup: true) do |input, output, error, child|
+    Open3.popen3(RbConfig.ruby, ARCHON, 'agents', 'restart', pgroup: true) do |input, output, error, child|
       input.close
       begin
         100.times do
@@ -261,7 +248,7 @@ test('Ctrl+C during terminal discovery exits quietly with status 130') do
         assert child.join(3), 'cancellation did not finish promptly'
         equal 130, child.value.exitstatus
         equal '', output.read
-        equal "Codex restart cancelled.\n", error.read
+        equal "Claude restart cancelled.\n", error.read
       ensure
         if child.alive?
           Process.kill('KILL', -child.pid)

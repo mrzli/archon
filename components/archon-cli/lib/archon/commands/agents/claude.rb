@@ -5,13 +5,6 @@ module Archon
   module Claude
     extend self
 
-    HELP = <<~TEXT.chomp.freeze
-      Usage: archon claude restart
-
-      Restart all Claude Code sessions in running Herdr and tmux sessions.
-      Run from a separate shell with Claude sessions idle and input boxes empty.
-      Each conversation resumes in its existing pane. No selection or confirmation.
-    TEXT
     VALUE_OPTIONS = %w[--agent --agents --append-system-prompt --effort --fallback-model --model -n --name
                        --permission-mode --plugin-dir --setting-sources --settings --system-prompt].freeze
     LIST_OPTIONS = %w[--add-dir --allowedTools --allowed-tools --disallowedTools --disallowed-tools
@@ -21,11 +14,10 @@ module Archon
     COMMANDS = %w[agents attach auth auto-mode doctor gateway import install kill logs mcp plugin plugins purge
                   respawn rm setup-token stop ultrareview update upgrade].freeze
 
-    def run_claude(arguments, home: Dir.home, terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
-                   wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
-      AgentRestart.run_restart_command(arguments, help: HELP, label: 'Claude', program: 'claude',
-                                       relaunch: ->(info) { relaunch_command(info, home) },
-                                       terminals: terminals, run: run, wait: wait, term_grace: term_grace)
+    def restart(home: Dir.home, terminals: AgentTerminals, run: AgentTerminals.method(:run_process),
+                wait: -> { sleep 0.1 }, term_grace: AgentRestart::TERM_GRACE)
+      AgentRestart.restart(label: 'Claude', program: 'claude', relaunch: ->(info) { relaunch_command(info, home) },
+                           terminals: terminals, run: run, wait: wait, term_grace: term_grace)
     end
 
     def launch_options(argv)

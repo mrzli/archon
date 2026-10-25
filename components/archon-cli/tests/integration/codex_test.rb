@@ -16,7 +16,7 @@ test('tmux restart skips stale sockets and preserves real panes, shell processes
       sleep 0.02
     end
     assert File.exist?(log), 'fake Codex did not start'
-    result = run_archon(%w[codex restart], 'TMUX' => "#{fixture[:root]}/codex.sock,1,0", 'TMUX_TMPDIR' => fixture[:root])
+    result = run_archon(%w[agents restart], 'TMUX' => "#{fixture[:root]}/codex.sock,1,0", 'TMUX_TMPDIR' => fixture[:root])
     equal 0, result[:status]
     assert result[:stdout].include?('Sent restart commands to 1/1'), result.inspect
     100.times do
