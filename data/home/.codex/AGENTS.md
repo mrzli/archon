@@ -30,6 +30,8 @@ Make a change to a file that another repository manages in that repository. `/ho
 
 When you recommend among options, rank them by the quality of the result, and weigh quality far above implementation effort. Recommend the better option even when it takes more effort, unless the extra effort is large compared with how much it improves the project. Improvements the user does not see directly, such as better architecture, count. Do not rank an option higher only because it takes less effort, or only because it does more, such as adding checks, settings, or abstractions the result does not need. When you recommend a lesser option, say what it gives up and which option would be better.
 
+When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Weigh one-off transition work far below the end result, so it does not read as a drawback of the option.
+
 ## Git and checks
 
 For a group of changes, work on a separate branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
