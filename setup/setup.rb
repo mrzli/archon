@@ -140,6 +140,7 @@ def install_packages
     'dbeaver',     # Database client
     'img2pdf',     # Convert images to PDF
     'perf',        # Linux kernel performance profiler
+    'ccache',      # Compiler cache, for C++ builds such as trading-app's
     # Headless GUI tests: virtual X server, single-app Wayland compositor, and output configuration
     'xorg-server-xvfb', 'cage', 'wlr-randr',
     # LaTeX-to-PDF compilation, recommended fonts, and latexmk build automation
