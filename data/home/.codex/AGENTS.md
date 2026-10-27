@@ -16,7 +16,7 @@ A question is not a request to act. Answer it and wait for an instruction. Do no
 
 Do not add large or lasting structure, such as a new module, package, or service, only because an approved change makes it possible. Ask first, even inside an approved item.
 
-When you report a change, list every choice you made beyond what the user approved, or say there were none, so the user can accept or reject each one. A design change is a choice even inside a tidy-up. Treat an uncertain case as a choice. Doing what an approved change mechanically requires, such as updating stale references, is not a choice.
+When you report a change, sort the choices you made beyond what the user approved into three levels, or say there were none. Leave out routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references. List reasonable, easily reversed choices once, as taken. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left. Ask about choices that affect names, user-visible behavior, interfaces, scope, persisted data, or anything hard to reverse, and put them first in the report. Keep each open until the user answers, and never treat silence as accepting one. A design change is at least a listed choice, even inside a tidy-up. When unsure of the level, use the higher one.
 
 When a request may have been misheard or mistranscribed, as can happen with voice dictation, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
 
