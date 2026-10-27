@@ -22,7 +22,7 @@ When a request may have been misheard or mistranscribed, as can happen with voic
 
 ## Other repositories
 
-When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it with the `handoff` skill without being asked, and give its path with the recommendation. The handoff is an offer, and the user decides whether to use it. In the handoff, ask only for the change to the receiving repository's files, not for applying or deploying it, because that repository's instructions decide how and when a change is applied. An agent that receives a handoff follows its repository's instructions where the handoff conflicts with them. Do not write one for a passing idea or an undecided change.
+When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it with the `handoff` skill without being asked, and give its path with the recommendation. The handoff is an offer, and the user decides whether to use it. An agent that receives a handoff follows its repository's instructions where the handoff conflicts with them. Do not write one for a passing idea or an undecided change.
 
 Make a change to a file that another repository manages in that repository. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`, so a change to one of them is a handoff to `archon`, not an edit in place.
 
