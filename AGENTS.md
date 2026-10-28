@@ -5,8 +5,8 @@ workstation. Target Ruby, Bash, and the current Omarchy environment. Do not
 add cross-platform abstractions.
 
 - `setup.sh` bootstraps Ruby and runs the setup in `setup/`, the main
-  provisioning entry point. [The setup guide](docs/setup.md) is the user's
-  procedure for installing a new machine.
+  provisioning entry point. [The installation guide](docs/installation.md) is
+  the user's procedure for installing a new machine.
 - `data/home/` mirrors files that setup copies into the user's home directory
   ([AGENTS.md](data/AGENTS.md)).
 - `components/archon-cli/` is the `archon` command-line program

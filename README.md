@@ -13,9 +13,10 @@ other Omarchy machine. Day to day, I work on many repositories across several
 GitHub organizations, often with several AI coding agents running at once, and
 the Archon CLI handles that work.
 
-## What setup does
+## Setup
 
-Running `setup.sh`, or `arc setup` once the CLI is installed:
+`setup.sh`, or `arc setup` once the CLI is installed, applies my configuration
+to the machine:
 
 - installs applications, packages, language runtimes, and developer tools, and
   removes Omarchy defaults I don't use
@@ -24,13 +25,16 @@ Running `setup.sh`, or `arc setup` once the CLI is installed:
 - installs the Archon CLI and my agent skills
 - sets up rootless Docker and voice dictation
 
-Setup is idempotent. I can run it again at any time, and it changes only what
-differs from the desired state.
+Setup is idempotent. I run it after every change, and a run on a configured
+machine takes a few seconds.
 
-A few manual steps remain, such as connecting to Wi-Fi, signing in to browser
-accounts, and adding the GitHub SSH key. I left them manual on purpose, and
-they take about five minutes. The [setup guide](docs/setup.md) covers the full
-procedure for a new machine.
+## Installing a new machine
+
+A new machine needs a one-time installation: write the Omarchy ISO to a USB
+stick, install Omarchy, clone this repository, and run setup. A few manual
+steps follow, such as connecting to Wi-Fi, signing in to browser accounts, and
+adding the GitHub SSH key. I left them manual on purpose, and they take about
+five minutes. The [installation guide](docs/installation.md) has the details.
 
 ## Archon CLI
 

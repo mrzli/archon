@@ -1,4 +1,4 @@
-# Setup
+# Installing a new machine
 
 You can follow instructions from [here](https://learn.omacom.io/2/the-omarchy-manual/50/getting-started).
 
