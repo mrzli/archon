@@ -4,33 +4,7 @@ This guide turns a new computer into my workstation: install Omarchy, run Archon
 
 ## Create a bootable USB drive
 
-Download the Omarchy ISO from [omarchy.org](https://omarchy.org/).
-
-Check whether Caligula, a tool for writing disk images, is installed:
-
-```bash
-caligula --version
-```
-
-If it is not, install it:
-
-```bash
-sudo pacman -S caligula
-```
-
-Insert the USB drive. `lsblk` lists the drives if you need to identify it:
-
-```bash
-lsblk
-```
-
-Write the ISO to the drive:
-
-```bash
-sudo caligula burn /path/to/omarchy.iso
-```
-
-Skip the optional steps. Caligula then lists the target devices. Select the USB drive and confirm.
+Write the Omarchy ISO to a USB drive, as described in [Creating a bootable USB drive](bootable-usb.md).
 
 ## Install Omarchy
 
