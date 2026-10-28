@@ -12,6 +12,8 @@ Updating is idempotent. Running it once or many times gives the same result, so 
 
 ## Why
 
+I used to hate setting up a computer. Reinstalling meant a long, tedious job of installing every tool and recreating every setting by hand, so the thought of formatting a drive was a nightmare. I wanted that process to be painless, and now it is trivial.
+
 The repository is a complete record of how my workstation should be set up. My code and data are online as well, so if a computer breaks, gets lost, or needs a reinstall, I lose nothing important, and a new workstation is running within several minutes.
 
 For the same reason, moving between computers is easy. I work on more than one at the same time. When I switch, I pull this repository and run the setup script, and a few seconds later that computer is set up exactly as I want.
