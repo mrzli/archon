@@ -24,7 +24,7 @@ For the same reason, moving between computers is easy. I work on more than one a
 - **All my projects in one structure.** My repositories, across my GitHub account and organizations, live under `~/projects/personal/<owner>/<repository>`. `arc projects sync` clones the missing ones and updates the rest, and `arc projects status` shows which of them have uncommitted or unpushed work.
 - **Project workspaces in a terminal multiplexer.** `arc workspaces herdr start` opens the projects I choose in Herdr, the multiplexer I currently use, and the same command works with tmux. Each project gets tabs for Neovim, lazygit, a shell, and an AI coding agent that resumes its last conversation. Archon remembers which projects I chose.
 - **Voice dictation.** Setup installs Voxtype with a local Whisper model that runs on the GPU. I use it to dictate my prompts to AI agents.
-- **AI agents set up the same way everywhere.** Setup installs my [agent skills](https://github.com/mrzli/skills) and my [global agent instructions](data/home/.codex/AGENTS.md), which both Claude Code and Codex read. `arc agents reload` runs setup and restarts every running agent session, so the sessions pick up the change.
+- **AI agents set up the same way everywhere.** Setup installs my [agent skills](https://github.com/mrzli/skills) and my [global agent instructions](data/home/.codex/AGENTS.md), which both Claude Code and Codex read. When I change a skill, the global instructions, or another agent setting, `arc agents reload` runs setup and restarts every running agent session, so all of them pick up the change at once.
 
 ## Setup
 
