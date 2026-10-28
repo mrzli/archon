@@ -1,10 +1,11 @@
 # Archon
 
-Archon is the setup of my development computer, as code.
+This repository represents the setup of my development workstation.
 
-I make every change to my computer in this repository instead of by hand.
-Running the setup script applies it, usually within a few seconds. Running the
-same script on another Omarchy computer gives it the same setup.
+When I need to change my system, such as what I have installed or how my
+tooling and processes are set up, this is where I make the change. Running the
+setup script applies it, usually within a few seconds. Running the same script
+on another Omarchy computer gives it the same setup.
 
 Archon also includes a command-line program for my daily work across many
 repositories and AI coding agents, and it manages my global instructions for
