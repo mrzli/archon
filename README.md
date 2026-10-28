@@ -24,12 +24,26 @@ For the same reason, moving between computers is easy. I work on more than one a
 
 - **The same environment on every machine.** Applications, developer tools, editor settings, keybindings, and shell configuration match everywhere. A new machine needs only a short installation and one run of the setup script.
 - **Development tools ready to use.** Setup installs the language runtimes and developer tools I use, such as Node.js, Python, Ruby, Go, and Claude Code, mostly through mise. VS Code comes with all my extensions, settings, keybindings, and snippets.
+- **One command-line program for everyday tasks.** The [Archon CLI](#archon-cli) manages my projects, workspaces, agent sessions, and system tasks, with short aliases for the commands I type most.
 - **All my projects in one place.** My repositories live in one fixed structure, one command keeps all of them in sync, and their secrets are kept in one store. See [Projects](#projects).
 - **Project workspaces in a terminal multiplexer.** One command opens the projects I'm working on, each with my editor, Git client, shell, and AI agent ready. See [Workspaces](#workspaces).
 - **Voice dictation.** Setup installs Voxtype with a local Whisper model that runs on the GPU. I use it to dictate my prompts to AI agents.
 - **AI agents set up the same way everywhere.** Setup installs my [agent skills](https://github.com/mrzli/skills) and my [global agent instructions](data/home/.codex/AGENTS.md), which both Claude Code and Codex read. When I change a skill, the global instructions, or another agent setting, `arc agents reload` runs setup and restarts every running agent session, so all of them pick up the change at once.
 
 ## Features
+
+### Archon CLI
+
+`archon`, or its short alias `arc`, is the command-line program in this repository for managing my workstation. Setup installs it.
+
+- `arc setup` runs the setup script from any directory.
+- `arc projects` manages my repositories. See [Projects](#projects).
+- `arc workspaces` opens my projects in workspaces. See [Workspaces](#workspaces).
+- `arc agents` restarts or reloads every running AI agent session.
+- `arc admin` handles battery charging, voice dictation, and GitHub SSH keys.
+- `arc drives` lists and ejects removable drives.
+
+Command groups have short aliases, such as `arc p status` or `arc w h start`. The [CLI documentation](components/archon-cli/README.md) describes every command.
 
 ### Setup
 
@@ -60,10 +74,6 @@ A workspace opens the projects I choose, ready to work in. Projects gives me eve
 In Herdr and tmux, each project gets tabs for Neovim, lazygit, a shell, and an AI coding agent. The agent is Claude Code by default and resumes the project's last conversation, or starts a new one if there is none. With `--ai codex`, it is Codex instead. Starting again keeps workspaces that are already open, and `stop` and `kill` close them.
 
 In VS Code, each selected project opens in its own window, on a Hyprland workspace I choose.
-
-### Other commands
-
-`archon`, or its short alias `arc`, provides the commands above and a few more, such as for drives, battery charging, voice dictation, and GitHub SSH keys. The [CLI documentation](components/archon-cli/README.md) describes every command.
 
 ## Installation
 
