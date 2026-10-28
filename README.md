@@ -1,8 +1,8 @@
 # Archon
 
-This repository is the setup of my [Omarchy](https://omarchy.org/) development workstation.
+My [Omarchy](https://omarchy.org/) development workstation, defined as code.
 
-When I change what I want installed, or how I want my tooling and processes set up, I make the change here. The repository is the source of truth for my workstation, in effect its configuration as code.
+When I change what I want installed, or how I want my tooling and processes set up, I make the change here. This repository is the source of truth for my workstation.
 
 ## How it works
 
