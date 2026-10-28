@@ -23,7 +23,7 @@ For the same reason, moving between computers is easy. I work on more than one a
 ### What I get from it
 
 - **The same environment on every machine.** Applications, developer tools, editor settings, keybindings, and shell configuration match everywhere. A new machine needs only a short installation and one run of the setup script.
-- **Development tools ready to use.** Setup installs my language runtimes, Ruby, Python, Node.js, Bun, Go, Rust, and Zig, and developer tools such as pnpm, ShellCheck, Claude Code, and Codex, mostly through mise. VS Code comes with all my extensions, settings, keybindings, and snippets.
+- **Development tools ready to use.** Setup installs the language runtimes and developer tools I use, such as Node.js, Python, Ruby, Go, and Claude Code, mostly through mise. VS Code comes with all my extensions, settings, keybindings, and snippets.
 - **All my projects in one place.** My repositories live in one fixed structure, one command keeps all of them in sync, and their secrets are kept in one store. See [Projects](#projects).
 - **Project workspaces in a terminal multiplexer.** One command opens the projects I'm working on, each with my editor, Git client, shell, and AI agent ready. See [Workspaces](#workspaces).
 - **Voice dictation.** Setup installs Voxtype with a local Whisper model that runs on the GPU. I use it to dictate my prompts to AI agents.
