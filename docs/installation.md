@@ -66,8 +66,7 @@ Sign in to:
 - YouTube
 - GitHub
 - X
-- Grok
-- ChatGPT
+- AI assistants, such as Claude, ChatGPT, and Grok
 
 Add these extensions:
 
