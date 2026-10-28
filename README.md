@@ -1,12 +1,16 @@
-# Setup
+# Archon
+
+Archon provisions and maintains my [Omarchy](https://omarchy.org/) workstation. Running `setup.sh` installs software and copies configuration into the home directory, and running it again converges on the same state. It also includes the `archon` command-line program and manages my global instructions for AI coding agents in [`data/home/.codex/AGENTS.md`](data/home/.codex/AGENTS.md).
+
+## Setup
 
 You can follow instructions from [here](https://learn.omacom.io/2/the-omarchy-manual/50/getting-started).
 
-## Create Bootable USB
+### Create Bootable USB
 
 Download iso from https://omarchy.org/.
 
-### Install Software
+#### Install Software
 
 Check if you have `caligula` installed:
 
@@ -20,7 +24,7 @@ If you don't have it, install it:
 sudo pacman -S caligula
 ```
 
-### Create Bootable USB
+#### Create Bootable USB
 
 Find out the device name of your USB drive:
 
@@ -36,7 +40,7 @@ sudo caligula /path/to/omarchy.iso
 
 Skip unnecessary steps, and it will offer you a target device. Select it. Don't know what the exact steps after this are, but should be trivial.
 
-## Install Omarchy
+### Install Omarchy
 
 I suspect the system will ask you for some information:
 
@@ -48,7 +52,7 @@ I suspect the system will ask you for some information:
 - Timezone, e.g. `Europe/Zagreb`.
 - Keyboard layout, e.g. `us`.
 
-## Setup System
+### Setup System
 
 Login to GitHub CLI:
 
@@ -78,9 +82,9 @@ Run the setup script to apply the managed system configuration:
 "${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo/setup.sh"
 ```
 
-## Manual Steps
+### Manual Steps
 
-### Wi-Fi
+#### Wi-Fi
 
 - Go to Wi-Fi settings:
   - Press `SUPER + ALT + SPACE`.
@@ -92,7 +96,7 @@ Run the setup script to apply the managed system configuration:
   - Press `ENTER`.
 - Enter the Wi-Fi password and press `ENTER`.
 
-### Chromium
+#### Chromium
 
 - Log into:
   - GMail
@@ -109,7 +113,7 @@ Run the setup script to apply the managed system configuration:
   - uBlock Origin Lite.
   - Redux DevTools (if you use it).
 
-### Logins
+#### Logins
 
 - VS Code:
   - Sign into VS Code Copilot.
@@ -117,7 +121,7 @@ Run the setup script to apply the managed system configuration:
 - Claude Code: run `claude` once and log in.
 - Log into Steam.
 
-### GitHub SSH Key
+#### GitHub SSH Key
 
 Run Archon setup first, as described above. It installs the CLI;
 the initial HTTPS clone and setup do not require this SSH key.
@@ -147,7 +151,7 @@ Now that the SSH key is set up, change the `archon` repo to use SSH instead of H
 git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo" remote set-url origin git@github.com:mrzli/archon.git
 ```
 
-## Update Archon Repo
+### Update Archon Repo
 
 ```bash
 archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
