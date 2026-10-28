@@ -6,15 +6,15 @@ Every change to my workstation starts here, whether it is the software I install
 
 ## How it works
 
-I update the repository, or ask an AI agent to update it, and then run the setup script. The script brings my workstation to the state this repository describes. In most cases, that takes a few seconds.
+I update the repository, or ask an AI agent to update it, and then run [`setup.sh`](setup.sh), the setup script that is part of this repository. It brings my workstation to the state the repository describes. In most cases, that takes a few seconds.
 
-The setup script is idempotent. I can run it once or many times, and the result is the same. It changes only what differs from this repository, and nothing else.
+Updating is idempotent. Running it once or many times gives the same result, so I can run it at any time without being careful, and a repeated run does no harm.
 
 ## Why
 
-The repository is a complete record of how my workstation should be set up. My code and data are online as well, so if a computer breaks, gets lost, or needs a reinstall, I lose nothing important.
+The repository is a complete record of how my workstation should be set up. My code and data are online as well, so if a computer breaks, gets lost, or needs a reinstall, I lose nothing important, and a new workstation is running within a few minutes.
 
-I also work on more than one computer at the same time. When I move to another one, I pull this repository and run the setup script, and a few seconds later that computer is set up exactly as I want.
+For the same reason, moving between computers is easy. I work on more than one at the same time. When I switch, I pull this repository and run the setup script, and a few seconds later that computer is set up exactly as I want.
 
 ## What I get from it
 
