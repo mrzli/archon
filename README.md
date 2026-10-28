@@ -2,11 +2,24 @@
 
 This repository is the setup of my [Omarchy](https://omarchy.org/) development workstation.
 
-When I change what I have installed, or how my tooling and processes are set up, I make the change here. Then I run the setup script, and it applies the change to my workstation. Most of the time, that takes a few seconds.
+When I change what I want installed, or how I want my tooling and processes to be set up, this is where I make the change here.
 
-The setup script is idempotent. I can run it once or many times, and the result is the same. It changes only what differs from the configuration in this repository and leaves everything that already matches alone.
+This is the source of truth. It is essentially setup as a code <todo is this the proper expression ?>.
 
-I use more than one development machine. To keep them in sync, I pull this repository on each one and run the setup script.
+## How does it work?
+
+I update the repository or ask the agent to update it. Then I run the setup script.
+
+This produces the <situation on my workstation>. In most cases, it takes just a few seconds.
+
+The setup is idempotent. I can run it once or many times, and the result is the same. It will sync my workstation to <this repo>, and nothing more.
+
+## Why?
+
+<I don't know whether that's the best wording but please rephrase it but essentially this is a declarative record of my setup of my system slash workstation setup>
+
+if I ever need to delete my computer or reinstall it like all of the important stuff is online I have essentially nothing that I will lose if I lose the computer if I whatever right and also mentioned the fact that I'm working on multiple computers at the same time so I can just move to another computer and a few seconds later have the entire setup exactly as I want it usually a few seconds later
+
 
 ## What I get from it
 
