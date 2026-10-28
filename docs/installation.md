@@ -11,12 +11,12 @@ Write the Omarchy ISO to a USB drive, as described in [Creating a bootable USB d
 Boot the new computer from the USB drive and follow the installer. It asks for:
 
 - Keyboard layout, such as `us`.
-- Username, such as `mrzli`.
+- Username, such as `alex`.
 - Password.
 - Full name.
 - Email address.
-- Hostname, such as `mrzli-arch`.
-- Timezone, such as `Europe/Zagreb`.
+- Hostname, such as `workstation`.
+- Timezone, such as `Europe/Berlin`.
 
 ## Connect to the internet
 
@@ -95,7 +95,7 @@ Add the key to GitHub:
 
 1. Go to <https://github.com/settings/keys>.
 2. Click **New SSH key**.
-3. Enter a name, such as `mrzli-arch`.
+3. Enter a name, such as `workstation`.
 4. Paste the public key from the clipboard.
 5. Click **Add SSH key**.
 
