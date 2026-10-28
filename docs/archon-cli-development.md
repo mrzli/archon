@@ -40,7 +40,7 @@ Repeated installation converges without generating artifacts.
 bash tests/test.sh
 ```
 
-This runs setup, skill-link, video-workaround, WoW setup, and CLI checks.
+This runs setup, video-workaround, WoW setup, and CLI checks.
 Use ordinary test commands for routine verification. Run `ruby tests/profile.rb`
 only when the user explicitly requests test profiling. It runs the same checks
 and prints per-file and total times. Runner totals include their child tests;

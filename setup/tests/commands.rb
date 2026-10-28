@@ -129,6 +129,13 @@ when 'git'
   if ARGV.include?('clone')
     FileUtils.mkdir_p(["#{ARGV.last}/.git", "#{ARGV.last}/skills/productivity/example"])
     File.write("#{ARGV.last}/skills/productivity/example/SKILL.md", 'example skill')
+    # Records each run, and fails like the real script when the skills directory is missing.
+    FileUtils.mkdir_p("#{ARGV.last}/scripts")
+    File.write("#{ARGV.last}/scripts/sync-skills.sh", <<~'BASH')
+      test -d "$(dirname -- "$0")/../skills" || exit 1
+      printf '%s\n' "$HOME $*" >> "$(dirname -- "$0")/sync.log"
+      exit "${SYNC_STATUS:-0}"
+    BASH
   end
 when 'rsync'
   exec '/usr/bin/rsync', *ARGV

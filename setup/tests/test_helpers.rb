@@ -58,7 +58,7 @@ def fixture(area)
       File.write("#{bin}/#{command}", stub)
       File.chmod(0o755, "#{bin}/#{command}")
     end
-    %w[realpath dirname].each { |command| File.symlink("/usr/bin/#{command}", "#{bin}/#{command}") }
+    %w[realpath dirname bash].each { |command| File.symlink("/usr/bin/#{command}", "#{bin}/#{command}") }
     env = { 'HOME' => home, 'XDG_DATA_HOME' => "#{home}/.local/share", 'PATH' => bin,
             'XDG_CONFIG_HOME' => "#{home}/.config", 'XDG_STATE_HOME' => "#{home}/.local/state",
             'XDG_RUNTIME_DIR' => "#{root}/run", 'COMMAND_LOG' => "#{root}/commands.jsonl",

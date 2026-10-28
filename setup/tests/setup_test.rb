@@ -113,11 +113,7 @@ check('repeat runs preserve user files and avoid duplicate configuration', :full
   assert commands(env).none? { |args| args.include?('existing.extension') }
   assert commands(env).count { |args| args.include?('clone') } == 1
   assert commands(env).count { |args| args.include?('pull') } == 1
-  %w[.agents .claude].each do |directory|
-    path = "#{home}/#{directory}/skills/example"
-    assert File.readlink(path) == "#{env.fetch('XDG_DATA_HOME')}/archon/skills/skills/productivity/example"
-    assert File.read("#{path}/SKILL.md") == 'example skill'
-  end
+  assert File.readlines("#{env.fetch('XDG_DATA_HOME')}/archon/skills/scripts/sync.log").size == 2
   %w[voxtype.service.d/10-archon.conf docker.service].each do |service|
     relative = ".config/systemd/user/#{service}"
     assert File.read("#{home}/#{relative}") == File.read("#{repo}/data/home/#{relative}")
@@ -134,23 +130,32 @@ check('a populated ~/Projects fails setup and keeps its contents', :none) do |re
   assert File.read("#{home}/Projects/.keep") == 'user data'
 end
 
-check('failed skills updates preserve installed skills and links', :skills) do |repo, home, _bin, env|
+check('skills install runs the sync script from the checkout for the target home', :skills) do |repo, home, _bin, env|
+  checkout = "#{env.fetch('XDG_DATA_HOME')}/archon/skills"
+  2.times do
+    _, error, status = run_operation(repo, env, 'install_user_skills("#{home}/target")')
+    assert status.success?, error
+  end
+  assert File.readlines("#{checkout}/scripts/sync.log", chomp: true) == ["#{home}/target --user"] * 2
+  assert commands(env).map { |args| args.values_at(0, -2, -1) } ==
+         [['git', 'https://github.com/mrzli/skills.git', checkout], %w[git pull --ff-only]]
+
+  # The script requires the skills directory, which Git drops after the final skill is deleted.
+  FileUtils.rm_r("#{checkout}/skills")
   _, error, status = run_operation(repo, env, 'install_user_skills(home)')
   assert status.success?, error
-  source = "#{env.fetch('XDG_DATA_HOME')}/archon/skills/skills/productivity/example"
+  assert Dir.empty?("#{checkout}/skills")
+end
+
+check('failed skills updates and syncs fail setup', :skills) do |repo, _home, _bin, env|
+  checkout = "#{env.fetch('XDG_DATA_HOME')}/archon/skills"
+  _, error, status = run_operation(repo, env, 'install_user_skills(home)')
+  assert status.success?, error
   _, error, status = run_operation(repo, env.merge('FAIL_COMMAND' => 'git'), 'install_user_skills(home)')
   assert !status.success?, error
-  %w[.agents .claude].each do |directory|
-    assert File.read("#{home}/#{directory}/skills/example/SKILL.md") == 'example skill'
-  end
-  FileUtils.rm_r(File.dirname(source))
-  _, error, status = run_operation(repo, env, 'install_user_skills(home)')
-  assert status.success?, error
-  assert Dir.empty?(File.dirname(File.dirname(source)))
-  assert !File.exist?("#{env.fetch('XDG_DATA_HOME')}/archon-skills")
-  %w[.agents .claude].each do |directory|
-    assert !File.symlink?("#{home}/#{directory}/skills/example")
-  end
+  assert File.readlines("#{checkout}/scripts/sync.log").size == 1
+  _, error, status = run_operation(repo, env.merge('SYNC_STATUS' => '1'), 'install_user_skills(home)')
+  assert !status.success?, error
 end
 
 check('default setup replaces managed directories', :files) do |repo, home, _bin, env|

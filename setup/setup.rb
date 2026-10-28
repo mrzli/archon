@@ -308,61 +308,10 @@ def install_user_skills(home)
   else
     run(*github_git, 'clone', '--depth', '1', 'https://github.com/mrzli/skills.git', skills_repo)
   end
-  source = "#{skills_repo}/skills"
   # Git does not retain empty directories after the final skill is deleted.
-  FileUtils.mkdir_p(source)
-  sync_user_skill_links(source, home)
-end
-
-def sync_user_skill_links(source, home)
-  raise "Missing skills source: #{source}" unless File.directory?(source)
-
-  source = File.expand_path(source)
-  ignored_groups = %w[experimental]
-  targets = {}
-  Dir.children(source).sort.each do |group|
-    group_path = File.join(source, group)
-    next if ignored_groups.include?(group) || !File.directory?(group_path)
-
-    Dir.glob('**/SKILL.md', base: group_path).sort.each do |relative_path|
-      next unless File.file?(File.join(group_path, relative_path))
-
-      target = File.dirname(File.join(group_path, relative_path))
-      name = File.basename(target)
-      raise "Duplicate skill name: #{name}" if targets.key?(name)
-
-      targets[name] = target
-    end
-  end
-  destinations = %w[.agents/skills .claude/skills].map { |directory| File.join(home, directory) }
-  # Links into this checkout are managed, even when skills move within it.
-  skills_repo = File.dirname(source)
-  owned_link = lambda do |path|
-    File.symlink?(path) && File.expand_path(File.readlink(path), File.dirname(path)).start_with?("#{skills_repo}/")
-  end
-
-  # Check collisions before changing any links.
-  destinations.each do |directory|
-    targets.each_key do |name|
-      path = File.join(directory, name)
-      raise "Skill path already exists and is not managed by Archon: #{path}" if path_exists?(path) && !owned_link.call(path)
-    end
-  end
-
-  destinations.each do |directory|
-    FileUtils.mkdir_p(directory)
-    Dir.children(directory).each do |name|
-      path = File.join(directory, name)
-      next unless owned_link.call(path)
-      next if targets[name] == File.expand_path(File.readlink(path), directory)
-
-      File.unlink(path)
-    end
-    targets.each do |name, target|
-      path = File.join(directory, name)
-      File.symlink(target, path) unless File.symlink?(path)
-    end
-  end
+  FileUtils.mkdir_p("#{skills_repo}/skills")
+  # The skills repository owns the linking rules for its layout.
+  run({ 'HOME' => home }, 'bash', "#{skills_repo}/scripts/sync-skills.sh", '--user')
 end
 
 def configure_claude_settings(home)
