@@ -1,159 +1,60 @@
 # Archon
 
-Archon provisions and maintains my [Omarchy](https://omarchy.org/) workstation. Running `setup.sh` installs software and copies configuration into the home directory, and running it again converges on the same state. It also includes the `archon` command-line program and manages my global instructions for AI coding agents in [`data/home/.codex/AGENTS.md`](data/home/.codex/AGENTS.md).
+Archon sets up my Omarchy workstation for development, exactly the way I want
+it, from a single script.
 
-## Setup
+## Why
 
-You can follow instructions from [here](https://learn.omacom.io/2/the-omarchy-manual/50/getting-started).
+I want a fresh Omarchy installation to become my complete development machine
+with one script and a few minutes of manual steps. Whenever I change my
+system, I make the change in Archon's setup instead of by hand. My setup is
+then always recorded in one repository, and I can reproduce it exactly on any
+other Omarchy machine. Day to day, I work on many repositories across several
+GitHub organizations, often with several AI coding agents running at once, and
+the Archon CLI handles that work.
 
-### Create Bootable USB
+## What setup does
 
-Download iso from https://omarchy.org/.
+Running `setup.sh`, or `arc setup` once the CLI is installed:
 
-#### Install Software
+- installs applications, packages, language runtimes, and developer tools, and
+  removes Omarchy defaults I don't use
+- copies my configuration files into the home directory, such as Hyprland,
+  Neovim, Bash, Git, VS Code, Claude Code, and Codex settings
+- installs the Archon CLI and my agent skills
+- sets up rootless Docker and voice dictation
 
-Check if you have `caligula` installed:
+Setup is idempotent. I can run it again at any time, and it changes only what
+differs from the desired state.
 
-```bash
-caligula --version
-```
+A few manual steps remain, such as connecting to Wi-Fi, signing in to browser
+accounts, and adding the GitHub SSH key. I left them manual on purpose, and
+they take about five minutes. The [setup guide](docs/setup.md) covers the full
+procedure for a new machine.
 
-If you don't have it, install it:
+## Archon CLI
 
-```bash
-sudo pacman -S caligula
-```
+`archon`, or its short alias `arc`, handles daily work on the machine. The most
+important commands:
 
-#### Create Bootable USB
+- `arc workspaces <herdr|tmux|visual-studio-code> start` opens the projects I
+  choose. Each terminal project gets tabs for Neovim, lazygit, a shell, and an
+  AI agent that resumes its last conversation.
+- `arc projects sync` clones or updates all my repositories from GitHub, and
+  `arc projects status` shows which of them have uncommitted or unpushed work.
+- `arc agents reload` runs setup and then restarts every running Claude Code
+  and Codex session, so they pick up new skills, instructions, and settings.
 
-Find out the device name of your USB drive:
+The [CLI documentation](components/archon-cli/README.md) describes every
+command.
 
-```bash
-lsblk
-```
+## Agent instructions
 
-Burn the iso to the USB drive:
+Archon also manages my global instructions for AI coding agents in
+[`data/home/.codex/AGENTS.md`](data/home/.codex/AGENTS.md), which both Claude
+Code and Codex read. My agent skills are in the
+[skills repository](https://github.com/mrzli/skills), and setup installs them.
 
-```bash
-sudo caligula /path/to/omarchy.iso
-```
+## License
 
-Skip unnecessary steps, and it will offer you a target device. Select it. Don't know what the exact steps after this are, but should be trivial.
-
-### Install Omarchy
-
-I suspect the system will ask you for some information:
-
-- Username, e.g. `mrzli`.
-- Password.
-- Full name.
-- Email address.
-- Hostname, e.g. `mrzli-arch`.
-- Timezone, e.g. `Europe/Zagreb`.
-- Keyboard layout, e.g. `us`.
-
-### Setup System
-
-Login to GitHub CLI:
-
-```bash
-gh auth login \
-  --hostname github.com \
-  --git-protocol ssh \
-  --web \
-  --skip-ssh-key
-# Follow the prompts and login via browser.
-```
-
-Clone the repo locally:
-
-```bash
-archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
-mkdir -p "$(dirname "$archon_dir")"
-git \
-  -c credential.helper= \
-  -c credential.helper='!gh auth git-credential' \
-  clone https://github.com/mrzli/archon.git "$archon_dir"
-```
-
-Run the setup script to apply the managed system configuration:
-
-```bash
-"${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo/setup.sh"
-```
-
-### Manual Steps
-
-#### Wi-Fi
-
-- Go to Wi-Fi settings:
-  - Press `SUPER + ALT + SPACE`.
-  - Select 'Setup' and press `ENTER`.
-  - Select 'Wi-Fi' and press `ENTER`.
-- Select the SSID:
-  - Press `TAB` to focus on the list of available networks:
-  - Use arrow keys to select your network.
-  - Press `ENTER`.
-- Enter the Wi-Fi password and press `ENTER`.
-
-#### Chromium
-
-- Log into:
-  - GMail
-  - Youtube
-  - GitHub
-  - X
-  - Grok
-  - ChatGPT
-
-- Add extensions:
-  - Bitwarden.
-    - Also log into it.
-  - StayFocusd.
-  - uBlock Origin Lite.
-  - Redux DevTools (if you use it).
-
-#### Logins
-
-- VS Code:
-  - Sign into VS Code Copilot.
-  - Sign into Codex.
-- Claude Code: run `claude` once and log in.
-- Log into Steam.
-
-#### GitHub SSH Key
-
-Run Archon setup first, as described above. It installs the CLI;
-the initial HTTPS clone and setup do not require this SSH key.
-
-```bash
-archon admin github ssh create
-# Automatically copies the public key to clipboard.
-```
-
-Setup the SSH key in your GitHub account:
-
-- Go to https://github.com/settings/keys.
-- Click "New SSH key".
-- Set the name, e.g. "mrzli-arch".
-- Paste the public key from clipboard.
-- Click "Add SSH key".
-
-Test the SSH connection:
-
-```bash
-archon admin github ssh test
-```
-
-Now that the SSH key is set up, change the `archon` repo to use SSH instead of HTTPS:
-
-```bash
-git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo" remote set-url origin git@github.com:mrzli/archon.git
-```
-
-### Update Archon Repo
-
-```bash
-archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
-git -C "$archon_dir" pull --ff-only
-```
+[MIT](LICENSE)
