@@ -1,22 +1,17 @@
 # Archon
 
-Archon sets up my Omarchy workstation for development, exactly the way I want
-it, from a single script.
+Archon keeps the setup of my Omarchy workstation as code. I make every change
+to my workstation in this repository instead of by hand, and running the setup
+script applies it, usually within a few seconds. Running the same script on
+another Omarchy computer gives it the same setup.
 
-## Why
-
-I want a fresh Omarchy installation to become my complete development machine
-with one script and a few minutes of manual steps. Whenever I change my
-system, I make the change in Archon's setup instead of by hand. My setup is
-then always recorded in one repository, and I can reproduce it exactly on any
-other Omarchy machine. Day to day, I work on many repositories across several
-GitHub organizations, often with several AI coding agents running at once, and
-the Archon CLI handles that work.
+Archon also includes a command-line program for my daily work across many
+repositories and AI coding agents, and it manages my global instructions for
+those agents.
 
 ## Setup
 
-`setup.sh`, or `arc setup` once the CLI is installed, applies my configuration
-to the machine:
+`setup.sh`, or `arc setup` once the CLI is installed, applies my configuration:
 
 - installs applications, packages, language runtimes, and developer tools, and
   removes Omarchy defaults I don't use
@@ -25,8 +20,8 @@ to the machine:
 - installs the Archon CLI and my agent skills
 - sets up rootless Docker and voice dictation
 
-Setup is idempotent. I run it after every change, and a run on a configured
-machine takes a few seconds.
+Setup is idempotent, so I can run it as often as I like. A run on a configured
+machine takes a few seconds, and a run that installs new software takes longer.
 
 ## Installing a new machine
 
