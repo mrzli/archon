@@ -2,7 +2,7 @@
 
 My [Omarchy](https://omarchy.org/) development workstation, defined as code.
 
-When I change what I want installed, or how I want my tooling and processes set up, I make the change here. This repository is the source of truth for my workstation.
+Every change to my workstation starts here, whether it is the software I install, its configuration, or how my tooling and processes work. The repository is the source of truth, and the workstation follows it.
 
 ## How it works
 
