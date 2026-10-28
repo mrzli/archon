@@ -28,12 +28,12 @@ For the same reason, moving between computers is easy. I work on more than one a
 
 ## Setup
 
-`setup.sh`, or `arc setup` once the CLI is installed:
+`setup.sh`, or `arc setup` once the CLI is installed, does the following:
 
-- installs applications, packages, language runtimes, and developer tools, and removes Omarchy defaults I don't use
-- copies my configuration files into the home directory, such as Hyprland, Neovim, Bash, Git, VS Code, Claude Code, and Codex settings
-- installs the Archon CLI and my agent skills
-- sets up rootless Docker and voice dictation
+- Installs applications, packages, language runtimes, and developer tools, and removes Omarchy defaults I don't use.
+- Copies my configuration files into the home directory, such as Hyprland, Neovim, Bash, Git, VS Code, Claude Code, and Codex settings.
+- Installs the Archon CLI and my agent skills.
+- Sets up rootless Docker and voice dictation.
 
 ## Installing a new machine
 
