@@ -22,7 +22,7 @@ For the same reason, moving between computers is easy. I work on more than one a
 
 - **The same environment on every machine.** Applications, developer tools, editor settings, keybindings, and shell configuration match everywhere. A new machine needs only a short installation and one run of the setup script.
 - **All my projects in one place.** My repositories live in one fixed structure, one command keeps all of them in sync, and their secrets are kept in one store. See [Projects](#projects).
-- **Project workspaces in a terminal multiplexer.** `arc workspaces herdr start` opens the projects I choose in Herdr, the multiplexer I currently use, and the same command works with tmux. Each project gets tabs for Neovim, lazygit, a shell, and an AI coding agent that resumes its last conversation. Archon remembers which projects I chose.
+- **Project workspaces in a terminal multiplexer.** One command opens the projects I'm working on, each with my editor, Git client, shell, and AI agent ready. See [Workspaces](#workspaces).
 - **Voice dictation.** Setup installs Voxtype with a local Whisper model that runs on the GPU. I use it to dictate my prompts to AI agents.
 - **AI agents set up the same way everywhere.** Setup installs my [agent skills](https://github.com/mrzli/skills) and my [global agent instructions](data/home/.codex/AGENTS.md), which both Claude Code and Codex read. When I change a skill, the global instructions, or another agent setting, `arc agents reload` runs setup and restarts every running agent session, so all of them pick up the change at once.
 
@@ -45,6 +45,16 @@ All my repositories live in one fixed structure, `~/projects/personal/<owner>/<r
 - `arc projects secrets` keeps secret values, such as API tokens, in one local store, and generates each project's `.env` file from a template committed in that project. A token I use in several projects is stored only once.
 
 The workspace commands use the same structure, so I can open any project in Herdr, tmux, or VS Code.
+
+## Workspaces
+
+A workspace opens the projects I choose, ready to work in. Projects gives me every repository on the machine, and Workspaces opens the ones I'm working on.
+
+`arc workspaces <backend> start` shows a checklist of every project in the fixed structure, and opens the ones I select. The backend is Herdr, the terminal multiplexer I currently use, tmux, or VS Code, and I always name it, since there is no default. Each backend remembers its own selection, so next time the same projects are already checked. New projects start unchecked.
+
+In Herdr and tmux, each project gets tabs for Neovim, lazygit, a shell, and an AI coding agent. The agent is Claude Code by default and resumes the project's last conversation, or starts a new one if there is none. With `--ai codex`, it is Codex instead. Starting again keeps workspaces that are already open, and `stop` and `kill` close them.
+
+In VS Code, each selected project opens in its own window, on a Hyprland workspace I choose.
 
 ## Installing a new machine
 
