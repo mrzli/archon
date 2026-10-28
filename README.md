@@ -2,24 +2,19 @@
 
 This repository is the setup of my [Omarchy](https://omarchy.org/) development workstation.
 
-When I change what I want installed, or how I want my tooling and processes to be set up, this is where I make the change here.
+When I change what I want installed, or how I want my tooling and processes set up, I make the change here. The repository is the source of truth for my workstation, in effect its configuration as code.
 
-This is the source of truth. It is essentially setup as a code <todo is this the proper expression ?>.
+## How it works
 
-## How does it work?
+I update the repository, or ask an AI agent to update it, and then run the setup script. The script brings my workstation to the state this repository describes. In most cases, that takes a few seconds. A run that installs new software takes longer.
 
-I update the repository or ask the agent to update it. Then I run the setup script.
+The setup script is idempotent. I can run it once or many times, and the result is the same. It changes only what differs from this repository, and nothing else.
 
-This produces the <situation on my workstation>. In most cases, it takes just a few seconds.
+## Why
 
-The setup is idempotent. I can run it once or many times, and the result is the same. It will sync my workstation to <this repo>, and nothing more.
+The repository is a complete record of how my workstation should be set up. My code and data are online as well, so if a computer breaks, gets lost, or needs a reinstall, I lose nothing important.
 
-## Why?
-
-<I don't know whether that's the best wording but please rephrase it but essentially this is a declarative record of my setup of my system slash workstation setup>
-
-if I ever need to delete my computer or reinstall it like all of the important stuff is online I have essentially nothing that I will lose if I lose the computer if I whatever right and also mentioned the fact that I'm working on multiple computers at the same time so I can just move to another computer and a few seconds later have the entire setup exactly as I want it usually a few seconds later
-
+I also work on more than one computer at the same time. When I move to another one, I pull this repository and run the setup script, and a few seconds later that computer is set up exactly as I want.
 
 ## What I get from it
 
@@ -37,8 +32,6 @@ if I ever need to delete my computer or reinstall it like all of the important s
 - copies my configuration files into the home directory, such as Hyprland, Neovim, Bash, Git, VS Code, Claude Code, and Codex settings
 - installs the Archon CLI and my agent skills
 - sets up rootless Docker and voice dictation
-
-A run that installs new software takes longer than the usual few seconds.
 
 ## Installing a new machine
 
