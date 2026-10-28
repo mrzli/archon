@@ -34,7 +34,7 @@ For the same reason, moving between computers is easy. I work on more than one a
 
 ### Archon CLI
 
-`archon`, or its short alias `arc`, is the command-line program in this repository for managing my workstation. Setup installs it.
+`archon`, or its short alias `arc`, is the command-line program in this repository for managing my workstation. Whenever I notice a task I repeat often, I turn it into a command here. Setup installs it.
 
 - `arc setup` runs the setup script from any directory.
 - `arc projects` manages my repositories. See [Projects](#projects).
