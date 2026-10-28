@@ -115,3 +115,19 @@ arc projects sync
 ```
 
 From now on, setup runs from that checkout. To apply a change, pull it there and run `arc setup`. Setup no longer uses the first clone in `~/.local/share/archon/repo`.
+
+## Set up secrets
+
+Create the secrets store, which lists every secret name with an empty value:
+
+```bash
+arc projects secrets init
+```
+
+Open `~/.local/share/archon/secrets/secrets.env` and fill in the values, for example from the password manager.
+
+Generate each project's `.env` file from its template:
+
+```bash
+arc projects secrets sync
+```
