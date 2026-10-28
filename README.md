@@ -6,7 +6,7 @@ Every change to my workstation starts here, whether it is the software I install
 
 ## How it works
 
-I update the repository, or ask an AI agent to update it, and then run the setup script. The script brings my workstation to the state this repository describes. In most cases, that takes a few seconds. A run that installs new software takes longer.
+I update the repository, or ask an AI agent to update it, and then run the setup script. The script brings my workstation to the state this repository describes. In most cases, that takes a few seconds.
 
 The setup script is idempotent. I can run it once or many times, and the result is the same. It changes only what differs from this repository, and nothing else.
 
