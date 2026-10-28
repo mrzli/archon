@@ -6,7 +6,7 @@ Every change to my workstation starts here, whether it is the software I install
 
 ## How it works
 
-I update the repository, or ask an AI agent to update it, and then run [`setup.sh`](setup.sh), the setup script that is part of this repository. It brings my workstation to the state the repository describes. In most cases, that takes a few seconds.
+I update this repository, or ask an AI agent to update it, and then run [`setup.sh`](setup.sh), the setup script that is part of this repository. It brings my workstation to the state the repository describes. In most cases, that takes a few seconds.
 
 Updating is idempotent. Running it once or many times gives the same result, so I can run it at any time without being careful, and a repeated run does no harm.
 
