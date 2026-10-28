@@ -1,15 +1,18 @@
 # Archon
 
-This repository represents the setup of my development workstation.
+This repository represents the setup of my <todo agent add link to Omarchy> development workstation.
 
-When I need to change my system, such as what I have installed or how my
-tooling and processes are set up, this is where I make the change. Running the
-setup script applies it, usually within a few seconds. Running the same script
-on another Omarchy computer gives it the same setup.
+If I change what I want to have installed, or how my tooling or processes are set up, this is where I make the change.
 
-Archon also includes a command-line program for my daily work across many
-repositories and AI coding agents, and it manages my global instructions for
-those agents.
+Then I run a script, and that result gets applied to my workstation. Most of the time, that takes just a few seconds.
+
+That script is idempotent. I can run it one time, or many times. The result is the same. Only things that do not match the <todo arhcon repo setup - use better wording> will get updates util <todo that matched, use better wordking>.
+
+I use multiple development machines. It is trivial to keep them in sync <todo just pull and run script, describe better>.
+
+
+
+
 
 ## Setup
 
