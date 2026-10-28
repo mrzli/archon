@@ -75,11 +75,13 @@ Add these extensions:
 - uBlock Origin Lite.
 - Redux DevTools, if needed.
 
-### Other sign-ins
+### Applications
 
-- In VS Code, sign in to GitHub Copilot and Codex.
-- Run `claude` once and sign in to Claude Code.
-- Sign in to Steam.
+Sign in to:
+
+- Codex in VS Code.
+- Claude Code, by running `claude` once.
+- Any other application, such as Steam or Battle.net.
 
 ### GitHub SSH key
 
