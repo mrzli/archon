@@ -44,6 +44,14 @@ Boot the new computer from the USB drive and follow the installer. It asks for:
 - Hostname, such as `mrzli-arch`.
 - Timezone, such as `Europe/Zagreb`.
 
+## Connect to the internet
+
+Skip this if the installer already connected to Wi-Fi or the computer uses ethernet. Signing in to GitHub, cloning, and setup all need the internet.
+
+1. Open the Wi-Fi settings. Press `SUPER + ALT + SPACE`, select **Setup**, and press `ENTER`. Then select **Wi-Fi** and press `ENTER`.
+2. Press `TAB` to move to the list of networks, select the network with the arrow keys, and press `ENTER`.
+3. Enter the Wi-Fi password and press `ENTER`.
+
 ## Run setup
 
 Sign in to the GitHub CLI:
@@ -75,12 +83,6 @@ Run the setup script:
 ```
 
 ## Manual steps
-
-### Wi-Fi
-
-1. Open the Wi-Fi settings. Press `SUPER + ALT + SPACE`, select **Setup**, and press `ENTER`. Then select **Wi-Fi** and press `ENTER`.
-2. Press `TAB` to move to the list of networks, select the network with the arrow keys, and press `ENTER`.
-3. Enter the Wi-Fi password and press `ENTER`.
 
 ### Chromium
 
@@ -129,15 +131,12 @@ Test the connection:
 archon admin github ssh test
 ```
 
-Switch the Archon clone from HTTPS to SSH:
+## Clone my projects
+
+Clone all my repositories over SSH, including this one at `~/projects/personal/mrzli/archon`:
 
 ```bash
-git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo" remote set-url origin git@github.com:mrzli/archon.git
+arc projects sync
 ```
 
-## Update the Archon clone
-
-```bash
-archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
-git -C "$archon_dir" pull --ff-only
-```
+From now on, setup runs from that checkout. To apply a change, pull it there and run `arc setup`. Setup no longer uses the first clone in `~/.local/share/archon/repo`.

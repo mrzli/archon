@@ -79,7 +79,7 @@ In VS Code, each selected project opens in its own window, on a Hyprland workspa
 
 ### Installing a new machine
 
-A new machine needs a one-time installation: write the Omarchy ISO to a USB stick, install Omarchy, clone this repository, and run the setup script. A few manual steps follow, such as connecting to Wi-Fi, signing in to browser accounts, and adding the GitHub SSH key. I left them manual on purpose. They could probably be automated too, but they take only a few minutes, so automating them is not worth the effort yet. The [installation guide](docs/installation.md) has the details.
+A new machine needs a one-time installation: write the Omarchy ISO to a USB stick, install Omarchy, clone this repository, and run the setup script. A few steps stay manual, such as connecting to Wi-Fi, signing in to browser accounts, and adding the GitHub SSH key. I left them manual on purpose. They could probably be automated too, but they take only a few minutes, so automating them is not worth the effort yet. The [installation guide](docs/installation.md) has the details.
 
 ## License
 
