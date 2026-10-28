@@ -1,56 +1,52 @@
 # Installing a new machine
 
-You can follow instructions from [here](https://learn.omacom.io/2/the-omarchy-manual/50/getting-started).
+This guide turns a new computer into my workstation: install Omarchy, run Archon's setup, and finish a few manual steps. The [Omarchy manual](https://learn.omacom.io/2/the-omarchy-manual/50/getting-started) covers the Omarchy installation in more detail.
 
-## Create Bootable USB
+## Create a bootable USB drive
 
-Download iso from https://omarchy.org/.
+Download the Omarchy ISO from [omarchy.org](https://omarchy.org/).
 
-### Install Software
-
-Check if you have `caligula` installed:
+Check whether Caligula, a tool for writing disk images, is installed:
 
 ```bash
 caligula --version
 ```
 
-If you don't have it, install it:
+If it is not, install it:
 
 ```bash
 sudo pacman -S caligula
 ```
 
-### Create Bootable USB
-
-Find out the device name of your USB drive:
+Insert the USB drive. `lsblk` lists the drives if you need to identify it:
 
 ```bash
 lsblk
 ```
 
-Burn the iso to the USB drive:
+Write the ISO to the drive:
 
 ```bash
-sudo caligula /path/to/omarchy.iso
+sudo caligula burn /path/to/omarchy.iso
 ```
 
-Skip unnecessary steps, and it will offer you a target device. Select it. Don't know what the exact steps after this are, but should be trivial.
+Skip the optional steps. Caligula then lists the target devices. Select the USB drive and confirm.
 
 ## Install Omarchy
 
-I suspect the system will ask you for some information:
+Boot the new computer from the USB drive and follow the installer. It asks for:
 
-- Username, e.g. `mrzli`.
+- Keyboard layout, such as `us`.
+- Username, such as `mrzli`.
 - Password.
 - Full name.
 - Email address.
-- Hostname, e.g. `mrzli-arch`.
-- Timezone, e.g. `Europe/Zagreb`.
-- Keyboard layout, e.g. `us`.
+- Hostname, such as `mrzli-arch`.
+- Timezone, such as `Europe/Zagreb`.
 
-## Setup System
+## Run setup
 
-Login to GitHub CLI:
+Sign in to the GitHub CLI:
 
 ```bash
 gh auth login \
@@ -58,10 +54,10 @@ gh auth login \
   --git-protocol ssh \
   --web \
   --skip-ssh-key
-# Follow the prompts and login via browser.
+# Follow the prompts and sign in through the browser.
 ```
 
-Clone the repo locally:
+Clone this repository:
 
 ```bash
 archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
@@ -72,82 +68,74 @@ git \
   clone https://github.com/mrzli/archon.git "$archon_dir"
 ```
 
-Run the setup script to apply the managed system configuration:
+Run the setup script:
 
 ```bash
 "${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo/setup.sh"
 ```
 
-## Manual Steps
+## Manual steps
 
 ### Wi-Fi
 
-- Go to Wi-Fi settings:
-  - Press `SUPER + ALT + SPACE`.
-  - Select 'Setup' and press `ENTER`.
-  - Select 'Wi-Fi' and press `ENTER`.
-- Select the SSID:
-  - Press `TAB` to focus on the list of available networks:
-  - Use arrow keys to select your network.
-  - Press `ENTER`.
-- Enter the Wi-Fi password and press `ENTER`.
+1. Open the Wi-Fi settings. Press `SUPER + ALT + SPACE`, select **Setup**, and press `ENTER`. Then select **Wi-Fi** and press `ENTER`.
+2. Press `TAB` to move to the list of networks, select the network with the arrow keys, and press `ENTER`.
+3. Enter the Wi-Fi password and press `ENTER`.
 
 ### Chromium
 
-- Log into:
-  - GMail
-  - Youtube
-  - GitHub
-  - X
-  - Grok
-  - ChatGPT
+Sign in to:
 
-- Add extensions:
-  - Bitwarden.
-    - Also log into it.
-  - StayFocusd.
-  - uBlock Origin Lite.
-  - Redux DevTools (if you use it).
+- Gmail
+- YouTube
+- GitHub
+- X
+- Grok
+- ChatGPT
 
-### Logins
+Add these extensions:
 
-- VS Code:
-  - Sign into VS Code Copilot.
-  - Sign into Codex.
-- Claude Code: run `claude` once and log in.
-- Log into Steam.
+- Bitwarden, and sign in to it.
+- StayFocusd.
+- uBlock Origin Lite.
+- Redux DevTools, if needed.
 
-### GitHub SSH Key
+### Other sign-ins
 
-Run Archon setup first, as described above. It installs the CLI;
-the initial HTTPS clone and setup do not require this SSH key.
+- In VS Code, sign in to GitHub Copilot and Codex.
+- Run `claude` once and sign in to Claude Code.
+- Sign in to Steam.
+
+### GitHub SSH key
+
+Setup installs the Archon CLI, which creates the key. The initial HTTPS clone and setup do not need it.
 
 ```bash
 archon admin github ssh create
-# Automatically copies the public key to clipboard.
+# Copies the public key to the clipboard.
 ```
 
-Setup the SSH key in your GitHub account:
+Add the key to GitHub:
 
-- Go to https://github.com/settings/keys.
-- Click "New SSH key".
-- Set the name, e.g. "mrzli-arch".
-- Paste the public key from clipboard.
-- Click "Add SSH key".
+1. Go to <https://github.com/settings/keys>.
+2. Click **New SSH key**.
+3. Enter a name, such as `mrzli-arch`.
+4. Paste the public key from the clipboard.
+5. Click **Add SSH key**.
 
-Test the SSH connection:
+Test the connection:
 
 ```bash
 archon admin github ssh test
 ```
 
-Now that the SSH key is set up, change the `archon` repo to use SSH instead of HTTPS:
+Switch the Archon clone from HTTPS to SSH:
 
 ```bash
 git -C "${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo" remote set-url origin git@github.com:mrzli/archon.git
 ```
 
-## Update Archon Repo
+## Update the Archon clone
 
 ```bash
 archon_dir="${XDG_DATA_HOME:-$HOME/.local/share}/archon/repo"
