@@ -77,7 +77,11 @@ Add these extensions:
 
 ### Applications
 
-Sign in to any remaining applications, such as Steam or Battle.net.
+Sign in to:
+
+- Claude Code, by running `claude` once.
+- Codex, by running `codex` once.
+- Any remaining applications, such as Steam or Battle.net.
 
 ### GitHub SSH key
 
