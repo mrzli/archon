@@ -2,7 +2,6 @@ angular.ng-template
 bradlc.vscode-tailwindcss
 digitalbrainstem.javascript-ejs-support
 donjayamanne.githistory
-esbenp.prettier-vscode
 evzen-wybitul.magic-racket
 firsttris.vscode-jest-runner
 grapecity.gc-excelviewer
