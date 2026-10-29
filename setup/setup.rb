@@ -250,6 +250,15 @@ def install_vscode_extensions(repo_root)
       installed_extensions << extension.downcase
     end
   end
+  report_unlisted_vscode_extensions(installed_extensions, extensions)
+end
+
+def report_unlisted_vscode_extensions(installed_extensions, extensions)
+  unlisted = installed_extensions - extensions.map(&:downcase)
+  return if unlisted.empty?
+
+  log_info 'Installed but not in data/vscode-extensions.txt:'
+  unlisted.each { |extension| log_info "  #{extension}" }
 end
 
 def install_home_files(repo_root, home)

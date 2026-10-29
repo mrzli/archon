@@ -124,7 +124,7 @@ when 'docker'
 when 'hyprctl'
   puts ENV.fetch('HYPRLAND_ERRORS', '[""]') if ARGV == %w[-j configerrors]
 when 'code'
-  puts 'EXISTING.extension' if ARGV.first == '--list-extensions'
+  puts "EXISTING.extension\nunlisted.extension" if ARGV.first == '--list-extensions'
 when 'git'
   if ARGV.include?('clone')
     FileUtils.mkdir_p(["#{ARGV.last}/.git", "#{ARGV.last}/skills/productivity/example"])

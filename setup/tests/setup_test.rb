@@ -93,8 +93,9 @@ check('repeat runs preserve user files and avoid duplicate configuration', :full
   FileUtils.mkdir_p(["#{home}/Projects", "#{home}/.claude"])
   File.write("#{home}/.claude/settings.json", '{"theme": "dark"}')
   2.times do
-    _, error, status = run_setup(repo, env)
+    output, error, status = run_setup(repo, env)
     assert status.success?, error
+    assert output.include?("Installed but not in data/vscode-extensions.txt:\n      unlisted.extension\n")
     assert !File.exist?("#{home}/Projects")
   end
   assert File.read("#{home}/personal-file") == "preserve\n"
