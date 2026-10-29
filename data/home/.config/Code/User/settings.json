@@ -50,6 +50,9 @@
   "workbench.editor.wrapTabs": true,
   "workbench.secondarySideBar.defaultVisibility": "hidden",
   "zig.zls.enabled": "on",
+  "[astro][css][graphql][handlebars][html][javascript][javascriptreact][json][json5][jsonc][less][markdown][mdx][mjml][scss][svelte][toml][typescript][typescriptreact][vue][yaml]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
   "[markdown]": {
     "editor.wordWrap": "off"
   }
