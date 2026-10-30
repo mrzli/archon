@@ -56,6 +56,8 @@ For a group of changes, work on a separate branch. Give each self-contained chan
 
 Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the user's branch by fast-forwarding. If the user's branch has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit. Ask before rebasing commits that were already pushed. Resolve mechanical rebase conflicts, such as a rename meeting an edited line, and report them. Ask about any other conflict. If integrating would touch files with uncommitted changes, report the files and ask before committing, stashing, or discarding anything.
 
+Before bringing commits into the main branch, have them reviewed by an agent that did not write them. Give the reviewer the original request and the diff, not the author's conversation. A review that an independent agent already made of the same changes counts, also after a rebase that resolved only mechanical conflicts. Bring them in only when no blocking findings remain, and report how long the review took.
+
 Run only the checks the project requires for the kind of change, such as documentation only or code. After a check fails, rerun only that check until it passes, then run the change's full set once.
 
 ## Tooling
