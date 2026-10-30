@@ -135,6 +135,7 @@ def install_packages
 
   repository_packages = [
     'tokei',       # Source code statistics
+    'gitleaks',    # Secret scanning for the global pre-push hook
     'foliate',     # E-book reader
     'qbittorrent', # BitTorrent client
     'dbeaver',     # Database client

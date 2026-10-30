@@ -5,3 +5,6 @@
   defaultBranch = master
 [fetch]
   prune = true
+[hook "gitleaks"]
+  event = pre-push
+  command = ~/.config/git/hooks/gitleaks-pre-push.sh
