@@ -34,13 +34,15 @@ Hold your own design choices to the same standard while you work, not only when 
 
 When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Weigh one-off transition work far below the end result, so it does not read as a drawback of the option.
 
-## Design
+## Code design
 
-Pass a unit what it uses explicitly, such as a parameter or a required input. Never let it reach a dependency through a global, a singleton, or an ambient object. One shared instance passed to every unit that uses it is fine.
+Treat these as defaults for code that will be maintained, not as absolute rules. A project's own conventions and its language's or framework's idioms take precedence, and scripts, prototypes, and small tools call for judgment. Apply them to code you write or change. When existing code you work with departs from them without a clear reason, say so and recommend a change, but make it only when asked.
 
-Prefer immutable values, replaced whole, and pure functions. Mutate state only where a stated reason requires it, such as measured performance or a framework requirement.
+Pass a unit what it uses, such as a parameter or a constructor argument, instead of letting it reach a global, a singleton, process state such as environment variables, or effects such as the clock. Read that state once, near the program's entry point, and pass it down. One shared instance passed to every unit that uses it is fine.
 
-Define defaults once, at the program's top level, and pass them down. A unit never fills in a value that its caller left out.
+Prefer immutable values and pure functions. Change a value by building a new one, and mutate in place only for a clear reason, such as measured performance or a framework requirement. Mutating a local value that only leaves the function once it is finished is fine.
+
+Define defaults once, near the program's entry point, and pass them down. A unit takes what it needs and does not fill in a value its caller left out, even with a default argument. A constant that is part of a unit's contract, such as a protocol value, is fine.
 
 ## Git and checks
 
