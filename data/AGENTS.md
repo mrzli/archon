@@ -9,4 +9,5 @@ settings. Order these blocks alphabetically by language identifier, such as
 
 Keep `home/.codex/AGENTS.md` independent of any skill collection. Describe the
 activity, such as reviewing a change or writing a handoff, not the name of a
-skill that performs it.
+skill that performs it. That file already tells agents to use a skill that
+matches the task, so naming one adds nothing.
