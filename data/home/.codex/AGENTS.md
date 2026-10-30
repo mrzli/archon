@@ -34,6 +34,14 @@ Hold your own design choices to the same standard while you work, not only when 
 
 When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Weigh one-off transition work far below the end result, so it does not read as a drawback of the option.
 
+## Design
+
+Pass a unit what it uses explicitly, such as a parameter or a required input. Never let it reach a dependency through a global, a singleton, or an ambient object. One shared instance passed to every unit that uses it is fine.
+
+Prefer immutable values, replaced whole, and pure functions. Mutate state only where a stated reason requires it, such as measured performance or a framework requirement.
+
+Define defaults once, at the program's top level, and pass them down. A unit never fills in a value that its caller left out.
+
 ## Git and checks
 
 For a group of changes, work on a separate branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
