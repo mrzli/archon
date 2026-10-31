@@ -44,13 +44,13 @@ When an option needs changes in another unit or module, present those changes by
 
 Treat these as defaults for code that will be maintained, not as absolute rules. A project's own conventions and its language's or framework's idioms take precedence, and scripts, prototypes, and small tools call for judgment.
 
-Follow them in the code you write. In each unit you change, also fix existing code that departs from them, without waiting to be asked, and report each fix as a choice you made. Ask first only where "Approval" requires it. In code you only read, point out departures that have no clear reason and recommend a fix, but make it only when asked.
+Follow them in the code you write. In each unit you change, also fix existing code that departs from them without a clear reason. Do it without waiting to be asked, and report each fix as "Approval" describes. Ask first only where that section requires it. In code you only read, point out departures that have no clear reason and recommend a fix, but make it only when asked.
 
-Pass a unit what it uses, as parameters or constructor arguments. Do not let it reach a global, a singleton, process state such as environment variables, or effects such as the clock. Read that state once, near the program's entry point, and pass it down. One shared instance passed to every unit that uses it is fine.
+Pass a unit what it uses, such as through parameters or constructor arguments. Do not let it reach a global, a singleton, process state such as environment variables, or effects such as the clock. Read that state once, near the program's entry point, and pass it down. One shared instance passed to every unit that uses it is fine. When a unit reaches for something it was not given, first check whether it needs it at all. Removing a dependency is better than passing it in.
 
-Pass the values a unit reads, not the object they come from, such as a size rather than the window that has it. When a unit reaches for something it was not given, first check whether it needs it at all. Removing a dependency is better than passing it in.
+Pass a unit the narrowest input that covers what it uses. When it only reads values, pass those values, not the object they come from, such as a size rather than the window that has it.
 
-Make code testable through its design, such as by passing dependencies in. Do not add code, parameters, optional inputs, or public members that exist only for tests.
+Make code testable through its design, such as by passing dependencies in. Do not add to the code under test any code, parameter, optional input, or public member that exists only for tests.
 
 Prefer immutable values and pure functions. Change a value by building a new one, and mutate in place only for a clear reason, such as measured performance or a framework requirement. Mutating a local value that only leaves the function once it is finished is fine.
 
