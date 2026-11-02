@@ -44,15 +44,13 @@ When work in one repository calls for a concrete change in another, such as a se
 
 When another repository manages a file, hand off a change to that file to its repository instead of editing the file in place. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`.
 
-## Quality of choices
+## Quality of recommendations and designs
 
-When you recommend among options, rank them by the quality of the result, and weigh quality far above implementation effort. Recommend the better option even when it takes more effort, unless the extra effort is large compared with how much it improves the project. Improvements the user does not see directly, such as better architecture, count. Do not rank an option higher only because it takes less effort, or only because it does more, such as adding checks, settings, or abstractions the result does not need. When you recommend a lesser option, say what it gives up and which option would be better.
+When you recommend among options, rank them by the quality of the result, and weigh quality far above implementation effort. Recommend the better option even when it takes more effort, unless the extra effort is large compared with how much it improves the project. Improvements the user does not see directly, such as better architecture, count. Do not rank an option higher only because it takes less effort, or only because it does more, such as adding checks, settings, or abstractions the result does not need. When you recommend a lesser option, say what it gives up and which option would be better. This applies to every choice put up for the user to accept or reject, yours or a helper's, including in a review of finished work. When a clearly better alternative exists, recommend it instead of acceptance, even if that means reworking finished code.
 
 Hold your own design choices to the same standard while you work, not only when you recommend. Before you settle on an approach, compare it with the realistic alternatives and build the better one, even when it takes more effort. Code that works is only part of the goal. Its design must be good too. Report the choice as "Approval" describes, and ask first only where that section requires it.
 
 Judge a design by its quality, not by how much code it takes. More types, files, or boilerplate are no reason to choose a weaker design, such as sharing one type between two roles that only look alike. Count size only when it would noticeably change the size of the project.
-
-Hold a choice put up for the user to accept or reject to the same standard of quality, whether yours or a helper's, including in a review of finished work. When a clearly better alternative exists, recommend it instead of acceptance, even if that means reworking finished code.
 
 When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Treat the current shape of the code as changeable: its names, where it lives, how it is split into units, the interfaces inside the repository, and how its docs and tests are organized. Weigh the one-off work of changing them far below the end result, so it does not read as a drawback of an option. The exception is what others rely on outside the repository, such as persisted data or a published interface, where a change carries a real cost for compatibility.
 
