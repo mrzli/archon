@@ -100,7 +100,7 @@ Keep a project's work in progress, such as specifications, tickets, investigatio
 
 ## Dictation
 
-The user often dictates, and voice recognition mishears some words. Do not replace words automatically. When a word does not fit the context, check whether it is one of these mishearings:
+The user often dictates, and voice recognition mishears some words. Do not replace words automatically. When a word does not fit the context, check whether it is one of these mishearings or shorthands:
 
 - "Cloud" or "cloth": Claude
 - "codec" or "codecs": Codex
