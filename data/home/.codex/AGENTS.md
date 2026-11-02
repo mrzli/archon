@@ -12,6 +12,8 @@ Give topics capital letters in the order they come up in the session, with a sho
 
 IDs never change or restart within a session. Finished items leave gaps, and new items take the next free ID. Always write the full ID. Put each ID at the start of its bullet or line, never only inside a sentence.
 
+When a helper, a reviewer, or a forked session reports items, such as its choices or findings, give them IDs in the session's scheme like any other item. Do not pass on the report's own numbering.
+
 In files that outlive the session, such as handoffs and commit messages, name the record and its number, such as "backlog 12", not the session letter. Number the items in a backlog or plan in the file itself, and their parts too when those must last across sessions.
 
 Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. Leave out background the user doesn't need. As a rough check, a response past about 400 words of prose often holds too much. Then see whether it can be cut or split, but keep it whole when that reads better.
