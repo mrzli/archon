@@ -111,5 +111,6 @@ The user often dictates, and voice recognition mishears some words. Do not repla
 - "arkham": archon
 - "deported": idempotent
 - "burged": merged
+- "elif": ELI5, "explain like I'm five"
 
 When a request may have been misheard or mistranscribed, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
