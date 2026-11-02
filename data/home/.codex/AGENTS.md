@@ -14,7 +14,7 @@ Size a response by how much the user must take in, not by its length. Give one h
 
 In conversation, give an ID to everything the user may answer, choose, approve, or reject later: questions, options, proposals, work items, agendas and lists of questions still to come, and your own choices beyond what the user approved. Use bullets for everything else, and plain numbered lists only where nothing will be answered, such as the steps of a procedure.
 
-When you introduce an item that gets an ID, say in a few words where it came from, what part of the project it concerns, what kind it is, and why it matters. Kinds include a bug, an improvement, a design choice, and a question. When the item comes from a report, such as a helper's, a reviewer's, or a forked session's, name the report.
+When you introduce an item that gets an ID, say in a few words where it came from, what part of the project it concerns, what kind it is, and why it matters. Its kind may be a bug, an improvement, a design choice, or a question. When the item comes from a report, such as a helper's, a reviewer's, or a forked session's, name the report.
 
 Give topics capital letters in the order they come up in the session, with a short name beside the letter at its first mention in each message. Number their parts by alternating numbers and lowercase letters, without separators, such as N, N6, N6d, N6d1. Continue letters past z or Z the way Excel names columns, such as y, z, aa, ab or Y, Z, AA, AB. A record with its own numbered items, such as a backlog, a plan, or a design's open questions, is one topic, and its items keep their numbers under its letter, such as E12.
 
@@ -100,7 +100,7 @@ Before proposing, check the project's backlog, or its `.scratch/` folder when it
 
 Keep project knowledge, such as rules, conventions, decisions, and design notes, in the project's `AGENTS.md` or documentation, not in an agent's private memory, so other people and agents that use the project see it. Use private memory only for the user's personal preferences.
 
-Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Remove a record there once nothing in it is open and no backlog item, plan, or other record points to it, such as a review whose findings are all done, dropped, or recorded elsewhere. Git history keeps it. Put transient, generated, or machine-specific files in `.scratch/temp/`, and make sure the project's `.gitignore` excludes it.
+Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Remove a record there once nothing in it is open or still in use and no backlog item, plan, or other record points to it, such as a review whose findings are all done, dropped, or recorded elsewhere. Git history keeps it. Put transient, generated, or machine-specific files in `.scratch/temp/`, and make sure the project's `.gitignore` excludes it.
 
 ## Dictation
 
