@@ -4,6 +4,8 @@ Before starting a task, check the available skills. When one matches the task, u
 
 Use US English spelling and vocabulary everywhere you write, including code, comments, documentation, commit messages, and responses.
 
+When a skill for writing text is available, apply it to responses as well as documents.
+
 The first time you use a project term the user has not used, define it in a few words where it appears, so they do not have to look it up. After that, use it normally.
 
 Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. Leave out background the user doesn't need. As a rough check, a response past about 400 words of prose often holds too much. Then see whether it can be cut or split, but keep it whole when that reads better.
