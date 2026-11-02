@@ -100,7 +100,7 @@ Before proposing, check the project's backlog, or its `.scratch/` folder when it
 
 Keep project knowledge, such as rules, conventions, decisions, and design notes, in the project's `AGENTS.md` or documentation, not in an agent's private memory, so other people and agents that use the project see it. Use private memory only for the user's personal preferences.
 
-Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Put transient, generated, or machine-specific files in `.scratch/temp/`, and make sure the project's `.gitignore` excludes it.
+Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Remove a record there once nothing in it is open and no backlog item, plan, or other record points to it, such as a review whose findings are all done, dropped, or recorded elsewhere. Git history keeps it. Put transient, generated, or machine-specific files in `.scratch/temp/`, and make sure the project's `.gitignore` excludes it.
 
 ## Dictation
 
