@@ -8,7 +8,7 @@ When a skill for writing text is available, apply it to responses as well as doc
 
 The first time you use a project term the user has not used, define it in a few words where it appears, so they do not have to look it up. After that, use it normally.
 
-Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. Leave out background the user doesn't need. As a rough check, a response past about 400 words of prose often holds too much. Then see whether it can be cut or split, but keep it whole when that reads better.
+Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. Leave out background the user does not need. As a rough check, a response past about 400 words of prose often holds too much. When one does, see whether it can be cut or split, but keep it whole when that reads better.
 
 ## IDs in conversation
 
@@ -22,7 +22,7 @@ IDs never change or restart within a session. Finished items leave gaps, and new
 
 When a helper, a reviewer, or a forked session reports items, such as its choices or findings, give them IDs in the session's scheme like any other item. Do not pass on the report's own numbering as the item's ID. You may keep it beside the new ID as a reference, such as `G3 (finding 4)`.
 
-In files that outlive the session, such as handoffs and commit messages, name the record and its number, such as "backlog 12", not the session letter. Number the items in a backlog or plan in the file itself, and their parts too when those must last across sessions.
+In files that outlive the session, such as handoffs and commit messages, name the record and its number, such as "backlog 12", not the session letter. Number the items in a backlog or plan in the file itself, and their parts too when those must last across sessions. Describe any other item in words, not by its session ID.
 
 ## Approval
 
@@ -30,7 +30,7 @@ A question is not a request to act. Answer it and wait for an instruction. Do no
 
 Do not add large or lasting structure, such as a new module, package, or service, only because an approved change makes it possible. Ask first, even inside an approved item. A small file, type, or helper that improves the design of the code you change is not such structure. Make it and list it as a choice taken.
 
-When you report a change, sort your choices beyond what the user approved into three levels, omit, list, and ask, or say there were none. When unsure of the level, use the higher one.
+When you report a change, sort your choices beyond what the user approved into three levels: omit, list, and ask. When there are none, say so. When unsure of the level, use the higher one.
 
 - Omit routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references.
 - List reasonable, easily reversed choices once, as taken. A design change is at least a listed choice, even inside a tidy-up. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left.
@@ -40,7 +40,7 @@ Rename and change interfaces inside the repository on your own judgment when a b
 
 ## Other repositories
 
-When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it without being asked, and give its path with the recommendation. The handoff is an offer, and the user decides whether to use it. An agent that receives a handoff follows its repository's instructions where the handoff conflicts with them. Do not write one for a passing idea or an undecided change.
+When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it without being asked, and give its path when you recommend the change. The handoff is an offer, and the user decides whether to use it. An agent that receives a handoff follows its repository's instructions where the handoff conflicts with them. Do not write one for a passing idea or an undecided change.
 
 When another repository manages a file, hand off a change to that file to its repository instead of editing the file in place. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`.
 
@@ -60,7 +60,7 @@ Treat these as defaults for code that will be maintained, not as absolute rules.
 
 Follow them in the code you write. In each unit you change, also fix existing code that departs from them without a clear reason. Do it without waiting to be asked, and report each fix as "Approval" describes. Ask first only where that section requires it. In code you only read, point out departures that have no clear reason and recommend a fix, but make it only when asked.
 
-Pass a unit what it uses, such as through parameters or constructor arguments. Do not let it reach a global, a singleton, process state such as environment variables, or effects such as the clock. Read that state once, near the program's entry point, and pass it down. One shared instance passed to every unit that uses it is fine. When a unit reaches for something it was not given, first check whether it needs it at all. Removing a dependency is better than passing it in.
+Pass a unit what it uses, such as through parameters or constructor arguments. Do not let it reach for a global, a singleton, process state such as environment variables, or an effect such as reading the clock. Read that state once, near the program's entry point, and pass it down. One shared instance passed to every unit that uses it is fine. When a unit reaches for something it was not given, first check whether it needs it at all. Removing a dependency is better than passing it in.
 
 Pass a unit the narrowest input that covers what it uses. When it only reads values, pass those values, not the object they come from, such as a size rather than the window that has it.
 
@@ -78,7 +78,7 @@ When you rename or change something that code inside the repository uses, update
 
 Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
 
-Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the user's branch by fast-forwarding. If the user's branch has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit.
+Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the branch you work on for the user by fast-forwarding. If the branch you work on has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit.
 
 Ask before rebasing commits that were already pushed. Resolve mechanical rebase conflicts, such as a rename meeting an edited line, and report them. Ask about any other conflict. If integrating would touch files with uncommitted changes, report the files and ask before committing, stashing, or discarding anything.
 
@@ -100,7 +100,7 @@ Before proposing, check the project's backlog, or its `.scratch/` folder when it
 
 Keep project knowledge, such as rules, conventions, decisions, and design notes, in the project's `AGENTS.md` or documentation, not in an agent's private memory, so other people and agents that use the project see it. Use private memory only for the user's personal preferences.
 
-Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Put transient, generated, or machine-specific files in `.scratch/temp/`, which the project's `.gitignore` excludes.
+Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Put transient, generated, or machine-specific files in `.scratch/temp/`, and make sure the project's `.gitignore` excludes it.
 
 ## Dictation
 
