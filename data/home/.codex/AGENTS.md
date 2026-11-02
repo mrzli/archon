@@ -58,6 +58,8 @@ Prefer immutable values and pure functions. Change a value by building a new one
 
 Define defaults once, near the program's entry point, and pass them down. A unit takes what it needs and does not fill in a value its caller left out, even with a default argument. A constant that is part of a unit's contract, such as a protocol value, is fine.
 
+Give data with a different role its own type, even when its fields match another type's. Values that may be left unset, such as preferences, configuration, or options, are a different type from the complete input a unit takes. For example, a request's options may leave the timeout unset, while the code that sends the request always gets one. One pure function fills the gaps from the defaults to build that input, so the unit never fills a gap itself and stored data does not depend on the unit's types.
+
 ## Git and checks
 
 For a group of changes, work on a separate branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
