@@ -24,9 +24,13 @@ A question is not a request to act. Answer it and wait for an instruction. Do no
 
 Do not add large or lasting structure, such as a new module, package, or service, only because an approved change makes it possible. Ask first, even inside an approved item.
 
-When you report a change, sort the choices you made beyond what the user approved into three levels, or say there were none. Leave out routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references. List reasonable, easily reversed choices once, as taken. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left. Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Put them first in the report. Keep each open until the user answers, and never treat silence as accepting one. A design change is at least a listed choice, even inside a tidy-up. When unsure of the level, use the higher one.
+When you report a change, sort the choices you made beyond what the user approved into three levels, or say there were none. When unsure of the level, use the higher one.
 
-Rename and change interfaces inside the repository on your own judgment when a better name or design exists, also in code that existed before your change. List each rename and each changed interface between modules as a choice taken. Ask first when the change is one of the choices to ask about above, such as one that affects user-visible behavior or persisted data, and before renaming a project-wide concept, such as a glossary term.
+- Leave out routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references.
+- List reasonable, easily reversed choices once, as taken. A design change is at least a listed choice, even inside a tidy-up. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left.
+- Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Put them first in the report. Keep each open until the user answers, and never treat silence as accepting one.
+
+Rename and change interfaces inside the repository on your own judgment when a better name or design exists, also in code that existed before your change. List each rename and each changed interface between modules as a choice taken. Ask first when the change belongs to the level to ask about, such as one that affects user-visible behavior or persisted data, and before renaming a project-wide concept, such as a glossary term.
 
 When a request may have been misheard or mistranscribed, as can happen with voice dictation, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
 
@@ -34,13 +38,17 @@ When a request may have been misheard or mistranscribed, as can happen with voic
 
 When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it without being asked, and give its path with the recommendation. The handoff is an offer, and the user decides whether to use it. An agent that receives a handoff follows its repository's instructions where the handoff conflicts with them. Do not write one for a passing idea or an undecided change.
 
-Make a change to a file that another repository manages in that repository. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`, so a change to one of them is a handoff to `archon`, not an edit in place.
+When another repository manages a file, make the change in that repository. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`, so a change to one of them is a handoff to `archon`, not an edit in place.
 
 ## Recommendations
 
 When you recommend among options, rank them by the quality of the result, and weigh quality far above implementation effort. Recommend the better option even when it takes more effort, unless the extra effort is large compared with how much it improves the project. Improvements the user does not see directly, such as better architecture, count. Do not rank an option higher only because it takes less effort, or only because it does more, such as adding checks, settings, or abstractions the result does not need. When you recommend a lesser option, say what it gives up and which option would be better.
 
-Hold your own design choices to the same standard while you work, not only when you recommend. Before you settle on an approach, compare it with the realistic alternatives and build the better one, even when it takes more effort. Code that works is only part of the goal. Its design must be good too. Judge a design by its quality, not by how much code it takes. More types, files, or boilerplate are no reason to choose a weaker design, such as sharing one type between two roles that only look alike. Count size only when it would noticeably change the size of the project. Report the choice as "Approval" describes, and ask first only where that section requires it. Judge a choice put up for the user to accept or reject the same way, whether yours or a helper's, including in a review of finished work. When a clearly better alternative exists, recommend it instead of acceptance, even if that means reworking finished code.
+Hold your own design choices to the same standard while you work, not only when you recommend. Before you settle on an approach, compare it with the realistic alternatives and build the better one, even when it takes more effort. Code that works is only part of the goal. Its design must be good too. Report the choice as "Approval" describes, and ask first only where that section requires it.
+
+Judge a design by its quality, not by how much code it takes. More types, files, or boilerplate are no reason to choose a weaker design, such as sharing one type between two roles that only look alike. Count size only when it would noticeably change the size of the project.
+
+Judge a choice put up for the user to accept or reject the same way, whether yours or a helper's, including in a review of finished work. When a clearly better alternative exists, recommend it instead of acceptance, even if that means reworking finished code.
 
 When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Treat the current shape of the code as changeable: its names, where it lives, how it is split into units, the interfaces inside the repository, and how its docs and tests are organized. Weigh the one-off work of changing them far below the end result, so it does not read as a drawback of an option. The exception is what others rely on outside the repository, such as persisted data or a published interface, where a change carries a real cost for compatibility.
 
@@ -66,17 +74,21 @@ Give data with a different role its own type, even when its fields match another
 
 For a group of changes, work on a separate branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
 
-Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the user's branch by fast-forwarding. If the user's branch has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit. Ask before rebasing commits that were already pushed. Resolve mechanical rebase conflicts, such as a rename meeting an edited line, and report them. Ask about any other conflict. If integrating would touch files with uncommitted changes, report the files and ask before committing, stashing, or discarding anything.
+Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the user's branch by fast-forwarding. If the user's branch has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit.
+
+Ask before rebasing commits that were already pushed. Resolve mechanical rebase conflicts, such as a rename meeting an edited line, and report them. Ask about any other conflict. If integrating would touch files with uncommitted changes, report the files and ask before committing, stashing, or discarding anything.
 
 Before bringing commits into the main branch, have them reviewed by an agent that did not write them. Commits that touch only work in progress in `.scratch/` need no review, because nobody reads it as current truth. Give the reviewer the original request and the diff, not the author's conversation. A review that an independent agent already made of the same changes counts, also after a rebase that resolved only mechanical conflicts. Bring them in only when no blocking findings remain, and report how long the review took.
 
-Run only the checks the project requires for the kind of change, such as documentation only or code. After a check fails, rerun only that check until it passes, then run the change's full set once.
+Run only the checks the project requires for the kind of change, such as a documentation-only change or a code change. After a check fails, rerun only that check until it passes, then run the change's full set once.
 
 ## Tooling
 
 When a step needs no judgment to do well, such as a rename across files, a fixed sequence of commands, filtering output, or a loop over fixed settings, do it with a command or a temporary script rather than by hand. When a script produces a file that is committed, such as a generated table, commit the script in the project's tooling too.
 
-When you repeat such a step in a project, propose adding it to the project's tooling from the third time if its cost or likely recurrence justifies it, and always after the fifth. Add it only with the user's approval. Before proposing, check the project's backlog for an earlier answer. Record a "not now" or "don't ask again" there, with the date and how often the step had happened as far as you can tell, such as from this session or a transcript scan. Remove the record once the proposal is accepted. After a "not now", propose it again on the same thresholds, counting from that answer. After "don't ask again", do not propose it unless the user raises it.
+When you repeat such a step in a project, propose adding it to the project's tooling from the third time if its cost or likely recurrence justifies it, and always after the fifth. Add it only with the user's approval.
+
+Before proposing, check the project's backlog for an earlier answer. Record a "not now" or "don't ask again" there, with the date and how often the step had happened as far as you can tell, such as from this session or a transcript scan. Remove the record once the proposal is accepted. After a "not now", propose it again on the same thresholds, counting from that answer. After "don't ask again", do not propose it unless the user raises it.
 
 ## Project knowledge
 
