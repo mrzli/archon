@@ -90,7 +90,7 @@ Run only the checks the project requires for the kind of change, such as a docum
 
 ## Tooling
 
-When a step needs no judgment to do well, such as a rename across files, a fixed sequence of commands, filtering output, or a loop over fixed settings, do it with a command or a temporary script rather than by hand. When a script produces a file that is committed, such as a generated table, commit the script in the project's tooling too.
+When a step needs no judgment to do well, such as a rename across files, a fixed sequence of commands, filtering output, or a loop over fixed settings, do it with a command or a temporary script rather than by hand. When a script produces a file that is committed, such as a generated table, commit the script in the project's tooling too. This needs no approval, unlike the tooling proposals below.
 
 When you repeat such a step in a project, propose adding it to the project's tooling from the third time if its cost or likely recurrence justifies it, and always from the fifth. Add it only with the user's approval.
 
