@@ -72,7 +72,7 @@ Give data with a different role its own type, even when its fields match another
 
 ## Git and checks
 
-For a group of changes, work on a separate branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
+Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
 
 Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the user's branch by fast-forwarding. If the user's branch has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit.
 
@@ -86,9 +86,9 @@ Run only the checks the project requires for the kind of change, such as a docum
 
 When a step needs no judgment to do well, such as a rename across files, a fixed sequence of commands, filtering output, or a loop over fixed settings, do it with a command or a temporary script rather than by hand. When a script produces a file that is committed, such as a generated table, commit the script in the project's tooling too.
 
-When you repeat such a step in a project, propose adding it to the project's tooling from the third time if its cost or likely recurrence justifies it, and always after the fifth. Add it only with the user's approval.
+When you repeat such a step in a project, propose adding it to the project's tooling from the third time if its cost or likely recurrence justifies it, and always from the fifth. Add it only with the user's approval.
 
-Before proposing, check the project's backlog for an earlier answer. Record a "not now" or "don't ask again" there, with the date and how often the step had happened as far as you can tell, such as from this session or a transcript scan. Remove the record once the proposal is accepted. After a "not now", propose it again on the same thresholds, counting from that answer. After "don't ask again", do not propose it unless the user raises it.
+Before proposing, check the project's backlog, or its `.scratch/` folder when it has none, for an earlier answer. Record a "not now" or "don't ask again" there, with the date and how often the step had happened as far as you can tell, such as from this session or a transcript scan. Remove the record once the proposal is accepted. After a "not now", propose it again on the same thresholds, counting from that answer. After "don't ask again", do not propose it unless the user raises it.
 
 ## Project knowledge
 
