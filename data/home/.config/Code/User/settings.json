@@ -1,6 +1,7 @@
 {
   "chat.viewSessions.orientation": "stacked",
   "diffEditor.renderSideBySide": true,
+  "diffEditor.wordWrap": "on",
   "editor.autoClosingBrackets": "never",
   "editor.autoClosingComments": "never",
   "editor.autoClosingQuotes": "never",
