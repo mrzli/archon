@@ -24,21 +24,19 @@ A question is not a request to act. Answer it and wait for an instruction. Do no
 
 Do not add large or lasting structure, such as a new module, package, or service, only because an approved change makes it possible. Ask first, even inside an approved item.
 
-When you report a change, sort the choices you made beyond what the user approved into three levels, or say there were none. When unsure of the level, use the higher one.
+When you report a change, sort the choices you made beyond what the user approved into three levels, omit, list, and ask, or say there were none. When unsure of the level, use the higher one.
 
-- Leave out routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references.
+- Omit routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references.
 - List reasonable, easily reversed choices once, as taken. A design change is at least a listed choice, even inside a tidy-up. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left.
 - Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Put them first in the report. Keep each open until the user answers, and never treat silence as accepting one.
 
-Rename and change interfaces inside the repository on your own judgment when a better name or design exists, also in code that existed before your change. List each rename and each changed interface between modules as a choice taken. Ask first when the change belongs to the level to ask about, such as one that affects user-visible behavior or persisted data, and before renaming a project-wide concept, such as a glossary term.
-
-When a request may have been misheard or mistranscribed, as can happen with voice dictation, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
+Rename and change interfaces inside the repository on your own judgment when a better name or design exists, also in code that existed before your change. List each rename and each changed interface between modules as a choice taken. Ask first when the change belongs to the ask level, such as one that affects user-visible behavior or persisted data, and before renaming a project-wide concept, such as a glossary term.
 
 ## Other repositories
 
 When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it without being asked, and give its path with the recommendation. The handoff is an offer, and the user decides whether to use it. An agent that receives a handoff follows its repository's instructions where the handoff conflicts with them. Do not write one for a passing idea or an undecided change.
 
-When another repository manages a file, make the change in that repository. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`, so a change to one of them is a handoff to `archon`, not an edit in place.
+When another repository manages a file, hand off a change to that file to its repository instead of editing the file in place. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`.
 
 ## Recommendations
 
@@ -48,7 +46,7 @@ Hold your own design choices to the same standard while you work, not only when 
 
 Judge a design by its quality, not by how much code it takes. More types, files, or boilerplate are no reason to choose a weaker design, such as sharing one type between two roles that only look alike. Count size only when it would noticeably change the size of the project.
 
-Judge a choice put up for the user to accept or reject the same way, whether yours or a helper's, including in a review of finished work. When a clearly better alternative exists, recommend it instead of acceptance, even if that means reworking finished code.
+Hold a choice put up for the user to accept or reject to the same standard of quality, whether yours or a helper's, including in a review of finished work. When a clearly better alternative exists, recommend it instead of acceptance, even if that means reworking finished code.
 
 When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Treat the current shape of the code as changeable: its names, where it lives, how it is split into units, the interfaces inside the repository, and how its docs and tests are organized. Weigh the one-off work of changing them far below the end result, so it does not read as a drawback of an option. The exception is what others rely on outside the repository, such as persisted data or a published interface, where a change carries a real cost for compatibility.
 
@@ -109,3 +107,5 @@ The user often dictates, and voice recognition mishears some words. Do not repla
 - "arkham": archon
 - "deported": idempotent
 - "burged": merged
+
+When a request may have been misheard or mistranscribed, confirm destructive or hard-to-reverse actions before taking them, such as merging or deleting branches, force-pushing, or deleting files.
