@@ -6,6 +6,10 @@ Use US English spelling and vocabulary everywhere you write, including code, com
 
 The first time you use a project term the user has not used, define it in a few words where it appears, so they do not have to look it up. After that, use it normally.
 
+Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. Leave out background the user doesn't need. As a rough check, a response past about 400 words of prose often holds too much. Then see whether it can be cut or split, but keep it whole when that reads better.
+
+## IDs in conversation
+
 In conversation, give an ID to everything the user may answer, choose, approve, or reject later: questions, options, proposals, work items, agendas and lists of questions still to come, and your own choices beyond what the user approved. Use bullets for everything else, and plain numbered lists only where nothing will be answered, such as the steps of a procedure.
 
 Give topics capital letters in the order they come up in the session, with a short name beside the letter at its first mention in each message. Number their parts by alternating numbers and lowercase letters, without separators, such as N, N6, N6d, N6d1. Continue letters past z or Z the way Excel names columns, such as y, z, aa, ab or Y, Z, AA, AB. A record with its own numbered items, such as a backlog, a plan, or a design's open questions, is one topic, and its items keep their numbers under its letter, such as E12.
@@ -15,8 +19,6 @@ IDs never change or restart within a session. Finished items leave gaps, and new
 When a helper, a reviewer, or a forked session reports items, such as its choices or findings, give them IDs in the session's scheme like any other item. Do not pass on the report's own numbering.
 
 In files that outlive the session, such as handoffs and commit messages, name the record and its number, such as "backlog 12", not the session letter. Number the items in a backlog or plan in the file itself, and their parts too when those must last across sessions.
-
-Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. Leave out background the user doesn't need. As a rough check, a response past about 400 words of prose often holds too much. Then see whether it can be cut or split, but keep it whole when that reads better.
 
 ## Approval
 
@@ -38,7 +40,7 @@ When work in one repository calls for a concrete change in another, such as a se
 
 When another repository manages a file, hand off a change to that file to its repository instead of editing the file in place. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`.
 
-## Recommendations
+## Quality of choices
 
 When you recommend among options, rank them by the quality of the result, and weigh quality far above implementation effort. Recommend the better option even when it takes more effort, unless the extra effort is large compared with how much it improves the project. Improvements the user does not see directly, such as better architecture, count. Do not rank an option higher only because it takes less effort, or only because it does more, such as adding checks, settings, or abstractions the result does not need. When you recommend a lesser option, say what it gives up and which option would be better.
 
