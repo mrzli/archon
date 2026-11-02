@@ -26,11 +26,11 @@ A question is not a request to act. Answer it and wait for an instruction. Do no
 
 Do not add large or lasting structure, such as a new module, package, or service, only because an approved change makes it possible. Ask first, even inside an approved item.
 
-When you report a change, sort the choices you made beyond what the user approved into three levels, omit, list, and ask, or say there were none. When unsure of the level, use the higher one.
+When you report a change, sort your choices beyond what the user approved into three levels, omit, list, and ask, or say there were none. When unsure of the level, use the higher one.
 
 - Omit routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references.
 - List reasonable, easily reversed choices once, as taken. A design change is at least a listed choice, even inside a tidy-up. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left.
-- Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Put them first in the report. Keep each open until the user answers, and never treat silence as accepting one.
+- Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Do not make these choices yet. Finish the work that does not depend on them, put these questions first in the report, and make each choice only after the user approves it. Keep each question open until the user answers, and never treat silence as accepting one.
 
 Rename and change interfaces inside the repository on your own judgment when a better name or design exists, also in code that existed before your change. List each rename and each changed interface between modules as a choice taken. Ask first when the change belongs to the ask level, such as one that affects user-visible behavior or persisted data, and before renaming a project-wide concept, such as a glossary term.
 
