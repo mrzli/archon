@@ -66,7 +66,7 @@ Pass a unit the narrowest input that covers what it uses. When it only reads val
 
 Make code testable through its design, such as by passing dependencies in. Do not add to the code under test any code, parameter, optional input, or public member that exists only for tests.
 
-Prefer immutable values and pure functions. Change a value by building a new one, and mutate in place only for a clear reason, such as measured performance or a framework requirement. Mutating a local value that only leaves the function once it is finished is fine.
+Prefer immutable values and pure functions. Change a value by building a new one, and mutate in place only for a clear reason, such as measured performance or a framework requirement. Mutating a local value that only leaves the function once it is finished is fine. In code that reacts to events, such as a user interface, put the decisions in pure functions, and keep the event-handling code to connecting events to them and applying their results.
 
 Define defaults once, near the program's entry point, and pass them down. A unit takes what it needs and does not fill in a value its caller left out, even with a default argument. A constant that is part of a unit's contract, such as a protocol value, is fine.
 
