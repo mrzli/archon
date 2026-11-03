@@ -64,7 +64,7 @@ Pass a unit what it uses, such as through parameters or constructor arguments. D
 
 Pass a unit the narrowest input that covers what it uses. When it only reads values, pass those values, not the object they come from, such as a size rather than the window that has it.
 
-Inherit only to implement an interface, or from a base that the framework provides to build on, such as a template. Add optional behavior as separate objects that a unit composes, not through more inheritance or a growing set of flags.
+Inherit only to implement an interface, or from a base that a framework provides to build on, such as a base control meant to be styled. Do not inherit only to share code. Add optional behavior as separate objects that a unit composes, not through more inheritance or a growing set of flags.
 
 Make code testable through its design, such as by passing dependencies in. Do not add to the code under test any code, parameter, optional input, or public member that exists only for tests.
 
