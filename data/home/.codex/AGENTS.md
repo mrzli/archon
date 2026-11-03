@@ -50,11 +50,11 @@ When you recommend among options, rank them by the quality of the result, and we
 
 Hold your own design choices to the same standard while you work, not only when you recommend. Before you settle on an approach, compare it with the realistic alternatives and build the better one, even when it takes more effort. Code that works is only part of the goal. Its design must be good too. Report the choice as "Approval" describes, and ask first only where that section requires it.
 
-When a design grows to fix neighboring problems, say so, and propose a slice of the change that fits the target design. Keep the simple, settled neighboring changes in the slice, and split out each one that needs its own design work into an item in the project's backlog. Propose removing an unfinished part that nothing needs yet rather than redesigning it now. Make later slices extend the first, not replace it.
-
 Judge a design by its quality, not by how much code it takes. More types, files, or boilerplate are no reason to choose a weaker design, such as sharing one type between two roles that only look alike. Count size only when it would noticeably change the size of the project.
 
 When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Treat the current shape of the code as changeable: its names, where it lives, how it is split into units, the interfaces inside the repository, and how its docs and tests are organized. Weigh the one-off work of changing them far below the end result, so it does not read as a drawback of an option. The exception is what others rely on outside the repository, such as persisted data or a published interface, where a change carries a real cost for compatibility.
+
+When a design grows to fix neighboring problems, tell the user, and propose a slice of the change that fits the target design. Keep the neighboring changes that are simple to make in the slice, and split out each complicated one, such as one that needs its own design work, into a backlog item. Propose removing an unfinished part of the existing code that nothing needs yet, rather than redesigning it now, and record its design in a backlog item. Make later slices extend the first, not replace it.
 
 ## Code design
 
