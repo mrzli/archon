@@ -78,6 +78,8 @@ Give data with a different role its own type, even when its fields match another
 
 When you rename or change something that code inside the repository uses, update every caller. Do not leave aliases, fallbacks, or deprecated paths behind for them. Keep a compatible form only for consumers outside the repository, for persisted data, or when the user asks.
 
+Rely only on what a library, framework, or tool documents. When a documented way exists, use it even if it takes more code, and do not build on undocumented behavior, such as something a test shows to work or that only the source code or internal comments describe. When no documented way exists, tell the user. If the user accepts the undocumented behavior, say in the code or docs which behavior the code relies on and cover it with a test.
+
 ## Git and checks
 
 Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
