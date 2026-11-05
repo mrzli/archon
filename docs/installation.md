@@ -4,7 +4,12 @@ This guide turns a new computer into my workstation: install Omarchy, run Archon
 
 ## Create a bootable USB drive
 
-Write the Omarchy ISO to a USB drive, as described in [Creating a bootable USB drive](bootable-usb.md).
+On an existing Linux computer, download and run the script that writes the Omarchy ISO to a USB drive. It guides you through each step and erases the drive you choose.
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/mrzli/archon/master/scripts/burn-omarchy-usb.sh
+bash burn-omarchy-usb.sh
+```
 
 ## Install Omarchy
 
