@@ -55,7 +55,10 @@ FAKE_COMMANDS = {
         columns "$2" < "$FAKE_ROOT/drives"
         if [[ -f $FAKE_ROOT/drives-after-scan ]]; then mv "$FAKE_ROOT/drives-after-scan" "$FAKE_ROOT/drives"; fi
         ;;
-      -bdno) cat "$FAKE_ROOT/drive-size" ;;
+      -bdno)
+        if [[ -f $FAKE_ROOT/lsblk-size-fail ]]; then exit 32; fi
+        cat "$FAKE_ROOT/drive-size"
+        ;;
       -no) if [[ -f $FAKE_ROOT/old-lsblk ]]; then exit 1; fi ;;
       -nlo)
         [[ $2 == LABEL ]] && printf 'OLD_LABEL\nOLD_LABEL\n\n'
@@ -289,6 +292,13 @@ check('a wrong device name cancels without touching the drive') do |root|
   assert sudo_calls(root).empty?, sudo_calls(root).inspect
 end
 
+check('typing the device name with its quotes cancels') do |root|
+  output, status = run_script(root, "1\n1\n1\n\"fakeusb\"\n")
+  assert !status.success?, output
+  assert output.include?('Nothing was written.'), output
+  assert sudo_calls(root).empty?, sudo_calls(root).inspect
+end
+
 check('the end of input cancels at the confirmation') do |root|
   output, status = run_script(root, "1\n1\n1\n")
   assert !status.success?, output
@@ -300,6 +310,10 @@ check('an invalid menu answer is asked again') do |root|
   output, status = run_script(root, "9\nx\n1\n1\n1\nfakeusb\n")
   assert status.success?, output
   assert output.scan('Enter a number from 1 to 2.').length == 2, output
+  output, status = run_script(root, "18446744073709551617\n")
+  assert !status.success?, output
+  assert output.include?('Enter a number from 1 to 2.'), output
+  assert !output.include?('Which architecture'), output
 end
 
 check('a local ISO without a published checksum gets a warning and can be written') do |root|
@@ -320,6 +334,27 @@ check('a local ISO is checked when a published checksum exists') do |root|
   output, status = run_script(root, "2\n1\n1\nfakeusb\n")
   assert !status.success?, output
   assert output.include?('does not match the published checksum'), output
+  assert sudo_calls(root).empty?, sudo_calls(root).inspect
+end
+
+check('a symlinked local ISO is measured by the ISO itself') do |root|
+  FileUtils.mkdir_p("#{root}/home/Downloads")
+  File.binwrite("#{root}/real.iso", iso_content('OMARCHY_202605'))
+  File.symlink("#{root}/real.iso", downloaded(root, 'omarchy-3.8.2.iso'))
+  output, status = run_script(root, "2\n1\n1\nfakeusb\n")
+  assert status.success?, output
+  assert output.include?('Writing 40000 bytes'), output
+  assert write_calls(root).any? { |line| line.include?('count=40000') }, log(root).inspect
+end
+
+check('a symlinked local ISO larger than the drive is rejected') do |root|
+  FileUtils.mkdir_p("#{root}/home/Downloads")
+  File.binwrite("#{root}/real.iso", iso_content('OMARCHY_202605'))
+  File.symlink("#{root}/real.iso", downloaded(root, 'omarchy-3.8.2.iso'))
+  File.write("#{root}/drive-size", "1000\n")
+  output, status = run_script(root, "2\n1\n1\nfakeusb\n")
+  assert !status.success?, output
+  assert output.include?('does not fit'), output
   assert sudo_calls(root).empty?, sudo_calls(root).inspect
 end
 
@@ -356,6 +391,14 @@ check('a missing architecture on the website is reported') do |root|
   output, status = run_script(root, "1\n2\n")
   assert !status.success?, output
   assert output.include?('does not list an ISO for aarch64'), output
+end
+
+check('a drive that disappears before the size check is reported') do |root|
+  File.write("#{root}/lsblk-size-fail", '')
+  output, status = run_script(root, "1\n1\n1\nfakeusb\n")
+  assert !status.success?, output
+  assert output.include?('no longer available'), output
+  assert sudo_calls(root).empty?, sudo_calls(root).inspect
 end
 
 check('an ISO larger than the drive is rejected before confirmation') do |root|

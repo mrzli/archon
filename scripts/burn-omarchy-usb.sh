@@ -66,7 +66,7 @@ choose() {
   while true; do
     ask "$prompt"
     [[ -z $answer ]] && (( default > 0 )) && answer=$default
-    if [[ $answer =~ ^[0-9]+$ ]] && (( 10#$answer >= 1 && 10#$answer <= $# )); then
+    if [[ $answer =~ ^[0-9]{1,3}$ ]] && (( 10#$answer >= 1 && 10#$answer <= $# )); then
       choice=$(( 10#$answer ))
       return
     fi
@@ -250,8 +250,9 @@ choose_drive() {
 
 check_drive_capacity() {
   local iso_size drive_size
-  iso_size=$(stat -c %s "$iso_path")
-  drive_size=$(lsblk -bdno SIZE "$device")
+  iso_size=$(stat -Lc %s "$iso_path")
+  drive_size=$(lsblk -bdno SIZE "$device" 2> /dev/null) ||
+    die "$device is no longer available. Nothing was written."
   (( iso_size <= drive_size )) || die "The ISO does not fit on $device."
 }
 
@@ -304,7 +305,7 @@ format_size() {
 
 write_iso() {
   local size status=0
-  size=$(stat -c %s "$iso_path")
+  size=$(stat -Lc %s "$iso_path")
   printf '\nThe next steps need administrator rights.\n'
   sudo -v || die "Could not get administrator rights. Nothing was written."
   check_drive_unchanged
