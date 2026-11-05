@@ -47,14 +47,15 @@ def vsc_terminal(home)
   end
 end
 
-# Models what the code relies on from Omarchy's undocumented o.workspaces helpers.
+# Models what the code relies on from Omarchy's undocumented o.workspaces.move_window.
 # The focused monitor owns the given block of ten global workspace numbers, and
-# `helpers` selects how they behave: :working, :missing (Hyprland reports the Lua
-# error), :focus_missing (only focus does), :silent (ok without moving, as with no
-# active window), :skips_first (silent for window 0x1 only), :other_slot, or
-# :other_block (each move lands one monitor further along). Focusing a window
-# makes its monitor the focused one. `focus_elsewhere_at` moves focus to another
-# monitor as the given window opens, and `closes_first_at` closes window 0x1 then.
+# `helpers` selects how it behaves: :working, :missing (Hyprland reports the Lua
+# error), :silent (ok without moving, as with no active window), :skips_first (silent
+# for window 0x1 only), or :other_block (each move lands one monitor further along).
+# The temporary named workspace has a negative id, as Hyprland gives named workspaces.
+# Focusing a window makes its monitor the focused one. `focus_elsewhere_at` moves
+# focus to another monitor as the given window opens, and `closes_first_at` closes
+# window 0x1 then.
 def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, block: 0, helpers: :working,
                  focus_elsewhere_at: nil, closes_first_at: nil)
   calls = []
@@ -68,18 +69,12 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, block:
     group = moved['grouped'].empty? ? [address] : moved['grouped']
     clients.select { |window| group.include?(window['address']) }.each { |window| window['workspace'] = { 'id' => destination } }
   end
-  helper = lambda do |name, slot, follow|
+  move_window = lambda do |slot|
     assert (1..10).include?(slot), "Slot outside 1-10: #{slot}"
-    id = block * 10 + slot
-    case name
-    when 'focus' then workspace = id
-    when 'move_window'
-      equal ', false', follow
-      next if helpers == :skips_first && focused == '0x1'
+    next if helpers == :skips_first && focused == '0x1'
 
-      move_group.call(focused, helpers == :other_slot ? id + 1 : id + 10 * moves)
-      moves += 1 if helpers == :other_block
-    end
+    move_group.call(focused, block * 10 + slot + 10 * moves)
+    moves += 1 if helpers == :other_block
   end
   run = lambda do |command, arguments|
     calls << [command, arguments]
@@ -110,11 +105,11 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, block:
       else
         equal 'dispatch', arguments.first
         equal 2, arguments.length
-        if (omarchy = /\Ao\.workspaces\.(focus|move_window)\((\d+)(, false)?\)\z/.match(arguments.last))
-          if helpers == :missing || (helpers == :focus_missing && omarchy[1] == 'focus')
+        if (omarchy = /\Ao\.workspaces\.move_window\((\d+), false\)\z/.match(arguments.last))
+          if helpers == :missing
             output, status = "error: attempt to index a nil value (global 'o')", 7
           elsif helpers != :silent
-            helper.call(omarchy[1], omarchy[2].to_i, omarchy[3])
+            move_window.call(omarchy[1].to_i)
           end
         else
           match = /\Ahl\.dsp\.([\w.]+)\(\{ (.*) \}\)\z/.match(arguments.last)
@@ -298,14 +293,14 @@ end
   end
 end
 
-test('the digit is a slot of the focused monitor, reached through the Omarchy helpers') do
+test('the digit is a slot of the focused monitor, reached through the Omarchy helper') do
   [[3, 13], [10, 20]].each do |slot, id|
     backend = vsc_hyprland(block: 1)
     VSC.launch_projects(['/one', '/two'], slot, run: backend[:run], timeout: 0)
     backend[:clients].drop(1).each { |client| equal({ 'id' => id }, client['workspace']) }
     equal({ 'id' => 3 }, backend[:clients].first['workspace'])
     assert backend[:calls].include?(['hyprctl', ['dispatch', "o.workspaces.move_window(#{slot}, false)"]])
-    assert backend[:calls].include?(['hyprctl', ['dispatch', "o.workspaces.focus(#{slot})"]])
+    equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ window = "address:0x1" })']], backend[:calls].last
   end
 end
 
@@ -314,7 +309,7 @@ test('launch and grouping failures move opened windows to the target workspace')
     backend = vsc_hyprland(block: 1, **options)
     raises(/failed|could not group/) { VSC.launch_projects(['/one', '/two'], 5, run: backend[:run]) }
     backend[:clients].drop(1).each { |client| equal({ 'id' => 15 }, client['workspace']) }
-    equal ['hyprctl', ['dispatch', 'o.workspaces.focus(5)']], backend[:calls].last
+    equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ window = "address:0x1" })']], backend[:calls].last
   end
   backend = vsc_hyprland(launch_failure: 1)
   raises(/failed/) { VSC.launch_projects(['/one'], 5, run: backend[:run]) }
@@ -323,8 +318,7 @@ end
 
 test('an Omarchy helper that fails or does not move the window raises without using global numbers') do
   { missing: /o\.workspaces\.move_window\(5, false\) failed \(7\): error: /,
-    silent: /did not move VS Code window 0x1 to slot 5; it is on workspace -99/,
-    other_slot: /did not move VS Code window 0x1 to slot 5; it is on workspace 6/ }.each do |helpers, message|
+    silent: /did not move VS Code window 0x1 to slot 5; it is on workspace -99/ }.each do |helpers, message|
     backend = vsc_hyprland(helpers: helpers)
     raises(message) { VSC.launch_projects(['/one'], 5, run: backend[:run], timeout: 0) }
 
@@ -335,13 +329,6 @@ test('an Omarchy helper that fails or does not move the window raises without us
     assert error.match?(message), error
     assert error.include?('Could not restore VS Code windows'), error
   end
-
-  backend = vsc_hyprland(helpers: :silent)
-  raises(/to slot 1; it is on workspace -99/) { VSC.launch_projects(['/one'], 1, run: backend[:run], timeout: 0) }
-
-  backend = vsc_hyprland(helpers: :focus_missing)
-  raises(/o\.workspaces\.focus\(5\) failed \(7\)/) { VSC.launch_projects(['/one'], 5, run: backend[:run], timeout: 0) }
-  equal({ 'id' => 5 }, backend[:clients].last['workspace'])
 
   backend = vsc_hyprland(automatic: false, fail_group: true, helpers: :other_block)
   _, _, error = capture do
@@ -363,8 +350,12 @@ test('cleanup moves the remaining windows past a closed window and a window that
   end
   equal ['0xmanual', '0x2'], backend[:clients].map { |client| client['address'] }
   equal({ 'id' => 15 }, backend[:clients].last['workspace'])
-  equal ['hyprctl', ['dispatch', 'o.workspaces.focus(5)']], backend[:calls].last
+  equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ window = "address:0x2" })']], backend[:calls].last
   assert !error.include?('Could not restore'), error
+
+  backend = vsc_hyprland(launch_failure: 2, closes_first_at: 2)
+  raises(/failed/) { VSC.launch_projects(['/one', '/two'], 5, run: backend[:run], timeout: 0) }
+  equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ workspace = "3" })']], backend[:calls].last
 
   backend = vsc_hyprland(block: 1, automatic: false, fail_group: true, helpers: :skips_first)
   _, _, error = capture do

@@ -24,27 +24,18 @@ module Archon
       JSON.parse(checked_process(run, 'hyprctl', %w[-j clients]))
     end
 
-    # Omarchy's per-monitor workspace helpers are undocumented, and relying on them
-    # is an accepted choice. Their source is Omarchy's
-    # default/hypr/monitor-workspaces.lua. This code relies on exactly this:
+    # Omarchy's per-monitor workspace helper is undocumented, and relying on it is an
+    # accepted choice. Its source is Omarchy's default/hypr/monitor-workspaces.lua.
+    # This code relies on exactly this:
     #
-    # - `hyprctl dispatch` evaluates `o.workspaces.focus(slot)` and
-    #   `o.workspaces.move_window(slot, false)`, and answers ok.
-    # - focus goes to that slot of the focused monitor.
-    # - move_window moves the active window to that slot of the focused monitor
-    #   without following it. It does nothing and still answers ok when there is no
-    #   active window, so the result is read back from Hyprland.
+    # - `hyprctl dispatch` evaluates `o.workspaces.move_window(slot, false)` and
+    #   answers ok.
+    # - It moves the active window to that slot of the focused monitor without
+    #   following it. It does nothing and still answers ok when there is no active
+    #   window, so the result is read back from Hyprland.
     # - Slots run from 1 to 10, so slot 10 is passed as 10, never as the key 0.
-    # - Each monitor owns a block of ten global workspace numbers: 1-10, 11-20, and
-    #   so on. A slot's number therefore has that slot's position in its block.
-    OMARCHY_WORKSPACE_SLOTS = 10
-
-    def omarchy_workspace_helper(run, helper, *arguments)
-      hypr_evaluate(run, "Omarchy workspace helper #{helper}", "o.workspaces.#{helper}(#{arguments.join(', ')})")
-    end
-
-    def workspace_id_in_slot?(id, slot)
-      id.positive? && (id - 1) % OMARCHY_WORKSPACE_SLOTS + 1 == slot
+    def move_active_window_to_slot(run, slot)
+      hypr_evaluate(run, 'Omarchy workspace helper move_window', "o.workspaces.move_window(#{slot}, false)")
     end
 
     def window_workspace_id(run, address)
@@ -55,6 +46,10 @@ module Archon
     # group as a whole, so the other windows of a group are already there. A window
     # closed during the launch is skipped, and one that fails does not strand the
     # rest, so every failure is raised together at the end.
+    #
+    # A moved window must have left the temporary named workspace, which the check
+    # recognizes by its negative id. Hyprland states this only in a source comment
+    # (src/desktop/Workspace.hpp: name-based workspaces have ids from -1337).
     def move_windows_to_slot(run, addresses, slot)
       target = nil
       errors = []
@@ -67,9 +62,9 @@ module Archon
         # between, such as from the mouse, would move another window. The read-back
         # then reports this window, but the other one has moved.
         hypr_dispatch(run, 'focus', window: "address:#{address}")
-        omarchy_workspace_helper(run, 'move_window', slot, false)
+        move_active_window_to_slot(run, slot)
         id = window_workspace_id(run, address)
-        unless id && workspace_id_in_slot?(id, slot) && (target.nil? || id == target)
+        unless id&.positive? && (target.nil? || id == target)
           raise "Omarchy workspace helper move_window did not move VS Code window #{address} to slot #{slot}; it is on workspace #{id.inspect}."
         end
 
@@ -107,10 +102,12 @@ module Archon
       opened = []
       restore = lambda do
         move_windows_to_slot(run, opened, slot)
-        if opened.empty?
-          hypr_dispatch(run, 'focus', workspace: original.to_s)
+        existing = hypr_clients(run).map { |client| client.fetch('address') }
+        first = opened.find { |address| existing.include?(address) }
+        if first
+          hypr_dispatch(run, 'focus', window: "address:#{first}")
         else
-          omarchy_workspace_helper(run, 'focus', slot)
+          hypr_dispatch(run, 'focus', workspace: original.to_s)
         end
       end
       begin
@@ -146,7 +143,6 @@ module Archon
         raise error
       end
       restore.call
-      hypr_dispatch(run, 'focus', window: "address:#{opened.first}")
     end
 
     def group_window(run, opened)
