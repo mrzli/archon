@@ -200,7 +200,7 @@ iso_label() {
   local label
   label=$(read_iso_bytes "$1" 32808 32)
   label=${label%"${label##*[![:space:]]}"}
-  printf '%s' "${label:-no label}"
+  if [[ -n $label ]]; then printf '"%s"' "$label"; else printf 'no label'; fi
 }
 
 # Prints the value of a field from a line of lsblk --pairs output.
@@ -210,7 +210,7 @@ pair_value() {
 
 drive_labels() {
   local labels
-  labels=$(lsblk -nlo LABEL "$1" | sed '/^$/d' | sort -u | tr '\n' ' ')
+  labels=$(lsblk -nlo LABEL "$1" | sed '/^$/d' | sort -u | sed 's/.*/"&"/' | tr '\n' ' ')
   printf '%s' "${labels% }"
 }
 
@@ -263,7 +263,7 @@ confirm_write() {
   printf '  Label:    %s (the drive gets this name)\n' "$(iso_label "$iso_path")"
   printf '  Drive:    %s\n' "$device_summary"
   printf '\nEverything on this drive will be erased.\n'
-  ask "Type $name to continue, or anything else to cancel: "
+  ask "Type \"$name\" to continue, or anything else to cancel: "
   [[ $answer == "$name" ]] || cancel
 }
 

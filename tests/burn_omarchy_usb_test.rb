@@ -192,9 +192,11 @@ check('the latest x86 ISO is the default and is written after confirmation') do 
   assert actual == expected, actual.inspect
   assert output.include?('Latest from omarchy.org (4.5.0)'), output
   assert output.include?('Omarchy 4.5.0'), output
-  assert output.include?('OMARCHY_202611'), output
-  assert output.include?('Drive:    /dev/fakeusb  57.9G  Fake Stick  OLD_LABEL'), output
+  assert output.include?('Label:    "OMARCHY_202611"'), output
+  assert output.include?('labeled "OMARCHY_202611".'), output
+  assert output.include?('Drive:    /dev/fakeusb  57.9G  Fake Stick  "OLD_LABEL"'), output
   assert output.include?('Everything on this drive will be erased.'), output
+  assert output.include?('Type "fakeusb" to continue'), output
   assert output.include?('Writing 40000 bytes (0.0 GB)'), output
   assert output.include?('Checking the 40000 bytes (0.0 GB) that were written'), output
   assert File.binread("#{root}/written") == iso_content, 'the ISO was not written'
@@ -220,7 +222,7 @@ end
 check('only removable USB drives are offered') do |root|
   output, status = run_script(root, "1\n1\n3\n3\n3\n")
   assert !status.success?, output
-  assert output.include?('/dev/fakeusb  57.9G  Fake Stick  OLD_LABEL'), output
+  assert output.include?('/dev/fakeusb  57.9G  Fake Stick  "OLD_LABEL"'), output
   %w[fakenvme fakefixedusb fakesd fakerom].each do |drive|
     assert !output.include?(drive), "#{drive} was offered"
   end
@@ -233,7 +235,7 @@ check('a drive inserted later is found by scanning again') do |root|
   output, status = run_script(root, "1\n1\n1\n1\nfakeusb\n")
   assert status.success?, output
   assert output.include?('No removable USB drives found.'), output
-  assert output.include?('/dev/fakeusb  57.9G  Fake Stick  OLD_LABEL'), output
+  assert output.include?('/dev/fakeusb  57.9G  Fake Stick  "OLD_LABEL"'), output
 end
 
 check('canceling at the drive menu writes nothing') do |root|
@@ -308,7 +310,7 @@ check('a local ISO without a published checksum gets a warning and can be writte
   assert status.success?, output
   assert output.include?('it cannot be verified'), output
   assert output.include?('Omarchy 3.8.2'), output
-  assert output.include?('OMARCHY_202605'), output
+  assert output.include?('Label:    "OMARCHY_202605"'), output
   assert write_calls(root).any? { |line| line.include?("if=#{iso} of=/dev/fakeusb") }, log(root).inspect
 end
 
