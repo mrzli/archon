@@ -46,6 +46,7 @@ check('web app removal skips absent apps and suppresses removal notifications', 
   launcher = "#{home}/.local/share/applications/nested/HEY.desktop"
   FileUtils.mkdir_p(File.dirname(launcher))
   File.write(launcher, "[Desktop Entry]\n")
+  File.write("#{File.dirname(launcher)}/Fizzy.desktop", "[Desktop Entry]\n")
   _, error, status = run_operation(repo, env, 'remove_unwanted_webapps(home)')
   assert status.success?, error
   assert commands(env).select { |args| args[0, 2] == %w[omarchy webapp] } == [%w[omarchy webapp remove HEY]]

@@ -54,7 +54,7 @@ end
 def remove_unwanted_webapps(home)
   log_step 'Removing unwanted web apps'
   applications = File.join(home, '.local/share/applications')
-  %w[Basecamp Fizzy HEY].each do |webapp|
+  %w[Basecamp HEY].each do |webapp|
     if Dir.glob("**/#{webapp}.desktop", base: applications).empty?
       log_info "#{webapp} is not installed; skipping"
     else
