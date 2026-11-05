@@ -226,8 +226,10 @@ check('voice AI runs the installer again when the Voxtype configuration is missi
   assert File.exist?("#{home}/.config/voxtype/config.toml")
 end
 
-check('voice AI runs the installer when another dictation backend is selected', :voice) do |repo, _home, _bin, env|
+check('voice AI runs the installer when another dictation backend is selected', :voice) do |repo, home, _bin, env|
   File.write("#{env.fetch('SYSTEM_FIXTURE')}/dictation-backend", "other\n")
+  FileUtils.mkdir_p("#{home}/.config/voxtype")
+  FileUtils.touch("#{home}/.config/voxtype/config.toml")
   _, error, status = run_operation(repo, env, 'install_voice_ai')
   assert status.success?, error
   assert commands(env).include?(%w[omarchy install dictation voxtype])
