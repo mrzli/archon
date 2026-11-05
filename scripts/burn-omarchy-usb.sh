@@ -8,6 +8,7 @@ set -euo pipefail
 readonly SITE_URL='https://omarchy.org/'
 readonly ISO_HOST='https://iso.omarchy.org'
 readonly DOWNLOAD_DIR="$HOME/Downloads"
+readonly LOOKUP_LIMITS=(--connect-timeout 10 --max-time 30)
 readonly DRIVE_COLUMNS='NAME,TYPE,RM,TRAN,SIZE,MODEL,SERIAL'
 
 # Runs as a single sudo call, so the credential cannot expire between writing
@@ -82,7 +83,7 @@ iso_name_on_site() {
 # Prints the published checksum, or fails when there is no usable one.
 published_checksum() {
   local checksum
-  checksum=$(curl -fsSL "$ISO_HOST/$1.sha256" 2> /dev/null) || return 1
+  checksum=$(curl -fsSL "${LOOKUP_LIMITS[@]}" "$ISO_HOST/$1.sha256" 2> /dev/null) || return 1
   checksum=${checksum%%[[:space:]]*}
   [[ $checksum =~ ^[0-9a-fA-F]{64}$ ]] || return 1
   printf '%s' "${checksum,,}"
@@ -156,7 +157,7 @@ verify_local_iso() {
 choose_iso() {
   local page='' x86_name='' arch name
   printf 'Looking up the latest Omarchy version...\n'
-  page=$(curl -fsSL "$SITE_URL" 2> /dev/null) || page=''
+  page=$(curl -fsSL "${LOOKUP_LIMITS[@]}" "$SITE_URL" 2> /dev/null) || page=''
   [[ -n $page ]] && x86_name=$(iso_name_on_site "$page" x86)
 
   if [[ -z $x86_name ]]; then

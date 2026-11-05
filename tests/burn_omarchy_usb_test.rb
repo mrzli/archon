@@ -200,6 +200,16 @@ check('the latest x86 ISO is the default and is written after confirmation') do 
   assert File.binread("#{root}/written") == iso_content, 'the ISO was not written'
 end
 
+check('lookups have time limits and the ISO download does not') do |root|
+  output, status = run_script(root, "1\n1\n1\nfakeusb\n")
+  assert status.success?, output
+  curl_calls = log(root).select { |line| line.start_with?('curl ') }
+  download, lookups = curl_calls.partition { |line| line.end_with?("/#{X86_ISO}") }
+  assert download.length == 1 && lookups.length == 2, curl_calls.inspect
+  assert lookups.all? { |line| line.include?('--connect-timeout 10 --max-time 30') }, lookups.inspect
+  assert !download.first.include?('--max-time'), download.inspect
+end
+
 check('the ARM ISO can be chosen') do |root|
   output, status = run_script(root, "1\n2\n1\nfakeusb\n")
   assert status.success?, output
