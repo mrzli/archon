@@ -5,9 +5,7 @@ require_relative 'helpers'
 
 def configure_rootless_docker(home)
   log_step 'Configuring rootless Docker'
-  missing_packages = %w[rootlesskit slirp4netns].reject do |package|
-    system('pacman', '-Q', package, out: File::NULL, err: File::NULL)
-  end
+  missing_packages = %w[rootlesskit slirp4netns].reject { |package| package_installed?(package) }
   run 'omarchy', 'pkg', 'add', *missing_packages unless missing_packages.empty?
   changed = install_rootless_docker_launcher(home)
   user = capture('id', '-un').strip

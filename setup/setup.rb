@@ -59,7 +59,7 @@ def install_applications
     ['steam', 'Steam', 'gaming', 'steam'],
     ['visual-studio-code-bin', 'VS Code', 'editor', 'vscode']
   ].each do |package, name, group, application|
-    if system('pacman', '-Q', package, out: File::NULL, err: File::NULL)
+    if package_installed?(package)
       log_info "#{name} is already installed; skipping"
     else
       log_info "Installing #{name}"

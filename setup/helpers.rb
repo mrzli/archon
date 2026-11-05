@@ -24,6 +24,10 @@ def command_available?(command)
   end
 end
 
+def package_installed?(package)
+  system('pacman', '-Q', package, out: File::NULL, err: File::NULL)
+end
+
 def path_exists?(path)
   File.exist?(path) || File.symlink?(path)
 end
