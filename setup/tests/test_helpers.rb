@@ -62,7 +62,7 @@ def fixture(area)
     env = { 'HOME' => home, 'XDG_DATA_HOME' => "#{home}/.local/share", 'PATH' => bin,
             'XDG_CONFIG_HOME' => "#{home}/.config", 'XDG_STATE_HOME' => "#{home}/.local/state",
             'XDG_RUNTIME_DIR' => "#{root}/run", 'COMMAND_LOG' => "#{root}/commands.jsonl",
-            'SYSTEM_FIXTURE' => root, 'OMARCHY_PATH' => "#{root}/omarchy", 'CARGO_HOME' => nil,
+            'SYSTEM_FIXTURE' => root, 'CARGO_HOME' => nil,
             'HYPRLAND_INSTANCE_SIGNATURE' => 'fixture' }
     yield repo, home, bin, env
   end
@@ -107,8 +107,6 @@ end
 
 def prepare_voice(_repo, _home, root)
   File.write("#{root}/voice-variant", 'whisper-avx2')
-  FileUtils.mkdir_p("#{root}/omarchy/default/voxtype")
-  File.write("#{root}/omarchy/default/voxtype/config.toml", "[hotkey]\nenabled = false\n")
   File.write("#{root}/voice-config.json", JSON.generate({
     'engine' => 'whisper', 'whisper.model' => 'base.en', 'whisper.mode' => 'local',
     'whisper.language' => 'en', 'audio.device' => 'my microphone', 'hotkey.enabled' => false,

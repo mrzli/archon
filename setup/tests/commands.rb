@@ -33,7 +33,20 @@ when 'pacman'
     exit(File.exist?("#{state}/#{ARGV.last}") ? 0 : 1)
   end
 when 'omarchy'
-  FileUtils.rm_f("#{state}/superwhisper-bin") if ARGV == %w[remove dictation superwhisper]
+  backend = "#{state}/dictation-backend"
+  case ARGV
+  when %w[default dictation]
+    unless File.exist?(backend)
+      warn 'No dictation backend configured.'
+      exit 1
+    end
+    puts File.read(backend)
+  when %w[install dictation voxtype]
+    File.write(backend, "voxtype\n")
+  when %w[remove dictation superwhisper]
+    FileUtils.rm_f("#{state}/superwhisper-bin")
+    FileUtils.rm_f(backend) if File.exist?(backend) && File.read(backend).strip == 'superwhisper'
+  end
   if ARGV[0, 2] == %w[webapp remove]
     File.write("#{state}/webapp-notify", ENV.fetch('OMARCHY_REMOVE_NOTIFY', 'unset'))
   end
@@ -55,14 +68,7 @@ when 'omarchy'
     FileUtils.mkdir_p(File.dirname(launcher))
     FileUtils.touch(launcher)
   end
-  if ARGV == %w[voxtype install]
-    warn 'Call failed: The name is not activatable'
-    exit 1
-  end
   if ARGV[0, 2] == %w[pkg add]
-    if ARGV.include?('voxtype-bin') && !File.exist?(File.join(File.dirname($0), 'voxtype'))
-      File.symlink($0, File.join(File.dirname($0), 'voxtype'))
-    end
     (ARGV & %w[rootlesskit slirp4netns]).each { |package| FileUtils.touch("#{state}/#{package}") }
   end
 when 'voxtype'

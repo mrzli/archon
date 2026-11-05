@@ -92,6 +92,10 @@ end
 check('repeat runs preserve user files and avoid duplicate configuration', :full) do |repo, home, _bin, env|
   FileUtils.mkdir_p(["#{home}/Projects", "#{home}/.claude"])
   File.write("#{home}/.claude/settings.json", '{"theme": "dark"}')
+  # A clean Omarchy 4.5 install ships Superwhisper as the selected dictation backend.
+  state = env.fetch('SYSTEM_FIXTURE')
+  FileUtils.touch("#{state}/superwhisper-bin")
+  File.write("#{state}/dictation-backend", "superwhisper\n")
   2.times do
     output, error, status = run_setup(repo, env)
     assert status.success?, error
@@ -119,6 +123,14 @@ check('repeat runs preserve user files and avoid duplicate configuration', :full
     assert File.read("#{home}/#{relative}") == File.read("#{repo}/data/home/#{relative}")
   end
   assert File.read("#{home}/.config/systemd/user/voxtype.service.d/10-archon.conf").include?('Environment=VK_DRIVER_FILES=/usr/share/vulkan/icd.d/nvidia_icd.json')
+  calls = commands(env)
+  removal = %w[omarchy remove dictation superwhisper]
+  installer = %w[omarchy install dictation voxtype]
+  assert calls.count(removal) == 1 && calls.count(installer) == 1
+  # The installer starts the service, so a later restart must pick up the installed override.
+  assert calls.index(removal) < calls.index(installer)
+  assert calls.index(installer) < calls.index { |args| args.first == 'rsync' }
+  assert calls.index { |args| args.first == 'rsync' } < calls.index(%w[systemctl --user restart voxtype.service])
 end
 
 check('a populated ~/Projects fails setup and keeps its contents', :none) do |repo, home, _bin, env|
@@ -195,18 +207,25 @@ check('Superwhisper removal runs Omarchy\'s remover once and skips when the pack
   assert commands(env).count(removal) == 1
 end
 
-check('voice AI installs without desktop notifications and preserves existing config', :voice) do |repo, home, _bin, env|
-  _, error, status = run_operation(repo, env, 'install_voice_ai')
-  assert status.success?, error
-  config = "#{home}/.config/voxtype/config.toml"
-  assert File.read(config) == "[hotkey]\nenabled = false\n"
-  File.write(config, "# personal configuration\n")
+check('voice AI adds the packages first and runs the installer only until Voxtype is selected', :voice) do |repo, _home, _bin, env|
+  packages = %w[omarchy pkg add wtype voxtype-bin]
+  installer = %w[omarchy install dictation voxtype]
+  2.times do
+    _, error, status = run_operation(repo, env, 'install_voice_ai')
+    assert status.success?, error
+    assert !error.include?('No dictation backend'), 'The expected missing selection was reported'
+  end
+  calls = commands(env)
+  assert calls.count(packages) == 2
+  assert calls.count(installer) == 1
+  assert calls.index(packages) < calls.index(installer)
+end
 
+check('voice AI runs the installer when another dictation backend is selected', :voice) do |repo, _home, _bin, env|
+  File.write("#{env.fetch('SYSTEM_FIXTURE')}/dictation-backend", "other\n")
   _, error, status = run_operation(repo, env, 'install_voice_ai')
   assert status.success?, error
-  assert File.read(config) == "# personal configuration\n"
-  assert commands(env).none? { |args| args == %w[omarchy voxtype install] }
-  assert commands(env).count { |args| args == %w[omarchy pkg add wtype voxtype-bin] } == 2
+  assert commands(env).include?(%w[omarchy install dictation voxtype])
 end
 
 check('GPU dictation requests the model and skips unchanged settings and variant on reruns', :voice) do |repo, _home, _bin, env|

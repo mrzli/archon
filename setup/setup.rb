@@ -89,15 +89,20 @@ end
 
 def install_voice_ai
   log_step 'Installing Voice AI'
-  # The interactive installer also switches GPUs and restarts the desktop shell.
+  # With the packages present, Omarchy's installer asks for no confirmation.
   run 'omarchy', 'pkg', 'add', 'wtype', 'voxtype-bin'
-
-  config = File.join(ENV.fetch('HOME'), '.config/voxtype/config.toml')
-  unless path_exists?(config)
-    omarchy_path = ENV.fetch('OMARCHY_PATH', '/usr/share/omarchy')
-    FileUtils.mkdir_p(File.dirname(config))
-    FileUtils.cp(File.join(omarchy_path, 'default/voxtype/config.toml'), config)
+  if dictation_backend_selected?('voxtype')
+    log_info 'Voxtype is already installed and selected; skipping'
+  else
+    log_info 'Installing Voxtype'
+    run 'omarchy', 'install', 'dictation', 'voxtype'
   end
+end
+
+def dictation_backend_selected?(backend)
+  # The command fails when no backend is selected, which is expected after a removal.
+  selected = IO.popen(%w[omarchy default dictation], err: File::NULL, &:read).strip
+  $?.success? && selected == backend
 end
 
 def configure_voice_ai
