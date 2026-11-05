@@ -43,6 +43,9 @@ when 'omarchy'
     puts File.read(backend)
   when %w[install dictation voxtype]
     File.write(backend, "voxtype\n")
+    config = File.join(ENV.fetch('HOME'), '.config/voxtype/config.toml')
+    FileUtils.mkdir_p(File.dirname(config))
+    FileUtils.touch(config)
   when %w[remove dictation superwhisper]
     FileUtils.rm_f("#{state}/superwhisper-bin")
     FileUtils.rm_f(backend) if File.exist?(backend) && File.read(backend).strip == 'superwhisper'

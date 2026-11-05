@@ -91,7 +91,9 @@ def install_voice_ai
   log_step 'Installing Voice AI'
   # With the packages present, Omarchy's installer asks for no confirmation.
   run 'omarchy', 'pkg', 'add', 'wtype', 'voxtype-bin'
-  if dictation_backend_selected?('voxtype')
+  # The installer creates the configuration when it is missing.
+  config = File.join(ENV.fetch('HOME'), '.config/voxtype/config.toml')
+  if dictation_backend_selected?('voxtype') && path_exists?(config)
     log_info 'Voxtype is already installed and selected; skipping'
   else
     log_info 'Installing Voxtype'

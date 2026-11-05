@@ -215,6 +215,17 @@ check('voice AI adds the packages first and runs the installer only until Voxtyp
   assert calls.index(packages) < calls.index(installer)
 end
 
+check('voice AI runs the installer again when the Voxtype configuration is missing', :voice) do |repo, home, _bin, env|
+  installer = %w[omarchy install dictation voxtype]
+  _, error, status = run_operation(repo, env, 'install_voice_ai')
+  assert status.success?, error
+  FileUtils.rm("#{home}/.config/voxtype/config.toml")
+  _, error, status = run_operation(repo, env, 'install_voice_ai')
+  assert status.success?, error
+  assert commands(env).count(installer) == 2
+  assert File.exist?("#{home}/.config/voxtype/config.toml")
+end
+
 check('voice AI runs the installer when another dictation backend is selected', :voice) do |repo, _home, _bin, env|
   File.write("#{env.fetch('SYSTEM_FIXTURE')}/dictation-backend", "other\n")
   _, error, status = run_operation(repo, env, 'install_voice_ai')
