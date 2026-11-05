@@ -52,14 +52,20 @@ module Archon
     end
 
     # The first window moved settles which workspace the slot is. Hyprland moves a
-    # group as a whole, so the other windows of a group are already there.
+    # group as a whole, so the other windows of a group are already there. A window
+    # closed during the launch is skipped, and one that fails does not strand the
+    # rest, so every failure is raised together at the end.
     def move_windows_to_slot(run, addresses, slot)
       target = nil
+      errors = []
       addresses.each do |address|
-        next if target && window_workspace_id(run, address) == target
+        current = window_workspace_id(run, address)
+        next if current.nil? || (target && current == target)
 
         # move_window takes the active window, and focusing a window also makes its
-        # monitor the focused one.
+        # monitor the focused one. These are two processes, so a focus change in
+        # between, such as from the mouse, would move another window. The read-back
+        # then reports this window, but the other one has moved.
         hypr_dispatch(run, 'focus', window: "address:#{address}")
         omarchy_workspace_helper(run, 'move_window', slot, false)
         id = window_workspace_id(run, address)
@@ -68,7 +74,10 @@ module Archon
         end
 
         target = id
+      rescue StandardError => error
+        errors << error.message
       end
+      raise errors.join(' ') unless errors.empty?
     end
 
     def code_window?(client)
