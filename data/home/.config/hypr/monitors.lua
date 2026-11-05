@@ -23,10 +23,3 @@ configure_monitor(monitors.desktop.right, "preferred", 1, "2560x0")
 
 configure_monitor(monitors.laptop.primary_external, "3840x2160@60", 1.5)
 configure_monitor(monitors.laptop.right_external, "3840x2160@60", 1.5)
-
-for workspace = 1, 10 do
-  hl.workspace_rule({
-    workspace = tostring(workspace),
-    persistent = true,
-  })
-end
