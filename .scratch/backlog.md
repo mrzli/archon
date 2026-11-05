@@ -31,36 +31,6 @@ Open points:
 - The versions and units above come from blogs and vendor pages; verify them
   against each tool's documentation before relying on them.
 
-## 2. Adapt Archon to Omarchy 4.5
-
-Added 2026-11-02. Omarchy 4.5 is in release candidates (4.5.0-rc3 on
-2026-11-02; this machine runs 4.0.6). Wait for the final release, then
-check after updating:
-
-- The Hyprland key bindings in `data/home/.config/hypr/bindings.lua` still
-  load and work, including bindings added since this item was written.
-- Setup and the Archon scripts still work against the new release, such as
-  the Omarchy commands and default paths they use.
-- `intel-media-driver` is installed on Intel machines whose GPU `lspci`
-  names only "[Intel Graphics]", such as the Arrow Lake laptop. Omarchy
-  4.0.6 skips it there. omarchy#17150 fixes it on Omarchy's default branch
-  (reported in omarchy#11958 and omarchy#13987), but 4.5.0-rc3 does not
-  include the fix yet, so the final release may still skip it.
-
-## 4. Review installed applications periodically
-
-Added 2026-11-05. From time to time, check for applications the user may not
-need, and add the unwanted ones to setup's removal list. Sizes below are for
-each package alone, on Omarchy 4.5. These applications cost disk space only
-while they are not open.
-
-Candidates that Omarchy installs and that were kept for now:
-
-- LibreOffice, office suite, 423 MiB.
-- Pinta, image editor, which depends on the .NET runtime, 74 MiB.
-- LocalSend, file sharing between nearby devices, 67 MiB.
-- Cliamp, terminal music player, 39 MiB.
-
 ## 3. Project skill for syncing Archon after an Omarchy update
 
 Added 2026-11-05, during the Omarchy 4.5 adaptation. Create it after that
@@ -112,3 +82,17 @@ What to check:
   `~/.local/state/omarchy/migrations/`. Example: Omarchy migration 1793477875
   appended old dictation keys to the live `bindings.lua`, which setup then
   overwrites.
+
+## 4. Review installed applications periodically
+
+Added 2026-11-05. From time to time, check for applications the user may not
+need, and add the unwanted ones to setup's removal list. Sizes below are for
+each package alone, on Omarchy 4.5. These applications cost disk space only
+while they are not open.
+
+Candidates that Omarchy installs and that were kept for now:
+
+- LibreOffice, office suite, 423 MiB.
+- Pinta, image editor, which depends on the .NET runtime, 74 MiB.
+- LocalSend, file sharing between nearby devices, 67 MiB.
+- Cliamp, terminal music player, 39 MiB.
