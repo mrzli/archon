@@ -96,3 +96,41 @@ Candidates that Omarchy installs and that were kept for now:
 - Pinta, image editor, which depends on the .NET runtime, 74 MiB.
 - LocalSend, file sharing between nearby devices, 67 MiB.
 - Cliamp, terminal music player, 39 MiB.
+
+## 5. Diagnose the workspace bar on the desktop's second monitor
+
+Added 2026-11-05, after Archon moved to Omarchy 4.5. Investigate on the desktop,
+which has two monitors. The laptop was checked with only its panel connected.
+
+Reported on the desktop after the 4.5 update:
+
+- The bars on both monitors show all 10 workspaces. Omarchy's bar should show
+  1-5 plus any in use, and Archon no longer has its rule that keeps 1-10.
+- On the right monitor, all 10 are grayed out, although workspace 1 there has a
+  window. The left monitor marks its occupied workspaces correctly.
+
+Unverified ideas from reading Omarchy's
+`shell/plugins/bar/widgets/Workspaces.qml`, which dims a workspace number when
+the workspace with that id has no windows and the monitor is not showing it:
+
+- The running session or `~/.config/hypr/monitors.lua` still has the old rule,
+  for example because setup or a new login has not happened since the change.
+  This would explain the 10 numbers, but not the graying.
+- The right bar's block in `~/.local/state/omarchy/monitor-workspaces` differs
+  from the block of the workspaces that monitor shows, so the bar reads the
+  wrong ids. All 10 grayed out points here, because the workspace the monitor
+  shows is then not among the numbers the bar lists.
+
+First log out and back in, and check whether the problem remains. If it does,
+collect this:
+
+```bash
+grep -n 'persistent' ~/.config/hypr/monitors.lua
+cat ~/.local/state/omarchy/monitor-workspaces
+hyprctl workspacerules -j | jq -c '.[] | select(.persistent) | .workspaceString'
+hyprctl workspaces -j | jq -r '.[] | "\(.id) \(.monitor) windows=\(.windows)"'
+hyprctl monitors -j | jq -r '.[] | "\(.name) \(.description) active=\(.activeWorkspace.id)"'
+```
+
+If this turns out to be an Omarchy bug, report it upstream. See the Omarchy
+agent skill's contributing guide.
