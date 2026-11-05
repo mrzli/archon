@@ -58,9 +58,15 @@ installed packages and verify the result.
 
 # Setup invariants
 
-Setup provisions the current desired state only. Put one-time migration or
-cleanup of superseded configurations, names, or paths in `migrations/` or in
-explicit manual commands.
+Setup provisions the current desired state only, starting from a clean install
+of the current Omarchy version. This includes removing something a normal
+install ships that the user does not want.
+
+Put one-time migration or cleanup in `migrations/` or in explicit manual
+commands, and only for a state that will never exist again, such as an older
+Omarchy version or a superseded configuration, name, or path. Setup must not
+carry this code. A file that setup overwrites needs no migration. The user runs
+a migration on each machine, and it is removed once it has run on all of them.
 
 Setup must be convergent and repeat-safe. Running it again on a configured
 machine must succeed without manual cleanup, converge on the same

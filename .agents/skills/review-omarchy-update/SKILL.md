@@ -41,8 +41,7 @@ Check whether a tool is installed with `pacman -Q` or `mise ls`, not by running 
 
 ## Choose where each change belongs
 
-- **Setup:** the desired state starting from a clean install of the current Omarchy version, repeat-safe on later runs. This includes removing something a normal install ships that the user does not want.
-- **`migrations/`:** only the gap from a state that will never exist again, such as an older Omarchy version or a superseded Archon configuration. Setup must not carry this code. A file that setup overwrites needs no migration. The user runs a migration on each machine, and it is removed afterward.
+- **Setup or `migrations/`:** as "Setup invariants" in the repository's `AGENTS.md` says.
 - **`data/home/`:** configuration files, preferred over setup logic.
 - **Documentation or the backlog:** corrections and work to do later.
 - **Upstream:** a bug in Omarchy, reported as the `omarchy` skill's contributing guide says.
