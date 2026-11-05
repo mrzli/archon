@@ -10,14 +10,15 @@ module Archon
       Usage: archon workspaces visual-studio-code <start|stop>
              archon w vsc <start|stop>
 
-      start  Choose a workspace and projects, then open a Hyprland tabbed group
+      start  Choose a workspace on the focused monitor and projects, then open a
+             Hyprland tabbed group
       stop   Close ALL VS Code windows in the current Hyprland session
 
-      Start requires an interactive terminal, Hyprland, hyprctl, and code on PATH.
+      Start requires an interactive terminal, Omarchy's per-monitor workspaces, and code on PATH.
       Projects are direct directories in ~/projects/cloned and ~/projects/personal/<owner>.
       Workspace and project selections are remembered for the next start.
       j/k or Up/Down: navigate. Space: toggle. Enter: accept. Esc or Ctrl+C: cancel.
-      Workspace digits 1-9 and 0 (workspace 10) select a workspace; Enter accepts it.
+      Workspace digits 1-9 and 0 (workspace 10) select that workspace of the focused monitor; Enter accepts it.
     TEXT
 
     def run_visual_studio_code(arguments, home: Dir.home, state_home: ENV['XDG_STATE_HOME'],

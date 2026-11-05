@@ -10,15 +10,65 @@ module Archon
       result.fetch(:stdout)
     end
 
+    def hypr_evaluate(run, label, expression)
+      output = checked_process(run, 'hyprctl', ['dispatch', expression]).strip
+      raise "#{label}: #{output}" unless output == 'ok'
+    end
+
     def hypr_dispatch(run, dispatcher, **arguments)
       fields = arguments.map { |key, value| "#{key} = #{JSON.generate(value)}" }.join(', ')
-      expression = "hl.dsp.#{dispatcher}({ #{fields} })"
-      output = checked_process(run, 'hyprctl', ['dispatch', expression]).strip
-      raise "Hyprland #{dispatcher}: #{output}" unless output == 'ok'
+      hypr_evaluate(run, "Hyprland #{dispatcher}", "hl.dsp.#{dispatcher}({ #{fields} })")
     end
 
     def hypr_clients(run)
       JSON.parse(checked_process(run, 'hyprctl', %w[-j clients]))
+    end
+
+    # Omarchy's per-monitor workspace helpers are undocumented, and relying on them
+    # is an accepted choice. Their source is Omarchy's
+    # default/hypr/monitor-workspaces.lua. This code relies on exactly this:
+    #
+    # - `hyprctl dispatch` evaluates `o.workspaces.focus(slot)` and
+    #   `o.workspaces.move_window(slot, false)`, and answers ok.
+    # - focus goes to that slot of the focused monitor.
+    # - move_window moves the active window to that slot of the focused monitor
+    #   without following it. It does nothing and still answers ok when there is no
+    #   active window, so the result is read back from Hyprland.
+    # - Slots run from 1 to 10, so slot 10 is passed as 10, never as the key 0.
+    # - Each monitor owns a block of ten global workspace numbers: 1-10, 11-20, and
+    #   so on. A slot's number therefore has that slot's position in its block.
+    OMARCHY_WORKSPACE_SLOTS = 10
+
+    def omarchy_workspace_helper(run, helper, *arguments)
+      hypr_evaluate(run, "Omarchy workspace helper #{helper}", "o.workspaces.#{helper}(#{arguments.join(', ')})")
+    end
+
+    def workspace_id_in_slot?(id, slot)
+      id.positive? && (id - 1) % OMARCHY_WORKSPACE_SLOTS + 1 == slot
+    end
+
+    def window_workspace_id(run, address)
+      hypr_clients(run).find { |client| client.fetch('address') == address }&.dig('workspace', 'id')
+    end
+
+    # The first window moved settles which workspace the slot is. Hyprland moves a
+    # group as a whole, so the other windows of a group are already there.
+    def move_windows_to_slot(run, addresses, slot)
+      target = nil
+      addresses.each do |address|
+        next if target && window_workspace_id(run, address) == target
+
+        # move_window takes the active window, and focusing a window also makes its
+        # monitor the focused one.
+        hypr_dispatch(run, 'focus', window: "address:#{address}")
+        omarchy_workspace_helper(run, 'move_window', slot, false)
+        id = window_workspace_id(run, address)
+        unless id && workspace_id_in_slot?(id, slot) && (target.nil? || id == target)
+          raise "Omarchy workspace helper move_window did not move VS Code window #{address} to slot #{slot}; it is on workspace #{id.inspect}."
+        end
+
+        target = id
+      end
     end
 
     def code_window?(client)
@@ -42,15 +92,17 @@ module Archon
       end
     end
 
-    def launch_projects(projects, workspace, run:, timeout: 30)
+    def launch_projects(projects, slot, run:, timeout: 30)
       original = JSON.parse(checked_process(run, 'hyprctl', %w[-j activeworkspace])).fetch('id')
       staging = "name:archon-vsc-#{Process.pid}"
       opened = []
       restore = lambda do
-        opened.each do |address|
-          hypr_dispatch(run, 'window.move', workspace: workspace.to_s, window: "address:#{address}", follow: false)
+        move_windows_to_slot(run, opened, slot)
+        if opened.empty?
+          hypr_dispatch(run, 'focus', workspace: original.to_s)
+        else
+          omarchy_workspace_helper(run, 'focus', slot)
         end
-        hypr_dispatch(run, 'focus', workspace: opened.empty? ? original.to_s : workspace.to_s)
       end
       begin
         projects.each do |project|

@@ -47,10 +47,30 @@ def vsc_terminal(home)
   end
 end
 
-def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil)
+# Models what the code relies on from Omarchy's undocumented o.workspaces helpers.
+# The focused monitor owns the given block of ten global workspace numbers, and
+# `helpers` selects how they behave: :working, :missing (Hyprland reports the Lua
+# error), :silent (ok without moving, as with no active window), or :other_slot.
+def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, block: 0, helpers: :working)
   calls = []
   clients = [{ 'address' => '0xmanual', 'class' => 'com.microsoft.VSCode', 'grouped' => [], 'workspace' => { 'id' => 3 }, 'at' => [0, 0] }]
+  staging_id = -99
   workspace, focused, count = 3, nil, 0
+  move_group = lambda do |address, destination|
+    moved = clients.find { |window| window['address'] == address }
+    group = moved['grouped'].empty? ? [address] : moved['grouped']
+    clients.select { |window| group.include?(window['address']) }.each { |window| window['workspace'] = { 'id' => destination } }
+  end
+  helper = lambda do |name, slot, follow|
+    assert (1..10).include?(slot), "Slot outside 1-10: #{slot}"
+    id = block * 10 + slot
+    case name
+    when 'focus' then workspace = id
+    when 'move_window'
+      equal ', false', follow
+      move_group.call(focused, helpers == :other_slot ? id + 1 : id)
+    end
+  end
   run = lambda do |command, arguments|
     calls << [command, arguments]
     output, status = 'ok', 0
@@ -78,30 +98,40 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil)
       else
         equal 'dispatch', arguments.first
         equal 2, arguments.length
-        match = /\Ahl\.dsp\.([\w.]+)\(\{ (.*) \}\)\z/.match(arguments.last)
-        assert match, "Expected Lua dispatcher: #{arguments.last}"
-        dispatcher = match[1]
-        fields = match[2].scan(/(\w+) = ("[^"]*"|true|false)/).to_h.transform_values { |value| JSON.parse(value) }
-        client = clients.find { |window| window['address'] == focused }
-        case dispatcher
-        when 'focus'
-          fields.key?('workspace') ? workspace = fields['workspace'] : focused = fields.fetch('window').delete_prefix('address:')
-        when 'window.float' then equal 'disable', fields.fetch('action')
-        when 'group.toggle' then client['grouped'] = [focused]
-        when 'window.move'
-          if fields.key?('workspace')
-            equal false, fields.fetch('follow')
-            destination = fields.fetch('workspace')
-            address = fields.fetch('window').delete_prefix('address:')
-            moved = clients.find { |window| window['address'] == address }
-            group = moved['grouped'].empty? ? [address] : moved['grouped']
-            clients.select { |window| group.include?(window['address']) }.each { |window| window['workspace'] = { 'id' => destination } }
-          elsif fields.key?('into_group') && !fail_group
-            target = clients.find { |window| !window['grouped'].empty? }
-            group = target['grouped'] + [focused]
-            clients.select { |window| group.include?(window['address']) }.each { |window| window['grouped'] = group }
+        if (omarchy = /\Ao\.workspaces\.(focus|move_window)\((\d+)(, false)?\)\z/.match(arguments.last))
+          if helpers == :missing
+            output, status = "error: attempt to index a nil value (global 'o')", 7
+          elsif helpers != :silent
+            helper.call(omarchy[1], omarchy[2].to_i, omarchy[3])
           end
-        else raise "Unexpected dispatcher: #{dispatcher}"
+        else
+          match = /\Ahl\.dsp\.([\w.]+)\(\{ (.*) \}\)\z/.match(arguments.last)
+          assert match, "Expected Lua dispatcher: #{arguments.last}"
+          dispatcher = match[1]
+          fields = match[2].scan(/(\w+) = ("[^"]*"|true|false)/).to_h.transform_values { |value| JSON.parse(value) }
+          client = clients.find { |window| window['address'] == focused }
+          case dispatcher
+          when 'focus'
+            if fields.key?('workspace')
+              workspace = fields['workspace'].start_with?('name:') ? staging_id : Integer(fields['workspace'])
+            else
+              focused = fields.fetch('window').delete_prefix('address:')
+              workspace = clients.find { |window| window['address'] == focused }['workspace']['id']
+            end
+          when 'window.float' then equal 'disable', fields.fetch('action')
+          when 'group.toggle' then client['grouped'] = [focused]
+          when 'window.move'
+            if fields.key?('workspace')
+              equal false, fields.fetch('follow')
+              assert fields.fetch('workspace').start_with?('name:archon-vsc-'), "Global workspace move: #{arguments.last}"
+              move_group.call(fields.fetch('window').delete_prefix('address:'), staging_id)
+            elsif fields.key?('into_group') && !fail_group
+              target = clients.find { |window| !window['grouped'].empty? }
+              group = target['grouped'] + [focused]
+              clients.select { |window| group.include?(window['address']) }.each { |window| window['grouped'] = group }
+            end
+          else raise "Unexpected dispatcher: #{dispatcher}"
+          end
         end
       end
     else
@@ -240,7 +270,7 @@ end
     equal projects.map { |path| ['code', ['--new-window', path]] }, backend[:calls].select { |command, _| command == 'code' }
     backend[:clients].drop(1).each do |client|
       equal %w[0x1 0x2 0x3], client['grouped']
-      equal({ 'id' => '10' }, client['workspace'])
+      equal({ 'id' => 10 }, client['workspace'])
     end
     equal({ 'id' => 3 }, backend[:clients].first['workspace'])
     equal [], backend[:clients].first['grouped']
@@ -248,16 +278,43 @@ end
   end
 end
 
+test('the digit is a slot of the focused monitor, reached through the Omarchy helpers') do
+  [[3, 13], [10, 20]].each do |slot, id|
+    backend = vsc_hyprland(block: 1)
+    VSC.launch_projects(['/one', '/two'], slot, run: backend[:run], timeout: 0)
+    backend[:clients].drop(1).each { |client| equal({ 'id' => id }, client['workspace']) }
+    equal({ 'id' => 3 }, backend[:clients].first['workspace'])
+    assert backend[:calls].include?(['hyprctl', ['dispatch', "o.workspaces.move_window(#{slot}, false)"]])
+    assert backend[:calls].include?(['hyprctl', ['dispatch', "o.workspaces.focus(#{slot})"]])
+  end
+end
+
 test('launch and grouping failures move opened windows to the target workspace') do
   [{ launch_failure: 2 }, { automatic: false, fail_group: true }].each do |options|
-    backend = vsc_hyprland(**options)
+    backend = vsc_hyprland(block: 1, **options)
     raises(/failed|could not group/) { VSC.launch_projects(['/one', '/two'], 5, run: backend[:run]) }
-    backend[:clients].drop(1).each { |client| equal({ 'id' => '5' }, client['workspace']) }
-    equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ workspace = "5" })']], backend[:calls].last
+    backend[:clients].drop(1).each { |client| equal({ 'id' => 15 }, client['workspace']) }
+    equal ['hyprctl', ['dispatch', 'o.workspaces.focus(5)']], backend[:calls].last
   end
   backend = vsc_hyprland(launch_failure: 1)
   raises(/failed/) { VSC.launch_projects(['/one'], 5, run: backend[:run]) }
   equal ['hyprctl', ['dispatch', 'hl.dsp.focus({ workspace = "3" })']], backend[:calls].last
+end
+
+test('an Omarchy helper that fails or does not move the window raises without using global numbers') do
+  { missing: /o\.workspaces\.move_window\(5, false\) failed \(7\): error: /,
+    silent: /did not move VS Code window 0x1 to slot 5; it is on workspace -99/,
+    other_slot: /did not move VS Code window 0x1 to slot 5; it is on workspace 6/ }.each do |helpers, message|
+    backend = vsc_hyprland(helpers: helpers)
+    raises(message) { VSC.launch_projects(['/one'], 5, run: backend[:run], timeout: 0) }
+
+    backend = vsc_hyprland(helpers: helpers, launch_failure: 2)
+    _, _, error = capture do
+      raises(/code --new-window \/two failed/) { VSC.launch_projects(['/one', '/two'], 5, run: backend[:run], timeout: 0) }
+    end
+    assert error.match?(message), error
+    assert error.include?('Could not restore VS Code windows'), error
+  end
 end
 
 test('a failed window cleanup is reported without hiding the launch failure') do

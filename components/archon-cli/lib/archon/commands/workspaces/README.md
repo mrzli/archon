@@ -84,6 +84,6 @@ arc w vsc stop
 arc w vsc --help
 ```
 
-Choose a Hyprland workspace, then projects in the shared checklist. Stop closes
+Choose a workspace of the focused monitor, then projects in the shared checklist. Stop closes
 all VS Code windows in the current Hyprland session. See
 [Visual Studio Code usage](./visual_studio_code/README.md).

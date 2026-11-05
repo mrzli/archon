@@ -1,8 +1,8 @@
 # Visual Studio Code
 
 Requires Ruby, current VS Code, an interactive terminal, a running Hyprland
-session with Lua configuration (as used by current Omarchy), and `code` and
-`hyprctl` on `PATH`.
+session with Lua configuration, `code` and `hyprctl` on `PATH`, and for `start`,
+the per-monitor workspaces of Omarchy 4.5 or later.
 
 ## Start
 
@@ -11,7 +11,9 @@ archon workspaces visual-studio-code start
 arc w vsc start
 ```
 
-Choose a workspace, then select projects in the terminal checklist.
+Choose a workspace, then select projects in the terminal checklist. The workspace
+number means that workspace of the focused monitor, the one `SUPER` + that number
+goes to. The windows open there even when the terminal is on another workspace.
 The action is required; `arc w vsc` shows usage and exits with status 2.
 Use `arc w vsc --help` for help. The controls are shown in both prompts:
 
@@ -23,8 +25,9 @@ Use `arc w vsc --help` for help. The controls are shown in both prompts:
 - Ctrl+C cancels and restores the terminal.
 
 Projects and saved choices work as described in the
-[shared project checklist](../README.md); the chosen workspace is remembered
-with them.
+[shared project checklist](../README.md); the chosen workspace number is
+remembered with them and applies to whichever monitor is focused at the next
+start.
 
 Each selected project opens in a new VS Code window, using your existing
 settings and extensions. Windows open in checklist order and form one Hyprland
@@ -33,8 +36,10 @@ Existing VS Code windows are preserved. Starting again opens a new group.
 
 While assembling the group, windows briefly appear on a temporary named
 workspace. If opening or grouping fails, windows already opened are moved to
-the chosen workspace and the failure is reported. Group locks or window rules
-that prevent grouping must be resolved before retrying.
+the chosen workspace and the failure is reported. If Omarchy's workspace helpers
+fail, windows can stay on the temporary workspace, and that failure is reported
+too. Group locks or window rules that prevent grouping must be resolved before
+retrying.
 
 ## Stop
 
