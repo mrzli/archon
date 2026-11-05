@@ -213,7 +213,7 @@ drive_labels() {
   printf '%s' "${labels% }"
 }
 
-# Sets device and device_identity to a drive the user selects. Only removable USB drives are listed.
+# Sets device, device_identity, and device_summary to a drive the user selects. Only removable USB drives are listed.
 choose_drive() {
   local line path devices=() labels=() identities=() model size current
   while true; do
@@ -240,6 +240,7 @@ choose_drive() {
     if (( choice <= ${#devices[@]} )); then
       device=${devices[choice - 1]}
       device_identity=${identities[choice - 1]}
+      device_summary=${labels[choice - 1]}
       return
     fi
     (( choice == ${#devices[@]} + 2 )) && cancel
@@ -259,7 +260,7 @@ confirm_write() {
   printf '  ISO:      %s\n' "$iso_path"
   printf '  Version:  Omarchy %s\n' "$(iso_version "$iso_path")"
   printf '  Label:    %s (the drive gets this name)\n' "$(iso_label "$iso_path")"
-  printf '  Drive:    %s\n' "$device"
+  printf '  Drive:    %s\n' "$device_summary"
   printf '\nEverything on this drive will be erased.\n'
   ask "Type $name to continue, or anything else to cancel: "
   [[ $answer == "$name" ]] || cancel
@@ -319,7 +320,7 @@ write_iso() {
 }
 
 main() {
-  local answer='' choice=0 iso_path='' device='' device_identity=''
+  local answer='' choice=0 iso_path='' device='' device_identity='' device_summary=''
   check_tools
   choose_iso
   choose_drive

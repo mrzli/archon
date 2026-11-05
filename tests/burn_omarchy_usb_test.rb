@@ -193,6 +193,7 @@ check('the latest x86 ISO is the default and is written after confirmation') do 
   assert output.include?('Latest from omarchy.org (4.5.0)'), output
   assert output.include?('Omarchy 4.5.0'), output
   assert output.include?('OMARCHY_202611'), output
+  assert output.include?('Drive:    /dev/fakeusb  57.9G  Fake Stick  OLD_LABEL'), output
   assert output.include?('Everything on this drive will be erased.'), output
   assert output.include?('Writing 40000 bytes (0.0 GB)'), output
   assert output.include?('Checking the 40000 bytes (0.0 GB) that were written'), output
