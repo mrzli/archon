@@ -76,6 +76,11 @@ What to check:
   one, which adds it to setup, or drops it, which adds a migration. Example: on
   Omarchy 4.5, the system `rust` package, Kdenlive, OBS Studio, Signal,
   Xournal++, and .NET runtime 9.0 went into a migration.
+- Leftover files in `~/.config` that the current Omarchy version no longer uses
+  and that Archon does not manage, listed for the user to decide on. Setup never
+  removes these, and a restart does not help. Example: after the update to
+  Omarchy 4.5, a leftover workspace file on the desktop made the bar show the
+  wrong workspaces on the second monitor.
 - Each Omarchy migration since the last check, listed as run here, not needed
   here, or needing a counterpart in setup or `migrations/`. It may still matter
   on another machine. Omarchy records the migrations it ran in
