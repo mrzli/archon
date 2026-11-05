@@ -38,8 +38,8 @@ While assembling the group, windows briefly appear on a temporary named
 workspace. If opening or grouping fails, windows already opened are moved to
 the chosen workspace and the failure is reported. If moving a window through
 Omarchy's workspace helper fails, it can stay on the temporary workspace, and
-that failure is reported too. Group locks or window rules that prevent grouping must be resolved before
-retrying.
+that failure is reported too. Group locks or window rules that prevent grouping
+must be resolved before retrying.
 
 ## Stop
 
