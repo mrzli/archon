@@ -14,6 +14,8 @@ add cross-platform abstractions.
   [its development guide](docs/archon-cli-development.md) before changing it.
 - `migrations/` holds one-time scripts for superseded configurations, which
   setup does not run.
+- `scripts/` holds standalone scripts that the user runs directly and that
+  setup does not install.
 
 Read a directory's `AGENTS.md` before working in it.
 
@@ -87,9 +89,9 @@ Choose the checks by the kind of change:
 - **Configuration under `data/home/`:** the file's own syntax or configuration
   validation, without installing it into the real home directory, and
   `git diff --check`.
-- **Code,** including setup, components, tests, migrations, and shell scripts
-  under `data/home/`: `bash tests/test.sh`, which also runs the syntax checks
-  and ShellCheck.
+- **Code,** including setup, components, tests, migrations, `scripts/`, and
+  shell scripts under `data/home/`: `bash tests/test.sh`, which also runs the
+  syntax checks and ShellCheck.
 
 Never run `setup.sh` or full provisioning as a test, because it changes the
 workstation. Verify single setup operations with focused, safe checks.

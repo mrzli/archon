@@ -15,16 +15,17 @@ run_ruby_tests() {
   printf '%s\0' "$@" | xargs -0 -P 0 -n 1 bash -c 'output="$(ruby "$1" 2>&1)"; status=$?; printf "%s\n" "$output"; exit "$status"' _
 }
 
-# The setup tests are the slowest group, so they run alongside the CLI verification.
+# The setup tests are the slowest in this group, so it runs alongside the CLI verification.
 setup_log="$(mktemp)"
 trap 'rm -f -- "$setup_log"' EXIT
-run_ruby_tests "$repo_root/setup/tests/"*_test.rb "$repo_root/components/wow-setup/tests/"*_test.rb > "$setup_log" 2>&1 &
+run_ruby_tests "$repo_root/setup/tests/"*_test.rb "$repo_root/components/wow-setup/tests/"*_test.rb \
+  "$repo_root/tests/"*_test.rb > "$setup_log" 2>&1 &
 setup_pid=$!
 
 printf '\n%s\n' 'Archon CLI verification'
 bash "$repo_root/components/archon-cli/tests/run.sh"
 
-printf '\n%s\n' 'Setup and WoW tests'
+printf '\n%s\n' 'Setup, WoW, and USB script tests'
 setup_status=0
 wait "$setup_pid" || setup_status=$?
 cat "$setup_log"
@@ -32,7 +33,7 @@ cat "$setup_log"
 
 mapfile -t home_shell_paths < <(find "$repo_root/data/home" -type f -name '*.sh' -print | sort)
 mapfile -t migration_paths < <(find "$repo_root/migrations" -type f -name '*.sh' -print | sort)
-bash_check_paths=("$repo_root/tests/"*.sh "$repo_root/components/wow-setup/"*.sh "${migration_paths[@]}"
+bash_check_paths=("$repo_root/scripts/"*.sh "$repo_root/tests/"*.sh "$repo_root/components/wow-setup/"*.sh "${migration_paths[@]}"
   "${home_shell_paths[@]}")
 printf '\n%s\n' 'Additional Bash syntax checks'
 for path in "${bash_check_paths[@]}"; do
