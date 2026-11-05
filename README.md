@@ -23,7 +23,7 @@ For the same reason, moving between computers is easy. I work on more than one a
 ### What I get from it
 
 - **The same environment on every machine.** Applications, developer tools, editor settings, keybindings, and shell configuration match everywhere. A new machine needs only a short installation and one run of the setup script.
-- **Development tools ready to use.** Setup installs the language runtimes and developer tools I use, such as Node.js, Python, Ruby, Go, and Claude Code, mostly through mise. VS Code comes with all my extensions, settings, keybindings, and snippets.
+- **Development tools ready to use.** Setup installs the language runtimes and developer tools I use, such as Node.js, Python, Ruby, and Go, mostly through mise. VS Code comes with all my extensions, settings, keybindings, and snippets.
 - **One command-line program for everyday tasks.** The [Archon CLI](#archon-cli) manages my projects, workspaces, agent sessions, and system tasks, with short aliases for the commands I type most.
 - **All my projects in one place.** My repositories live in one fixed structure, one command keeps all of them in sync, and their secrets are kept in one store. See [Projects](#projects).
 - **Project workspaces in a terminal multiplexer.** One command opens the projects I'm working on, each with my editor, Git client, shell, and AI agent ready. See [Workspaces](#workspaces).

@@ -10,7 +10,7 @@ check('mise installs tools despite system executables and skips repeat installat
   end
   installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
   assert installs == %w[ruby python node bun go rust zig].map { |tool| %W[omarchy install dev-env #{tool}] } +
-                     %w[pnpm codex claude shellcheck].map { |tool| %W[mise use --global #{tool}] }
+                     %w[pnpm shellcheck].map { |tool| %W[mise use --global #{tool}] }
 end
 
 check('mise requires installed versions and rejects system passthrough', :tools) do |repo, _home, _bin, env|
@@ -25,7 +25,7 @@ check('mise requires installed versions and rejects system passthrough', :tools)
   assert status.success?, error
   installs = commands(env).reject { |args| args[0, 2] == %w[mise ls] }
   assert installs == [*%w[go rust zig].map { |tool| %W[omarchy install dev-env #{tool}] },
-                      *%w[pnpm codex claude shellcheck].map { |tool| %W[mise use --global #{tool}] }]
+                      *%w[pnpm shellcheck].map { |tool| %W[mise use --global #{tool}] }]
 end
 
 check('Ruby LSP and Claude Code plugins install once on a fresh Claude Code', :tools) do |repo, _home, _bin, env|

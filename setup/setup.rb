@@ -193,8 +193,6 @@ def install_mise_tools
   log_step 'Installing mise tools'
   [
     'pnpm',      # Node.js package manager
-    'codex',     # OpenAI Codex CLI
-    'claude',    # Claude Code CLI
     'shellcheck' # Shell script linter
   ].each do |tool|
     if mise_tool_installed?(tool)
