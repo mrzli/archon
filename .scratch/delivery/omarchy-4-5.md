@@ -16,7 +16,9 @@ and `L`.
 
 Footprint: the two Hyprland files, any tests or docs that mention them.
 Depends on: none.
-Status: agreed.
+Status: integrated.
+Commits: 772f797.
+Times: items 1 and 5 shared one implementer, which ran 8 min 32 s, including a fresh review.
 
 ## 2. Make the VS Code workspace digit per monitor
 
@@ -29,7 +31,8 @@ and cover it with a test.
 Footprint: `components/archon-cli/lib/archon/commands/workspaces/visual_studio_code/`,
 its README, and `components/archon-cli/tests/visual_studio_code_test.rb`.
 Depends on: none.
-Status: agreed.
+Status: integrated. The code ended up relying only on `o.workspaces.move_window`.
+Times: implementer ran 18 min 5 s across two rounds, including fresh reviews.
 
 ## 3. Align setup with a clean Omarchy 4.5
 
@@ -53,7 +56,9 @@ Decisions:
 Footprint: `setup/setup.rb`, `setup.sh`, `setup/tests/`, and docs or the README where
 they describe these steps.
 Depends on: none.
-Status: agreed.
+Status: integrated.
+Commits: 3020531 to e0765ba.
+Times: implementer ran 11 min 52 s, including a fresh review.
 
 ## 4. Add the migration that removes unused packages
 
@@ -65,7 +70,9 @@ and report any that is required. Do not remove anything on the live system.
 
 Footprint: `migrations/`.
 Depends on: none.
-Status: agreed.
+Status: integrated.
+Commits: b2ccc9e.
+Times: implementer ran 5 min 20 s, including a fresh review of about 3 min.
 
 ## 5. Update outdated documentation
 
@@ -77,4 +84,6 @@ changes make inaccurate, such as in the README.
 
 Footprint: `docs/installation.md`, `README.md`.
 Depends on: 1.
-Status: agreed.
+Status: integrated.
+Commits: f280e70.
+Times: shared with item 1.
