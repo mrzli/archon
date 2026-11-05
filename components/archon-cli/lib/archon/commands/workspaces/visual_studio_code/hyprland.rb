@@ -46,10 +46,6 @@ module Archon
     # group as a whole, so the other windows of a group are already there. A window
     # closed during the launch is skipped, and one that fails does not strand the
     # rest, so every failure is raised together at the end.
-    #
-    # A moved window must have left the temporary named workspace, which the check
-    # recognizes by its negative id. Hyprland states this only in a source comment
-    # (src/desktop/Workspace.hpp: name-based workspaces have ids from -1337).
     def move_windows_to_slot(run, addresses, slot)
       target = nil
       errors = []
@@ -64,7 +60,7 @@ module Archon
         hypr_dispatch(run, 'focus', window: "address:#{address}")
         move_active_window_to_slot(run, slot)
         id = window_workspace_id(run, address)
-        unless id&.positive? && (target.nil? || id == target)
+        unless id && id != current && (target.nil? || id == target)
           raise "Omarchy workspace helper move_window did not move VS Code window #{address} to slot #{slot}; it is on workspace #{id.inspect}."
         end
 
@@ -146,15 +142,21 @@ module Archon
     end
 
     def group_window(run, opened)
+      assemble_group(run, opened)
+    rescue StandardError
+      raise if (opened - hypr_clients(run).map { |client| client.fetch('address') }).empty?
+
+      raise 'A VS Code window closed while its group was being assembled.'
+    end
+
+    def assemble_group(run, opened)
       hypr_dispatch(run, 'focus', window: "address:#{opened.last}")
       clients = hypr_clients(run)
       client = clients.find { |window| window['address'] == opened.last }
-      target = clients.find { |window| window['address'] == opened.first }
-      raise 'A VS Code window closed while its group was being assembled.' unless client && target
-
       if opened.length == 1
         hypr_dispatch(run, 'group.toggle', window: "address:#{opened.last}") if client.fetch('grouped').empty?
       elsif !client.fetch('grouped').include?(opened.first)
+        target = clients.find { |window| window['address'] == opened.first }
         dx, dy = target.fetch('at').zip(client.fetch('at')).map { |a, b| a - b }
         direction = dx.abs >= dy.abs ? (dx < 0 ? 'l' : 'r') : (dy < 0 ? 'u' : 'd')
         hypr_dispatch(run, 'window.move', into_group: direction, window: "address:#{opened.last}")

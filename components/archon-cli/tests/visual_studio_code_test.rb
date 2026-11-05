@@ -52,7 +52,6 @@ end
 # `helpers` selects how it behaves: :working, :missing (Hyprland reports the Lua
 # error), :silent (ok without moving, as with no active window), :skips_first (silent
 # for window 0x1 only), or :other_block (each move lands one monitor further along).
-# The temporary named workspace has a negative id, as Hyprland gives named workspaces.
 # Focusing a window makes its monitor the focused one. `focus_elsewhere_at` moves
 # focus to another monitor as the given window opens, and `closes_first_at` closes
 # window 0x1 then.
