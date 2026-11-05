@@ -14,7 +14,7 @@ FIXTURE_COMMANDS = {
   hyprland: %w[hyprctl],
   skills: %w[git],
   tools: %w[omarchy mise rails uv node bun zls pnpm go claude setsid],
-  voice: %w[omarchy voxtype sudo systemctl]
+  voice: %w[omarchy pacman voxtype sudo systemctl]
 }.freeze
 $checks = 0
 $failures = 0

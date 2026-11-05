@@ -29,10 +29,11 @@ when 'cat'
 when 'test'
   exit(File.exist?(File.join(state, File.basename(ARGV.last))) ? 0 : 1)
 when 'pacman'
-  if %w[rootlesskit slirp4netns].include?(ARGV.last)
+  if %w[rootlesskit slirp4netns superwhisper-bin].include?(ARGV.last)
     exit(File.exist?("#{state}/#{ARGV.last}") ? 0 : 1)
   end
 when 'omarchy'
+  FileUtils.rm_f("#{state}/superwhisper-bin") if ARGV == %w[remove dictation superwhisper]
   if ARGV[0, 2] == %w[webapp remove]
     File.write("#{state}/webapp-notify", ENV.fetch('OMARCHY_REMOVE_NOTIFY', 'unset'))
   end

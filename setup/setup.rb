@@ -11,6 +11,7 @@ def setup
   home = ENV.fetch('HOME')
 
   remove_unwanted_packages
+  remove_superwhisper
   remove_unwanted_webapps(home)
   install_applications
   install_voice_ai
@@ -38,6 +39,16 @@ end
 def remove_unwanted_packages
   log_step 'Removing unwanted packages'
   run 'omarchy', 'pkg', 'drop', 'aether', 'obsidian'
+end
+
+def remove_superwhisper
+  log_step 'Removing Superwhisper'
+  if package_installed?('superwhisper-bin')
+    # Dropping only the package would leave its service and bar plugin.
+    run 'omarchy', 'remove', 'dictation', 'superwhisper'
+  else
+    log_info 'Superwhisper is not installed; skipping'
+  end
 end
 
 def remove_unwanted_webapps(home)

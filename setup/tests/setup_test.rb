@@ -181,6 +181,20 @@ check('Battle.net installs once and skips the installed launcher on reruns', :ap
   assert commands(env).count { |args| args == %w[omarchy install gaming battlenet] } == 1
 end
 
+check('Superwhisper removal runs Omarchy\'s remover once and skips when the package is absent', :voice) do |repo, _home, _bin, env|
+  removal = %w[omarchy remove dictation superwhisper]
+  _, error, status = run_operation(repo, env, 'remove_superwhisper')
+  assert status.success?, error
+  assert !commands(env).include?(removal)
+
+  FileUtils.touch("#{env.fetch('SYSTEM_FIXTURE')}/superwhisper-bin")
+  2.times do
+    _, error, status = run_operation(repo, env, 'remove_superwhisper')
+    assert status.success?, error
+  end
+  assert commands(env).count(removal) == 1
+end
+
 check('voice AI installs without desktop notifications and preserves existing config', :voice) do |repo, home, _bin, env|
   _, error, status = run_operation(repo, env, 'install_voice_ai')
   assert status.success?, error
