@@ -149,10 +149,12 @@ module Archon
       hypr_dispatch(run, 'focus', window: "address:#{opened.last}")
       clients = hypr_clients(run)
       client = clients.find { |window| window['address'] == opened.last }
+      target = clients.find { |window| window['address'] == opened.first }
+      raise 'A VS Code window closed while its group was being assembled.' unless client && target
+
       if opened.length == 1
         hypr_dispatch(run, 'group.toggle', window: "address:#{opened.last}") if client.fetch('grouped').empty?
       elsif !client.fetch('grouped').include?(opened.first)
-        target = clients.find { |window| window['address'] == opened.first }
         dx, dy = target.fetch('at').zip(client.fetch('at')).map { |a, b| a - b }
         direction = dx.abs >= dy.abs ? (dx < 0 ? 'l' : 'r') : (dy < 0 ? 'u' : 'd')
         hypr_dispatch(run, 'window.move', into_group: direction, window: "address:#{opened.last}")

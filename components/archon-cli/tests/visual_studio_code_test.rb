@@ -346,7 +346,7 @@ end
 test('cleanup moves the remaining windows past a closed window and a window that fails') do
   backend = vsc_hyprland(block: 1, automatic: false, fail_group: true, closes_first_at: 2)
   _, _, error = capture do
-    raises(/./) { VSC.launch_projects(['/one', '/two'], 5, run: backend[:run], timeout: 0) }
+    raises(/window closed/) { VSC.launch_projects(['/one', '/two'], 5, run: backend[:run], timeout: 0) }
   end
   equal ['0xmanual', '0x2'], backend[:clients].map { |client| client['address'] }
   equal({ 'id' => 15 }, backend[:clients].last['workspace'])
