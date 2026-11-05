@@ -13,23 +13,27 @@ bash burn-omarchy-usb.sh
 
 ## Install Omarchy
 
-Boot the new computer from the USB drive and follow the installer. It asks for:
+Boot the new computer from the USB drive and follow the installer. It asks for these, in order:
 
-- Keyboard layout, such as `us`.
-- Username, such as `alex`.
-- Password.
-- Full name.
-- Email address.
-- Hostname, such as `workstation`.
-- Timezone, such as `Europe/Berlin`.
+1. Language.
+2. Keyboard layout, such as `English (US)`.
+3. Timezone, such as `Europe/Berlin`.
+4. Username, such as `alex`.
+5. Password, entered twice. It is used for the user, root, and disk encryption when enabled.
+6. Hostname, such as `workstation`. Press `ENTER` on an empty field to use `omarchy`.
+7. Confirmation of these answers.
+8. Install disk.
+9. Installation mode: **Full disk install**, **Free space install (alongside existing data)**, or **Choose a different disk**. The installer skips this question and uses a full disk install when the disk has no partition table or no free space. It offers the free space install only on UEFI computers.
+10. Confirmation of the install. A full disk install overwrites everything on the disk. The install is encrypted unless you press `CTRL + C` at this question.
 
 ## Connect to the internet
 
-Skip this if the installer already connected to Wi-Fi or the computer uses ethernet. Signing in to GitHub, cloning, and setup all need the internet.
+Skip this if the computer is already online, such as over ethernet. The installer does not set up Wi-Fi. Signing in to GitHub, cloning, and setup all need the internet.
 
-1. Open the Wi-Fi settings. Press `SUPER + ALT + SPACE`, select **Setup**, and press `ENTER`. Then select **Wi-Fi** and press `ENTER`.
-2. Press `TAB` to move to the list of networks, select the network with the arrow keys, and press `ENTER`.
-3. Enter the Wi-Fi password and press `ENTER`.
+1. Press `SUPER + CTRL + N` to open the Network panel.
+2. Press the down arrow to show the selection, select the network with the arrow keys, and press `ENTER`. You can also click the network.
+3. If asked, enter the Wi-Fi password and press `ENTER`.
+4. Wait for the network to show **Connected**, then press `ESCAPE` to close the panel.
 
 ## Run setup
 
