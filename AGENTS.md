@@ -4,8 +4,9 @@ Archon provisions and maintains the desired state of an Omarchy/Arch Linux
 workstation. Target Ruby, Bash, and the current Omarchy environment. Do not
 add cross-platform abstractions.
 
-- `setup.sh` bootstraps Ruby and runs the setup in `setup/`, the main
-  provisioning entry point. [The installation guide](docs/installation.md) is
+- `setup.sh` runs the setup in `setup/` with `ruby`, which Omarchy's base
+  packages provide, and is the main provisioning entry point.
+  [The installation guide](docs/installation.md) is
   the user's procedure for installing a new machine.
 - `data/home/` mirrors files that setup copies into the user's home directory
   ([AGENTS.md](data/AGENTS.md)).

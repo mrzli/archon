@@ -75,19 +75,12 @@ check('help and invalid arguments do not provision', :none) do |repo, _home, _bi
   assert commands(env).empty?
 end
 
-check('bootstrap supports existing Ruby and installation through mise', :tools) do |repo, _home, bin, env|
-  launch = -> { Open3.capture3(env, '/bin/bash', "#{repo}/setup.sh", '--help') }
-  output, error, status = launch.call
+check('bootstrap runs setup with the available Ruby and passes its arguments', :tools) do |repo, _home, bin, env|
+  File.symlink(RbConfig.ruby, "#{bin}/ruby")
+  output, error, status = Open3.capture3(env, '/bin/bash', "#{repo}/setup.sh", '--help')
   assert status.success?, error
   assert output.include?('Usage: setup.sh')
-  assert commands(env) == [
-    %w[omarchy install dev-env ruby],
-    ['mise', 'exec', 'ruby', '--', 'ruby', "#{repo}/setup/main.rb", '--help']
-  ]
-  File.symlink(RbConfig.ruby, "#{bin}/ruby")
-  count = commands(env).length
-  assert launch.call.last.success?
-  assert commands(env).length == count
+  assert commands(env).empty?
 end
 
 check('repeat runs preserve user files and avoid duplicate configuration', :full) do |repo, home, _bin, env|
