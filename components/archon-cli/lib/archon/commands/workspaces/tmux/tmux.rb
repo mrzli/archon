@@ -15,7 +15,7 @@ module Archon
       definitions
     end
 
-    def create_tmux(run: Workspaces.method(:run_command), capture: Workspaces.method(:capture_command), ai: Workspaces::DEFAULT_AI)
+    def create_tmux(run:, capture:, ai:)
       has_session = lambda do |definition|
         session = definition[:session]
         next false unless run.call('tmux', ['has-session', '-t', "=#{session}"], stdio: :ignore) == 0
@@ -32,7 +32,7 @@ module Archon
       {
         resource_label: 'tmux session',
         has_session: has_session,
-        create_editor_session: ->(definition) { create_editor_session(run, definition, ai: ai) },
+        create_project_session: ->(definition) { create_project_session(run, definition, ai: ai) },
         attach_session: ->(definition) { run.call('tmux', ['attach-session', '-t', "=#{definition[:session]}"]) }
       }
     end
@@ -78,9 +78,9 @@ module Archon
       status
     end
 
-    def create_editor_session(run, definition, ai: Workspaces::DEFAULT_AI)
+    def create_project_session(run, definition, ai:)
       session, directory = definition.values_at(:session, :directory)
-      tabs = Workspaces.editor_tabs(ai: ai)
+      tabs = Workspaces.project_tabs(ai: ai)
       first_tab = tabs.first[:name]
       if run.call('tmux', ['new-session', '-d', '-s', session, '-c', directory, '-n', first_tab]) != 0
         return { status: 1 }

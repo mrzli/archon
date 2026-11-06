@@ -6,7 +6,7 @@ module Archon
                      'then claude --continue; else claude; fi'
     AI_COMMANDS = { 'claude' => CLAUDE_COMMAND, 'codex' => 'codex resume --last' }.freeze
 
-    def editor_tabs(ai: DEFAULT_AI)
+    def project_tabs(ai:)
       [{ name: 'shell' }, { name: ai, command: AI_COMMANDS[ai] }]
     end
   end

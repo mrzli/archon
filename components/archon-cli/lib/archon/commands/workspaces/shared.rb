@@ -87,7 +87,7 @@ module Archon
           next unless backend[:start_existing_session]
           result = backend.fetch(:start_existing_session).call(definition)
         else
-          result = backend.fetch(:create_editor_session).call(definition)
+          result = backend.fetch(:create_project_session).call(definition)
         end
         next if result[:status] == 0
         warn "Failed to start #{backend.fetch(:resource_label)}: #{definition[:session]}"

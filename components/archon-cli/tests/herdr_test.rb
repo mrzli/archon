@@ -37,7 +37,7 @@ test('every failed Herdr creation step rolls back only its newly returned worksp
               'tab' => { 'tab_id' => 'w401:t709' }, 'root_pane' => { 'pane_id' => 'w401:p901' } }
   operations = []
   request = ->(arguments) { operations << arguments; created }
-  tabs = Archon::Workspaces.editor_tabs
+  tabs = Archon::Workspaces.project_tabs(ai: 'claude')
   equal 0, Herdr.create_workspace(definition, tabs, request)[:status]
   operations.each_index do |failed_index|
     calls = []

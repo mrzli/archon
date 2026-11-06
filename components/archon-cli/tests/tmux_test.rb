@@ -3,29 +3,29 @@ require_relative 'workspace_helpers'
 Workspaces = Archon::Workspaces
 Tmux = Archon::WorkspacesTmux
 
-test('uniform editor layout rolls back each failed creation operation') do
-  definition = { session: 'editor', directory: '/fixture/space dir' }
+test('uniform project layout rolls back each failed creation operation') do
+  definition = { session: 'project', directory: '/fixture/space dir' }
   expected = [
-    ['new-session', '-d', '-s', 'editor', '-c', definition[:directory], '-n', 'shell'],
-    ['set-option', '-t', '=editor:', '@archon-managed', '1'],
-    ['set-option', '-t', '=editor:', '@archon-project', definition[:directory]],
-    ['new-window', '-t', '=editor', '-c', definition[:directory], '-n', 'claude'],
-    ['send-keys', '-t', '=editor:claude', Workspaces::CLAUDE_COMMAND, 'Enter']
+    ['new-session', '-d', '-s', 'project', '-c', definition[:directory], '-n', 'shell'],
+    ['set-option', '-t', '=project:', '@archon-managed', '1'],
+    ['set-option', '-t', '=project:', '@archon-project', definition[:directory]],
+    ['new-window', '-t', '=project', '-c', definition[:directory], '-n', 'claude'],
+    ['send-keys', '-t', '=project:claude', Workspaces::CLAUDE_COMMAND, 'Enter']
   ]
-  expected.concat([['select-window', '-t', '=editor:shell']])
+  expected.concat([['select-window', '-t', '=project:shell']])
   calls = []
-  result = Tmux.create_editor_session(->(_, arguments) { calls << arguments; 0 }, definition)
+  result = Tmux.create_project_session(->(_, arguments) { calls << arguments; 0 }, definition, ai: 'claude')
   equal({ status: 0 }, result)
   equal expected, calls
   expected.each_index do |failed_index|
     calls = []
     run = ->(_, arguments) { calls << arguments; calls.length == failed_index + 1 ? 1 : 0 }
-    result = Tmux.create_editor_session(run, definition)
+    result = Tmux.create_project_session(run, definition, ai: 'claude')
     equal 1, result[:status]
     equal failed_index.zero? ? nil : 0, result[:cleanup_status]
-    equal expected.take(failed_index + 1) + (failed_index.zero? ? [] : [%w[kill-session -t =editor]]), calls
+    equal expected.take(failed_index + 1) + (failed_index.zero? ? [] : [%w[kill-session -t =project]]), calls
   end
-  result = Tmux.create_editor_session(->(_, args) { args.first == 'new-session' ? 0 : 1 }, definition)
+  result = Tmux.create_project_session(->(_, args) { args.first == 'new-session' ? 0 : 1 }, definition, ai: 'claude')
   equal({ status: 1, cleanup_status: 1 }, result)
 end
 
@@ -79,7 +79,7 @@ test('start continues after failures, reports failed cleanup, skips vanished dir
     fail_start = true
     backend = {
       resource_label: 'tmux session', has_session: ->(definition) { sessions.include?(definition[:session]) },
-      create_editor_session: ->(definition) {
+      create_project_session: ->(definition) {
         if definition == definitions.first && fail_start
           { status: 1, cleanup_status: 1 }
         else
@@ -143,12 +143,12 @@ test('starting refuses an untagged name collision and preserves the existing ses
   calls = []
   run = ->(command, arguments, **_) { calls << [command, arguments]; 0 }
   definition = { session: 'archon-name', directory: '/project' }
-  backend = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 0, output: '' } })
+  backend = Tmux.create_tmux(run: run, capture: ->(*_) { { status: 0, output: '' } }, ai: 'claude')
   raises(/not managed by Archon/) { backend[:has_session].call(definition) }
   equal [['tmux', %w[has-session -t =archon-name]]], calls
-  backend = Tmux.create_tmux(run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/project' } })
+  backend = Tmux.create_tmux(run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/project' } }, ai: 'claude')
   equal true, backend[:has_session].call(definition)
-  backend = Tmux.create_tmux(run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/other/project' } })
+  backend = Tmux.create_tmux(run: run, capture: ->(_, args) { { status: 0, output: args.last == '@archon-managed' ? '1' : '/other/project' } }, ai: 'claude')
   raises(/belongs to another project/) { backend[:has_session].call(definition) }
 end
 

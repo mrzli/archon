@@ -97,7 +97,7 @@ module Archon
       end
     end
 
-    def create_herdr(state_path:, capture:, run:, ai: Workspaces::DEFAULT_AI)
+    def create_herdr(state_path:, capture:, run:, ai:)
       request = ->(arguments) { Herdr.request(SESSION, arguments, capture) }
       selection = WorkspaceProjects.load_selection(state_path)
       workspace_ids = selection.fetch('workspace_ids', {})
@@ -127,8 +127,8 @@ module Archon
         start_existing_session: ->(definition) {
           start_existing_tools(find_workspace.call(definition).fetch('workspace_id'), request)
         },
-        create_editor_session: ->(definition) {
-          result = create_workspace(definition, Workspaces.editor_tabs(ai: ai), request) do |workspace|
+        create_project_session: ->(definition) {
+          result = create_workspace(definition, Workspaces.project_tabs(ai: ai), request) do |workspace|
             remember_workspace.call(definition, workspace)
           end
           workspaces << result[:workspace] if result[:workspace]
