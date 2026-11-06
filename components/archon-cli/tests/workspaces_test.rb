@@ -122,3 +122,8 @@ test('a client reattaches only after a restart that began while it was attached 
     equal false, Archon::Workspaces.wait_for_restart(marker, since: since)
   end
 end
+
+test('project tabs open a shell first, then the selected AI tool under its own name') do
+  equal [{ name: 'shell' }, { name: 'claude', command: Archon::Workspaces::CLAUDE_COMMAND }], Archon::Workspaces.project_tabs(ai: 'claude')
+  equal [{ name: 'shell' }, { name: 'codex', command: 'codex resume --last' }], Archon::Workspaces.project_tabs(ai: 'codex')
+end

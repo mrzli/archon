@@ -39,6 +39,7 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
       equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **inside)
       equal ['old'], invoke.call('archon', %w[workspace list]).fetch('workspaces').map { |item| item['label'] }
       tabs = invoke.call('archon', ['tab', 'list', '--workspace', before.first]).fetch('tabs')
+      equal 'shell', tabs.find { |tab| tab['focused'] }['label']
       panes = invoke.call('archon', ['pane', 'list', '--workspace', before.first]).fetch('panes')
       process_info = lambda do |label|
         tab = tabs.find { |item| item['label'] == label }
