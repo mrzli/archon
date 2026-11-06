@@ -148,7 +148,7 @@ module Archon
       panes.each do |pane|
         tab = tabs.find { |item| item.fetch('tab_id') == pane.fetch('tab_id') }
         next unless tab && tab.fetch('pane_count') == 1
-        command = Workspaces::TAB_COMMANDS[tab.fetch('label')]
+        command = Workspaces::AI_COMMANDS[tab.fetch('label')]
         # Native agent restores can be pending before a client attaches.
         next unless command && !pane['agent']
         pane_id = pane.fetch('pane_id')

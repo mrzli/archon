@@ -24,7 +24,7 @@ test('real tmux project layouts are tagged, repeat safely, and stop preserves un
       definitions.each do |definition|
         result = invoke.call(['list-windows', '-t', "=#{definition[:session]}", '-F', '#{window_name}'])
         equal 0, result[:status]
-        equal %w[nvim lazygit shell claude], result[:stdout].lines.map(&:strip)
+        equal %w[shell claude], result[:stdout].lines.map(&:strip)
         result = invoke.call(['show-options', '-qv', '-t', "=#{definition[:session]}:", '@archon-managed'])
         equal 0, result[:status]
         equal '1', result[:stdout].strip
@@ -46,7 +46,7 @@ test('real tmux restart from inside a session reattaches the terminal that start
     socket_dir = File.join(fixture[:root], 'tmux')
     FileUtils.mkdir_p(socket_dir, mode: 0o700)
     write_executable(File.join(fixture[:bin], 'tmux'), "#!/bin/sh\nexec /usr/bin/tmux -f /dev/null \"$@\"\n")
-    %w[claude nvim].each { |tool| write_executable(File.join(fixture[:bin], tool), "#!/bin/sh\nexec sleep 60\n") }
+    write_executable(File.join(fixture[:bin], 'claude'), "#!/bin/sh\nexec sleep 60\n")
     workspace_directory(fixture, 'cloned/project')
     environment = { 'TMUX_TMPDIR' => socket_dir }
     tmux = ->(*arguments) { Open3.capture3(environment, File.join(fixture[:bin], 'tmux'), *arguments).first.strip }

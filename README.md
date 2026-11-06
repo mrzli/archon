@@ -71,7 +71,7 @@ A workspace opens the projects I choose, ready to work in. Projects gives me eve
 
 `arc workspaces <backend> start` shows a checklist of every project in the fixed structure, and opens the ones I select. The backend is Herdr, the terminal multiplexer I currently use, tmux, or VS Code, and I always name it, since there is no default. Each backend remembers its own selection, so next time the same projects are already checked. New projects start unchecked.
 
-In Herdr and tmux, each project gets tabs for Neovim, lazygit, a shell, and an AI coding agent. The agent is Claude Code by default and resumes the project's last conversation, or starts a new one if there is none. With `--ai codex`, it is Codex instead. Starting again keeps workspaces that are already open, and `stop` and `kill` close them.
+In Herdr and tmux, each project gets tabs for a shell and an AI coding agent. The agent is Claude Code by default and resumes the project's last conversation, or starts a new one if there is none. With `--ai codex`, it is Codex instead. Starting again keeps workspaces that are already open, and `stop` and `kill` close them.
 
 In VS Code, each selected project opens in its own window, on a Hyprland workspace I choose.
 

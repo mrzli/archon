@@ -80,16 +80,18 @@ module Archon
 
     def create_editor_session(run, definition, ai: Workspaces::DEFAULT_AI)
       session, directory = definition.values_at(:session, :directory)
-      if run.call('tmux', ['new-session', '-d', '-s', session, '-c', directory, '-n', 'nvim']) != 0
+      tabs = Workspaces.editor_tabs(ai: ai)
+      first_tab = tabs.first[:name]
+      if run.call('tmux', ['new-session', '-d', '-s', session, '-c', directory, '-n', first_tab]) != 0
         return { status: 1 }
       end
       operations = [['set-option', '-t', "=#{session}:", '@archon-managed', '1'],
                     ['set-option', '-t', "=#{session}:", '@archon-project', directory]]
-      Workspaces.editor_tabs(ai: ai).each_with_index do |tab, index|
+      tabs.each_with_index do |tab, index|
         operations << ['new-window', '-t', "=#{session}", '-c', directory, '-n', tab[:name]] unless index.zero?
         operations << ['send-keys', '-t', "=#{session}:#{tab[:name]}", tab[:command], 'Enter'] if tab[:command]
       end
-      operations << ['select-window', '-t', "=#{session}:nvim"]
+      operations << ['select-window', '-t', "=#{session}:#{first_tab}"]
       operations.each do |arguments|
         if run.call('tmux', arguments) != 0
           return { status: 1, cleanup_status: run.call('tmux', ['kill-session', '-t', "=#{session}"]) }

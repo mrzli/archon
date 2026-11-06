@@ -17,8 +17,8 @@ projects get separate workspaces. Workspace IDs are remembered in
 so later starts reuse the same workspaces. A workspace you renamed gets its
 folder name back.
 
-Repeated starts preserve existing workspaces and relaunch Neovim, lazygit or the
-AI tool in their single-pane tabs when only a bash prompt is running there.
+Repeated starts preserve existing workspaces and relaunch the AI tool in its
+single-pane tab when only a bash prompt is running there.
 Running programs and native agent restores are left alone. Failed creations roll
 back their new resources, and later projects are still attempted.
 

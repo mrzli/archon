@@ -76,13 +76,12 @@ test('Herdr existing tool recovery only submits commands to a single idle shell 
   [
     ['codex', 1, nil, 100, 'bash', 'codex resume --last'],
     ['claude', 1, nil, 100, 'bash', Archon::Workspaces::CLAUDE_COMMAND],
-    ['nvim', 1, nil, 100, 'bash', 'nvim .'],
-    ['lazygit', 1, nil, 100, 'bash', 'lazygit'],
+    ['nvim', 1, nil, 100, 'bash', nil],
     ['codex', 1, nil, 200, 'bash', nil],
     ['codex', 1, 'codex', 100, 'bash', nil],
     ['shell', 1, nil, 100, 'bash', nil],
     ['codex', 2, nil, 100, 'bash', nil],
-    ['nvim', 1, nil, 100, 'nvim', nil],
+    ['claude', 1, nil, 100, 'claude', nil],
     ['codex', 1, nil, 100, 'zsh', nil]
   ].each do |label, count, agent, foreground, process_name, expected|
     submitted = []
@@ -111,8 +110,8 @@ test('Herdr creates selected uniform workspaces, repeats safely and attaches onl
     state = herdr_state(path)
     equal 1, state['workspaces'].length
     equal File.basename(project), state['workspaces'].first['label']
-    equal %w[nvim lazygit shell claude], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
-    equal ['nvim .', 'lazygit', Archon::Workspaces::CLAUDE_COMMAND], state['workspaces'].first['tabs'].flat_map { |tab| tab['commands'] }
+    equal %w[shell claude], state['workspaces'].first['tabs'].map { |tab| tab['label'] }
+    equal [Archon::Workspaces::CLAUDE_COMMAND], state['workspaces'].first['tabs'].flat_map { |tab| tab['commands'] }
     equal project, state['workspaces'].first['cwd']
     equal 0, state['attachments']
     equal 1, state['calls'].count { |call| call == ['server'] }
@@ -346,8 +345,8 @@ test('Herdr kill then start creates only newly selected projects and launches th
     workspaces = herdr_state(path)['workspaces']
     equal selected, workspaces.map { |workspace| workspace['cwd'] }
     workspaces.each do |workspace|
-      equal %w[nvim lazygit shell claude], workspace['tabs'].map { |tab| tab['label'] }
-      equal ['nvim .', 'lazygit', Archon::Workspaces::CLAUDE_COMMAND], workspace['tabs'].flat_map { |tab| tab['commands'] }
+      equal %w[shell claude], workspace['tabs'].map { |tab| tab['label'] }
+      equal [Archon::Workspaces::CLAUDE_COMMAND], workspace['tabs'].flat_map { |tab| tab['commands'] }
     end
   end
 end

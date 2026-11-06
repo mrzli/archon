@@ -25,7 +25,7 @@ Removed projects are omitted and new ones start unchecked. An accepted empty
 selection is saved and opens nothing. For terminal backends, existing sessions
 survive a later start with a different selection.
 
-Each terminal project has tabs for Neovim, lazygit, a shell, and an AI tool.
+Each terminal project has tabs for a shell and an AI tool.
 `--ai claude` is the default and runs `claude --continue`, or `claude` when the
 project has no saved conversation; `--ai codex` runs `codex resume --last`. The
 tool must be on `PATH`, and the option applies to newly created workspaces.
@@ -33,7 +33,7 @@ Development servers are not started.
 
 ## Herdr
 
-Requires Herdr, Neovim, lazygit and the selected AI tool on `PATH`.
+Requires Herdr and the selected AI tool on `PATH`.
 
 ```bash
 arc w h start
@@ -59,7 +59,7 @@ Missing roots are treated as empty. Listing takes no options except help.
 
 ## tmux
 
-Requires tmux, Neovim, lazygit and the selected AI tool on `PATH`.
+Requires tmux and the selected AI tool on `PATH`.
 
 ```bash
 arc w t start
