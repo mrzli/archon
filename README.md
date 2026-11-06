@@ -26,7 +26,7 @@ For the same reason, moving between computers is easy. I work on more than one a
 - **Development tools ready to use.** Setup installs the language runtimes and developer tools I use, such as Node.js, Python, Ruby, and Go, mostly through mise. VS Code comes with all my extensions, settings, keybindings, and snippets.
 - **One command-line program for everyday tasks.** The [Archon CLI](#archon-cli) manages my projects, workspaces, agent sessions, and system tasks, with short aliases for the commands I type most.
 - **All my projects in one place.** My repositories live in one fixed structure, one command keeps all of them in sync, and their secrets are kept in one store. See [Projects](#projects).
-- **Project workspaces in a terminal multiplexer.** One command opens the projects I'm working on, each with my editor, Git client, shell, and AI agent ready. See [Workspaces](#workspaces).
+- **Project workspaces in a terminal multiplexer.** One command opens the projects I'm working on, each with a shell and my AI agent ready. See [Workspaces](#workspaces).
 - **Voice dictation.** Setup installs Voxtype with a local Whisper model that runs on the GPU. I use it to dictate my prompts to AI agents.
 - **AI agents set up the same way everywhere.** Setup installs my [agent skills](https://github.com/mrzli/skills) and my [global agent instructions](data/home/.codex/AGENTS.md), which both Claude Code and Codex read. When I change a skill, the global instructions, or another agent setting, `arc agents reload` runs setup and restarts every running agent session, so all of them pick up the change at once.
 
