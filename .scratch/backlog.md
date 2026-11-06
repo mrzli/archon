@@ -44,3 +44,20 @@ Candidates that Omarchy installs and that were kept for now:
 - Pinta, image editor, which depends on the .NET runtime, 74 MiB.
 - LocalSend, file sharing between nearby devices, 67 MiB.
 - Cliamp, terminal music player, 39 MiB.
+
+## 6. Intermittent Herdr restart integration test
+
+Added 2026-11-06. The test "real Herdr restart from inside a pane reattaches
+the terminal that started the workspaces", in
+`components/archon-cli/tests/integration/herdr_test.rb`, sometimes fails with
+"execution expired". It passed two of three runs on `master` and two of three
+on the branch that reduced workspaces to a shell and an AI tool, so that change
+is not the likely cause. The `master` failure was the wait for the terminal
+process to exit, at `tests/workspace_helpers.rb:31`, which allows 10 seconds.
+
+Open points:
+
+- Find out whether the test or `arc w h restart` is at fault, because a slow or
+  missed reattach would also affect real restarts.
+- `bash tests/test.sh` does not run the integration tests, so this failure shows
+  only when they are run by hand.
