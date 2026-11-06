@@ -28,6 +28,8 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
       assert status == 0, "#{error}\n#{File.read(File.join(ENV.fetch('XDG_STATE_HOME'), 'archon/workspaces-herdr-server.log'))}"
       wait_for_tools.call(projects.first)
       before = invoke.call('archon', %w[workspace list]).fetch('workspaces').map { |item| item['workspace_id'] }
+      focused = invoke.call('archon', ['tab', 'list', '--workspace', before.first]).fetch('tabs').select { |tab| tab['focused'] }
+      equal ['shell'], focused.map { |tab| tab['label'] }
       equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['stop'], **context)
       inside = context.merge(environment: { 'HERDR_ENV' => '1' }, picker: workspace_picker([projects.first]))
       equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **inside)
@@ -39,7 +41,6 @@ test('real Herdr start revives stopped tools and kill clears saved sessions befo
       equal 0, Archon::WorkspacesHerdr.run_workspaces_herdr(['start'], **inside)
       equal ['old'], invoke.call('archon', %w[workspace list]).fetch('workspaces').map { |item| item['label'] }
       tabs = invoke.call('archon', ['tab', 'list', '--workspace', before.first]).fetch('tabs')
-      equal 'shell', tabs.find { |tab| tab['focused'] }['label']
       panes = invoke.call('archon', ['pane', 'list', '--workspace', before.first]).fetch('panes')
       process_info = lambda do |label|
         tab = tabs.find { |item| item['label'] == label }
