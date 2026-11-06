@@ -7,6 +7,7 @@
   asked to change them.
 - Keep resource creation and rollback together; orchestration should report
   failures and continue where the command contract requires it.
-- Use isolated fixtures and fake external operations; never disturb live
-  sessions or launch real interactive tools during tests.
+- Use isolated fixtures and, outside the real Herdr and tmux integration tests,
+  fake external operations. Never disturb live sessions or launch real
+  interactive tools during tests.
 - Verify project selection, repeat safety, and failure propagation.

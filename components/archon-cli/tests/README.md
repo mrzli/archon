@@ -50,7 +50,7 @@ and the util-linux `setsid` utility.
 Default Herdr checks use a fake executable and temporary state. They do not
 require Herdr or start real editors, agents, or development servers.
 
-Run real Herdr and tmux integration tests when changing workspace shutdown or Claude
+Run real Herdr and tmux integration tests when changing workspace code or Claude
 or Codex restart behavior, and before releases:
 
 ```bash

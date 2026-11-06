@@ -65,7 +65,7 @@ do not run full workstation setup or touch live tmux or Herdr sessions or home
 configuration.
 
 Run `bash components/archon-cli/tests/run-integration.sh` when changing workspace
-shutdown or Claude or Codex restart behavior, and before releases. These separate tests
+code or Claude or Codex restart behavior, and before releases. These separate tests
 use isolated Herdr sessions and temporary tmux sockets to verify that kill
 clears saved layouts, stopping workspaces survives closing the calling pane,
 and Claude and Codex restarts preserve real shells and panes. They require Unix socket

@@ -99,9 +99,11 @@ Choose the checks by the kind of change:
 - **Code,** including setup, components, tests, migrations, `scripts/`, and
   shell scripts under `data/home/`: `bash tests/test.sh`, which also runs the
   syntax checks and ShellCheck.
-- **Workspace code,** under `components/archon-cli/lib/archon/commands/workspaces/`:
-  the code checks and `bash components/archon-cli/tests/run-integration.sh`,
-  which tests against real Herdr and tmux in isolated fixtures.
+- **Workspace code,** meaning
+  `components/archon-cli/lib/archon/commands/workspaces/` and
+  `components/archon-cli/lib/archon/shared/herdr.rb`: the code checks and
+  `bash components/archon-cli/tests/run-integration.sh`, which tests against
+  real Herdr and tmux in isolated fixtures.
 
 Never run `setup.sh` or full provisioning as a test, because it changes the
 workstation. Verify single setup operations with focused, safe checks.
