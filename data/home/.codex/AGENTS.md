@@ -84,7 +84,7 @@ Rely only on what a library, framework, or tool documents. When a documented way
 
 Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Merge only when the user asks.
 
-Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the branch you work on for the user by fast-forwarding. If the branch you work on has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit.
+Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the branch you work on for the user by fast-forwarding. If the branch you work on has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit. After merging a branch into the main branch, delete the branch with `git branch -d`.
 
 Ask before rebasing commits that were already pushed. Resolve mechanical rebase conflicts, such as a rename meeting an edited line, and report them. Ask about any other conflict. If integrating would touch files with uncommitted changes, report the files and ask before committing, stashing, or discarding anything.
 
