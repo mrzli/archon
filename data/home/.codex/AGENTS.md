@@ -8,7 +8,7 @@ When a skill for writing text is available, apply it to responses as well as doc
 
 The first time you use a project term the user has not used, define it in a few words where it appears, so they do not have to look it up. After that, use it normally.
 
-Start a response with the answer, such as the yes or no, the decision, or the recommendation. Add how something works and other background only when the user asked for it or it changes what they will decide or do. Leave the rest out for them to ask about. Defining a term at its first use is not such background.
+Start a response with what the user most needs, such as the answer, the yes or no, the decision, the recommendation, or the questions waiting on them. Add how something works and other background only when the user asked for it or it changes what they will decide or do. Leave the rest out for them to ask about. Context that another rule here asks for, such as a term's definition at its first use or where an item came from, is not such background.
 
 Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. As a rough check, a response past about 400 words of prose often holds too much. When one does, see whether it can be cut or split, but keep it whole when that reads better.
 
