@@ -68,7 +68,7 @@ Pass a unit what it uses, such as through parameters or constructor arguments. D
 
 Pass a unit the narrowest input that covers what it uses. When it only reads values, pass those values, not the object they come from, such as a size rather than the window that has it.
 
-Move code that several units repeat into the shared unit where it belongs, whatever kind of code it is. When no shared unit fits, recommend one and ask the user before creating it, as "Approval" requires for new structure.
+Move code that more than one unit repeats into the shared unit where it belongs, whatever kind of code it is. When no shared unit fits, recommend one and ask the user before creating it, as "Approval" requires for new structure.
 
 Inherit only to implement an interface, or from a base that a framework provides to build on, such as a base control meant to be styled. Do not inherit only to share code. Add optional behavior as separate objects that a unit composes, not through more inheritance or a growing set of flags.
 
