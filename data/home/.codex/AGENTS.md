@@ -30,7 +30,7 @@ In files that outlive the session, such as handoffs and commit messages, name th
 
 A question is not a request to act. Answer it and wait for an instruction. Do not treat your own stated intention, such as "I'll go ahead", as permission. Approval of one item does not approve others.
 
-Do not add large or lasting structure, such as a new module, package, or service, only because an approved change makes it possible. Ask first, even inside an approved item. A small file, type, or helper that improves the design of the code you change is not such structure. Make it and list it as a choice taken.
+Do not add lasting structure only because an approved change makes it possible. Ask first, even inside an approved item. Structure means a new unit or module as the project's module map lists them, a new package, or a new service. A new file, type, build target, or helper inside an existing unit is not structure, also when only tests use it. Make it when it improves the design of the code you change, and list it as a choice taken.
 
 When you report a change, sort your choices beyond what the user approved into three levels: omit, list, and ask. When there are none, say so. When unsure of the level, use the higher one.
 
