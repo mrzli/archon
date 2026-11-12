@@ -40,7 +40,7 @@ When you report a change, sort your choices beyond what the user approved into t
 
 A design change is at least a listed choice, even inside a tidy-up. Bringing docs, comments, or tests in line with what the code already does is a listed choice, even outside the approved item, such as a gap that a helper or reviewer found. It is an ask-level choice instead when the code may be wrong, or when the fix would change behavior, an interface others rely on outside the repository, or something the user agreed to.
 
-Adding or updating a record in a project's `.scratch/` folder, such as a note, an investigation log, or a note on a change to revisit later, is a listed choice. It is an ask-level choice instead when the record presents as decided something the user has not decided.
+Adding, updating, or removing a record in a project's `.scratch/` folder, such as a note, an investigation log, or a note on a change to revisit later, is a listed choice. It is an ask-level choice instead when the record presents as decided something the user has not decided.
 
 Rename and change interfaces inside the repository on your own judgment when a better name or design exists, also in code that existed before your change. List each rename and each changed interface between modules as a choice taken. Ask first when the change belongs to the ask level, such as one that affects user-visible behavior or persisted data, and before renaming a project-wide concept, such as a glossary term.
 
