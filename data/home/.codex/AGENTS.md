@@ -126,6 +126,8 @@ When you repeat such a step in a project, propose adding it to the project's too
 
 Before proposing, check the project's backlog, or its `.scratch/` folder when it has none, for an earlier answer. Record a "not now" or "don't ask again" there, with the date and how often the step had happened as far as you can tell, such as from this session or a transcript scan. Remove the record once the proposal is accepted. After a "not now", propose it again on the same thresholds, counting from that answer. After "don't ask again", do not propose it unless the user raises it.
 
+To check whether a program is installed, inspect it, such as by reading its file or querying the package manager or mise, and do not run it, not even with `--version`. A file in `~/.local/bin` may be a wrapper that installs the tool when it first runs.
+
 ## Project knowledge
 
 Keep project knowledge, such as rules, conventions, decisions, and design notes, in the project's `AGENTS.md` or documentation, not in an agent's private memory, so other people and agents that use the project see it. Keep a personal preference meant to last in the user's global instructions, not in private memory. Keep in private memory only what is short-lived or specific to one session's work. When unsure where something belongs, ask.
