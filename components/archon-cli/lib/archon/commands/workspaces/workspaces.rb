@@ -22,7 +22,7 @@ module Archon
     LIST_HELP = <<~TEXT.chomp.freeze
       Usage: archon workspaces list [options]
 
-      Lists project directories under ~/projects/cloned and ~/projects/personal/<owner>.
+      Lists project directories under ~/projects/cloned, ~/projects/personal, and ~/projects/personal/<owner>.
       No backend or running workspace session is required.
     TEXT
 

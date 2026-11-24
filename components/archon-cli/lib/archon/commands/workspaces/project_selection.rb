@@ -10,7 +10,8 @@ module Archon
     def discover_projects(home)
       cloned = File.join(home, 'projects/cloned')
       personal = File.join(home, 'projects/personal')
-      (project_directories(cloned) + project_directories(personal).flat_map { |owner| project_directories(owner) }).sort
+      owners = project_directories(personal)
+      (project_directories(cloned) + owners + owners.flat_map { |owner| project_directories(owner) }).sort_by { |path| path.split(File::SEPARATOR) }
     end
 
     def project_directories(root)

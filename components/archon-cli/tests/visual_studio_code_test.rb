@@ -156,7 +156,7 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, block:
   { run: run, calls: calls, clients: clients }
 end
 
-test('VS Code discovery uses exact directory depths without requiring Git or following symlinks') do
+test('VS Code discovery lists owner directories and their children without requiring Git or following symlinks') do
   fixture do |fixture|
     home = fixture[:home]
     equal [], Archon::WorkspaceProjects.discover_projects(home)
@@ -168,6 +168,7 @@ test('VS Code discovery uses exact directory depths without requiring Git or fol
     vsc_project(home, 'cloned/owner/deep/nested')
     vsc_project(home, 'personal/owner/a/vendor/nested')
     FileUtils.mkdir_p(File.join(home, 'projects/personal/empty-owner'))
+    expected += %w[personal/owner personal/empty-owner].map { |relative| File.join(home, 'projects', relative) }
     File.write(File.join(home, 'projects/cloned/file'), '')
     File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
     File.symlink(File.join(home, 'projects/personal/owner'), File.join(home, 'projects/personal/linked-owner'))
@@ -202,7 +203,7 @@ end
 test('terminal navigation, toggling, saved defaults, scrolling, and launch order') do
   fixture do |fixture|
     home = fixture[:home]
-    projects = (1..12).map { |number| vsc_project(home, "personal/owner/project-#{number.to_s.rjust(2, '0')}") }
+    projects = (1..12).map { |number| vsc_project(home, "cloned/project-#{number.to_s.rjust(2, '0')}") }
     status, transcript = vsc_terminal(home) do |terminal, wait, _|
       wait.call('Choose workspace')
       terminal.write("0\r")
@@ -222,7 +223,7 @@ test('terminal navigation, toggling, saved defaults, scrolling, and launch order
       assert text.include?('(*) 10')
       terminal.write("\r")
       wait.call('Choose projects')
-      assert text.include?('[x] personal/owner/project-02')
+      assert text.include?('[x] cloned/project-02')
       terminal.write("k " + 'j' * 11 + " \r")
     end
     equal 0, status

@@ -7,6 +7,7 @@ test('workspace list uses shared discovery and aliases without external commands
     equal 0, run_archon(%w[w list])[:status]
     assert !File.exist?(File.join(fixture[:home], 'projects'))
     paths = %w[cloned/one personal/owner/two].map { |relative| workspace_directory(fixture, relative) }
+    paths = (paths + [File.join(fixture[:home], 'projects/personal/owner')]).sort
     expected = paths.map { |path| path.sub(fixture[:home], '~') }.join("\n") + "\n"
     result = run_archon(%w[workspaces list])
     equal expected, result[:stdout]
@@ -40,7 +41,7 @@ test('terminal backends share discovery and remember selections independently fr
     end
     equal %w[tmux herdr], seen.map(&:first)
     seen.each do |_, paths, previous, home|
-      equal [first, second], paths
+      equal [first, File.dirname(second), second], paths
       equal({ 'projects' => [] }, previous)
       equal fixture[:home], home
     end
@@ -75,7 +76,7 @@ test('VS Code remembers its workspace and selection in its own state file') do
     state_root = File.join(fixture[:root], 'state')
     picker = ->(paths, previous, home:, workspace:) {
       equal true, workspace
-      equal [project], paths
+      equal [File.dirname(project), project], paths
       equal fixture[:home], home
       equal({ 'workspace' => 1, 'projects' => [] }, previous)
       { 'workspace' => 6, 'projects' => [] }

@@ -19,7 +19,7 @@ test('tmux checklist saves choices, restores defaults, ignores deleted projects,
     status, = workspace_terminal(%w[w t start], environment: { 'TMUX' => 'fixture' }) do |terminal, wait, text|
       wait.call('Choose projects')
       assert text.include?('[ ] personal/owner/two')
-      terminal.write(" \r")
+      terminal.write("j \r")
     end
     equal 0, status
     equal({ 'projects' => [second] }, JSON.parse(File.read(path)))
@@ -63,7 +63,7 @@ test('Herdr uses the same checklist and actual terminal attachment rules') do
       status, = workspace_terminal(%w[w h start --ai claude], environment: environment) do |terminal, wait, text|
         wait.call('Choose projects')
         assert !text.include?('Choose workspace')
-        terminal.write(environment.empty? ? " \r" : "\r")
+        terminal.write(environment.empty? ? "j \r" : "\r")
       end
       equal 0, status
     end

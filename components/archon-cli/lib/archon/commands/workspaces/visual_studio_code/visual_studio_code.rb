@@ -16,7 +16,7 @@ module Archon
 
       Start requires an interactive terminal, Omarchy's per-monitor workspaces, and
       hyprctl and code on PATH.
-      Projects are direct directories in ~/projects/cloned and ~/projects/personal/<owner>.
+      Projects are direct directories in ~/projects/cloned, ~/projects/personal, and ~/projects/personal/<owner>.
       Workspace and project selections are remembered for the next start.
       j/k or Up/Down: navigate. Space: toggle. Enter: accept. Esc or Ctrl+C: cancel.
       Workspace digits 1-9 and 0 (workspace 10) select that workspace of the focused monitor; Enter accepts it.

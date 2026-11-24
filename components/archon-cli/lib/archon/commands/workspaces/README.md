@@ -4,8 +4,9 @@ List available projects or choose a backend explicitly. There is no default back
 `w` aliases `workspaces`, `h` aliases `herdr`, and `t` aliases `tmux`.
 
 Every direct directory under `~/projects/cloned` is a project. Under
-`~/projects/personal`, each directory directly under an owner or organization
-is a project. Discovery does not search deeper, require Git, or follow directory
+`~/projects/personal`, each owner or organization directory is a project, and
+so is each directory directly under it. An owner project lets one workspace
+work across that owner's repositories. Discovery does not search deeper, require Git, or follow directory
 symlinks. All backends share this discovery and project checklist.
 
 Terminal backend start requires an interactive terminal. Use `j`/`k` or Up/Down

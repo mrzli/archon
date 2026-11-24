@@ -87,7 +87,7 @@ test_repeated_overlay_copy() {
 
   mkdir -p "$home/projects/cloned/plain folder" "$home/projects/personal/owner/plain" || return
   archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces list)" || return
-  assert_equals $'~/projects/cloned/plain folder\n~/projects/personal/owner/plain' "$archon_output" || return
+  assert_equals $'~/projects/cloned/plain folder\n~/projects/personal/owner\n~/projects/personal/owner/plain' "$archon_output" || return
 
   archon_output="$(cd "$home" && HOME="$home" .local/bin/archon workspaces visual-studio-code --help)" || return
   alias_output="$(cd "$home" && HOME="$home" .local/bin/arc w vsc --help)" || return
