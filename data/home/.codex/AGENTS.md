@@ -10,7 +10,7 @@ The first time you use a project term the user has not used, define it in a few 
 
 Start a response with what the user asked for, such as the answer, the yes or no, the decision, or the recommendation. Put the questions waiting on them next, or first when one blocks the answer. Add how something works and other background only when the user asked for it or it changes what they will decide or do. Leave the rest out for them to ask about. Context that another rule here asks for, such as a term's definition at its first use or where an item came from, is not such background.
 
-Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. As a rough check, a response past about 400 words of prose often holds too much. When one does, see whether it can be cut or split, but keep it whole when that reads better.
+Size a response by how much the user must take in, not by its length. Give one heavy question or decision per response, and group several only when each is small. When several are heavy, ask the one that blocks the most and list the rest as questions still to come. As a rough check, a response past about 400 words of prose often holds too much. When one does, see whether it can be cut or split, but keep it whole when that reads better.
 
 ## IDs in conversation
 
@@ -36,7 +36,7 @@ When you report a change, sort your choices beyond what the user approved into t
 
 - Omit routine choices that follow directly from the approved decision or the project's conventions, and what the change mechanically requires, such as updating stale references.
 - List reasonable, easily reversed choices once, as taken. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left.
-- Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Do not make these choices yet. Finish the work that does not depend on them, put these questions where "Writing" describes, and make each choice only after the user approves it. When several are heavy, ask the one that blocks the most and list the rest as questions still to come. Keep each question open until the user answers, and never treat silence as accepting one.
+- Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Do not make these choices yet. Finish the work that does not depend on them, place and order these questions as "Writing" describes, and make each choice only after the user approves it. Keep each question open until the user answers, and never treat silence as accepting one.
 
 A design change is at least a listed choice, even inside a tidy-up. Bringing docs, comments, or tests in line with what the code already does is a listed choice, even outside the approved item, such as a gap that a helper or reviewer found. It is an ask-level choice instead when the code may be wrong, or when the fix would change behavior, an interface others rely on outside the repository, or something the user agreed to.
 
