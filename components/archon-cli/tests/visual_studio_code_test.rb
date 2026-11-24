@@ -173,7 +173,7 @@ test('VS Code discovery lists owner directories and their children without requi
     File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
     File.symlink(File.join(home, 'projects/personal/owner'), File.join(home, 'projects/personal/linked-owner'))
     File.symlink(expected.first, File.join(home, 'projects/personal/owner/link'))
-    equal expected.sort, Archon::WorkspaceProjects.discover_projects(home)
+    equal expected.sort_by { |path| path.split(File::SEPARATOR) }, Archon::WorkspaceProjects.discover_projects(home)
   end
 end
 

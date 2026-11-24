@@ -11,7 +11,8 @@ module Archon
       cloned = File.join(home, 'projects/cloned')
       personal = File.join(home, 'projects/personal')
       owners = project_directories(personal)
-      projects = project_directories(cloned) + owners + owners.flat_map { |owner| project_directories(owner) }
+      projects = project_directories(cloned) + owners +
+                 owners.flat_map { |owner| project_directories(owner) }
       # Sorting by path components keeps each owner directly above its projects.
       projects.sort_by { |path| path.split(File::SEPARATOR) }
     end
