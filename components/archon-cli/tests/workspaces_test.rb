@@ -20,6 +20,35 @@ test('workspace list uses shared discovery and aliases without external commands
   end
 end
 
+test('discovery lists owner directories and their children without requiring Git or following symlinks') do
+  fixture do |fixture|
+    home = fixture[:home]
+    equal [], Projects.discover_projects(home)
+    expected = %w[cloned/z cloned/.hidden cloned/owner personal/owner/a personal/owner/space\ project].map do |relative|
+      workspace_directory(fixture, relative)
+    end
+    workspace_directory(fixture, 'cloned/owner/deep/nested')
+    workspace_directory(fixture, 'personal/owner/a/vendor/nested')
+    FileUtils.mkdir_p(File.join(home, 'projects/personal/empty-owner'))
+    expected += %w[personal/owner personal/empty-owner].map { |relative| File.join(home, 'projects', relative) }
+    File.write(File.join(home, 'projects/cloned/file'), '')
+    File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
+    File.symlink(File.join(home, 'projects/personal/owner'), File.join(home, 'projects/personal/linked-owner'))
+    File.symlink(expected.first, File.join(home, 'projects/personal/owner/link'))
+    equal expected.sort_by { |path| path.split(File::SEPARATOR) }, Projects.discover_projects(home)
+  end
+end
+
+test('discovery lists each owner directly above its projects') do
+  fixture do |fixture|
+    home = fixture[:home]
+    expected = %w[cloned/a personal/a personal/a/x personal/a-b personal/a-b/y].map do |relative|
+      workspace_directory(fixture, relative)
+    end
+    equal expected, Projects.discover_projects(home)
+  end
+end
+
 test('terminal backends share discovery and remember selections independently from VS Code') do
   fixture do |fixture|
     first = workspace_directory(fixture, 'cloned/one')

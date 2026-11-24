@@ -156,38 +156,6 @@ def vsc_hyprland(automatic: true, fail_group: false, launch_failure: nil, block:
   { run: run, calls: calls, clients: clients }
 end
 
-test('VS Code discovery lists owner directories and their children without requiring Git or following symlinks') do
-  fixture do |fixture|
-    home = fixture[:home]
-    equal [], Archon::WorkspaceProjects.discover_projects(home)
-    expected = %w[cloned/z cloned/.hidden cloned/owner personal/owner/a personal/owner/space\ project].map do |relative|
-      path = File.join(home, 'projects', relative)
-      FileUtils.mkdir_p(path)
-      path
-    end
-    vsc_project(home, 'cloned/owner/deep/nested')
-    vsc_project(home, 'personal/owner/a/vendor/nested')
-    FileUtils.mkdir_p(File.join(home, 'projects/personal/empty-owner'))
-    expected += %w[personal/owner personal/empty-owner].map { |relative| File.join(home, 'projects', relative) }
-    File.write(File.join(home, 'projects/cloned/file'), '')
-    File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
-    File.symlink(File.join(home, 'projects/personal/owner'), File.join(home, 'projects/personal/linked-owner'))
-    File.symlink(expected.first, File.join(home, 'projects/personal/owner/link'))
-    equal expected.sort_by { |path| path.split(File::SEPARATOR) }, Archon::WorkspaceProjects.discover_projects(home)
-  end
-end
-
-test('discovery lists each owner directly above its projects') do
-  fixture do |fixture|
-    home = fixture[:home]
-    expected = %w[cloned/a personal/a personal/a/x personal/a-b personal/a-b/y].map do |relative|
-      File.join(home, 'projects', relative)
-    end
-    expected.each { |path| FileUtils.mkdir_p(path) }
-    equal expected, Archon::WorkspaceProjects.discover_projects(home)
-  end
-end
-
 test('VS Code CLI validates arguments and routes aliases and help without external effects') do
   fixture do |fixture|
     %w[hyprctl code pkill].each { |name| write_executable(File.join(fixture[:bin], name), "#!/bin/sh\nexit 99\n") }
