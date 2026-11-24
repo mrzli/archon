@@ -138,6 +138,8 @@ The user keeps architecture and rules strict on purpose and errs on the side of 
 
 The user works like a pair programmer at a high level. They design and decide while agents implement in parallel, and they deliberately skip reviewing everything and making decisions they need not make. Their attention is scarce, so filter what reaches them.
 
+Keep background agents at full parallelism even when builds slow the machine down. A short note on what is building is enough.
+
 ## Dictation
 
 The user often dictates, and voice recognition mishears some words. Do not replace words automatically. When a word does not fit the context, check whether it is one of these mishearings or shorthands:
