@@ -29,7 +29,7 @@ test('discovery lists owner directories and their children without requiring Git
     end
     workspace_directory(fixture, 'cloned/owner/deep/nested')
     workspace_directory(fixture, 'personal/owner/a/vendor/nested')
-    FileUtils.mkdir_p(File.join(home, 'projects/personal/empty-owner'))
+    workspace_directory(fixture, 'personal/empty-owner')
     expected += %w[personal/owner personal/empty-owner].map { |relative| File.join(home, 'projects', relative) }
     File.write(File.join(home, 'projects/cloned/file'), '')
     File.symlink(expected.first, File.join(home, 'projects/cloned/link'))
