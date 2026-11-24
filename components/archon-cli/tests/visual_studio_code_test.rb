@@ -177,6 +177,17 @@ test('VS Code discovery lists owner directories and their children without requi
   end
 end
 
+test('discovery lists each owner directly above its projects') do
+  fixture do |fixture|
+    home = fixture[:home]
+    expected = %w[cloned/a personal/a personal/a/x personal/a-b personal/a-b/y].map do |relative|
+      File.join(home, 'projects', relative)
+    end
+    expected.each { |path| FileUtils.mkdir_p(path) }
+    equal expected, Archon::WorkspaceProjects.discover_projects(home)
+  end
+end
+
 test('VS Code CLI validates arguments and routes aliases and help without external effects') do
   fixture do |fixture|
     %w[hyprctl code pkill].each { |name| write_executable(File.join(fixture[:bin], name), "#!/bin/sh\nexit 99\n") }

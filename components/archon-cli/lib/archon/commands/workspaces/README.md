@@ -6,8 +6,10 @@ List available projects or choose a backend explicitly. There is no default back
 Every direct directory under `~/projects/cloned` is a project. Under
 `~/projects/personal`, each owner or organization directory is a project, and
 so is each directory directly under it. An owner project lets one workspace
-work across that owner's repositories. Discovery does not search deeper, require Git, or follow directory
-symlinks. All backends share this discovery and project checklist.
+work across that owner's repositories. Discovery does not search deeper,
+require Git, or follow directory symlinks. Projects are sorted alphabetically,
+each owner followed by its projects. All backends share this discovery and
+project checklist.
 
 Terminal backend start requires an interactive terminal. Use `j`/`k` or Up/Down
 to move, Space to toggle projects, and Enter to accept. Escape or Ctrl+C cancels
@@ -49,7 +51,7 @@ See [Herdr usage](./herdr/README.md).
 
 ## List
 
-List discovered paths alphabetically without starting a backend:
+List discovered paths in checklist order without starting a backend:
 
 ```bash
 archon workspaces list
