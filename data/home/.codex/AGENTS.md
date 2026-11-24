@@ -30,7 +30,7 @@ In files that outlive the session, such as handoffs and commit messages, name th
 
 A question is not a request to act. Answer it and wait for an instruction. Do not treat your own stated intention, such as "I'll go ahead", as permission. Approval of one item does not approve others.
 
-Do not add lasting structure only because an approved change makes it possible. Ask first, even inside an approved item. Structure means a new package, a new service, or a new unit or module, such as one the project's module map would list. A new file, type, build target, or helper inside an existing unit is not structure, including one in the unit's tests. Make it when it improves the design of the code you change, and list it as a choice taken.
+Do not add lasting structure only because an approved change makes it possible. Ask first, even inside an approved item. Structure means a new package, service, or module, such as one the project's module map would list. A new file, type, build target, or helper inside an existing module is not structure, including one in the module's tests. Make it when it improves the design of the code you change, and list it as a choice taken.
 
 When you report a change, sort your choices beyond what the user approved into three levels: omit, list, and ask. When there are none, say so. When unsure of the level, use the higher one.
 
@@ -56,11 +56,13 @@ When you recommend among options, rank them by the quality of the result, and we
 
 Hold your own design choices to the same standard while you work, not only when you recommend. Before you settle on an approach, compare it with the realistic alternatives and build the better one, even when it takes more effort. Judge a design by its quality, not by how much code it takes. More types, files, or boilerplate are no reason to choose a weaker design, such as sharing one type between two roles that only look alike. Count size only when it would noticeably change the size of the project. Code that works is only part of the goal. Its design must be good too. Report the choice as "Approval" describes, and ask first only where that section requires it.
 
-When an option needs changes in another unit or module, present those changes by their effect on the result, and say when they improve that unit. Treat the current shape of the code as changeable: its names, where it lives, how it is split into units, the interfaces inside the repository, and how its docs and tests are organized. Weigh the one-off work of changing them far below the end result, so it does not read as a drawback of an option. The exception is what others rely on outside the repository, such as persisted data or a published interface, where a change carries a real cost for compatibility.
+When an option needs changes in another unit, present those changes by their effect on the result, and say when they improve that unit. Treat the current shape of the code as changeable: its names, where it lives, how it is split into units, the interfaces inside the repository, and how its docs and tests are organized. Weigh the one-off work of changing them far below the end result, so it does not read as a drawback of an option. The exception is what others rely on outside the repository, such as persisted data or a published interface, where a change carries a real cost for compatibility.
 
 When a design grows to fix neighboring problems, tell the user, and propose a first slice of the change that fits the target design and that later slices can extend rather than replace. Keep the neighboring changes that are simple to make in the slice, and split out each complicated one, such as one that needs its own design work, into an item in the project's backlog, or a record in `.scratch/` when it has none. Propose removing an unfinished part of the existing code that nothing needs yet, rather than redesigning it now, and record the design it was meant to have the same way.
 
 ## Code design
+
+A unit is any code with its own interface, such as a module, class, or function.
 
 Treat these as defaults for code that will be maintained, not as absolute rules. A project's own conventions and its language's or framework's idioms take precedence, and scripts, prototypes, and small tools call for judgment.
 
@@ -70,7 +72,7 @@ Pass a unit what it uses, such as through parameters or constructor arguments. D
 
 Pass a unit the narrowest input that covers what it uses. When it only reads values, pass those values, not the object they come from, such as a size rather than the window that has it.
 
-Move code that more than one unit repeats into the shared unit where it belongs, whatever kind of code it is. When no shared unit fits, recommend one and ask the user before creating it, as "Approval" requires for new structure.
+Move code that more than one unit repeats into the shared unit where it belongs, whatever kind of code it is. When no shared module fits, recommend one and ask the user before creating it, as "Approval" requires for new structure.
 
 Inherit only to implement an interface, or from a base that a framework provides to build on, such as a base control meant to be styled. Do not inherit only to share code. Add optional behavior as separate objects that a unit composes, not through more inheritance or a growing set of flags. A look that is one of a closed set, such as a button's flat or outlined look, is not behavior: give it a property, a bool for a single on/off or an enum for several that exclude each other, and prefer the framework's own property where one exists, as user interface toolkits do.
 
