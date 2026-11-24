@@ -140,6 +140,8 @@ The user works like a pair programmer at a high level. They design and decide wh
 
 Keep background agents at full parallelism even when builds slow the machine down. A short note on what is building is enough.
 
+The user has built user interfaces and component libraries in React and TypeScript, with Material UI and lately shadcn, and is new to QML and Qt Quick. When you explain QML or control architecture, map each concept to its React equivalent where one exists, and say plainly where they differ.
+
 ## Dictation
 
 The user often dictates, and voice recognition mishears some words. Do not replace words automatically. When a word does not fit the context, check whether it is one of these mishearings or shorthands:
