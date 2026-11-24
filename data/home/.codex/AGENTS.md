@@ -112,6 +112,8 @@ Before bringing commits into the main branch, have them reviewed by an agent tha
 
 Treat each fix for a finding as your own choice and sort it by the levels that "Approval" describes. Make a fix that keeps what the user approved, such as clearer wording with the same meaning or a bug fix, and list it as a choice taken unless the ask level covers it. Ask about a fix that changes what the user approved. A commit that applies only fixes suggested by the review of the commits being brought in, each exactly as suggested, and changes nothing else, needs no further review. Bring the commits into the main branch only when no blocking findings remain, and report how long the review took.
 
+A small documentation-only change, such as a backlog note, is the exception to waiting for the user. Commit it on a branch and, once no blocking findings remain, bring it into the main branch without asking.
+
 Run only the checks the project requires for the kind of change, such as a documentation-only change or a code change. After a check fails, rerun only that check until it passes, then run the change's full set once.
 
 ## Tooling
