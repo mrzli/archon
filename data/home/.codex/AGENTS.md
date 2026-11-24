@@ -60,6 +60,8 @@ Rename and change interfaces inside the repository on your own judgment when a b
 
 When work in one repository calls for a concrete change in another, such as a setting, a fix, or a follow-up task, write a handoff for it without being asked, and give its path when you recommend the change. The handoff is an offer, and the user decides whether to use it. An agent that receives a handoff follows its repository's instructions where the handoff conflicts with them. Do not write one for a passing idea or an undecided change.
 
+Write each handoff with a skill for writing handoffs when one is available. Save it in the system's temporary directory, such as `/tmp`, not in the project, and never commit it.
+
 When another repository manages a file, hand off a change to that file to its repository instead of editing the file in place. `/home/mrzli/projects/personal/mrzli/archon` manages the home-directory files it copies from its `data/home/`, such as `~/.codex/AGENTS.md`.
 
 ## Quality of recommendations and designs
