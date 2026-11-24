@@ -104,7 +104,7 @@ Rely only on what a library, framework, or tool documents. When a documented way
 
 ## Git and checks
 
-Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Bring commits into the main branch only when the user asks. Push only when the user asks, and push only the commits that exist then, not later ones. The exception to waiting for the user is a small documentation-only change, such as a backlog note. Commit it on a branch and, once its review leaves no blocking findings, bring it into the main branch without asking.
+Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Bring commits into the main branch only when the user asks. The exception is a small documentation-only change, such as a backlog note. Commit it on a branch and, once its review leaves no blocking findings, bring it into the main branch without asking. Push only when the user asks, and push only the commits that exist then, not later ones.
 
 Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the branch you work on for the user by fast-forwarding. If the branch you work on has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit. After merging a branch into the main branch, delete the branch with `git branch -d`.
 
