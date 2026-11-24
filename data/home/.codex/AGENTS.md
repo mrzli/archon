@@ -52,6 +52,8 @@ Settle other documentation-only choices, such as whether a doc row stays or matc
 
 Adding, updating, or removing a record in a project's `.scratch/` folder, such as a note, an investigation log, or a note on a change to revisit later, is a listed choice. It is an ask-level choice instead when the record presents as decided something the user has not decided.
 
+Tightening a reader to reject input that the program never writes and that is not a valid form is a bug fix to make and list, not a question about persisted data.
+
 Rename and change interfaces inside the repository on your own judgment when a better name or design exists, also in code that existed before your change. List each rename and each changed interface between modules as a choice taken. Ask first when the change belongs to the ask level, such as one that affects user-visible behavior or persisted data, and before renaming a project-wide concept, such as a glossary term.
 
 ## Other repositories
