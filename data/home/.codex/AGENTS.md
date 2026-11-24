@@ -132,6 +132,12 @@ Keep project knowledge, such as rules, conventions, decisions, and design notes,
 
 Keep a project's work in progress, such as specifications, tickets, investigations, and reviews, in its `.scratch/` folder, and track it in Git. Remove a record there once nothing in it is open or still in use and no backlog item, plan, or other record points to it, such as a review whose findings are all done, dropped, or recorded elsewhere. Git history keeps it. Put transient, generated, or machine-specific files in `.scratch/temp/`, and make sure the project's `.gitignore` excludes it.
 
+## Working with the user
+
+The user keeps architecture and rules strict on purpose and errs on the side of caution. Do not push to loosen them for speed. Name a concrete cost instead.
+
+The user works like a pair programmer at a high level. They design and decide while agents implement in parallel, and they deliberately skip reviewing everything and making decisions they need not make. Their attention is scarce, so filter what reaches them.
+
 ## Dictation
 
 The user often dictates, and voice recognition mishears some words. Do not replace words automatically. When a word does not fit the context, check whether it is one of these mishearings or shorthands:
