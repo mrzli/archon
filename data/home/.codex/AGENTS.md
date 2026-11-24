@@ -18,7 +18,7 @@ In conversation, give an ID to everything the user may answer, choose, approve, 
 
 When you introduce an item that gets an ID, say in a few words where it came from, what part of the project it concerns, what kind it is, and why it matters. Its kind may be a bug, an improvement, a design choice, or a question. When the item comes from a report, such as a helper's, a reviewer's, or a forked session's, name the report.
 
-At the first mention of an ID in each message, put a few words beside it on what the item is, also when an earlier message introduced the item.
+At the first mention of an ID in each message, including a topic letter, put a few words beside it on what the item is, also when an earlier message introduced the item.
 
 Give topics capital letters in the order they come up in the session. Number their parts by alternating numbers and lowercase letters, without separators, such as N, N6, N6d, N6d1. Continue letters past z or Z the way Excel names columns, such as y, z, aa, ab or Y, Z, AA, AB. A record with its own numbered items, such as a backlog, a plan, or a design's open questions, is one topic, and its items keep their numbers under its letter, such as E12.
 
@@ -66,7 +66,7 @@ When a design grows to fix neighboring problems, tell the user, and propose a fi
 
 A unit is any code with its own interface, such as a module, class, or function.
 
-Treat these as defaults for code that will be maintained, not as absolute rules. A project's own conventions and its language's or framework's idioms take precedence, and scripts, prototypes, and small tools call for judgment.
+Treat the rules in this section as defaults for code that will be maintained, not as absolute rules. A project's own conventions and its language's or framework's idioms take precedence, and scripts, prototypes, and small tools call for judgment.
 
 Follow them in the code you write. In each unit you change, also fix existing code that departs from them without a clear reason. Do it without waiting to be asked, and report each fix as "Approval" describes. Ask first only where that section requires it. In code you only read, point out departures that have no clear reason and recommend a fix, but make it only when asked.
 
