@@ -44,11 +44,11 @@ When you report a change, sort your choices beyond what the user approved into t
 - List reasonable, easily reversed choices once, as taken, such as a small change to the output of a tool or diagnostic that only the user reads, or starting a read-only investigation. If the user's next reply does not object to one, treat it as accepted, and do not raise it again in recaps or lists of what is left.
 - Ask about choices that affect user-visible behavior, interfaces others rely on outside the repository, scope, persisted data, or anything hard to reverse, and about changes to something the user agreed to, such as an architecture. Do not make these choices yet. Finish the work that does not depend on them, place and order these questions as "Writing" describes, and make each choice only after the user approves it. Keep each question open until the user answers, and never treat silence as accepting one.
 
-Do not ask about something that an earlier answer, the agreed decisions, the backlog, or the real state already settles. Say that it is settled. Check a question from a helper, a reviewer, or a forked session the same way before you pass it on, and drop it when it is settled or cannot happen. An item the user left undecided stays in the backlog, out of lists of what waits on them, and comes up in its ranked place when they ask about the backlog.
+Do not ask about something that an earlier answer, the agreed decisions, the backlog, or the current state of the code or system already settles. Say that it is settled. Check a question from a helper, a reviewer, or a forked session the same way before you pass it on, and drop it when it is settled or cannot happen. An item the user left undecided stays in the backlog, out of lists of what waits on them, and comes up in its ranked place when they ask about the backlog.
 
 A design change is at least a listed choice, even inside a tidy-up. Bringing docs, comments, or tests in line with what the code already does is a listed choice, even outside the approved item, such as a gap that a helper or reviewer found. It is an ask-level choice instead when the code may be wrong, or when the fix would change behavior, an interface others rely on outside the repository, or something the user agreed to.
 
-Settle other documentation-only choices, such as whether a doc row stays or matches its siblings, and list them. Ask only when the doc would record a behavior or design the user has not agreed to. When the user reviews documentation wording on a branch, make each wording change in the file and commit it instead of showing drafts or options in chat, because they read the rendered result.
+Settle other documentation-only choices, such as whether a doc row stays or matches its siblings, and list them. Ask only when the doc would record a behavior or design the user has not agreed to. When the user reviews documentation wording on a branch, make each wording change that keeps the agreed meaning in the file and commit it instead of showing drafts or options in chat, because they read the rendered result.
 
 Adding, updating, or removing a record in a project's `.scratch/` folder, such as a note, an investigation log, or a note on a change to revisit later, is a listed choice. It is an ask-level choice instead when the record presents as decided something the user has not decided.
 
@@ -104,7 +104,7 @@ Rely only on what a library, framework, or tool documents. When a documented way
 
 ## Git and checks
 
-Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Bring commits into the main branch only when the user asks. Push only when the user asks, and push only the commits that exist then, not later ones.
+Work on a branch other than the main branch. Give each self-contained change its own commit, and split an item from the request or plan into several commits when it covers more than one change. Bring commits into the main branch only when the user asks. Push only when the user asks, and push only the commits that exist then, not later ones. The exception to waiting for the user is a small documentation-only change, such as a backlog note. Commit it on a branch and, once its review leaves no blocking findings, bring it into the main branch without asking.
 
 Keep Git history linear. Bring commits from another branch, such as a helper agent's branch, onto the branch you work on for the user by fast-forwarding. If the branch you work on has moved, rebase those commits onto its tip and rerun the project's required checks first. Merge into the main branch the same way. Never create a merge commit. After merging a branch into the main branch, delete the branch with `git branch -d`.
 
@@ -113,8 +113,6 @@ Ask before rebasing commits that were already pushed. Resolve mechanical rebase 
 Before bringing commits into the main branch, have them reviewed by an agent that did not write them. Commits that touch only work in progress in `.scratch/` need no review. Give the reviewer the original request and the diff, not the author's conversation. Match the review brief to the size and risk of the change. For a small, low-risk change, ask the reviewer to read the diff and the code it affects, without broad test reruns or experiments. A review that an independent agent already made of the same changes counts, also after a rebase that resolved only mechanical conflicts.
 
 Treat each fix for a finding as your own choice and sort it by the levels that "Approval" describes. Make a fix that keeps what the user approved, such as clearer wording with the same meaning or a bug fix, and list it as a choice taken unless the ask level covers it. Ask about a fix that changes what the user approved. A commit that applies only fixes suggested by the review of the commits being brought in, each exactly as suggested, and changes nothing else, needs no further review. Bring the commits into the main branch only when no blocking findings remain, and report how long the review took.
-
-A small documentation-only change, such as a backlog note, is the exception to waiting for the user. Commit it on a branch and, once no blocking findings remain, bring it into the main branch without asking.
 
 Run only the checks the project requires for the kind of change, such as a documentation-only change or a code change. After a check fails, rerun only that check until it passes, then run the change's full set once.
 
@@ -126,7 +124,7 @@ When you repeat such a step in a project, propose adding it to the project's too
 
 Before proposing, check the project's backlog, or its `.scratch/` folder when it has none, for an earlier answer. Record a "not now" or "don't ask again" there, with the date and how often the step had happened as far as you can tell, such as from this session or a transcript scan. Remove the record once the proposal is accepted. After a "not now", propose it again on the same thresholds, counting from that answer. After "don't ask again", do not propose it unless the user raises it.
 
-To check whether a program is installed, inspect it, such as by reading its file or querying the package manager or mise, and do not run it, not even with `--version`. A file in `~/.local/bin` may be a wrapper that installs the tool when it first runs.
+To check whether a program is installed, inspect it, such as by locating it with `command -v` and reading the file, or by querying the package manager or mise, and do not run it, not even with `--version`. A file in `~/.local/bin` may be a wrapper that installs the tool when it first runs.
 
 ## Project knowledge
 
@@ -136,9 +134,9 @@ Keep a project's work in progress, such as specifications, tickets, investigatio
 
 ## Working with the user
 
-The user keeps architecture and rules strict on purpose and errs on the side of caution. Do not push to loosen them for speed. Name a concrete cost instead.
+The user keeps architecture and rules strict on purpose and errs on the side of caution. Do not push to loosen them for speed. When a rule has a concrete cost, name the cost instead.
 
-The user works like a pair programmer at a high level. They design and decide while agents implement in parallel, and they deliberately skip reviewing everything and making decisions they need not make. Their attention is scarce, so filter what reaches them.
+The user works like a pair programmer at a high level. They design and decide while agents implement in parallel, and they deliberately do not review everything or make decisions they need not make. Their attention is scarce, so filter what reaches them.
 
 Keep background agents at full parallelism even when builds slow the machine down. A short note on what is building is enough.
 
