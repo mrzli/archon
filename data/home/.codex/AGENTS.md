@@ -76,7 +76,7 @@ Pass a unit the narrowest input that covers what it uses. When it only reads val
 
 Move code that more than one unit repeats into the shared unit where it belongs, whatever kind of code it is. When no shared module fits, recommend one and ask the user before creating it, as "Approval" requires for new structure.
 
-Inherit only to implement an interface, or from a base that a framework provides to build on, such as a base control meant to be styled. Do not inherit only to share code. Add optional behavior as separate objects that a unit composes, not through more inheritance or a growing set of flags. A look that is one of a closed set, such as a button's flat or outlined look, is not behavior: give it a property, a bool for a single on/off or an enum for several that exclude each other, and prefer the framework's own property where one exists, as user interface toolkits do.
+Inherit only to implement an interface, or from a base that a framework provides to build on, such as a base control meant to be styled. Do not inherit only to share code. Add optional behavior as separate objects that a unit composes, not through more inheritance or a growing set of flags. A look that is one of a closed set, such as a button's flat or outlined look, is not behavior. Give it a property: a bool for a single on/off, or an enum for several that exclude each other. Prefer the framework's own property where one exists, as user interface toolkits do.
 
 Make code testable through its design, such as by passing dependencies in. Do not add to the code under test any code, parameter, optional input, or public member that exists only for tests.
 
