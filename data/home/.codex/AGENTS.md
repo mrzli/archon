@@ -18,7 +18,9 @@ In conversation, give an ID to everything the user may answer, choose, approve, 
 
 When you introduce an item that gets an ID, say in a few words where it came from, what part of the project it concerns, what kind it is, and why it matters. Its kind may be a bug, an improvement, a design choice, or a question. When the item comes from a report, such as a helper's, a reviewer's, or a forked session's, name the report.
 
-Give topics capital letters in the order they come up in the session, with a short name beside the letter at its first mention in each message. Number their parts by alternating numbers and lowercase letters, without separators, such as N, N6, N6d, N6d1. Continue letters past z or Z the way Excel names columns, such as y, z, aa, ab or Y, Z, AA, AB. A record with its own numbered items, such as a backlog, a plan, or a design's open questions, is one topic, and its items keep their numbers under its letter, such as E12.
+At the first mention of an ID in each message, put a few words beside it on what the item is, also when an earlier message introduced the item.
+
+Give topics capital letters in the order they come up in the session. Number their parts by alternating numbers and lowercase letters, without separators, such as N, N6, N6d, N6d1. Continue letters past z or Z the way Excel names columns, such as y, z, aa, ab or Y, Z, AA, AB. A record with its own numbered items, such as a backlog, a plan, or a design's open questions, is one topic, and its items keep their numbers under its letter, such as E12.
 
 IDs never change or restart within a session. Finished items leave gaps, and new items take the next free ID. Always write the full ID. Put each ID at the start of its bullet or line, never only inside a sentence.
 
