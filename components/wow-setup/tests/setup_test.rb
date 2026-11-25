@@ -101,7 +101,17 @@ def fixture(games: %w[retail forever])
         state_file = "#{ENV.fetch('HOME')}/addons-#{profile}.json"
         state = File.exist?(state_file) ? JSON.parse(File.read(state_file)) : {}
         case ARGV.shift
+        when 'debug'
+          login_file = "#{ENV.fetch('HOME')}/github-login"
+          token = File.exist?(login_file) ? '**********' : nil
+          tokens = ENV['DEBUG_LAYOUT'] == 'unknown' ? {} : { 'cfcore' => nil, 'github' => token }
+          puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => tokens } } })
         when 'configure'
+          if ARGV == ['global_config.access_tokens.github']
+            abort 'login needs a terminal' unless $stdin.tty?
+            File.write("#{ENV.fetch('HOME')}/github-login", 'token')
+            exit
+          end
           path = ARGV.first.delete_prefix('addon_dir=')
           abort 'missing addon directory' unless File.directory?(path)
           abort 'wrong game directory' unless path.include?(profile == 'wow-retail' ? '/_retail_/' : '/_forever_/')
@@ -133,12 +143,17 @@ def fixture(games: %w[retail forever])
             'COMMAND_LOG' => "#{root}/commands.jsonl",
             'AUCTIONATOR_ARCHIVE' => archives['Auctionator'], 'BUGGRABBER_ARCHIVE' => archives['!BugGrabber'] }
     run = ->(*args, **extra) { Open3.capture3(env.merge(extra), '/bin/bash', script, *args) }
+    # Runs the script with a terminal on standard input, as when the user starts it.
+    run_tty = lambda do |**extra|
+      command = ['/bin/bash', script].map { |part| "'#{part}'" }.join(' ')
+      Open3.capture3(env.merge(extra), 'script', '-qec', command, '/dev/null', stdin_data: '')
+    end
     run_pinned = lambda do |game_dir, folder, **extra|
       sha = Digest::SHA256.file(archives.fetch(folder)).hexdigest
       Open3.capture3(env.merge(extra), '/bin/bash', "#{root}/install-pinned-addon.sh",
                      game_dir, folder, 'test', "https://example.invalid/#{folder}.zip", sha)
     end
-    yield home, dirs, env, run, run_pinned
+    yield home, dirs, env, run, run_pinned, run_tty
   end
 end
 
@@ -226,6 +241,33 @@ fixture(games: []) do |home, _dirs, _env, run|
   assert Dir.exist?("#{custom.fetch('retail')}/Interface/AddOns/Auctionator")
   assert Dir.exist?("#{custom.fetch('forever')}/Interface/AddOns/!BugGrabber")
   puts 'PASS directory options install into non-default paths'
+end
+
+fixture do |home, _dirs, env, _run, _run_pinned, run_tty|
+  2.times do
+    output, error, status = run_tty.call
+    assert status.success?, output + error
+  end
+  assert File.exist?("#{home}/github-login"), 'a terminal run must log in to GitHub'
+  logins = calls(env).count { |call| call.first == 'instawow' && call[5..] == %w[configure global_config.access_tokens.github] }
+  assert logins == 1, 'the login must run once, then be detected as saved'
+  puts 'PASS GitHub login runs once in a terminal and is skipped once saved'
+end
+
+fixture do |home, _dirs, _env, run|
+  _, error, status = run.call
+  assert status.success?, error
+  assert error.include?('No GitHub login saved for instawow. Run this script in a terminal to log in.')
+  assert !File.exist?("#{home}/github-login")
+  puts 'PASS without a terminal, the script skips the GitHub login and still installs'
+end
+
+fixture do |home, _dirs, _env, run|
+  _, error, status = run.call(**{ 'DEBUG_LAYOUT' => 'unknown' })
+  assert status.exitstatus == 1
+  assert error.include?('Cannot read the GitHub login from instawow debug output')
+  assert state(home, 'wow-retail').nil?, 'an unknown debug layout must stop before installing'
+  puts 'PASS an unknown instawow debug layout stops the script'
 end
 
 fixture(games: []) do |_home, _dirs, env, run|

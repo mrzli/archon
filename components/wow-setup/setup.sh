@@ -39,8 +39,12 @@ Each directory defaults to the Omarchy Battle.net installation under
 ~/Games/battlenet. A game whose default directory is missing is skipped; a
 directory given as an option must exist. At least one game must be found.
 
-Requires uv, curl, unzip, and sha256sum on PATH. Close WoW before running.
-Run without sudo.
+Requires uv, ruby, curl, unzip, and sha256sum on PATH. Close WoW before
+running. Run without sudo, in a terminal.
+When instawow has no GitHub login saved, the script starts instawow's GitHub
+login once, which you approve in the browser. Without it, GitHub allows 60
+requests an hour, and a first run for both games can stop partway; running
+again later continues.
 instawow is installed into ~/.local/bin. Add-ons use instawow's wow-retail and
 wow-forever profiles. Unrelated add-ons and WoW settings are preserved.
 Existing add-ons not managed by these profiles are not automatically
@@ -121,6 +125,39 @@ buggrabber=('!BugGrabber' v12.1.1
   'https://edge.forgecdn.net/files/9277/326/%21BugGrabber-v12.1.1.zip'
   1e53e65c72f525a45c8951abe06415df5b1fb52ec21e30970c1416a2fbd4a250)
 
+# Prints "saved" or "missing" for instawow's GitHub login. instawow documents
+# no way to check for a saved token, so this relies on the undocumented JSON
+# layout of `instawow debug` for a configured profile, which shows a saved
+# token masked and a missing one as null. It stops with an error when that
+# layout changes, rather than guessing.
+github_login_state() {
+  # shellcheck disable=SC2016 # The Ruby program expands its own variables.
+  "$@" debug | ruby -rjson -e '
+    tokens = JSON.parse($stdin.read).dig("active_profile_config", "global_config", "access_tokens")
+    unless tokens.is_a?(Hash) && tokens.key?("github")
+      abort "Cannot read the GitHub login from instawow debug output; update setup.sh for this instawow version."
+    end
+    puts(tokens["github"].nil? ? "missing" : "saved")
+  '
+}
+
+# Without a GitHub login, instawow is limited to 60 GitHub API requests an
+# hour, which a first run for both games can exceed. The login is global to
+# instawow, so it is offered once, through the first configured profile.
+ensure_github_login() {
+  local state
+  state=$(github_login_state "$@")
+  if [[ $state == saved ]]; then
+    return
+  fi
+  if [[ ! -t 0 ]]; then
+    echo 'No GitHub login saved for instawow. Run this script in a terminal to log in.' >&2
+    return
+  fi
+  printf '\n==> Logging instawow in to GitHub\n'
+  "$@" configure global_config.access_tokens.github
+}
+
 # Installs missing add-ons into one game's profile, then updates the profile.
 install_addons() {
   local game_dir=$1 profile=$2 flavour=$3
@@ -128,6 +165,7 @@ install_addons() {
   local instawow=("$HOME/.local/bin/instawow" --no-cache -v -p "$profile")
   mkdir -p -- "$game_dir/Interface/AddOns"
   "${instawow[@]}" configure "addon_dir=$game_dir/Interface/AddOns" "flavour_override=$flavour"
+  ensure_github_login "${instawow[@]}"
   local addon installed
   for addon in "$@"; do
     installed=$("${instawow[@]}" list --format simple "$addon")
