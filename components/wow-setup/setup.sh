@@ -121,9 +121,9 @@ component_dir=$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")
 
 # Pinned add-ons that instawow cannot install without a CurseForge key:
 # folder, version, URL, and SHA-256.
-auctionator=(Auctionator 339
-  https://edge.forgecdn.net/files/8939/586/Auctionator-339.zip
-  773e93d95249eb3988c79c65721476b57cf91ea0fdba8fe1c728b4f88212d6b2)
+auctionator=(Auctionator 354
+  https://edge.forgecdn.net/files/9809/922/Auctionator-354.zip
+  67e3d471abc0fc725db5dfc4a72015c69f469e882717b1efe750a26670bbbb22)
 buggrabber=('!BugGrabber' v12.1.1
   'https://edge.forgecdn.net/files/9277/326/%21BugGrabber-v12.1.1.zip'
   1e53e65c72f525a45c8951abe06415df5b1fb52ec21e30970c1416a2fbd4a250)

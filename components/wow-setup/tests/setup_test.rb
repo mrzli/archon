@@ -202,7 +202,7 @@ fixture do |home, dirs, env, run|
     end
     output, error, status = run.call(**{ 'ADDON_VERSION' => version.to_s })
     assert status.success?, error
-    assert output.include?('Installing Auctionator 339 (pinned')
+    assert output.include?('Installing Auctionator 354 (pinned')
     assert output.include?('Installing !BugGrabber v12.1.1 (pinned')
     dirs.each_value do |dir|
       auctionator = "#{dir}/Interface/AddOns/Auctionator"
