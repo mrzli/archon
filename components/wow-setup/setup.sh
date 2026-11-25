@@ -251,7 +251,7 @@ forever_addons=(
   github:DeadlyBossMods/DBM-Dungeons # Forever dungeons
   github:EllesmereGaming/EllesmereUI
   github:funkydude/BugSack # Requires the pinned BugGrabber.
-  github:openmap-world/openmap # OpenMap world map
+  github:openmap-world/openmap # World map
   wowi:7032 # TomTom
 )
 
