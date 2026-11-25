@@ -214,6 +214,20 @@ end
   puts "PASS only #{game} installed: the other game is skipped"
 end
 
+fixture(games: []) do |home, _dirs, _env, run|
+  custom = { 'retail' => "#{home}/other games/_retail_", 'forever' => "#{home}/other games/_forever_" }
+  custom.each_value do |dir|
+    FileUtils.mkdir_p(dir)
+    File.write("#{dir}/Wow.exe", '')
+  end
+  _, error, status = run.call('--retail-dir', custom.fetch('retail'), '--forever-dir', custom.fetch('forever'))
+  assert status.success?, error
+  assert !state(home, 'wow-retail').nil? && !state(home, 'wow-forever').nil?
+  assert Dir.exist?("#{custom.fetch('retail')}/Interface/AddOns/Auctionator")
+  assert Dir.exist?("#{custom.fetch('forever')}/Interface/AddOns/!BugGrabber")
+  puts 'PASS directory options install into non-default paths'
+end
+
 fixture(games: []) do |_home, _dirs, env, run|
   _, error, status = run.call
   assert status.exitstatus == 1
