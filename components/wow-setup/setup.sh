@@ -113,6 +113,9 @@ fi
 printf '\n==> Installing or updating instawow\n'
 export UV_TOOL_BIN_DIR="$HOME/.local/bin"
 uv tool install --upgrade instawow
+instawow() {
+  "$HOME/.local/bin/instawow" --no-cache -v "$@"
+}
 
 component_dir=$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")
 
@@ -130,23 +133,31 @@ buggrabber=('!BugGrabber' v12.1.1
 # layout of `instawow debug` for a configured profile, which shows a saved
 # token masked and a missing one as null. It stops with an error when that
 # layout changes, rather than guessing.
+# Takes the name of a configured profile.
 github_login_state() {
   # shellcheck disable=SC2016 # The Ruby program expands its own variables.
-  "$@" debug | ruby -rjson -e '
-    tokens = JSON.parse($stdin.read).dig("active_profile_config", "global_config", "access_tokens")
-    unless tokens.is_a?(Hash) && tokens.key?("github")
-      abort "Cannot read the GitHub login from instawow debug output; update setup.sh for this instawow version."
+  instawow -p "$1" debug | ruby -rjson -e '
+    error = "Cannot read the GitHub login from instawow debug output; update setup.sh for this instawow version."
+    begin
+      tokens = JSON.parse($stdin.read).dig("active_profile_config", "global_config", "access_tokens")
+    rescue JSON::ParserError, TypeError
+      abort error
     end
-    puts(tokens["github"].nil? ? "missing" : "saved")
+    abort error unless tokens.is_a?(Hash) && tokens.key?("github")
+    case tokens["github"]
+    when nil then puts "missing"
+    when String then puts "saved"
+    else abort error
+    end
   '
 }
 
 # Without a GitHub login, instawow is limited to 60 GitHub API requests an
 # hour, which a first run for both games can exceed. The login is global to
-# instawow, so it is offered once, through the first configured profile.
+# instawow, so it is offered once per run, through one configured profile.
 ensure_github_login() {
-  local state
-  state=$(github_login_state "$@")
+  local profile=$1 state
+  state=$(github_login_state "$profile")
   if [[ $state == saved ]]; then
     return
   fi
@@ -155,26 +166,28 @@ ensure_github_login() {
     return
   fi
   printf '\n==> Logging instawow in to GitHub\n'
-  "$@" configure global_config.access_tokens.github
+  instawow -p "$profile" configure global_config.access_tokens.github
+}
+
+# Points one game's profile at the game's add-on folder.
+configure_profile() {
+  local game_dir=$1 profile=$2 flavour=$3
+  mkdir -p -- "$game_dir/Interface/AddOns"
+  instawow -p "$profile" configure "addon_dir=$game_dir/Interface/AddOns" "flavour_override=$flavour"
 }
 
 # Installs missing add-ons into one game's profile, then updates the profile.
 install_addons() {
-  local game_dir=$1 profile=$2 flavour=$3
-  shift 3
-  local instawow=("$HOME/.local/bin/instawow" --no-cache -v -p "$profile")
-  mkdir -p -- "$game_dir/Interface/AddOns"
-  "${instawow[@]}" configure "addon_dir=$game_dir/Interface/AddOns" "flavour_override=$flavour"
-  ensure_github_login "${instawow[@]}"
-  local addon installed
+  local profile=$1 addon installed
+  shift
   for addon in "$@"; do
-    installed=$("${instawow[@]}" list --format simple "$addon")
+    installed=$(instawow -p "$profile" list --format simple "$addon")
     if [[ -z $installed ]]; then
-      "${instawow[@]}" install "$addon"
+      instawow -p "$profile" install "$addon"
     fi
   done
   # Updating the profile treats already-current addons as success; named updates do not.
-  "${instawow[@]}" update
+  instawow -p "$profile" update
 }
 
 # Author release archives on GitHub and WoWInterface require no CurseForge key.
@@ -226,15 +239,27 @@ forever_addons=(
   github:funkydude/BugSack # Requires the pinned BugGrabber.
 )
 
+# The GitHub login needs a configured profile, so profiles are configured first.
+login_profile=
+if [[ -n $retail_dir ]]; then
+  configure_profile "$retail_dir" wow-retail retail
+  login_profile=wow-retail
+fi
+if [[ -n $forever_dir ]]; then
+  configure_profile "$forever_dir" wow-forever forever_classic
+  login_profile=${login_profile:-wow-forever}
+fi
+ensure_github_login "$login_profile"
+
 if [[ -n $retail_dir ]]; then
   printf '\n==> Installing or updating Retail WoW add-ons\n'
-  install_addons "$retail_dir" wow-retail retail "${retail_addons[@]}"
+  install_addons wow-retail "${retail_addons[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$retail_dir" "${auctionator[@]}"
 fi
 
 if [[ -n $forever_dir ]]; then
   printf '\n==> Installing or updating WoW Forever add-ons\n'
-  install_addons "$forever_dir" wow-forever forever_classic "${forever_addons[@]}"
+  install_addons wow-forever "${forever_addons[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${auctionator[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${buggrabber[@]}"
 fi

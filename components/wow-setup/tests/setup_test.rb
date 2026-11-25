@@ -3,6 +3,7 @@ require 'digest'
 require 'json'
 require 'open3'
 require 'rbconfig'
+require 'shellwords'
 require 'tmpdir'
 
 SCRIPT = File.expand_path('../setup.sh', __dir__)
@@ -104,12 +105,16 @@ def fixture(games: %w[retail forever])
         when 'debug'
           login_file = "#{ENV.fetch('HOME')}/github-login"
           token = File.exist?(login_file) ? '**********' : nil
-          tokens = ENV['DEBUG_LAYOUT'] == 'unknown' ? {} : { 'cfcore' => nil, 'github' => token }
-          puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => tokens } } })
+          case ENV['DEBUG_LAYOUT']
+          when 'not-json' then puts 'not json'
+          when 'missing-key' then puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => {} } } })
+          when 'unexpected-value' then puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => { 'github' => false } } } })
+          else puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => { 'cfcore' => nil, 'github' => token } } } })
+          end
         when 'configure'
           if ARGV == ['global_config.access_tokens.github']
             abort 'login needs a terminal' unless $stdin.tty?
-            File.write("#{ENV.fetch('HOME')}/github-login", 'token')
+            File.write("#{ENV.fetch('HOME')}/github-login", 'token') unless ENV['DECLINE_LOGIN']
             exit
           end
           path = ARGV.first.delete_prefix('addon_dir=')
@@ -145,7 +150,7 @@ def fixture(games: %w[retail forever])
     run = ->(*args, **extra) { Open3.capture3(env.merge(extra), '/bin/bash', script, *args) }
     # Runs the script with a terminal on standard input, as when the user starts it.
     run_tty = lambda do |**extra|
-      command = ['/bin/bash', script].map { |part| "'#{part}'" }.join(' ')
+      command = Shellwords.join(['/bin/bash', script])
       Open3.capture3(env.merge(extra), 'script', '-qec', command, '/dev/null', stdin_data: '')
     end
     run_pinned = lambda do |game_dir, folder, **extra|
@@ -254,6 +259,16 @@ fixture do |home, _dirs, env, _run, _run_pinned, run_tty|
   puts 'PASS GitHub login runs once in a terminal and is skipped once saved'
 end
 
+fixture do |home, _dirs, env, _run, _run_pinned, run_tty|
+  output, error, status = run_tty.call(**{ 'DECLINE_LOGIN' => '1' })
+  assert status.success?, output + error
+  assert !File.exist?("#{home}/github-login")
+  assert !state(home, 'wow-retail').nil? && !state(home, 'wow-forever').nil?, 'a declined login still installs'
+  logins = calls(env).count { |call| call.first == 'instawow' && call[5..] == %w[configure global_config.access_tokens.github] }
+  assert logins == 1, 'a declined login must be offered once per run, not once per game'
+  puts 'PASS a declined GitHub login is offered once per run and installation continues'
+end
+
 fixture do |home, _dirs, _env, run|
   _, error, status = run.call
   assert status.success?, error
@@ -262,12 +277,15 @@ fixture do |home, _dirs, _env, run|
   puts 'PASS without a terminal, the script skips the GitHub login and still installs'
 end
 
-fixture do |home, _dirs, _env, run|
-  _, error, status = run.call(**{ 'DEBUG_LAYOUT' => 'unknown' })
-  assert status.exitstatus == 1
-  assert error.include?('Cannot read the GitHub login from instawow debug output')
-  assert state(home, 'wow-retail').nil?, 'an unknown debug layout must stop before installing'
-  puts 'PASS an unknown instawow debug layout stops the script'
+%w[not-json missing-key unexpected-value].each do |layout|
+  fixture do |home, _dirs, _env, run|
+    _, error, status = run.call(**{ 'DEBUG_LAYOUT' => layout })
+    assert status.exitstatus == 1
+    assert error.include?('Cannot read the GitHub login from instawow debug output'), error
+    assert !error.include?('.rb:'), 'an unknown layout must stop with the message, not a Ruby backtrace'
+    assert state(home, 'wow-retail').nil?, 'an unknown debug layout must stop before installing'
+  end
+  puts "PASS an unknown instawow debug layout (#{layout}) stops the script"
 end
 
 fixture(games: []) do |_home, _dirs, env, run|
