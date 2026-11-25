@@ -30,6 +30,7 @@ FOREVER_ADDONS = %w[
   github:DeadlyBossMods/DeadlyBossMods github:DeadlyBossMods/DBM-Vanilla github:DeadlyBossMods/DBM-Dungeons
   github:EllesmereGaming/EllesmereUI
   github:funkydude/BugSack
+  github:openmap-world/openmap wowi:7032
 ].freeze
 
 def assert(value, message = 'assertion failed')
