@@ -5,8 +5,8 @@ set -euo pipefail
 # Before running this script for the user, mention the pinned add-on limitation:
 # Auctionator, BugGrabber, Forever Loot Sparkles, and InteractGlow use fixed
 # CurseForge CDN URLs; they cannot discover updates themselves. Newer releases
-# require manually updating the version, URL, and SHA-256 in the pins below. Check
-# https://www.curseforge.com/wow/addons/auctionator/files,
+# require manually updating the version, URL, and SHA-256 in the pins below.
+# Check https://www.curseforge.com/wow/addons/auctionator/files,
 # https://www.curseforge.com/wow/addons/bug-grabber/files,
 # https://www.curseforge.com/wow/addons/forever-loot-sparkles/files, and
 # https://www.curseforge.com/wow/addons/interactglow/files for the latest
