@@ -166,7 +166,9 @@ ensure_github_login() {
     return
   fi
   printf '\n==> Logging instawow in to GitHub\n'
-  instawow -p "$profile" configure global_config.access_tokens.github
+  if ! instawow -p "$profile" configure global_config.access_tokens.github; then
+    echo 'GitHub login failed; continuing without it. The next run offers it again.' >&2
+  fi
 }
 
 # Points one game's profile at the game's add-on folder.

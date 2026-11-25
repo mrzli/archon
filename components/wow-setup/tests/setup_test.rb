@@ -116,6 +116,7 @@ def fixture(games: %w[retail forever])
         when 'configure'
           if ARGV == ['global_config.access_tokens.github']
             abort 'login needs a terminal' unless $stdin.tty?
+            exit 1 if ENV['FAIL_LOGIN']
             File.write("#{ENV.fetch('HOME')}/github-login", 'token') unless ENV['DECLINE_LOGIN']
             exit
           end
@@ -269,6 +270,14 @@ fixture do |home, _dirs, env, _run, _run_pinned, run_tty|
   logins = calls(env).count { |call| call.first == 'instawow' && call[5..] == %w[configure global_config.access_tokens.github] }
   assert logins == 1, 'a declined login must be offered once per run, not once per game'
   puts 'PASS a declined GitHub login is offered once per run and installation continues'
+end
+
+fixture do |home, _dirs, _env, _run, _run_pinned, run_tty|
+  output, error, status = run_tty.call(**{ 'FAIL_LOGIN' => '1' })
+  assert status.success?, output + error
+  assert (output + error).include?('GitHub login failed; continuing without it.')
+  assert !state(home, 'wow-retail').nil? && !state(home, 'wow-forever').nil?, 'a failed login still installs'
+  puts 'PASS a failed GitHub login prints a note and installation continues'
 end
 
 fixture do |home, _dirs, _env, run|
