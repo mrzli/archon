@@ -3,12 +3,14 @@
 set -euo pipefail
 
 # Before running this script for the user, mention the pinned add-on limitation:
-# Auctionator and BugGrabber use fixed CurseForge CDN URLs; they cannot discover
-# updates themselves. Newer releases require manually updating the version, URL,
-# and SHA-256 in the pins below. Check
-# https://www.curseforge.com/wow/addons/auctionator/files and
-# https://www.curseforge.com/wow/addons/bug-grabber/files for the latest
-# releases and tell the user whether the pinned versions have been checked.
+# Auctionator, BugGrabber, and Forever Loot Sparkles use fixed CurseForge CDN
+# URLs; they cannot discover updates themselves. Newer releases require manually
+# updating the version, URL, and SHA-256 in the pins below. Check
+# https://www.curseforge.com/wow/addons/auctionator/files,
+# https://www.curseforge.com/wow/addons/bug-grabber/files, and
+# https://www.curseforge.com/wow/addons/forever-loot-sparkles/files for the
+# latest releases and tell the user whether the pinned versions have been
+# checked.
 
 usage() {
   cat <<'EOF'
@@ -28,8 +30,8 @@ WoW Forever add-ons:
   Questie (with QuestieTrace), HandyNotes, HandyNotes: WoW Forever,
   GatherMate2, Deadly Boss Mods with its Forever raid and dungeon modules,
   EllesmereUI, BugSack
-  Auctionator and BugGrabber (fixed releases; newer versions require a
-  script update)
+  Auctionator, BugGrabber, and Forever Loot Sparkles (fixed releases; newer
+  versions require a script update)
 
   --retail-dir PATH   Path to the _retail_ directory.
   --forever-dir PATH  Path to the _forever_ directory.
@@ -127,6 +129,11 @@ auctionator=(Auctionator 354
 buggrabber=('!BugGrabber' v12.1.1
   'https://edge.forgecdn.net/files/9277/326/%21BugGrabber-v12.1.1.zip'
   1e53e65c72f525a45c8951abe06415df5b1fb52ec21e30970c1416a2fbd4a250)
+# Keeps the game's loot sparkle on quest items, even after a graphics preset
+# turns it off.
+forever_loot_sparkles=(ForeverLootSparkles v2.1.0
+  https://edge.forgecdn.net/files/9808/270/ForeverLootSparkles-v2.1.0-forever.zip
+  84feef6c7096fce387880bad14c3ba8ede5b8882e4d90de076bd2287629d06af)
 
 # Prints "saved" or "missing" for instawow's GitHub login. instawow documents
 # no way to check for a saved token, so this relies on the undocumented JSON
@@ -264,6 +271,7 @@ if [[ -n $forever_dir ]]; then
   install_addons wow-forever "${forever_addons[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${auctionator[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${buggrabber[@]}"
+  bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${forever_loot_sparkles[@]}"
 fi
 
 printf '\nAdd-ons are ready. Start WoW and check the AddOns menu.\n'

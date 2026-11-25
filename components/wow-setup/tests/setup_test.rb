@@ -61,7 +61,8 @@ def fixture(games: %w[retail forever])
       File.write("#{dir}/WTF/keep", 'personal settings')
     end
     FileUtils.mkdir_p(bin)
-    archives = { 'Auctionator' => "#{root}/auctionator.zip", '!BugGrabber' => "#{root}/buggrabber.zip" }
+    archives = { 'Auctionator' => "#{root}/auctionator.zip", '!BugGrabber' => "#{root}/buggrabber.zip",
+                 'ForeverLootSparkles' => "#{root}/foreverlootsparkles.zip" }
     source = File.read(SCRIPT)
     archives.each do |folder, archive|
       if folder == 'Auctionator' && ENV['AUCTIONATOR_TEST_ARCHIVE']
@@ -86,8 +87,10 @@ def fixture(games: %w[retail forever])
         if ENV['CORRUPT_DOWNLOAD']
           File.write(output, 'invalid download')
         else
-          archive = ARGV.any? { |arg| arg.include?('BugGrabber') } ? 'BUGGRABBER_ARCHIVE' : 'AUCTIONATOR_ARCHIVE'
-          FileUtils.cp(ENV.fetch(archive), output)
+          url = ARGV.find { |arg| arg.start_with?('https://') }
+          archives = JSON.parse(ENV.fetch('PINNED_ARCHIVES'))
+          folder = archives.keys.find { |name| url.include?(name.delete('!')) } || abort("no archive for #{url}")
+          FileUtils.cp(archives.fetch(folder), output)
         end
       when 'uv'
         abort 'unexpected uv command' unless ARGV == %w[tool install --upgrade instawow]
@@ -149,7 +152,7 @@ def fixture(games: %w[retail forever])
     end
     env = { 'HOME' => home, 'PATH' => "#{bin}:/usr/bin:/bin", 'STUB_BIN' => bin,
             'COMMAND_LOG' => "#{root}/commands.jsonl",
-            'AUCTIONATOR_ARCHIVE' => archives['Auctionator'], 'BUGGRABBER_ARCHIVE' => archives['!BugGrabber'] }
+            'PINNED_ARCHIVES' => JSON.generate(archives) }
     run = ->(*args, **extra) { Open3.capture3(env.merge(extra), '/bin/bash', script, *args) }
     # Runs the script with a terminal on standard input, as when the user starts it.
     run_tty = lambda do |**extra|
@@ -204,6 +207,7 @@ fixture do |home, dirs, env, run|
     assert status.success?, error
     assert output.include?('Installing Auctionator 354 (pinned')
     assert output.include?('Installing !BugGrabber v12.1.1 (pinned')
+    assert output.include?('Installing ForeverLootSparkles v2.1.0 (pinned')
     dirs.each_value do |dir|
       auctionator = "#{dir}/Interface/AddOns/Auctionator"
       assert !Dir["#{auctionator}/*.toc"].empty?
@@ -214,6 +218,8 @@ fixture do |home, dirs, env, run|
   end
   assert Dir.exist?("#{dirs.fetch('forever')}/Interface/AddOns/!BugGrabber")
   assert !Dir.exist?("#{dirs.fetch('retail')}/Interface/AddOns/!BugGrabber"), 'BugGrabber is Forever only'
+  assert Dir.exist?("#{dirs.fetch('forever')}/Interface/AddOns/ForeverLootSparkles")
+  assert !Dir.exist?("#{dirs.fetch('retail')}/Interface/AddOns/ForeverLootSparkles"), 'Forever Loot Sparkles is Forever only'
   { 'wow-retail' => RETAIL_ADDONS, 'wow-forever' => FOREVER_ADDONS }.each do |profile, expected|
     installed = state(home, profile)
     assert installed.keys.sort == expected.sort, "#{profile} must install exactly its add-ons"
