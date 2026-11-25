@@ -2,17 +2,21 @@
 
 set -euo pipefail
 
-# Before running this script for the user, mention the Auctionator limitation:
-# Auctionator uses a fixed CurseForge CDN URL; it cannot discover updates itself.
-# Newer releases require manually updating the version, URL, and SHA-256 in install-auctionator.sh. Check
-# https://www.curseforge.com/wow/addons/auctionator/files for the latest Retail
-# release and tell the user whether the pinned version has been checked.
+# Before running this script for the user, mention the pinned add-on limitation:
+# Auctionator and BugGrabber use fixed CurseForge CDN URLs; they cannot discover
+# updates themselves. Newer releases require manually updating the version, URL,
+# and SHA-256 in the pins below. Check
+# https://www.curseforge.com/wow/addons/auctionator/files and
+# https://www.curseforge.com/wow/addons/bug-grabber/files for the latest
+# releases and tell the user whether the pinned versions have been checked.
 
 usage() {
   cat <<'EOF'
-Usage: components/wow-setup/setup.sh [--wow-dir PATH]
+Usage: components/wow-setup/setup.sh [--retail-dir PATH] [--forever-dir PATH]
 
-Install or update instawow and these Retail WoW addons:
+Install or update instawow and the add-ons for each installed game.
+
+Retail add-ons:
   ALL THE THINGS, BtWQuests, HandyNotes, Deadly Boss Mods, EllesmereUI
   All 12 Zarillion HandyNotes expansion plugins, GatherMate2, GatherMate2_Data
   Auctionator (fixed release; newer versions require a script update)
@@ -20,30 +24,53 @@ Install or update instawow and these Retail WoW addons:
   plus Battle for Azeroth, Shadowlands, and Dragonflight prologues.
   Midnight is bundled with BtWQuests.
 
-  --wow-dir PATH  Path to the _retail_ directory. Defaults to the Omarchy
-                  Battle.net installation under ~/Games/battlenet.
-  -h, --help     Show this help.
+WoW Forever add-ons:
+  Questie (with QuestieTrace), HandyNotes, HandyNotes: WoW Forever,
+  GatherMate2, Deadly Boss Mods with its Forever raid and dungeon modules,
+  EllesmereUI, BugSack
+  Auctionator and BugGrabber (fixed releases; newer versions require a
+  script update)
+
+  --retail-dir PATH   Path to the _retail_ directory.
+  --forever-dir PATH  Path to the _forever_ directory.
+  -h, --help          Show this help.
+
+Each directory defaults to the Omarchy Battle.net installation under
+~/Games/battlenet. A game whose default directory is missing is skipped; a
+directory given as an option must exist. At least one game must be found.
 
 Requires uv, curl, unzip, and sha256sum on PATH. Close WoW before running.
 Run without sudo.
-instawow is installed into ~/.local/bin. Addons use instawow's wow-retail
-profile. Unrelated addons and WoW settings are preserved. Existing addons
-not managed by this profile are not automatically overwritten, except Auctionator:
-its addon folder is replaced with the pinned release; saved settings are preserved.
-After installing GatherMate2_Data, use GatherMate2's in-game Import settings
-to select databases and import them with Merge to preserve discovered nodes.
+instawow is installed into ~/.local/bin. Add-ons use instawow's wow-retail and
+wow-forever profiles. Unrelated add-ons and WoW settings are preserved.
+Existing add-ons not managed by these profiles are not automatically
+overwritten, except the pinned ones: their folders are replaced with the pinned
+releases; saved settings are preserved.
+After installing GatherMate2_Data in Retail, use GatherMate2's in-game Import
+settings to select databases and import them with Merge to preserve discovered
+nodes.
 EOF
 }
 
-wow_dir="$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft/_retail_"
+wow_root="$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft"
+retail_dir="$wow_root/_retail_"
+forever_dir="$wow_root/_forever_"
+retail_required=false
+forever_required=false
 while (($#)); do
   case "$1" in
-    --wow-dir)
+    --retail-dir|--forever-dir)
       if (($# < 2)) || [[ -z $2 ]]; then
-        echo '--wow-dir requires a path to the _retail_ directory.' >&2
+        printf '%s requires a path.\n' "$1" >&2
         exit 2
       fi
-      wow_dir=$2
+      if [[ $1 == --retail-dir ]]; then
+        retail_dir=$2
+        retail_required=true
+      else
+        forever_dir=$2
+        forever_required=true
+      fi
       shift 2
       ;;
     -h|--help) usage; exit 0 ;;
@@ -59,23 +86,61 @@ if ! command -v uv >/dev/null 2>&1; then
   echo 'uv is required but was not found on PATH.' >&2
   exit 1
 fi
-if [[ ! -f "$wow_dir/Wow.exe" ]]; then
-  printf 'Retail WoW not found at %s. Use --wow-dir PATH.\n' "$wow_dir" >&2
+
+# Prints the resolved game directory, or nothing when an optional game is absent.
+find_game() {
+  local name=$1 dir=$2 required=$3
+  if [[ -f "$dir/Wow.exe" ]]; then
+    realpath -- "$dir"
+  elif [[ $required == true ]]; then
+    printf '%s not found at %s.\n' "$name" "$dir" >&2
+    return 1
+  else
+    printf '%s not found at %s; skipping it.\n' "$name" "$dir" >&2
+  fi
+}
+retail_dir=$(find_game 'Retail WoW' "$retail_dir" "$retail_required")
+forever_dir=$(find_game 'WoW Forever' "$forever_dir" "$forever_required")
+if [[ -z $retail_dir && -z $forever_dir ]]; then
+  echo 'No WoW installation found. Use --retail-dir or --forever-dir.' >&2
   exit 1
 fi
-wow_dir=$(realpath -- "$wow_dir")
 
 printf '\n==> Installing or updating instawow\n'
 export UV_TOOL_BIN_DIR="$HOME/.local/bin"
 uv tool install --upgrade instawow
-instawow=("$HOME/.local/bin/instawow" --no-cache -v -p wow-retail)
 
-printf '\n==> Configuring Retail WoW addons\n'
-mkdir -p -- "$wow_dir/Interface/AddOns"
-"${instawow[@]}" configure "addon_dir=$wow_dir/Interface/AddOns" flavour_override=retail
+component_dir=$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")
+
+# Pinned add-ons that instawow cannot install without a CurseForge key:
+# folder, version, URL, and SHA-256.
+auctionator=(Auctionator 339
+  https://edge.forgecdn.net/files/8939/586/Auctionator-339.zip
+  773e93d95249eb3988c79c65721476b57cf91ea0fdba8fe1c728b4f88212d6b2)
+buggrabber=('!BugGrabber' v12.1.1
+  'https://edge.forgecdn.net/files/9277/326/%21BugGrabber-v12.1.1.zip'
+  1e53e65c72f525a45c8951abe06415df5b1fb52ec21e30970c1416a2fbd4a250)
+
+# Installs missing add-ons into one game's profile, then updates the profile.
+install_addons() {
+  local game_dir=$1 profile=$2 flavour=$3
+  shift 3
+  local instawow=("$HOME/.local/bin/instawow" --no-cache -v -p "$profile")
+  mkdir -p -- "$game_dir/Interface/AddOns"
+  "${instawow[@]}" configure "addon_dir=$game_dir/Interface/AddOns" "flavour_override=$flavour"
+  local addon installed
+  for addon in "$@"; do
+    installed=$("${instawow[@]}" list --format simple "$addon")
+    if [[ -z $installed ]]; then
+      "${instawow[@]}" install "$addon"
+    fi
+  done
+  # Updating the profile treats already-current addons as success; named updates do not.
+  "${instawow[@]}" update
+}
 
 # Author release archives on GitHub and WoWInterface require no CurseForge key.
-addons=(
+retail_addons=(
   github:ATTWoWAddon/AllTheThings
   wowi:24680 # BtWQuests
   wowi:25631 # BtWQuests: The Burning Crusade
@@ -111,18 +176,32 @@ addons=(
   github:EllesmereGaming/EllesmereUI
 )
 
-printf '\n==> Installing or updating addons\n'
-for addon in "${addons[@]}"; do
-  installed=$("${instawow[@]}" list --format simple "$addon")
-  if [[ -z $installed ]]; then
-    "${instawow[@]}" install "$addon"
-  fi
-done
-# Updating the profile treats already-current addons as success; named updates do not.
-"${instawow[@]}" update
+forever_addons=(
+  github:Questie/Questie # Includes QuestieTrace.
+  github:Nevcairiel/HandyNotes
+  github:kemayo/wow-handynotes-forever # HandyNotes: WoW Forever
+  github:Nevcairiel/GatherMate2
+  github:DeadlyBossMods/DeadlyBossMods
+  github:DeadlyBossMods/DBM-Vanilla # Forever raids
+  github:DeadlyBossMods/DBM-Dungeons # Forever dungeons
+  github:EllesmereGaming/EllesmereUI
+  github:funkydude/BugSack # Requires the pinned BugGrabber.
+)
 
-component_dir=$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")
-bash "$component_dir/install-auctionator.sh" "$wow_dir"
+if [[ -n $retail_dir ]]; then
+  printf '\n==> Installing or updating Retail WoW add-ons\n'
+  install_addons "$retail_dir" wow-retail retail "${retail_addons[@]}"
+  bash "$component_dir/install-pinned-addon.sh" "$retail_dir" "${auctionator[@]}"
+fi
 
-printf '\nAddons are ready. Start WoW and check the AddOns menu.\n'
-printf 'For preloaded gathering nodes, open GatherMate2 settings > Import and use Merge.\n'
+if [[ -n $forever_dir ]]; then
+  printf '\n==> Installing or updating WoW Forever add-ons\n'
+  install_addons "$forever_dir" wow-forever forever_classic "${forever_addons[@]}"
+  bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${auctionator[@]}"
+  bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${buggrabber[@]}"
+fi
+
+printf '\nAdd-ons are ready. Start WoW and check the AddOns menu.\n'
+if [[ -n $retail_dir ]]; then
+  printf 'For preloaded Retail gathering nodes, open GatherMate2 settings > Import and use Merge.\n'
+fi
