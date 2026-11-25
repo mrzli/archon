@@ -45,8 +45,12 @@ def write_archive(path, folder)
   assert status.success?, error
 end
 
-def pinned_sha(source, folder)
-  source[/\('?#{Regexp.escape(folder)}'? .*?\n\s+\S+\n\s+(\h{64})\)/m, 1] || raise("no pin for #{folder}")
+# Returns a pin's URL and SHA-256 from setup.sh's pin array for the folder.
+def pin(source, folder)
+  match = source.match(/\('?#{Regexp.escape(folder)}'? \S+\n\s+'?(https:\S+?)'?\n\s+(\h{64})\)/)
+  raise "no pin for #{folder}" unless match
+
+  match.captures
 end
 
 def fixture(games: %w[retail forever])
@@ -65,13 +69,19 @@ def fixture(games: %w[retail forever])
                  'ForeverLootSparkles' => "#{root}/foreverlootsparkles.zip",
                  'InteractGlow' => "#{root}/interactglow.zip" }
     source = File.read(SCRIPT)
+    # The fake curl serves each archive for its pin's exact URL, and for the
+    # URL that run_pinned passes.
+    archives_by_url = {}
     archives.each do |folder, archive|
+      url, sha = pin(source, folder)
+      archives_by_url[url] = archive
+      archives_by_url["https://example.invalid/#{folder}.zip"] = archive
       if folder == 'Auctionator' && ENV['AUCTIONATOR_TEST_ARCHIVE']
         FileUtils.cp(ENV.fetch('AUCTIONATOR_TEST_ARCHIVE'), archive)
         next
       end
       write_archive(archive, folder)
-      source = source.sub(pinned_sha(source, folder), Digest::SHA256.file(archive).hexdigest)
+      source = source.sub(sha, Digest::SHA256.file(archive).hexdigest)
     end
     script = "#{root}/setup.sh"
     File.write(script, source)
@@ -89,9 +99,8 @@ def fixture(games: %w[retail forever])
           File.write(output, 'invalid download')
         else
           url = ARGV.find { |arg| arg.start_with?('https://') }
-          archives = JSON.parse(ENV.fetch('PINNED_ARCHIVES'))
-          folder = archives.keys.find { |name| url.include?(name.delete('!')) } || abort("no archive for #{url}")
-          FileUtils.cp(archives.fetch(folder), output)
+          archive = JSON.parse(ENV.fetch('ARCHIVES_BY_URL'))[url] || abort("no fixture archive for #{url}")
+          FileUtils.cp(archive, output)
         end
       when 'uv'
         abort 'unexpected uv command' unless ARGV == %w[tool install --upgrade instawow]
@@ -153,7 +162,7 @@ def fixture(games: %w[retail forever])
     end
     env = { 'HOME' => home, 'PATH' => "#{bin}:/usr/bin:/bin", 'STUB_BIN' => bin,
             'COMMAND_LOG' => "#{root}/commands.jsonl",
-            'PINNED_ARCHIVES' => JSON.generate(archives) }
+            'ARCHIVES_BY_URL' => JSON.generate(archives_by_url) }
     run = ->(*args, **extra) { Open3.capture3(env.merge(extra), '/bin/bash', script, *args) }
     # Runs the script with a terminal on standard input, as when the user starts it.
     run_tty = lambda do |**extra|
