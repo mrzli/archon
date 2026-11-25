@@ -62,7 +62,8 @@ def fixture(games: %w[retail forever])
     end
     FileUtils.mkdir_p(bin)
     archives = { 'Auctionator' => "#{root}/auctionator.zip", '!BugGrabber' => "#{root}/buggrabber.zip",
-                 'ForeverLootSparkles' => "#{root}/foreverlootsparkles.zip" }
+                 'ForeverLootSparkles' => "#{root}/foreverlootsparkles.zip",
+                 'InteractGlow' => "#{root}/interactglow.zip" }
     source = File.read(SCRIPT)
     archives.each do |folder, archive|
       if folder == 'Auctionator' && ENV['AUCTIONATOR_TEST_ARCHIVE']
@@ -208,6 +209,7 @@ fixture do |home, dirs, env, run|
     assert output.include?('Installing Auctionator 354 (pinned')
     assert output.include?('Installing !BugGrabber v12.1.1 (pinned')
     assert output.include?('Installing ForeverLootSparkles v2.1.0 (pinned')
+    assert output.include?('Installing InteractGlow 0.2.1 (pinned')
     dirs.each_value do |dir|
       auctionator = "#{dir}/Interface/AddOns/Auctionator"
       assert !Dir["#{auctionator}/*.toc"].empty?
@@ -220,6 +222,8 @@ fixture do |home, dirs, env, run|
   assert !Dir.exist?("#{dirs.fetch('retail')}/Interface/AddOns/!BugGrabber"), 'BugGrabber is Forever only'
   assert Dir.exist?("#{dirs.fetch('forever')}/Interface/AddOns/ForeverLootSparkles")
   assert !Dir.exist?("#{dirs.fetch('retail')}/Interface/AddOns/ForeverLootSparkles"), 'Forever Loot Sparkles is Forever only'
+  assert Dir.exist?("#{dirs.fetch('forever')}/Interface/AddOns/InteractGlow")
+  assert !Dir.exist?("#{dirs.fetch('retail')}/Interface/AddOns/InteractGlow"), 'InteractGlow is Forever only'
   { 'wow-retail' => RETAIL_ADDONS, 'wow-forever' => FOREVER_ADDONS }.each do |profile, expected|
     installed = state(home, profile)
     assert installed.keys.sort == expected.sort, "#{profile} must install exactly its add-ons"

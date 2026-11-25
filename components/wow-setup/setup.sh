@@ -3,14 +3,15 @@
 set -euo pipefail
 
 # Before running this script for the user, mention the pinned add-on limitation:
-# Auctionator, BugGrabber, and Forever Loot Sparkles use fixed CurseForge CDN
-# URLs; they cannot discover updates themselves. Newer releases require manually
-# updating the version, URL, and SHA-256 in the pins below. Check
+# Auctionator, BugGrabber, Forever Loot Sparkles, and InteractGlow use fixed
+# CurseForge CDN URLs; they cannot discover updates themselves. Newer releases
+# require manually updating the version, URL, and SHA-256 in the pins below.
+# Check
 # https://www.curseforge.com/wow/addons/auctionator/files,
-# https://www.curseforge.com/wow/addons/bug-grabber/files, and
-# https://www.curseforge.com/wow/addons/forever-loot-sparkles/files for the
-# latest releases and tell the user whether the pinned versions have been
-# checked.
+# https://www.curseforge.com/wow/addons/bug-grabber/files,
+# https://www.curseforge.com/wow/addons/forever-loot-sparkles/files, and
+# https://www.curseforge.com/wow/addons/interactglow/files for the latest
+# releases and tell the user whether the pinned versions have been checked.
 
 usage() {
   cat <<'EOF'
@@ -30,8 +31,8 @@ WoW Forever add-ons:
   Questie (with QuestieTrace), HandyNotes, HandyNotes: WoW Forever,
   GatherMate2, Deadly Boss Mods with its Forever raid and dungeon modules,
   EllesmereUI, BugSack
-  Auctionator, BugGrabber, and Forever Loot Sparkles (fixed releases; newer
-  versions require a script update)
+  Auctionator, BugGrabber, Forever Loot Sparkles, and InteractGlow (fixed
+  releases; newer versions require a script update)
 
   --retail-dir PATH   Path to the _retail_ directory.
   --forever-dir PATH  Path to the _forever_ directory.
@@ -134,6 +135,11 @@ buggrabber=('!BugGrabber' v12.1.1
 forever_loot_sparkles=(ForeverLootSparkles v2.1.0
   https://edge.forgecdn.net/files/9808/270/ForeverLootSparkles-v2.1.0-forever.zip
   84feef6c7096fce387880bad14c3ba8ede5b8882e4d90de076bd2287629d06af)
+# Highlights the nearest interactable quest object or herb, for the Interact
+# with Target key. CurseForge labels this file v1.0; its TOC says 0.2.1.
+interactglow=(InteractGlow 0.2.1
+  'https://edge.forgecdn.net/files/9072/814/InteractGlow%20%283%29.zip'
+  ba3889b0ccf62d9d2fd509aed9231eda1f56d72176350883b85cce4f4b1251a8)
 
 # Prints "saved" or "missing" for instawow's GitHub login. instawow documents
 # no way to check for a saved token, so this relies on the undocumented JSON
@@ -272,6 +278,7 @@ if [[ -n $forever_dir ]]; then
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${auctionator[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${buggrabber[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${forever_loot_sparkles[@]}"
+  bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${interactglow[@]}"
 fi
 
 printf '\nAdd-ons are ready. Start WoW and check the AddOns menu.\n'
