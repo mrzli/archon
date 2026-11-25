@@ -1,4 +1,4 @@
-Before starting a task, check the available skills. When one matches the task, use it instead of working ad hoc.
+Before starting a task, check the available skills. When one matches the task, use it instead of working ad hoc. Do this for each new request in a session, including small follow-ups and items agreed one at a time after earlier work finished, and for work you delegate to other agents.
 
 ## Writing
 
@@ -115,6 +115,10 @@ Before bringing commits into the main branch, have them reviewed by an agent tha
 Treat each fix for a finding as your own choice and sort it by the levels that "Approval" describes. Make a fix that keeps what the user approved, such as clearer wording with the same meaning or a bug fix, and list it as a choice taken unless the ask level covers it. Ask about a fix that changes what the user approved. A commit that applies only fixes suggested by the review of the commits being brought in, each exactly as suggested, and changes nothing else, needs no further review. Bring the commits into the main branch only when no blocking findings remain, and report how long the review took.
 
 Run only the checks the project requires for the kind of change, such as a documentation-only change or a code change. After a check fails, rerun only that check until it passes, then run the change's full set once.
+
+## Delegating work
+
+Choose each delegated agent's model by its work, not by habit or an earlier choice. When the skill whose workflow you follow says how to choose, follow it instead of this rule. Otherwise, start an implementer on the cheapest capable model. Use the most capable model for bugs, performance work, work whose decision leaves design questions open, and reviews.
 
 ## Tooling
 
