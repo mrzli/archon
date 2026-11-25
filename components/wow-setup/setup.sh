@@ -140,7 +140,7 @@ github_login_state() {
     error = "Cannot read the GitHub login from instawow debug output; update setup.sh for this instawow version."
     begin
       tokens = JSON.parse($stdin.read).dig("active_profile_config", "global_config", "access_tokens")
-    rescue JSON::ParserError, TypeError
+    rescue JSON::ParserError, TypeError, NoMethodError
       abort error
     end
     abort error unless tokens.is_a?(Hash) && tokens.key?("github")

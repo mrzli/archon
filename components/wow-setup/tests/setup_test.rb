@@ -108,6 +108,8 @@ def fixture(games: %w[retail forever])
           case ENV['DEBUG_LAYOUT']
           when 'not-json' then puts 'not json'
           when 'missing-key' then puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => {} } } })
+          when 'string-root' then puts JSON.generate('x')
+          when 'string-parent' then puts JSON.generate({ 'active_profile_config' => 'x' })
           when 'unexpected-value' then puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => { 'github' => false } } } })
           else puts JSON.generate({ 'active_profile_config' => { 'global_config' => { 'access_tokens' => { 'cfcore' => nil, 'github' => token } } } })
           end
@@ -277,12 +279,12 @@ fixture do |home, _dirs, _env, run|
   puts 'PASS without a terminal, the script skips the GitHub login and still installs'
 end
 
-%w[not-json missing-key unexpected-value].each do |layout|
+%w[not-json string-root string-parent missing-key unexpected-value].each do |layout|
   fixture do |home, _dirs, _env, run|
     _, error, status = run.call(**{ 'DEBUG_LAYOUT' => layout })
     assert status.exitstatus == 1
     assert error.include?('Cannot read the GitHub login from instawow debug output'), error
-    assert !error.include?('.rb:'), 'an unknown layout must stop with the message, not a Ruby backtrace'
+    assert !error.include?('.rb:') && !error.include?('-e:'), 'an unknown layout must stop with the message, not a Ruby backtrace'
     assert state(home, 'wow-retail').nil?, 'an unknown debug layout must stop before installing'
   end
   puts "PASS an unknown instawow debug layout (#{layout}) stops the script"
