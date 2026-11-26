@@ -3,13 +3,15 @@
 set -euo pipefail
 
 # Before running this script for the user, mention the pinned add-on limitation:
-# Auctionator, BugGrabber, Forever Loot Sparkles, and InteractGlow use fixed
-# CurseForge CDN URLs; they cannot discover updates themselves. Newer releases
-# require manually updating the version, URL, and SHA-256 in the pins below.
+# Auctionator, BugGrabber, Forever Loot Sparkles, InteractGlow, and Leatrix
+# Maps use fixed CurseForge CDN URLs; they cannot discover updates themselves.
+# Newer releases require manually updating the version, URL, and SHA-256 in
+# the pins below.
 # Check https://www.curseforge.com/wow/addons/auctionator/files,
 # https://www.curseforge.com/wow/addons/bug-grabber/files,
-# https://www.curseforge.com/wow/addons/forever-loot-sparkles/files, and
-# https://www.curseforge.com/wow/addons/interactglow/files for the latest
+# https://www.curseforge.com/wow/addons/forever-loot-sparkles/files,
+# https://www.curseforge.com/wow/addons/interactglow/files, and
+# https://www.curseforge.com/wow/addons/leatrix-maps/files for the latest
 # releases and tell the user whether the pinned versions have been checked.
 
 usage() {
@@ -29,9 +31,9 @@ Retail add-ons:
 WoW Forever add-ons:
   Questie (with QuestieTrace), HandyNotes, HandyNotes: WoW Forever,
   GatherMate2, Deadly Boss Mods with its Forever raid and dungeon modules,
-  EllesmereUI, BugSack
-  Auctionator, BugGrabber, Forever Loot Sparkles, and InteractGlow (fixed
-  releases; newer versions require a script update)
+  EllesmereUI, BugSack, TomTom
+  Auctionator, BugGrabber, Forever Loot Sparkles, InteractGlow, and Leatrix
+  Maps (fixed releases; newer versions require a script update)
 
   --retail-dir PATH   Path to the _retail_ directory.
   --forever-dir PATH  Path to the _forever_ directory.
@@ -139,6 +141,10 @@ forever_loot_sparkles=(ForeverLootSparkles v2.1.0
 interactglow=(InteractGlow 0.2.1
   'https://edge.forgecdn.net/files/9072/814/InteractGlow%20%283%29.zip'
   ba3889b0ccf62d9d2fd509aed9231eda1f56d72176350883b85cce4f4b1251a8)
+# Keeps Blizzard's one-zone world map and can tint unexplored areas.
+leatrix_maps=(Leatrix_Maps 1.60.36
+  https://edge.forgecdn.net/files/9744/784/Leatrix_Maps-1.60.36-forever.zip
+  a1f277394b965320ab2dee48e10da19e790652328bde8f69272becb50ccddb46)
 
 # Prints "saved" or "missing" for instawow's GitHub login. instawow documents
 # no way to check for a saved token, so this relies on the undocumented JSON
@@ -251,7 +257,6 @@ forever_addons=(
   github:DeadlyBossMods/DBM-Dungeons # Forever dungeons
   github:EllesmereGaming/EllesmereUI
   github:funkydude/BugSack # Requires the pinned BugGrabber.
-  github:openmap-world/openmap # World map
   wowi:7032 # TomTom
 )
 
@@ -280,6 +285,7 @@ if [[ -n $forever_dir ]]; then
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${buggrabber[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${forever_loot_sparkles[@]}"
   bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${interactglow[@]}"
+  bash "$component_dir/install-pinned-addon.sh" "$forever_dir" "${leatrix_maps[@]}"
 fi
 
 printf '\nAdd-ons are ready. Start WoW and check the AddOns menu.\n'
