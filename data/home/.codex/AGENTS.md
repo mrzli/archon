@@ -120,6 +120,8 @@ Run only the checks the project requires for the kind of change, such as a docum
 
 Choose each delegated agent's model by its work, not by habit or an earlier choice. When the skill whose workflow you follow says how to choose, follow it instead of this rule. Otherwise, start an implementer on the cheapest capable model. Use the most capable model for bugs, performance work, work whose decision leaves design questions open, and reviews.
 
+Brief each delegated agent to end or wait for every background command it started, such as a download or a check, before it sends its final report. Once an agent's final report has arrived and its work is integrated or no longer needed, stop the agent if the tools still list it as running or waiting, such as with Claude Code's `TaskStop`. Stop an agent you replaced the same way, such as an implementer whose findings went to a fixer.
+
 ## Tooling
 
 When a step needs no judgment to do well, such as a rename across files, a fixed sequence of commands, filtering output, or a loop over fixed settings, do it with a command or a temporary script rather than by hand. When a script produces a file that is committed, such as a generated table, commit the script in the project's tooling too. This needs no approval, unlike the tooling proposals below.
